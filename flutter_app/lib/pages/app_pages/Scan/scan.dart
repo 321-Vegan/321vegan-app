@@ -29,6 +29,7 @@ import 'package:vegan_app/widgets/auth/login_form.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/pages/app_pages/Scan/account_prompt_dialog.dart';
+import 'package:vegan_app/pages/app_pages/Scan/ask_product/ask_in_store_page.dart';
 
 class ScanPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -495,6 +496,20 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     }
 
     return {'latitude': latitude, 'longitude': longitude};
+  }
+
+  void _openAskInStore() {
+    // Pause the scanner while the user is in the "ask in store" flow, then
+    // resume it when they come back.
+    controller.stop();
+    setState(() {
+      productInfo = null;
+    });
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(builder: (context) => const AskInStorePage()),
+        )
+        .then((_) => controller.start());
   }
 
   void _showSettingsModal() {
@@ -1138,7 +1153,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               top: 1100.h,
               left: 16,
               right: 16,
-              child: const NoResultCard(),
+              child: NoResultCard(onAskInStore: _openAskInStore),
             ),
           if (productInfo != null && productInfo?['is_vegan'] != "unknown")
             Positioned(

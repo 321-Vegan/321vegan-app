@@ -57,6 +57,8 @@ dependencies:
   flutter_timezone: ^5.0.1
   font_awesome_flutter: ^10.12.0
   in_app_purchase: ^3.2.3
+  barcode_widget: ^2.0.4
+  screen_brightness: ^2.1.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -167,6 +169,9 @@ flutter:
     - lib/assets/images/nutri-eco-scores/green-score-f.webp
     # Others
     - lib/assets/affiche-321vegan-a4.png
+    # Askable products (ask a store to add a product)
+    - lib/assets/images/ask_products/happyvore/
+    - lib/assets/images/ask_products/lavie/
     - .env
 
   fonts:

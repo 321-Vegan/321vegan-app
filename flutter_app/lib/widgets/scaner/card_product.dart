@@ -8,7 +8,12 @@ import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/widgets/scaner/product_info_form_modal.dart';
 
 class NoResultCard extends StatelessWidget {
-  const NoResultCard({super.key});
+  /// Called when the user taps the "produit introuvable en magasin" call to
+  /// action. The scan page uses this to pause the scanner and open the
+  /// "ask in store" flow.
+  final VoidCallback? onAskInStore;
+
+  const NoResultCard({super.key, this.onAskInStore});
 
   @override
   Widget build(BuildContext context) {
@@ -63,22 +68,101 @@ class NoResultCard extends StatelessWidget {
           RichText(
             textAlign: TextAlign.center,
             text: TextSpan(
-              style: TextStyle(fontSize: 40.sp, color: Colors.black),
+              style: TextStyle(fontSize: 38.sp, color: Colors.grey.shade600),
               children: [
-                const TextSpan(text: 'Le scan est prévu pour les produits '),
+                const TextSpan(text: 'Le scan ne concerne que les produits '),
                 TextSpan(
                   text: 'alimentaires',
-                  style: TextStyle(color: Colors.green.shade700),
+                  style: TextStyle(
+                    color: Colors.green.shade700,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                const TextSpan(
-                    text:
-                        ' uniquement. \nPour l\'instant nous ne pouvont pas traiter les produits '),
-                TextSpan(
-                  text: 'cosmétiques',
-                  style: TextStyle(color: Colors.red.shade700),
-                ),
-                const TextSpan(text: ', merci de ne pas en envoyer !'),
+                const TextSpan(text: '.'),
               ],
+            ),
+          ),
+          SizedBox(height: 28.h),
+          // Call to action: ask a store to add a product that's missing there.
+          Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(24.r),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(24.r),
+              onTap: onAskInStore,
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1A722E), Color(0xFF2E9D47)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(24.r),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF1A722E).withValues(alpha: 0.35),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.storefront,
+                            color: Colors.white, size: 56.sp),
+                      ),
+                      SizedBox(width: 24.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Produit préféré introuvable ?',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 44.sp,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Baloo',
+                              ),
+                            ),
+                            SizedBox(height: 6.h),
+                            Text(
+                              'Demandez à votre magasin de l\'ajouter',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.92),
+                                fontSize: 36.sp,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: 12.w),
+                      Container(
+                        padding: EdgeInsets.all(10.w),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.arrow_forward,
+                            color: Colors.white, size: 44.sp),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
