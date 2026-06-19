@@ -193,7 +193,7 @@ class MyHomePageState extends State<MyHomePage>
     if (targetDate == null) return; // No vegan date → nothing to celebrate.
 
     final savings = computeSavings(targetDate);
-    final years = DateTime.now().difference(targetDate!).inDays ~/ 365;
+    final years = AnniversaryService.veganYears(targetDate!);
     final scanCount = await PreferencesHelper.getTotalScanCount();
 
     // Backend contribution counters — only for logged-in users, and

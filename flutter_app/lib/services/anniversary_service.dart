@@ -78,6 +78,29 @@ class AnniversaryService {
     );
   }
 
+  /// Number of whole vegan years between [veganSince] and [now] (defaults to
+  /// the current local time). Counts from the y/m/d fields — not `inDays ~/ 365`
+  /// — so it is correct regardless of the start date's time-of-day, leap years,
+  /// or the notification fire time ([_hour]).
+  ///
+  /// The anniversary day is pinned to the month's length, mirroring
+  /// [_anniversaryFor]: a Feb 29 start is celebrated on Feb 28 in non-leap
+  /// years, so the year count must tick over on Feb 28 those years too.
+  static int veganYears(DateTime veganSince, {DateTime? now}) {
+    final reference = now ?? DateTime.now();
+    final lastDayOfMonth =
+        DateTime(reference.year, veganSince.month + 1, 0).day;
+    final anniversaryDay =
+        veganSince.day < lastDayOfMonth ? veganSince.day : lastDayOfMonth;
+    var years = reference.year - veganSince.year;
+    if (reference.month < veganSince.month ||
+        (reference.month == veganSince.month &&
+            reference.day < anniversaryDay)) {
+      years--;
+    }
+    return years;
+  }
+
   /// Compute the next occurrence of the anniversary (month/day of [veganSince])
   /// at the configured time. If this year's date has already passed, returns
   /// next year's.
