@@ -164,6 +164,27 @@ class NotificationService {
     }
   }
 
+  /// Pick the Android schedule mode based on the exact-alarm permission.
+  ///
+  /// `SCHEDULE_EXACT_ALARM` is denied by default on Android 13+ (a distinct
+  /// permission from POST_NOTIFICATIONS). Scheduling with
+  /// [AndroidScheduleMode.exactAllowWhileIdle] without it throws a
+  /// `PlatformException("exact_alarms_not_permitted")`. We fall back to the
+  /// inexact mode so scheduling never throws 
+  Future<AndroidScheduleMode> _androidScheduleMode() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final androidPlugin =
+          _notifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      final canExact =
+          await androidPlugin?.canScheduleExactNotifications() ?? false;
+      return canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexactAllowWhileIdle;
+    }
+    return AndroidScheduleMode.exactAllowWhileIdle;
+  }
+
   /// Request notification permissions
   Future<bool> requestPermissions() async {
     if (defaultTargetPlatform == TargetPlatform.android) {
@@ -293,7 +314,7 @@ class NotificationService {
       body,
       scheduledDate,
       details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _androidScheduleMode(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.dateAndTime,
@@ -362,7 +383,7 @@ class NotificationService {
       body,
       scheduledDate,
       details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _androidScheduleMode(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       payload: payload,
@@ -405,7 +426,7 @@ class NotificationService {
       body,
       scheduledDate,
       details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _androidScheduleMode(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -464,7 +485,7 @@ class NotificationService {
       body,
       scheduledDate,
       details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _androidScheduleMode(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
