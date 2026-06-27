@@ -19,6 +19,7 @@ class ValidatorProduct {
   final String ean;
   final String? name;
   final String? description;
+  final String? problemDescription;
   final String status;
   final String state;
   final DateTime? createdAt;
@@ -30,6 +31,7 @@ class ValidatorProduct {
     required this.ean,
     this.name,
     this.description,
+    this.problemDescription,
     required this.status,
     required this.state,
     this.createdAt,
@@ -43,6 +45,7 @@ class ValidatorProduct {
       ean: json['ean'] as String,
       name: json['name'] as String?,
       description: json['description'] as String?,
+      problemDescription: json['problem_description'] as String?,
       status: json['status'] as String? ?? 'VEGAN',
       state: json['state'] as String? ?? 'CREATED',
       createdAt: json['created_at'] != null

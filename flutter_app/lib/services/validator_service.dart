@@ -48,6 +48,34 @@ class ValidatorService {
     }
   }
 
+  // GET /products/{id} — fetch the current state of a single product.
+  // Returns null on network/parse error so callers can decide to proceed.
+  static Future<String?> getProductState(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final token = AuthService.accessToken;
+
+      final response = await dio.get(
+        '/products/$id',
+        options: dio_pkg.Options(
+          headers: {
+            if (token != null) 'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        final data = response.data as Map<String, dynamic>;
+        return data['state'] as String?;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // PUT /products/{id} — set state=WAITING_PUBLISH + validation fields
   static Future<bool> validateProduct({
     required int id,

@@ -37,6 +37,11 @@ class ValidatingPhase extends StatefulWidget {
 }
 
 class _ValidatingPhaseState extends State<ValidatingPhase> {
+  // While true, we are verifying the product is still untreated (CREATED)
+  // before showing the form. If another contributor already treated it, we
+  // skip to the next product without ever rendering it.
+  bool _checkingTreated = true;
+
   OffProductData? _offData;
   bool _loadingOff = true;
   Map<String, ENumberItem> _eNumberLookup = {};
@@ -71,7 +76,23 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
     _selectedStatus = widget.product.status;
     _nameCtrl.text = widget.product.name ?? '';
     _descCtrl.text = widget.product.description ?? '';
+    _problemCtrl.text = widget.product.problemDescription ?? '';
     _selectedBrand = widget.product.brand;
+    _verifyStillCreated();
+  }
+
+  // Re-fetch the product's current state. If another contributor already
+  // treated it (state != CREATED) since the session list was loaded, skip it.
+  // A null state means the check failed (e.g. network) — proceed rather than
+  // block a legitimate validation.
+  Future<void> _verifyStillCreated() async {
+    final currentState = await ValidatorService.getProductState(widget.product.id);
+    if (!mounted) return;
+    if (currentState != null && currentState != 'CREATED') {
+      widget.onSkip();
+      return;
+    }
+    setState(() => _checkingTreated = false);
     _loadENumbers();
     _fetchOff();
   }
@@ -84,36 +105,6 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
     setState(() {
       _eNumberLookup = {for (final item in items) item.eNumber.toUpperCase(): item};
     });
-  }
-
-  @override
-  void didUpdateWidget(ValidatingPhase old) {
-    super.didUpdateWidget(old);
-    if (old.product.ean != widget.product.ean) {
-      _reset();
-    }
-  }
-
-  void _reset() {
-    setState(() {
-      _selectedState = 'WAITING_PUBLISH';
-      _selectedStatus = widget.product.status;
-      _nameCtrl.text = widget.product.name ?? '';
-      _descCtrl.text = widget.product.description ?? '';
-      _selectedBrand = widget.product.brand;
-      _offBrandQuery = null;
-      _problemCtrl.clear();
-      _activeIngredients.clear();
-      _biodynamic = false;
-      _hasOldRecipe = false;
-      _offData = null;
-      _loadingOff = true;
-      _translatedIngredients = null;
-      _translating = false;
-      _showTranslated = false;
-    });
-    if (_scrollCtrl.hasClients) _scrollCtrl.jumpTo(0);
-    _fetchOff();
   }
 
   Future<void> _fetchOff() async {
@@ -364,6 +355,10 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
 
   @override
   Widget build(BuildContext context) {
+    if (_checkingTreated) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final percent = widget.total > 0 ? (widget.current + 1) / widget.total : 0.0;
 
     return Column(

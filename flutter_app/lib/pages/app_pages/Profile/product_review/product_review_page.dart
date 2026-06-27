@@ -137,6 +137,7 @@ class _ProductReviewPageState extends State<ProductReviewPage> {
           return _CompletedPhase(onRestart: _restart);
         }
         return ValidatingPhase(
+          key: ValueKey(_sessionProducts[_currentIndex].id),
           product: _sessionProducts[_currentIndex],
           current: _currentIndex,
           total: _sessionProducts.length,
