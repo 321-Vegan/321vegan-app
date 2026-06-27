@@ -604,6 +604,7 @@ class _UserProfileState extends State<UserProfile> {
         child: EditProfileModal(
           currentNickname: _user?.nickname ?? 'Utilisateur·ice',
           currentAvatar: _selectedAvatar,
+          currentEmail: _user?.email ?? '',
           onProfileUpdated: () {
             _loadUserInfo();
           },

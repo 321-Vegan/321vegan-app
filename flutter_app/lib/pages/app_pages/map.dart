@@ -18,7 +18,9 @@ import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/widgets/map/create_shop_sheet.dart';
 import 'package:vegan_app/widgets/map/map_access_overlay.dart';
 import 'package:vegan_app/widgets/map/map_filter_sheet.dart';
+import 'package:vegan_app/widgets/map/map_search_bar.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
+import 'package:vegan_app/services/geocoding_service.dart';
 
 class MapPage extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -31,6 +33,8 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   final MapController _mapController = MapController();
+  final GlobalKey<MapSearchBarState> _searchBarKey =
+      GlobalKey<MapSearchBarState>();
   List<Shop> _shops = [];
   bool _isLoading = true;
   bool _isPicking = false;
@@ -85,6 +89,11 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
   bool get _freeTrialActive =>
       _trialEndsAt != null && DateTime.now().isBefore(_trialEndsAt!);
+
+  // Map is interactive when the access overlay is not showing
+  bool get _hasMapAccess =>
+      (AuthService.isLoggedIn && SubscriptionService.isSubscribed) ||
+      _freeTrialActive;
 
   String _formatTrialRemaining() {
     final remaining = _trialEndsAt!.difference(DateTime.now());
@@ -244,6 +253,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
 
   void _onMapEvent(MapEvent event) {
+    // Dismiss the place-search dropdown as soon as the user moves the map.
+    if (event is MapEventMoveStart) {
+      _searchBarKey.currentState?.closeResults();
+    }
     if (event is MapEventMoveEnd) {
       // Only mark as not centered when the user manually moves the map
       if (event.source != MapEventSource.mapController && _isCentered) {
@@ -291,9 +304,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      // Transparent so the sheet can draw its own surface lower down, leaving
+      // room above it for the floating itinerary button to stay tappable.
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       builder: (_) => ShopDetailSheet(shop: shop),
     );
   }
@@ -315,6 +329,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     ).then((created) {
       if (created == true) _loadShops();
     });
+  }
+
+  void _onPlaceSelected(PlaceResult place) {
+    setState(() => _isCentered = false);
+    _mapController.move(LatLng(place.latitude, place.longitude), 14);
+    _loadShops();
   }
 
   void _recenterMap() {
@@ -345,11 +365,11 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               initialZoom: 16,
               onMapEvent: _onMapEvent,
               onMapReady: _onMapReady,
+              onTap: (_, __) => _searchBarKey.currentState?.closeResults(),
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'fr.321vegan.app',
                 tileProvider: _tileProvider,
               ),
@@ -369,8 +389,9 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                         point: _userLocation!,
                         radius: _pulseAnimation.value,
                         color: Theme.of(context).colorScheme.primary.withValues(
-                          alpha: 0.3 * (1 - (_pulseAnimation.value - 8) / 12),
-                        ),
+                              alpha:
+                                  0.3 * (1 - (_pulseAnimation.value - 8) / 12),
+                            ),
                         borderStrokeWidth: 0,
                       ),
                       CircleMarker(
@@ -430,7 +451,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(8.r),
@@ -443,7 +465,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                       ),
                       child: Text(
                         'Sélectionnez le milieu du bâtiment',
-                        style: TextStyle(fontSize: 32.sp, color: Colors.black87),
+                        style:
+                            TextStyle(fontSize: 32.sp, color: Colors.black87),
                       ),
                     ),
                     Icon(
@@ -462,7 +485,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               right: 0,
               child: Center(
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(20.r),
@@ -487,22 +511,28 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     style: OutlinedButton.styleFrom(
                       backgroundColor: Colors.white,
                       side: BorderSide(color: Colors.grey.shade400),
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 20.w, vertical: 12.h),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24.r),
                       ),
                     ),
-                    child: Text('Annuler', style: TextStyle(fontSize: 36.sp, color: Colors.grey.shade700)),
+                    child: Text('Annuler',
+                        style: TextStyle(
+                            fontSize: 36.sp, color: Colors.grey.shade700)),
                   ),
                   SizedBox(width: 12.w),
                   ElevatedButton.icon(
                     onPressed: _onCreateHere,
                     icon: const Icon(Icons.add_location_alt, size: 20),
-                    label: Text('Créer ici', style: TextStyle(fontSize: 36.sp, fontWeight: FontWeight.w600)),
+                    label: Text('Créer ici',
+                        style: TextStyle(
+                            fontSize: 36.sp, fontWeight: FontWeight.w600)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 20.w, vertical: 12.h),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24.r),
                       ),
@@ -513,84 +543,118 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             ),
           ],
           if (!_isPicking)
-          Positioned(
-            right: 24.w,
-            bottom: 100,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: _showFilterSheet,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.search, color: Theme.of(context).colorScheme.primary, size: 100.sp),
-                          SizedBox(height: 2.h),
-                          Text('Rechercher', style: TextStyle(fontSize: 28.sp, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
+            Positioned(
+              right: 24.w,
+              bottom: 100,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
                     ),
-                  ),
-                  Container(height: 1, width: 36.w, color: Colors.grey.shade300),
-                  GestureDetector(
-                    onTap: _enterPickMode,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.add_location_alt, color: Theme.of(context).colorScheme.primary, size: 100.sp),
-                          SizedBox(height: 2.h),
-                          Text('Créer', style: TextStyle(fontSize: 28.sp, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Container(height: 1, width: 36.w, color: Colors.grey.shade300),
-                  Builder(
-                    builder: (context) {
-                      final canRecenter = _userLocation != null && !_isCentered;
-                      final color = canRecenter
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey;
-                      return GestureDetector(
-                        onTap: canRecenter ? _recenterMap : null,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 8.h),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.my_location, color: color, size: 100.sp),
-                              SizedBox(height: 2.h),
-                              Text('Recentrer', style: TextStyle(fontSize: 28.sp, color: color, fontWeight: FontWeight.w600)),
-                            ],
-                          ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: _showFilterSheet,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 4.w, vertical: 8.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.search,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 100.sp),
+                            SizedBox(height: 2.h),
+                            Text('Produits',
+                                style: TextStyle(
+                                    fontSize: 28.sp,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w600)),
+                          ],
                         ),
-                      );
-                    },
-                  ),
-                ],
+                      ),
+                    ),
+                    Container(
+                        height: 1, width: 36.w, color: Colors.grey.shade300),
+                    GestureDetector(
+                      onTap: _enterPickMode,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 4.w, vertical: 8.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.add_location_alt,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 100.sp),
+                            SizedBox(height: 2.h),
+                            Text('Créer',
+                                style: TextStyle(
+                                    fontSize: 28.sp,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Container(
+                        height: 1, width: 36.w, color: Colors.grey.shade300),
+                    Builder(
+                      builder: (context) {
+                        final canRecenter =
+                            _userLocation != null && !_isCentered;
+                        final color = canRecenter
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey;
+                        return GestureDetector(
+                          onTap: canRecenter ? _recenterMap : null,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 4.w, vertical: 8.h),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.my_location,
+                                    color: color, size: 100.sp),
+                                SizedBox(height: 2.h),
+                                Text('Recentrer',
+                                    style: TextStyle(
+                                        fontSize: 28.sp,
+                                        color: color,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          // Place search bar (fly map to a city/address)
+          if (!_isPicking && _hasMapAccess)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 32,
+              left: 16.w,
+              right: MediaQuery.of(context).size.width * 0.45,
+              child: MapSearchBar(
+                  key: _searchBarKey, onPlaceSelected: _onPlaceSelected),
+            ),
           if (_isLoading)
             const Positioned(
-              top: 60,
+              top: 120,
               left: 0,
               right: 0,
               child: Center(
@@ -599,15 +663,15 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             ),
           if (_selectedEans.isNotEmpty)
             Positioned(
-              top: 50,
+              top: 110,
               left: 0,
               right: 0,
               child: Center(
                 child: GestureDetector(
                   onTap: _showFilterSheet,
                   child: Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 14.w, vertical: 7.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(20.r),
@@ -651,8 +715,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           // Trial countdown chip
           if (_freeTrialActive && !SubscriptionService.isSubscribed)
             Positioned(
-              top: 50,
-              left: 16,
+              top: MediaQuery.of(context).padding.top + 36,
+              right: 16,
               child: GestureDetector(
                 onTap: () => Navigator.push(
                   context,
@@ -699,8 +763,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               onLoginSuccess: widget.onLoginSuccess,
               onFreeTrial: () {
                 setState(() {
-                  _trialEndsAt =
-                      DateTime.now().add(PreferencesHelper.mapFreeTrialDuration);
+                  _trialEndsAt = DateTime.now()
+                      .add(PreferencesHelper.mapFreeTrialDuration);
                 });
                 _startTrialTicker();
               },

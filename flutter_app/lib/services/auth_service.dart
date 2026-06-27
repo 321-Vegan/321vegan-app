@@ -84,6 +84,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('access_token');
       await prefs.remove('token_expires_at');
+      await PreferencesHelper.clearPendingEmailChange();
       _accessToken = null;
       _currentUser = null;
     } catch (e) {
@@ -545,6 +546,53 @@ class AuthService {
     } catch (e) {
       debugPrint('❌ Unexpected update user error: $e');
       return AuthResult.error('Impossible de contacter le serveur');
+    }
+  }
+
+  // Request an email change. The backend stores the new email as pending and
+  // sends a confirmation link to the new address; the email only changes once
+  // the user confirms via that link (handled on the web app).
+  static Future<AuthResult<String>> requestEmailChange({
+    required String newEmail,
+    required String currentPassword,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+
+      // Accept 4xx without throwing so expected errors (wrong password,
+      // email in use) don't hit the global 401 interceptor, which would
+      // treat a wrong-password 401 as token expiry and log the user out.
+      final response = await dio.patch(
+        '/me/email',
+        data: {
+          'new_email': newEmail,
+          'current_password': currentPassword,
+        },
+        options: Options(
+          headers: {'Authorization': 'Bearer $_accessToken'},
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      switch (response.statusCode) {
+        case 200:
+          return AuthResult.success(
+              'Un email de confirmation a été envoyé à votre nouvelle adresse. '
+              'Cliquez sur le lien qu\'il contient pour finaliser le changement.');
+        case 401:
+          return AuthResult.error('Mot de passe incorrect');
+        case 409:
+          return AuthResult.error('Cette adresse email est déjà utilisée');
+        default:
+          return AuthResult.error(
+              'Une erreur est survenue. Veuillez réessayer.');
+      }
+    } on DioException catch (e) {
+      debugPrint('❌ Email change request error: ${e.message}');
+      return AuthResult.error('Une erreur est survenue. Veuillez réessayer.');
+    } catch (e) {
+      debugPrint('❌ Unexpected email change error: $e');
+      return AuthResult.error('Une erreur est survenue. Veuillez réessayer.');
     }
   }
 }

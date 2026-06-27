@@ -499,6 +499,27 @@ class PreferencesHelper {
     return prefs.getBool(_b12PopupShownKey) ?? false;
   }
 
+  // Pending email change methods
+  // Stores the new email the user requested but hasn't confirmed yet (the
+  // confirmation happens on the web app). Used to show an "awaiting
+  // verification" badge until the backend email matches the confirmed one.
+  static const String _pendingEmailChangeKey = 'pending_email_change';
+
+  static Future<void> savePendingEmailChange(String email) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_pendingEmailChangeKey, email);
+  }
+
+  static Future<String?> getPendingEmailChange() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_pendingEmailChangeKey);
+  }
+
+  static Future<void> clearPendingEmailChange() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_pendingEmailChangeKey);
+  }
+
   static const String _notificationPermissionAskedKey =
       'notification_permission_asked';
 

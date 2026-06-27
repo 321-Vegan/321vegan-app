@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/shops/shop.dart';
 import 'package:vegan_app/models/shops/shop_review.dart';
@@ -207,7 +208,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
               left: 24.w,
               right: 24.w,
               top: 12.h,
-              bottom: MediaQuery.of(ctx).viewInsets.bottom + MediaQuery.of(ctx).padding.bottom + 64.h,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom +
+                  MediaQuery.of(ctx).padding.bottom +
+                  64.h,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -235,8 +238,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (i) {
                     return GestureDetector(
-                      onTap: () =>
-                          setSheetState(() => selectedRating = i + 1),
+                      onTap: () => setSheetState(() => selectedRating = i + 1),
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4.w),
                         child: Icon(
@@ -338,6 +340,27 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     }
   }
 
+  // ── Itinerary ─────────────────────────────────────────────────────────────
+
+  Future<void> _openItinerary() async {
+    final shop = widget.shop;
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&destination=${shop.latitude},${shop.longitude}',
+    );
+    final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Impossible d\'ouvrir l\'itinéraire.',
+            style: TextStyle(fontSize: 44.sp),
+          ),
+        ),
+      );
+    }
+  }
+
   // ── Build helpers ─────────────────────────────────────────────────────────
 
   Color _scoreColor(double score) {
@@ -359,7 +382,8 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
 
     return ListView(
       controller: scrollController,
-      padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 64.h + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+          16.w, 8.h, 16.w, 64.h + MediaQuery.of(context).padding.bottom),
       children: [
         if (grouped.isEmpty)
           Padding(
@@ -619,7 +643,8 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   Row(
                     children: [
                       Icon(Icons.check_circle,
-                          size: 44.r, color: Colors.green.withValues(alpha: 0.8)),
+                          size: 44.r,
+                          color: Colors.green.withValues(alpha: 0.8)),
                       SizedBox(width: 6.w),
                       Text(
                         'Présence signalée',
@@ -778,25 +803,86 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
 
     return ListView(
       controller: scrollController,
-      padding: EdgeInsets.fromLTRB(16.w, 24.h, 16.w, 24.h + MediaQuery.of(context).padding.bottom),
+      padding: EdgeInsets.fromLTRB(
+          16.w, 24.h, 16.w, 24.h + MediaQuery.of(context).padding.bottom),
       children: [
-        _buildMyReviewSection(),
-        SizedBox(height: 16.h),
-        if (_reviews.isEmpty)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.h),
-            child: Text(
-              'Aucun avis pour ce magasin.',
-              style: TextStyle(fontSize: 50.sp, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else ...[
+        if (_reviews.isEmpty) ...[
+          _buildEmptyReviews(),
+          SizedBox(height: 20.h),
+          _buildMyReviewSection(),
+        ] else ...[
+          _buildMyReviewSection(),
+          SizedBox(height: 16.h),
           for (final review in _reviews) _buildReviewCard(review),
           SizedBox(height: 12.h),
           _buildPaginationControls(),
         ],
       ],
+    );
+  }
+
+  Widget _buildEmptyReviews() {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
+      child: Column(
+        children: [
+          // Speech bubble with a little tail
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(28.r),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.chat_bubble_outline,
+                  size: 110.r,
+                  color: primary,
+                ),
+              ),
+              Positioned(
+                right: 18.w,
+                top: 14.h,
+                child: Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(Icons.star, size: 40.r, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 18.h),
+          Text(
+            'Aucun avis pour le moment',
+            style: TextStyle(
+              fontSize: 50.sp,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Soyez le premier à mettre un avis 🌱',
+            style: TextStyle(fontSize: 44.sp, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
@@ -823,8 +909,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12.r),
           border: Border.all(
-            color:
-                Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
           ),
         ),
         child: Column(
@@ -843,8 +928,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                 GestureDetector(
                   onTap: () => _showReviewDialog(existing: _myReview),
                   child: Icon(Icons.edit,
-                      size: 48.r,
-                      color: Theme.of(context).colorScheme.primary),
+                      size: 48.r, color: Theme.of(context).colorScheme.primary),
                 ),
               ],
             ),
@@ -879,34 +963,34 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     return Align(
       alignment: Alignment.centerLeft,
       child: GestureDetector(
-      onTap: () => _showReviewDialog(),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(20.r),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.rate_review,
-              color: Colors.white,
-              size: 60.sp,
-            ),
-            SizedBox(width: 8.w),
-            Text(
-              'Laisser un avis',
-              style: TextStyle(
-                fontSize: 45.sp,
+        onTap: () => _showReviewDialog(),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(20.r),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.rate_review,
                 color: Colors.white,
-                fontWeight: FontWeight.w500,
+                size: 60.sp,
               ),
-            ),
-          ],
+              SizedBox(width: 8.w),
+              Text(
+                'Laisser un avis',
+                style: TextStyle(
+                  fontSize: 45.sp,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -942,8 +1026,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
               if (review.createdAt != null)
                 Text(
                   _formatDate(review.createdAt!),
-                  style:
-                      TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
+                  style: TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
                 ),
             ],
           ),
@@ -1015,156 +1098,223 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       maxChildSize: 0.85,
       expand: false,
       builder: (context, scrollController) {
-        return Column(
+        return Stack(
+          clipBehavior: Clip.none,
           children: [
-            // Handle bar
+            // White sheet surface, pushed down to leave room for the floating
+            // button to overlap its top edge while staying within hit-test bounds.
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.h),
+              padding: EdgeInsets.only(top: 50.h),
               child: Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2.r),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    // Handle bar
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.h),
+                      child: Container(
+                        width: 40.w,
+                        height: 4.h,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2.r),
+                        ),
+                      ),
+                    ),
+                    // Shop header
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              shop.shopType == 'vegan'
+                                  ? Icon(
+                                      Icons.eco,
+                                      color: Colors.green,
+                                      size: 64.r,
+                                    )
+                                  : Icon(
+                                      Icons.storefront,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      size: 64.r,
+                                    ),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        shop.name,
+                                        style: TextStyle(
+                                          fontSize: 64.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    if (shop.shopType == 'vegan')
+                                      Container(
+                                        margin: EdgeInsets.only(left: 24.w),
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 8.w,
+                                          vertical: 2.h,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade50,
+                                          borderRadius:
+                                              BorderRadius.circular(4.r),
+                                          border: Border.all(
+                                            color: Colors.green.shade300,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '100% Vegan',
+                                          style: TextStyle(
+                                            fontSize: 36.sp,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.green.shade700,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: 4.h, left: 32.w),
+                            child: Text(
+                              () {
+                                final address = [shop.address, shop.city]
+                                    .where((s) => s != null)
+                                    .join(', ');
+                                return address.isEmpty
+                                    ? 'Adresse inconnue'
+                                    : address;
+                              }(),
+                              style: TextStyle(
+                                fontSize: 50.sp,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          if (_reviewSummary != null &&
+                              _reviewSummary!.reviewCount > 0)
+                            Padding(
+                              padding: EdgeInsets.only(top: 6.h, left: 32.w),
+                              child: Row(
+                                children: [
+                                  ...List.generate(5, (i) {
+                                    final avg = _reviewSummary!.ratingAvg;
+                                    IconData icon;
+                                    if (i < avg.floor()) {
+                                      icon = Icons.star;
+                                    } else if (i < avg && avg - i >= 0.5) {
+                                      icon = Icons.star_half;
+                                    } else {
+                                      icon = Icons.star_border;
+                                    }
+                                    return Icon(icon,
+                                        size: 44.r, color: Colors.amber);
+                                  }),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    _reviewSummary!.ratingAvg
+                                        .toStringAsFixed(1),
+                                    style: TextStyle(
+                                      fontSize: 44.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  Text(
+                                    '(${_reviewSummary!.reviewCount})',
+                                    style: TextStyle(
+                                      fontSize: 42.sp,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    // Tab bar
+                    TabBar(
+                      controller: _tabController,
+                      tabs: [
+                        const Tab(text: 'Produits'),
+                        Tab(
+                          text: _reviewSummary != null &&
+                                  _reviewSummary!.reviewCount > 0
+                              ? 'Avis (${_reviewSummary!.reviewCount})'
+                              : 'Avis',
+                        ),
+                      ],
+                    ),
+                    // Tab content
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _buildProductsTab(scrollController),
+                          _buildReviewsTab(scrollController),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            // Shop header
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            // Floating itinerary button (straddles the top edge)
+            Positioned(
+              top: 0,
+              right: 16.w,
+              child: GestureDetector(
+                onTap: _openItinerary,
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(24.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      shop.shopType == 'vegan'
-                          ? Icon(
-                              Icons.eco,
-                              color: Colors.green,
-                              size: 64.r,
-                            )
-                          : Icon(
-                              Icons.storefront,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 64.r,
-                            ),
+                      Icon(
+                        Icons.directions,
+                        color: Colors.white,
+                        size: 56.sp,
+                      ),
                       SizedBox(width: 8.w),
-                      Expanded(
-                        child: Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                shop.name,
-                                style: TextStyle(
-                                  fontSize: 64.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                            if (shop.shopType == 'vegan')
-                              Container(
-                                margin: EdgeInsets.only(left: 24.w),
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 8.w,
-                                  vertical: 2.h,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade50,
-                                  borderRadius: BorderRadius.circular(4.r),
-                                  border: Border.all(
-                                    color: Colors.green.shade300,
-                                  ),
-                                ),
-                                child: Text(
-                                  '100% Vegan',
-                                  style: TextStyle(
-                                    fontSize: 36.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.green.shade700,
-                                  ),
-                                ),
-                              ),
-                          ],
+                      Text(
+                        'Itinéraire',
+                        style: TextStyle(
+                          fontSize: 45.sp,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 4.h, left: 32.w),
-                      child: Text(
-                        () {
-                          final address = [shop.address, shop.city]
-                              .where((s) => s != null)
-                              .join(', ');
-                          return address.isEmpty ? 'Adresse inconnue' : address;
-                        }(),
-                        style: TextStyle(
-                          fontSize: 50.sp,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ),
-                  if (_reviewSummary != null && _reviewSummary!.reviewCount > 0)
-                    Padding(
-                      padding: EdgeInsets.only(top: 6.h, left: 32.w),
-                      child: Row(
-                        children: [
-                          ...List.generate(5, (i) {
-                            final avg = _reviewSummary!.ratingAvg;
-                            IconData icon;
-                            if (i < avg.floor()) {
-                              icon = Icons.star;
-                            } else if (i < avg && avg - i >= 0.5) {
-                              icon = Icons.star_half;
-                            } else {
-                              icon = Icons.star_border;
-                            }
-                            return Icon(icon,
-                                size: 44.r, color: Colors.amber);
-                          }),
-                          SizedBox(width: 6.w),
-                          Text(
-                            _reviewSummary!.ratingAvg.toStringAsFixed(1),
-                            style: TextStyle(
-                              fontSize: 44.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            '(${_reviewSummary!.reviewCount})',
-                            style: TextStyle(
-                              fontSize: 42.sp,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            // Tab bar
-            TabBar(
-              controller: _tabController,
-              tabs: [
-                const Tab(text: 'Produits'),
-                Tab(
-                  text: _reviewSummary != null && _reviewSummary!.reviewCount > 0
-                      ? 'Avis (${_reviewSummary!.reviewCount})'
-                      : 'Avis',
                 ),
-              ],
-            ),
-            // Tab content
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildProductsTab(scrollController),
-                  _buildReviewsTab(scrollController),
-                ],
               ),
             ),
           ],
