@@ -57,6 +57,10 @@ dependencies:
   flutter_timezone: ^5.0.1
   font_awesome_flutter: ^10.12.0
   in_app_purchase: ^3.2.3
+  # Platform implementations — imported directly to read free-trial offer
+  # details (intro offers on iOS, pricing phases on Android).
+  in_app_purchase_android: ^0.4.0
+  in_app_purchase_storekit: ^0.4.8
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

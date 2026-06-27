@@ -109,9 +109,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
     if (_selectedProductId == null) return;
 
-    final product = SubscriptionService.products
-        .where((p) => p.id == _selectedProductId)
-        .firstOrNull;
+    final product =
+        SubscriptionService.getPurchasableProduct(_selectedProductId!);
 
     if (product == null) {
       setState(() {
@@ -277,6 +276,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
                       // Purchase button
                       _buildPurchaseButton(primaryColor),
+                      _buildTrialDisclosure(),
                       SizedBox(height: 20.h),
 
                       // Restore button
@@ -668,6 +668,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               referencePrice: _isYearly
                   ? _yearlyReferencePrice(t.monthlyId, t.yearlyId)
                   : null,
+              trialLabel: SubscriptionService.getTrialLabel(productId),
             ),
           );
         }),
@@ -683,6 +684,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     required bool isPopular,
     required Color primaryColor,
     String? referencePrice,
+    String? trialLabel,
   }) {
     final isSelected = _selectedTier == tier;
 
@@ -736,15 +738,40 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   ),
                 ),
                 SizedBox(width: 16.w),
-                // Title
+                // Title + optional free-trial badge
                 Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 44.sp,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? primaryColor : Colors.grey[800],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 44.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? primaryColor : Colors.grey[800],
+                        ),
+                      ),
+                      if (trialLabel != null) ...[
+                        SizedBox(height: 6.h),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(10.r),
+                          ),
+                          child: Text(
+                            trialLabel,
+                            style: TextStyle(
+                              fontSize: 28.sp,
+                              fontWeight: FontWeight.w600,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 // Price + period
@@ -829,6 +856,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Widget _buildPurchaseButton(Color primaryColor) {
+    final hasTrial = _selectedProductId != null &&
+        SubscriptionService.hasTrial(_selectedProductId!);
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -853,12 +882,39 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 ),
               )
             : Text(
-                'S\'abonner',
+                hasTrial ? 'Commencer l\'essai gratuit' : 'S\'abonner',
                 style: TextStyle(
                   fontSize: 48.sp,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+      ),
+    );
+  }
+
+  /// Required store disclosure: states the trial length and that it converts
+  /// to the recurring price unless cancelled. Hidden when no trial applies.
+  Widget _buildTrialDisclosure() {
+    final productId = _selectedProductId;
+    if (productId == null) return const SizedBox.shrink();
+    final trialLabel = SubscriptionService.getTrialLabel(productId);
+    if (trialLabel == null) return const SizedBox.shrink();
+
+    final price = SubscriptionService.getProduct(productId)?.price;
+    final period = _isYearly ? 'an' : 'mois';
+    final priceText = price != null ? ' puis $price / $period' : '';
+
+    return Padding(
+      padding: EdgeInsets.only(top: 10.h, left: 8.w, right: 8.w),
+      child: Text(
+        '$trialLabel$priceText. Annulable à tout moment ; '
+        'sans annulation, l\'abonnement démarre automatiquement à la fin de l\'essai.',
+        style: TextStyle(
+          fontSize: 32.sp,
+          color: Colors.grey[500],
+          height: 1.4,
+        ),
+        textAlign: TextAlign.center,
       ),
     );
   }

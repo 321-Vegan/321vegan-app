@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
+import 'package:in_app_purchase_android/billing_client_wrappers.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/subscription.dart';
 import 'api_service.dart';
@@ -52,6 +56,7 @@ class SubscriptionService {
   /// Initialize the service and start listening to purchase updates
   static Future<void> init() async {
     _isAvailable = await InAppPurchase.instance.isAvailable();
+    debugPrint('### SUBS init: store available=$_isAvailable');
     if (!_isAvailable) {
       debugPrint('In-app purchases not available');
       return;
@@ -102,30 +107,182 @@ class SubscriptionService {
 
   /// Query available products from the store
   static Future<void> queryProducts() async {
+    debugPrint('### SUBS queryProducts() called, available=$_isAvailable');
     if (!_isAvailable) return;
 
     final response =
         await InAppPurchase.instance.queryProductDetails(_productIds);
 
     if (response.error != null) {
-      debugPrint('Error querying products: ${response.error}');
+      debugPrint('### SUBS error querying products: ${response.error}');
       return;
     }
 
     if (response.notFoundIDs.isNotEmpty) {
-      debugPrint('Products not found: ${response.notFoundIDs.join(', ')}');
+      debugPrint('### SUBS products NOT FOUND: ${response.notFoundIDs.join(', ')}');
     }
 
     _products = response.productDetails;
+    _debugDumpProducts();
   }
 
-  /// Get a product by its ID
+  /// TEMPORARY: log every product/offer the store returns, so we can see
+  /// whether a free-trial offer is coming back (and under which product id).
+  /// Remove once trials are confirmed working.
+  static void _debugDumpProducts() {
+    debugPrint('=== SUBSCRIPTION PRODUCTS (${_products.length}) ===');
+    for (final p in _products) {
+      debugPrint('• id=${p.id}  price=${p.price}  rawPrice=${p.rawPrice}');
+      if (p is GooglePlayProductDetails) {
+        final offers = p.productDetails.subscriptionOfferDetails;
+        final idx = p.subscriptionIndex;
+        debugPrint('    android offerIndex=$idx  token=${p.offerToken}');
+        if (offers != null && idx != null && idx < offers.length) {
+          final offer = offers[idx];
+          debugPrint(
+              '    basePlanId=${offer.basePlanId}  offerId=${offer.offerId}');
+          for (final ph in offer.pricingPhases) {
+            debugPrint('      phase: period=${ph.billingPeriod} '
+                'price=${ph.formattedPrice} micros=${ph.priceAmountMicros} '
+                'cycles=${ph.billingCycleCount}');
+          }
+        }
+      } else if (p is AppStoreProductDetails) {
+        final intro = p.skProduct.introductoryPrice;
+        debugPrint('    ios introductoryPrice=${intro?.paymentMode} '
+            'period=${intro?.subscriptionPeriod.numberOfUnits}'
+            '${intro?.subscriptionPeriod.unit}');
+      }
+    }
+    debugPrint('=== END PRODUCTS ===');
+  }
+
+  /// Get a product by its ID for display — the entry exposing the recurring
+  /// price. On Android a product with a free-trial offer is returned as several
+  /// [ProductDetails] (one per offer); the trial offer's first pricing phase is
+  /// free, so we prefer an entry whose [rawPrice] is the real recurring price.
   static ProductDetails? getProduct(String productId) {
-    try {
-      return _products.firstWhere((p) => p.id == productId);
-    } catch (_) {
+    final matches = _products.where((p) => p.id == productId);
+    if (matches.isEmpty) return null;
+    for (final p in matches) {
+      if (p.rawPrice > 0) return p;
+    }
+    return matches.first;
+  }
+
+  /// The [ProductDetails] to actually purchase for [productId].
+  ///
+  /// On Android this prefers the offer that includes a free trial — Play only
+  /// returns offers the current user is eligible for, so its presence means the
+  /// user qualifies, and passing that entry uses the right offer token at
+  /// checkout. On iOS StoreKit applies the introductory offer automatically, so
+  /// the single product is returned.
+  static ProductDetails? getPurchasableProduct(String productId) {
+    return _androidTrialProduct(productId) ?? getProduct(productId);
+  }
+
+  /// Whether a free trial is available to the current user for [productId].
+  static bool hasTrial(String productId) => _trialInfo(productId) != null;
+
+  /// A short French label for the free trial on [productId], e.g.
+  /// "7 jours d'essai gratuit", or null if no trial is available.
+  static String? getTrialLabel(String productId) {
+    final info = _trialInfo(productId);
+    if (info == null) return null;
+    final (count, unit) = info;
+    final word = switch (unit) {
+      _TrialUnit.day => count == 1 ? 'jour' : 'jours',
+      _TrialUnit.week => count == 1 ? 'semaine' : 'semaines',
+      _TrialUnit.month => 'mois',
+      _TrialUnit.year => count == 1 ? 'an' : 'ans',
+    };
+    return "$count $word d'essai gratuit";
+  }
+
+  /// Resolve the trial duration for [productId] as (count, unit), or null.
+  static (int, _TrialUnit)? _trialInfo(String productId) {
+    if (Platform.isIOS) {
+      final product = getProduct(productId);
+      if (product is AppStoreProductDetails) {
+        final intro = product.skProduct.introductoryPrice;
+        // Note: the plugin enum is misspelled `freeTrail`.
+        if (intro != null &&
+            intro.paymentMode == SKProductDiscountPaymentMode.freeTrail) {
+          final unit = _skUnit(intro.subscriptionPeriod.unit);
+          final count =
+              intro.subscriptionPeriod.numberOfUnits * intro.numberOfPeriods;
+          if (count > 0) return (count, unit);
+        }
+      }
       return null;
     }
+    if (Platform.isAndroid) {
+      final entry = _androidTrialProduct(productId);
+      final phase = entry != null ? _googleTrialPhase(entry) : null;
+      if (phase != null) {
+        final parsed = _parseIso8601Period(phase.billingPeriod);
+        if (parsed != null) {
+          final (count, unit) = parsed;
+          final cycles =
+              phase.billingCycleCount > 0 ? phase.billingCycleCount : 1;
+          return (count * cycles, unit);
+        }
+      }
+    }
+    return null;
+  }
+
+  /// The Android [GooglePlayProductDetails] offer carrying a free trial for
+  /// [productId], or null (also null on iOS).
+  static GooglePlayProductDetails? _androidTrialProduct(String productId) {
+    if (!Platform.isAndroid) return null;
+    for (final p in _products.where((p) => p.id == productId)) {
+      if (p is GooglePlayProductDetails && _googleTrialPhase(p) != null) {
+        return p;
+      }
+    }
+    return null;
+  }
+
+  /// The free (price == 0) pricing phase of an Android offer, or null.
+  static PricingPhaseWrapper? _googleTrialPhase(GooglePlayProductDetails p) {
+    final offers = p.productDetails.subscriptionOfferDetails;
+    final index = p.subscriptionIndex;
+    if (offers == null || index == null || index >= offers.length) return null;
+    for (final phase in offers[index].pricingPhases) {
+      if (phase.priceAmountMicros == 0) return phase;
+    }
+    return null;
+  }
+
+  static _TrialUnit _skUnit(SKSubscriptionPeriodUnit unit) {
+    switch (unit) {
+      case SKSubscriptionPeriodUnit.day:
+        return _TrialUnit.day;
+      case SKSubscriptionPeriodUnit.week:
+        return _TrialUnit.week;
+      case SKSubscriptionPeriodUnit.month:
+        return _TrialUnit.month;
+      case SKSubscriptionPeriodUnit.year:
+        return _TrialUnit.year;
+    }
+  }
+
+  /// Parse a single-unit ISO-8601 duration (e.g. "P1W", "P7D", "P1M") into a
+  /// (count, unit). Returns the largest non-zero unit. Null if unparseable.
+  static (int, _TrialUnit)? _parseIso8601Period(String period) {
+    final match = RegExp(r'^P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)W)?(?:(\d+)D)?$')
+        .firstMatch(period);
+    if (match == null) return null;
+    final years = int.tryParse(match.group(1) ?? '') ?? 0;
+    final months = int.tryParse(match.group(2) ?? '') ?? 0;
+    final weeks = int.tryParse(match.group(3) ?? '') ?? 0;
+    final days = int.tryParse(match.group(4) ?? '') ?? 0;
+    if (years > 0) return (years, _TrialUnit.year);
+    if (months > 0) return (months, _TrialUnit.month);
+    if (weeks > 0) return (weeks, _TrialUnit.week);
+    if (days > 0) return (days, _TrialUnit.day);
+    return null;
   }
 
   /// Get the display name for a product ID
@@ -402,3 +559,6 @@ class SubscriptionService {
     _retryTimer = null;
   }
 }
+
+/// Duration unit of a free trial period.
+enum _TrialUnit { day, week, month, year }
