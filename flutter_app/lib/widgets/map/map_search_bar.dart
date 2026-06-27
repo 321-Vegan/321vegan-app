@@ -11,10 +11,10 @@ class MapSearchBar extends StatefulWidget {
   const MapSearchBar({super.key, required this.onPlaceSelected});
 
   @override
-  State<MapSearchBar> createState() => _MapSearchBarState();
+  State<MapSearchBar> createState() => MapSearchBarState();
 }
 
-class _MapSearchBarState extends State<MapSearchBar> {
+class MapSearchBarState extends State<MapSearchBar> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   Timer? _debounce;
@@ -52,6 +52,18 @@ class _MapSearchBarState extends State<MapSearchBar> {
       _results = results;
       _isSearching = false;
     });
+  }
+
+  /// Dismiss the results dropdown and keyboard, e.g. when the user interacts
+  /// with the map. Keeps the typed text so the query isn't lost.
+  void closeResults() {
+    if (_results.isEmpty && !_focusNode.hasFocus) return;
+    _debounce?.cancel();
+    setState(() {
+      _results = [];
+      _isSearching = false;
+    });
+    _focusNode.unfocus();
   }
 
   void _select(PlaceResult place) {
@@ -126,8 +138,8 @@ class _MapSearchBarState extends State<MapSearchBar> {
                   onTap: _clear,
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 12.w),
-                    child: Icon(Icons.close,
-                        color: Colors.grey[500], size: 52.sp),
+                    child:
+                        Icon(Icons.close, color: Colors.grey[500], size: 52.sp),
                   ),
                 )
               else
