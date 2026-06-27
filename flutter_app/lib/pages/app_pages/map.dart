@@ -18,7 +18,9 @@ import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/widgets/map/create_shop_sheet.dart';
 import 'package:vegan_app/widgets/map/map_access_overlay.dart';
 import 'package:vegan_app/widgets/map/map_filter_sheet.dart';
+import 'package:vegan_app/widgets/map/map_search_bar.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
+import 'package:vegan_app/services/geocoding_service.dart';
 
 class MapPage extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -85,6 +87,11 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
   bool get _freeTrialActive =>
       _trialEndsAt != null && DateTime.now().isBefore(_trialEndsAt!);
+
+  // Map is interactive when the access overlay is not showing
+  bool get _hasMapAccess =>
+      (AuthService.isLoggedIn && SubscriptionService.isSubscribed) ||
+      _freeTrialActive;
 
   String _formatTrialRemaining() {
     final remaining = _trialEndsAt!.difference(DateTime.now());
@@ -317,6 +324,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     });
   }
 
+  void _onPlaceSelected(PlaceResult place) {
+    setState(() => _isCentered = false);
+    _mapController.move(LatLng(place.latitude, place.longitude), 14);
+    _loadShops();
+  }
+
   void _recenterMap() {
     if (_userLocation != null) {
       setState(() => _isCentered = true);
@@ -541,7 +554,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                         children: [
                           Icon(Icons.search, color: Theme.of(context).colorScheme.primary, size: 100.sp),
                           SizedBox(height: 2.h),
-                          Text('Rechercher', style: TextStyle(fontSize: 28.sp, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600)),
+                          Text('Produits', style: TextStyle(fontSize: 28.sp, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -588,9 +601,17 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               ),
             ),
           ),
+          // Place search bar (fly map to a city/address)
+          if (!_isPicking && _hasMapAccess)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 16.w,
+              right: MediaQuery.of(context).size.width * 0.45,
+              child: MapSearchBar(onPlaceSelected: _onPlaceSelected),
+            ),
           if (_isLoading)
             const Positioned(
-              top: 60,
+              top: 120,
               left: 0,
               right: 0,
               child: Center(
@@ -599,7 +620,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             ),
           if (_selectedEans.isNotEmpty)
             Positioned(
-              top: 50,
+              top: 110,
               left: 0,
               right: 0,
               child: Center(
@@ -651,7 +672,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           // Trial countdown chip
           if (_freeTrialActive && !SubscriptionService.isSubscribed)
             Positioned(
-              top: 50,
+              top: 110,
               left: 16,
               child: GestureDetector(
                 onTap: () => Navigator.push(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/shops/shop.dart';
 import 'package:vegan_app/models/shops/shop_review.dart';
@@ -335,6 +336,28 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           ),
         );
       }
+    }
+  }
+
+  // ── Itinerary ─────────────────────────────────────────────────────────────
+
+  Future<void> _openItinerary() async {
+    final shop = widget.shop;
+    final url = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&destination=${shop.latitude},${shop.longitude}',
+    );
+    final launched =
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Impossible d\'ouvrir l\'itinéraire.',
+            style: TextStyle(fontSize: 44.sp),
+          ),
+        ),
+      );
     }
   }
 
@@ -780,23 +803,83 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       controller: scrollController,
       padding: EdgeInsets.fromLTRB(16.w, 24.h, 16.w, 24.h + MediaQuery.of(context).padding.bottom),
       children: [
-        _buildMyReviewSection(),
-        SizedBox(height: 16.h),
-        if (_reviews.isEmpty)
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.h),
-            child: Text(
-              'Aucun avis pour ce magasin.',
-              style: TextStyle(fontSize: 50.sp, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
-          )
-        else ...[
+        if (_reviews.isEmpty) ...[
+          _buildEmptyReviews(),
+          SizedBox(height: 20.h),
+          _buildMyReviewSection(),
+        ] else ...[
+          _buildMyReviewSection(),
+          SizedBox(height: 16.h),
           for (final review in _reviews) _buildReviewCard(review),
           SizedBox(height: 12.h),
           _buildPaginationControls(),
         ],
       ],
+    );
+  }
+
+  Widget _buildEmptyReviews() {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
+      child: Column(
+        children: [
+          // Speech bubble with a little tail
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(28.r),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.chat_bubble_outline,
+                  size: 110.r,
+                  color: primary,
+                ),
+              ),
+              Positioned(
+                right: 18.w,
+                top: 14.h,
+                child: Container(
+                  padding: EdgeInsets.all(8.r),
+                  decoration: BoxDecoration(
+                    color: Colors.amber,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(Icons.star, size: 40.r, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 18.h),
+          Text(
+            'Aucun avis pour le moment',
+            style: TextStyle(
+              fontSize: 50.sp,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            'Soyez le premier à mettre un avis 🌱',
+            style: TextStyle(fontSize: 44.sp, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
     );
   }
 
@@ -1015,7 +1098,10 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       maxChildSize: 0.85,
       expand: false,
       builder: (context, scrollController) {
-        return Column(
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Column(
           children: [
             // Handle bar
             Padding(
@@ -1165,6 +1251,50 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   _buildProductsTab(scrollController),
                   _buildReviewsTab(scrollController),
                 ],
+              ),
+            ),
+          ],
+        ),
+            // Floating itinerary button (straddles the top edge)
+            Positioned(
+              top: -50.h,
+              right: 16.w,
+              child: GestureDetector(
+                onTap: _openItinerary,
+                child: Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(24.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.directions,
+                        color: Colors.white,
+                        size: 56.sp,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Itinéraire',
+                        style: TextStyle(
+                          fontSize: 45.sp,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
