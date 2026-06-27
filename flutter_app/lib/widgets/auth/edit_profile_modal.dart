@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../helpers/preference_helper.dart';
+import './change_email_modal.dart';
 
 class EditProfileModal extends StatefulWidget {
   final String currentNickname;
   final String? currentAvatar;
+  final String currentEmail;
   final VoidCallback onProfileUpdated;
 
   const EditProfileModal({
     super.key,
     required this.currentNickname,
     this.currentAvatar,
+    required this.currentEmail,
     required this.onProfileUpdated,
   });
 
@@ -24,6 +27,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
   String? _selectedAvatar;
   bool _isLoading = false;
   bool _randomAvatarEnabled = false;
+  String? _pendingEmail;
 
   final List<String> _availableAvatars = [
     'lapin.png',
@@ -43,6 +47,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
     _nicknameController = TextEditingController(text: widget.currentNickname);
     _selectedAvatar = widget.currentAvatar;
     _loadRandomAvatarSetting();
+    _loadPendingEmail();
   }
 
   Future<void> _loadRandomAvatarSetting() async {
@@ -50,6 +55,21 @@ class _EditProfileModalState extends State<EditProfileModal> {
     setState(() {
       _randomAvatarEnabled = enabled;
     });
+  }
+
+  Future<void> _loadPendingEmail() async {
+    final pending = await PreferencesHelper.getPendingEmailChange();
+    // If the backend email already matches the pending one, the change was
+    // confirmed (on the web) — clear it and drop the badge.
+    if (pending != null && pending == widget.currentEmail) {
+      await PreferencesHelper.clearPendingEmailChange();
+    }
+    if (mounted) {
+      setState(() {
+        _pendingEmail =
+            (pending != null && pending != widget.currentEmail) ? pending : null;
+      });
+    }
   }
 
   @override
@@ -126,6 +146,27 @@ class _EditProfileModalState extends State<EditProfileModal> {
     }
   }
 
+  void _openChangeEmailModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.r),
+            topRight: Radius.circular(20.r),
+          ),
+        ),
+        child: ChangeEmailModal(
+          currentEmail: widget.currentEmail,
+          onChangeRequested: _loadPendingEmail,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -169,6 +210,92 @@ class _EditProfileModalState extends State<EditProfileModal> {
               prefixIcon: const Icon(Icons.person),
             ),
             style: TextStyle(fontSize: 48.sp),
+          ),
+
+          SizedBox(height: 24.h),
+
+          // Email row — opens the dedicated change-email flow (requires
+          // password + email confirmation, so it's not part of the main save).
+          InkWell(
+            onTap: _isLoading ? null : _openChangeEmailModal,
+            borderRadius: BorderRadius.circular(12.r),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[400]!),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.email_outlined,
+                      size: 56.sp, color: Colors.grey[700]),
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Email',
+                              style: TextStyle(
+                                fontSize: 40.sp,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            if (_pendingEmail != null) ...[
+                              SizedBox(width: 12.w),
+                              Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16.w, vertical: 6.h),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(20.r),
+                                  border: Border.all(
+                                    color: Colors.orange.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.hourglass_top,
+                                        size: 32.sp, color: Colors.orange[800]),
+                                    SizedBox(width: 6.w),
+                                    Text(
+                                      'En attente de confirmation',
+                                      style: TextStyle(
+                                        fontSize: 30.sp,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.orange[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          _pendingEmail ??
+                              (widget.currentEmail.isNotEmpty
+                                  ? widget.currentEmail
+                                  : 'Changer d\'email'),
+                          style: TextStyle(
+                            fontSize: 44.sp,
+                            color: Colors.grey[800],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.arrow_forward_ios,
+                      size: 40.sp, color: Colors.grey[400]),
+                ],
+              ),
+            ),
           ),
 
           SizedBox(height: 32.h),

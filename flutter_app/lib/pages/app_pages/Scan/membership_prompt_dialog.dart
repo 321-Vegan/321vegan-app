@@ -83,7 +83,7 @@ class _MembershipPromptDialogState extends State<MembershipPromptDialog> {
                       ),
                       SizedBox(height: 12.h),
                       Text(
-                        'Débloquez les Nutri & Eco-scores en illimité et la carte des produits vegan près de vous, tout en soutenant le projet !',
+                        'Débloquez les Nutri & Eco-scores en illimité, les thèmes et la carte des produits vegan près de vous, tout en soutenant le projet !',
                         style: TextStyle(
                           fontSize: 36.sp,
                           color: Colors.grey[600],
