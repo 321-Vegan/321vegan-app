@@ -45,6 +45,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   Set<String> _selectedEans = {};
   LatLng? _initialCenter;
   LatLng? _userLocation;
+  StreamSubscription<Position>? _positionStreamSub;
   CachedTileProvider? _tileProvider;
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
@@ -122,7 +123,35 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   void dispose() {
     _pulseController.dispose();
     _trialTimer?.cancel();
+    _positionStreamSub?.cancel();
     super.dispose();
+  }
+
+  /// Continuously track the user's position so the blue dot follows them as
+  /// they move. When the map is currently centered on the user, keep it
+  /// centered ("follow me"); otherwise just update the dot in place.
+  void _startPositionStream() {
+    _positionStreamSub?.cancel();
+    _positionStreamSub = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10,
+      ),
+    ).listen(
+      (position) {
+        if (!mounted) return;
+        final pos = LatLng(position.latitude, position.longitude);
+        setState(() => _userLocation = pos);
+        if (_isCentered) {
+          // Guard against the map not being ready yet (move() throws before
+          // onMapReady fires).
+          try {
+            _mapController.move(pos, _mapController.camera.zoom);
+          } catch (_) {}
+        }
+      },
+      onError: (_) {},
+    );
   }
 
   Future<void> _initLocation() async {
@@ -135,6 +164,9 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       }
       if (permission == LocationPermission.always ||
           permission == LocationPermission.whileInUse) {
+        // Track the position continuously so the blue dot follows the user.
+        _startPositionStream();
+
         // Fast path: last known position renders the map immediately
         final lastKnown = await Geolocator.getLastKnownPosition();
         if (lastKnown != null && mounted) {

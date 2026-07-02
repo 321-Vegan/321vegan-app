@@ -410,11 +410,15 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
       // Wait for location to be fetched and send scan event
       final locationData = await locationFuture;
-      final latitude = locationData['latitude'];
-      final longitude = locationData['longitude'];
-      
-      if (latitude == null || longitude == null) {
-        // No location, we dont send
+      final latitude = locationData.latitude;
+      final longitude = locationData.longitude;
+
+      // If the user hasn't granted location permission, we don't record the
+      // scan server-side (a prompt was already shown to enable it). But if
+      // permission IS granted and we simply couldn't get a fix (offline, GPS
+      // timeout), we still queue the scan — without coordinates — so the
+      // user's collection syncs once connectivity is back.
+      if (!locationData.permissionGranted) {
         return;
       }
 
@@ -463,13 +467,15 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     }
   }
 
-  Future<Map<String, double?>> _getLocationForScanEvent() async {
+  Future<({double? latitude, double? longitude, bool permissionGranted})>
+      _getLocationForScanEvent() async {
     double? latitude;
     double? longitude;
+    bool hasPermission = false;
 
     try {
       // Check if we have location permission
-      bool hasPermission = await _checkLocationPermission();
+      hasPermission = await _checkLocationPermission();
 
       // Get position if permission granted
       if (hasPermission) {
@@ -482,19 +488,23 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         latitude = position.latitude;
         longitude = position.longitude;
       } else {
-        // Show dialog to prompt user to enable location
+        // Permission genuinely not granted — prompt the user to enable it.
         if (mounted) {
           _showLocationPermissionDialog();
         }
       }
     } catch (e) {
-      // Show dialog to prompt user to enable location on error
-      if (mounted) {
-        _showLocationPermissionDialog();
-      }
+      // Permission is granted but we couldn't obtain a position (e.g. offline
+      // or the GPS fix timed out). Don't show the "enable location" dialog —
+      // it would wrongly tell the user location is disabled. The scan is still
+      // queued (without coordinates) so it syncs later.
     }
 
-    return {'latitude': latitude, 'longitude': longitude};
+    return (
+      latitude: latitude,
+      longitude: longitude,
+      permissionGranted: hasPermission,
+    );
   }
 
   void _showSettingsModal() {

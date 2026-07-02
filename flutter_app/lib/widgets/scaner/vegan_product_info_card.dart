@@ -131,6 +131,8 @@ class VeganProductInfoCard extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange.shade500,
+                      foregroundColor: Colors.white,
+                      elevation: 3,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

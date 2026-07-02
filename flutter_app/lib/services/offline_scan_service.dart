@@ -10,6 +10,36 @@ class OfflineScanService {
   static const String _pendingScanEventsKey = 'pending_scan_events';
   static const String _failedScanEventsKey = 'failed_scan_events';
 
+  /// A pending event is dropped after this many failed post attempts so a
+  /// permanently-rejected scan can't stay in the queue and retry forever.
+  static const int _maxPendingRetries = 5;
+
+  /// Increment the retry counter on the pending event at [index], persisting
+  /// the change. Once it exceeds [_maxPendingRetries] the event is removed.
+  static Future<void> _bumpPendingRetryOrDrop(
+      int index, Map<String, dynamic> event) async {
+    try {
+      final retryCount = (event['retry_count'] as int?) ?? 0;
+      if (retryCount + 1 >= _maxPendingRetries) {
+        await removePendingScanEvent(index);
+        debugPrint('Dropping pending scan event after $_maxPendingRetries '
+            'failed attempts: ${event['ean']}');
+        return;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      final List<String> pendingEvents =
+          prefs.getStringList(_pendingScanEventsKey) ?? [];
+      if (index >= 0 && index < pendingEvents.length) {
+        event['retry_count'] = retryCount + 1;
+        pendingEvents[index] = json.encode(event);
+        await prefs.setStringList(_pendingScanEventsKey, pendingEvents);
+      }
+    } catch (e) {
+      debugPrint('Failed to bump pending scan event retry: $e');
+    }
+  }
+
   /// Save a pending scan event to local storage
   static Future<void> savePendingScanEvent({
     required String ean,
@@ -198,22 +228,15 @@ class OfflineScanService {
         }
         return (true, response, true);
       } else {
-        // Failed to post
-        await saveFailedScanEvent(
-          ean: ean,
-          latitude: latitude,
-          longitude: longitude,
-          userId: userId,
-        );
+        // Failed to post. The event is already stored as pending above, so we
+        // simply leave it there for retryPendingScans to pick up. Do NOT also
+        // save a failed event — that would leave the scan in both queues and
+        // cause it to be posted twice once connectivity returns.
         return (false, null, false);
       }
     } catch (e) {
-      await saveFailedScanEvent(
-        ean: ean,
-        latitude: latitude,
-        longitude: longitude,
-        userId: userId,
-      );
+      // Same as above: the pending event already covers retry, so avoid
+      // duplicating it into the failed queue.
       return (false, null, false);
     }
   }
@@ -260,16 +283,18 @@ class OfflineScanService {
               'shop_id': response['shop_id'],
             });
           }
+        } else {
+          // Server responded but rejected the request (non-2xx). Count the
+          // attempt and drop the event once it has exhausted its retries so a
+          // permanently-rejected scan doesn't stay in the queue forever.
+          await _bumpPendingRetryOrDrop(i, event);
         }
       } catch (e) {
-        // Move to failed events after too many retries
-        await saveFailedScanEvent(
-          ean: event['ean'],
-          latitude: event['latitude'],
-          longitude: event['longitude'],
-          userId: event['user_id'],
-        );
-        await removePendingScanEvent(i);
+        // Network/connection error — no response from the server (offline,
+        // captive portal, dead zone). Leave the event untouched and retry it
+        // next time WITHOUT counting it against the cap, so bad connectivity
+        // never silently drops valid scans.
+        debugPrint('Network error retrying pending scan (will retry): $e');
       }
     }
 
@@ -308,25 +333,20 @@ class OfflineScanService {
             });
           }
         } else {
-          // Increment retry count
+          // Server rejected (non-2xx) — count the attempt toward the cap.
           event['retry_count'] = retryCount + 1;
           final prefs = await SharedPreferences.getInstance();
           final List<String> failedEvents =
               prefs.getStringList(_failedScanEventsKey) ?? [];
-          failedEvents[i] = json.encode(event);
-          await prefs.setStringList(_failedScanEventsKey, failedEvents);
+          if (i < failedEvents.length) {
+            failedEvents[i] = json.encode(event);
+            await prefs.setStringList(_failedScanEventsKey, failedEvents);
+          }
         }
       } catch (e) {
-        debugPrint('❌ Failed to retry failed scan event: $e');
-        // Increment retry count
-        event['retry_count'] = retryCount + 1;
-        final prefs = await SharedPreferences.getInstance();
-        final List<String> failedEvents =
-            prefs.getStringList(_failedScanEventsKey) ?? [];
-        if (i < failedEvents.length) {
-          failedEvents[i] = json.encode(event);
-          await prefs.setStringList(_failedScanEventsKey, failedEvents);
-        }
+        // Network/connection error — leave the retry count untouched and try
+        // again next time (see the pending-loop rationale above).
+        debugPrint('Network error retrying failed scan (will retry): $e');
       }
     }
 

@@ -194,38 +194,41 @@ class ApiService {
   /// [latitude] - User's latitude (optional)
   /// [longitude] - User's longitude (optional)
   /// Automatically adds the logged-in user's ID if available
+  ///
+  /// Returns the parsed response body on success (2xx), or `null` when the
+  /// server is reachable but rejects the request (non-2xx). Network/connection
+  /// failures (no response received) are rethrown so callers can distinguish
+  /// "no internet" from "server said no" — important for retry/queue logic.
   static Future<Map<String, dynamic>?> postScanEvent({
     required String ean,
     double? latitude,
     double? longitude,
   }) async {
-    try {
-      final url = Uri.parse('$_baseUrl/scan-events/');
+    final url = Uri.parse('$_baseUrl/scan-events/');
 
-      // Get the current user's ID if logged in
-      final userId = AuthService.currentUser?.id;
+    // Get the current user's ID if logged in
+    final userId = AuthService.currentUser?.id;
 
-      final body = json.encode({
-        'ean': ean,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
-        if (userId != null) 'user_id': userId,
-      });
+    final body = json.encode({
+      'ean': ean,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (userId != null) 'user_id': userId,
+    });
 
-      final response = await http.post(
-        url,
-        headers: _headers,
-        body: body,
-      );
+    // A network error here (SocketException, timeout, etc.) propagates to the
+    // caller on purpose — see the doc comment above.
+    final response = await http.post(
+      url,
+      headers: _headers,
+      body: body,
+    );
 
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return json.decode(utf8.decode(response.bodyBytes))
-            as Map<String, dynamic>;
-      }
-      return null;
-    } catch (e) {
-      return null;
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return json.decode(utf8.decode(response.bodyBytes))
+          as Map<String, dynamic>;
     }
+    return null;
   }
 
   /// Confirm which shop the user is in by osm_id.

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
+import 'package:vegan_app/models/boycott_data.dart';
 import 'package:vegan_app/models/vegan_status.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
 import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
 import 'package:vegan_app/services/auth_service.dart';
+import 'package:vegan_app/widgets/scaner/info_modal.dart';
 
 class HistoryModal extends StatefulWidget {
   final List<Map<String, dynamic>> scanHistory;
@@ -20,11 +22,22 @@ class HistoryModal extends StatefulWidget {
 
 class _HistoryModalState extends State<HistoryModal> {
   late List<Map<String, dynamic>> _history;
+  bool _showBoycott = true;
 
   @override
   void initState() {
     super.initState();
     _history = List<Map<String, dynamic>>.from(widget.scanHistory);
+    _loadBoycottPref();
+  }
+
+  Future<void> _loadBoycottPref() async {
+    final value = await PreferencesHelper.getShowBoycottPref();
+    if (mounted) {
+      setState(() {
+        _showBoycott = value;
+      });
+    }
   }
 
   Future<void> _clearHistory() async {
@@ -255,6 +268,12 @@ class _HistoryModalState extends State<HistoryModal> {
     bool alreadySent = false,
     bool isEan8 = false,
   }) {
+    final BoycottMatch? boycottMatch =
+        (brand.isNotEmpty && brand != 'Marque inconnue')
+            ? BoycottData.findBrand(brand)
+            : null;
+    final bool isBoycotted = boycottMatch != null && _showBoycott;
+
     Color badgeColor;
     String badgeText;
 
@@ -334,22 +353,75 @@ class _HistoryModalState extends State<HistoryModal> {
                     ],
                   ),
                 ),
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: badgeColor.withValues(alpha: 0.1),
-                    border: Border.all(color: badgeColor),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    badgeText,
-                    style: TextStyle(
-                      fontSize: 30.sp,
-                      color: badgeColor,
-                      fontWeight: FontWeight.bold,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: badgeColor.withValues(alpha: 0.1),
+                        border: Border.all(color: badgeColor),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        badgeText,
+                        style: TextStyle(
+                          fontSize: 30.sp,
+                          color: badgeColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
+                    if (isBoycotted) ...[
+                      SizedBox(height: 6.h),
+                      ElevatedButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => InfoModal(
+                              description:
+                                  "Les produits notés 'À éviter' sont des produits de marques qui ont des actions néfastes pour l'environnement, la santé, les droits des animaux ou les droits humains. Nous vous encourageons à boycotter ces marques pour soutenir des pratiques éthiques et responsables.",
+                              boycottMatch: boycottMatch,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange.shade500,
+                          foregroundColor: Colors.white,
+                          elevation: 3,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.w, vertical: 6.h),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.r),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'À éviter',
+                              style: TextStyle(
+                                fontSize: 30.sp,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.white,
+                              size: 32.sp,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),
