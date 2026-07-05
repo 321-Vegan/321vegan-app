@@ -120,7 +120,7 @@ class _SentProductsModalState extends State<SentProductsModal> {
                 Icon(
                   Icons.switch_access_shortcut_add_outlined,
                   color: Colors.white,
-                  size: 40.sp,
+                  size: 80.sp,
                 ),
                 SizedBox(width: 12.w),
                 Expanded(

@@ -41,6 +41,7 @@ class _UserProfileState extends State<UserProfile> {
   bool _openOnScanPage = false;
   bool _showBoycott = true;
   bool _showScores = true;
+  bool _themedNavBar = false;
   List<DateTime> _b12History = [];
 
   final List<String> _availableAvatars = [
@@ -145,11 +146,13 @@ class _UserProfileState extends State<UserProfile> {
     final openOnScanPage = await PreferencesHelper.getOpenOnScanPagePref();
     final showBoycott = await PreferencesHelper.getShowBoycottPref();
     final showScores = await PreferencesHelper.getShowScoresPref();
+    final themedNavBar = await PreferencesHelper.getThemedNavBarPref();
     if (mounted) {
       setState(() {
         _openOnScanPage = openOnScanPage;
         _showBoycott = showBoycott;
         _showScores = showScores;
+        _themedNavBar = themedNavBar;
       });
     }
   }
@@ -179,6 +182,12 @@ class _UserProfileState extends State<UserProfile> {
             onShowScoresChanged: (value) {
               setState(() {
                 _showScores = value;
+              });
+            },
+            initialThemedNavBar: _themedNavBar,
+            onThemedNavBarChanged: (value) {
+              setState(() {
+                _themedNavBar = value;
               });
             },
           ),

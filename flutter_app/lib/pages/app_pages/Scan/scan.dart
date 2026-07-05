@@ -3,6 +3,7 @@ import 'package:confetti/confetti.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -12,7 +13,10 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Scan/history_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/sent_products_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/settings_modal.dart';
+import 'package:vegan_app/pages/app_pages/Scan/search_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
+import 'package:vegan_app/pages/app_pages/Search/additives.dart';
+import 'package:vegan_app/pages/app_pages/Search/cosmetics.dart';
 import 'package:vegan_app/models/product_of_interest.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/auth_service.dart';
@@ -59,6 +63,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   bool _openOnScanPage = false;
   bool _showBoycott = true;
   bool _showScores = true;
+  bool _themedNavBar = false;
   List<String> _productsOfInterest = [];
   Map<String, ProductOfInterest> _productsOfInterestMap = {};
   Map<String, String> _alternativeEanToMainEan = {};
@@ -106,6 +111,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     _loadOpenOnScanPagePref();
     _loadShowBoycottPref();
     _loadShowScoresPref();
+    _loadThemedNavBarPref();
     // Load products from already-populated cache (populated at app startup)
     _loadProductsOfInterest();
 
@@ -151,11 +157,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ?.map((s) => Map<String, dynamic>.from(s as Map))
               .toList();
           final shopId = confirmation['shop_id'];
-          final String? shopOsmId = (shopId == null &&
-                  nearbyShops != null &&
-                  nearbyShops.isNotEmpty)
-              ? nearbyShops.first['osm_id'] as String?
-              : null;
+          final String? shopOsmId =
+              (shopId == null && nearbyShops != null && nearbyShops.isNotEmpty)
+                  ? nearbyShops.first['osm_id'] as String?
+                  : null;
 
           final mainEan = _alternativeEanToMainEan[ean] ?? ean;
           final product = _productsOfInterestMap[mainEan];
@@ -366,6 +371,13 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     });
   }
 
+  Future<void> _loadThemedNavBarPref() async {
+    final value = await PreferencesHelper.getThemedNavBarPref();
+    setState(() {
+      _themedNavBar = value;
+    });
+  }
+
   Future<void> _loadProductsOfInterest() async {
     // Load from cache instantly, updates in background automatically
     final products = await ProductsOfInterestCache.loadProductsOfInterest();
@@ -531,6 +543,40 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     );
   }
 
+  /// Stops the scanner, clears the current result, shows [modal] in a
+  /// 90%-height bottom sheet and restarts the scanner when it closes.
+  void _showModalSheet(Widget modal) {
+    controller.stop();
+    setState(() {
+      productInfo = null;
+    });
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SizedBox(
+        height: MediaQuery.of(context).size.height * 0.9,
+        child: modal,
+      ),
+    ).then((_) {
+      controller.start();
+    });
+  }
+
+  void _showSearchModal({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Widget child,
+  }) {
+    _showModalSheet(SearchModal(
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      child: child,
+    ));
+  }
+
   void _showSettingsModal() {
     // Stop the scanner when opening the modal
     controller.stop();
@@ -560,6 +606,12 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
             },
             initialShowScores: _showScores,
             onShowScoresChanged: _setShowScoresPref,
+            initialThemedNavBar: _themedNavBar,
+            onThemedNavBarChanged: (value) {
+              setState(() {
+                _themedNavBar = value;
+              });
+            },
           ),
         );
       },
@@ -650,7 +702,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                 Navigator.of(ctx).pop();
                 _simulateScan(raw);
               } else {
-                setStateDialog(() => errorText = 'Code-barres invalide (EAN-8 ou EAN-13)');
+                setStateDialog(
+                    () => errorText = 'Code-barres invalide (EAN-8 ou EAN-13)');
               }
             }
 
@@ -686,7 +739,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                           color: Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.qr_code_2, size: 32, color: Colors.grey.shade700),
+                        child: Icon(Icons.qr_code_2,
+                            size: 32, color: Colors.grey.shade700),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -695,12 +749,14 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                           children: [
                             const Text(
                               'Saisir un code-barres',
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               'Si le scan par caméra est impossible,\nsaisissez le code manuellement.',
-                              style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                              style: TextStyle(
+                                  fontSize: 13, color: Colors.grey.shade700),
                             ),
                           ],
                         ),
@@ -728,7 +784,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                       ),
                       errorText: errorText,
                       errorStyle: const TextStyle(fontSize: 13),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey.shade300),
@@ -739,7 +796,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFF1A722E), width: 2),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF1A722E), width: 2),
                       ),
                       errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -747,11 +805,14 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                       ),
                       focusedErrorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red, width: 2),
+                        borderSide:
+                            const BorderSide(color: Colors.red, width: 2),
                       ),
                     ),
                     onChanged: (_) {
-                      if (errorText != null) setStateDialog(() => errorText = null);
+                      if (errorText != null) {
+                        setStateDialog(() => errorText = null);
+                      }
                     },
                     onSubmitted: (_) => submit(),
                   ),
@@ -769,7 +830,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                             side: BorderSide(color: Colors.grey.shade300),
                             foregroundColor: Colors.grey.shade700,
                           ),
-                          child: const Text('Annuler', style: TextStyle(fontSize: 15)),
+                          child: const Text('Annuler',
+                              style: TextStyle(fontSize: 15)),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -785,7 +847,9 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text('Scanner', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                          child: const Text('Scanner',
+                              style: TextStyle(
+                                  fontSize: 15, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -861,7 +925,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
     showDialog(
       context: context,
-      builder: (_) => AccountPromptDialog(onCreateAccount: _showAuthBottomSheet),
+      builder: (_) =>
+          AccountPromptDialog(onCreateAccount: _showAuthBottomSheet),
     ).then((_) {
       controller.start();
     });
@@ -900,6 +965,54 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     });
   }
 
+  /// Gray tint shared by the scan page's glass buttons, so they stay
+  /// readable over bright scenes (the Vegandex button keeps its gold tint).
+  static const LiquidGlassAppearance _grayGlassAppearance =
+      LiquidGlassAppearance(
+    color: Color(0x80757575), // grey 600 at 50%
+    blur: LiquidGlassBlur(sigmaX: 3, sigmaY: 3),
+  );
+
+  /// Small square liquid-glass icon button (settings, history, ...),
+  /// styled consistently with [LiquidGlassButton].
+  Widget _buildGlassIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    double? iconSize,
+  }) {
+    return LiquidGlassLens(
+      style: LiquidGlassButton.defaultStyle.copyWith(
+        shape: LiquidGlassShape.roundedRectangle(
+          cornerRadius: 20.r,
+          borderWidth: 1.1,
+          lightIntensity: 1.2,
+          lightDirection: 80,
+          borderType: const OpticalBorder(
+            borderSaturation: 1.2,
+            ambientIntensity: 1.0,
+            borderSolidity: 0.35,
+          ),
+        ),
+        appearance: _grayGlassAppearance,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20.r),
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.all(8.w),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: iconSize ?? 80.sp,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -926,7 +1039,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               productInfo!.isEan8 &&
               productInfo!.status != ScanStatus.unknown)
             Positioned(
-              top: 300.h,
+              top: 700.h,
               left: 16,
               right: 16,
               child: Container(
@@ -969,7 +1082,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
           // Old receipe non vegan warning box at top
           if (productInfo?.hasNonVeganOldRecipe == true)
             Positioned(
-              top: productInfo?.isEan8 == true ? 450.h : 300.h,
+              top: 850.h,
               left: 16,
               right: 16,
               child: Container(
@@ -1042,25 +1155,9 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(40.r),
-                  onTap: () {
-                    controller.stop();
-                    setState(() {
-                      productInfo = null;
-                    });
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (context) => SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.9,
-                        child: VegandexModal(
-                          onNavigateToProfile: widget.onNavigateToProfile,
-                        ),
-                      ),
-                    ).then((_) {
-                      controller.start();
-                    });
-                  },
+                  onTap: () => _showModalSheet(VegandexModal(
+                    onNavigateToProfile: widget.onNavigateToProfile,
+                  )),
                   child: Padding(
                     padding:
                         EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
@@ -1220,151 +1317,86 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ),
             ),
           ),
-          // Add the floating button for scan history
-          Positioned(
-            top: 200.h,
-            left: 170.w,
-            child: Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    spreadRadius: 1,
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: GestureDetector(
-                onTap: () {
-                  controller.stop();
-                  setState(() {
-                    productInfo = null;
-                  });
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.9,
-                      child: HistoryModal(
-                        scanHistory: scanHistory,
-                      ),
-                    ),
-                  ).then((_) {
-                    controller.start();
-                  });
-                },
-                child: Icon(
-                  Icons.history,
-                  color: Colors.black54,
-                  size: 80.sp,
-                ),
-              ),
-            ),
-          ),
-          // Add the floating button for sent products
-          Positioned(
-            top: 200.h,
-            left: 280.w,
-            child: Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    spreadRadius: 1,
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: GestureDetector(
-                onTap: () {
-                  controller.stop();
-                  setState(() {
-                    productInfo = null;
-                  });
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.9,
-                      child: const SentProductsModal(),
-                    ),
-                  ).then((_) {
-                    controller.start();
-                  });
-                },
-                child: Icon(
-                  Icons.switch_access_shortcut_add_outlined,
-                  color: Colors.black54,
-                  size: 80.sp,
-                ),
-              ),
-            ),
-          ),
           Positioned(
             bottom: 100.h,
             right: 20,
-            child: Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    spreadRadius: 1,
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: GestureDetector(
-                onTap: _showManualEanDialog,
-                child: Icon(
-                  Icons.keyboard_outlined,
-                  color: Colors.black54,
-                  size: 90.sp,
-                ),
-              ),
+            child: _buildGlassIconButton(
+              icon: Icons.keyboard_outlined,
+              iconSize: 90.sp,
+              onTap: _showManualEanDialog,
             ),
           ),
-          // Settings button (positioned last to be on top)
+          // Floating action cluster (positioned last to be on top):
+          // settings / history / sent products in a row, with the additives
+          // and cosmetics searches below. Single anchor point; Row/Column
+          // spacing handles the rest.
           Positioned(
             top: 200.h,
             left: 60.w,
-            child: Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    spreadRadius: 1,
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: GestureDetector(
-                onTap: () {
-                  _showSettingsModal();
-                },
-                child: Icon(
-                  Icons.settings,
-                  color: Colors.black54,
-                  size: 80.sp,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 40.h,
+              children: [
+                Row(
+                  spacing: 60.w,
+                  children: [
+                    _buildGlassIconButton(
+                      icon: Icons.settings,
+                      onTap: _showSettingsModal,
+                    ),
+                    _buildGlassIconButton(
+                      icon: Icons.history,
+                      onTap: () => _showModalSheet(
+                        HistoryModal(scanHistory: scanHistory),
+                      ),
+                    ),
+                    _buildGlassIconButton(
+                      icon: Icons.switch_access_shortcut_add_outlined,
+                      onTap: () => _showModalSheet(const SentProductsModal()),
+                    ),
+                  ],
                 ),
-              ),
+                IntrinsicWidth(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 24.h,
+                    children: [
+                      LiquidGlassButton(
+                        label: 'Additifs',
+                        icon: Icons.science,
+                        height: 100.h,
+                        fontSize: 40.sp,
+                        iconSize: 80.sp,
+                        style: LiquidGlassButton.defaultStyle.copyWith(
+                          appearance: _grayGlassAppearance,
+                        ),
+                        onPressed: () => _showSearchModal(
+                          title: 'Additifs',
+                          subtitle: 'Rechercher un additif',
+                          icon: Icons.science,
+                          child: const AdditivesPage(),
+                        ),
+                      ),
+                      LiquidGlassButton(
+                        label: 'Cosmétiques',
+                        icon: Icons.soap_rounded,
+                        height: 100.h,
+                        fontSize: 40.sp,
+                        iconSize: 80.sp,
+                        style: LiquidGlassButton.defaultStyle.copyWith(
+                          appearance: _grayGlassAppearance,
+                        ),
+                        onPressed: () => _showSearchModal(
+                          title: 'Cosmétiques',
+                          subtitle: 'Rechercher une marque',
+                          icon: Icons.soap_rounded,
+                          child: const CosmeticsPage(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],

@@ -9,6 +9,8 @@ class SettingsModal extends StatefulWidget {
   final Function(bool) onShowBoycottChanged;
   final bool initialShowScores;
   final Function(bool) onShowScoresChanged;
+  final bool initialThemedNavBar;
+  final Function(bool) onThemedNavBarChanged;
 
   const SettingsModal({
     super.key,
@@ -18,6 +20,8 @@ class SettingsModal extends StatefulWidget {
     required this.onShowBoycottChanged,
     required this.initialShowScores,
     required this.onShowScoresChanged,
+    required this.initialThemedNavBar,
+    required this.onThemedNavBarChanged,
   });
 
   @override
@@ -28,6 +32,7 @@ class SettingsModalState extends State<SettingsModal> {
   late bool _openOnScanPage;
   late bool _showBoycott;
   late bool _showScores;
+  late bool _themedNavBar;
 
   @override
   void initState() {
@@ -35,6 +40,7 @@ class SettingsModalState extends State<SettingsModal> {
     _openOnScanPage = widget.initialOpenOnScanPage;
     _showBoycott = widget.initialShowBoycott;
     _showScores = widget.initialShowScores;
+    _themedNavBar = widget.initialThemedNavBar;
   }
 
   Future<void> _setOpenOnScanPagePref(bool value) async {
@@ -59,6 +65,14 @@ class SettingsModalState extends State<SettingsModal> {
       _showScores = value;
     });
     widget.onShowScoresChanged(value);
+  }
+
+  Future<void> _setThemedNavBarPref(bool value) async {
+    await PreferencesHelper.setThemedNavBarPref(value);
+    setState(() {
+      _themedNavBar = value;
+    });
+    widget.onThemedNavBarChanged(value);
   }
 
   @override
@@ -213,6 +227,50 @@ class SettingsModalState extends State<SettingsModal> {
                 Switch(
                   value: _showScores,
                   onChanged: _setShowScoresPref,
+                  activeThumbColor: Colors.white,
+                  activeTrackColor: const Color(0xFF1A722E),
+                  inactiveThumbColor: Colors.white,
+                  inactiveTrackColor: Colors.grey[300],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Menu coloré',
+                        style: TextStyle(
+                          fontSize: 40.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Afficher le menu de navigation aux couleurs du thème',
+                        style: TextStyle(
+                          fontSize: 30.sp,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _themedNavBar,
+                  onChanged: _setThemedNavBarPref,
                   activeThumbColor: Colors.white,
                   activeTrackColor: const Color(0xFF1A722E),
                   inactiveThumbColor: Colors.white,

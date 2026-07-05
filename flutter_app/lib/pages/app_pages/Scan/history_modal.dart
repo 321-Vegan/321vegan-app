@@ -90,7 +90,7 @@ class _HistoryModalState extends State<HistoryModal> {
                 Icon(
                   Icons.history,
                   color: Colors.white,
-                  size: 40.sp,
+                  size: 80.sp,
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
