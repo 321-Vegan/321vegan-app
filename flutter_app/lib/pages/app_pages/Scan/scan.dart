@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:confetti/confetti.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -13,6 +14,7 @@ import 'package:vegan_app/pages/app_pages/Scan/sent_products_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/settings_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
 import 'package:vegan_app/models/product_of_interest.dart';
+import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/offline_scan_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
@@ -49,7 +51,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
       BarcodeFormat.upcE, // UPC-E for compressed barcodes
     ],
   );
-  Map<dynamic, dynamic>? productInfo;
+  ScanResult? productInfo;
   List<Map<String, dynamic>> scanHistory = [];
   String? _lastScannedBarcode = '';
   late ConfettiController _confettiController;
@@ -62,6 +64,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   Map<String, String> _alternativeEanToMainEan = {};
   bool _scannerPausedByModal = false;
   bool _isRetrying = false;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -111,6 +114,15 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
       _startScanner();
       _retryPendingScans();
     });
+
+    // Sync queued offline scans as soon as connectivity comes back, instead
+    // of waiting for the next app resume.
+    _connectivitySubscription =
+        Connectivity().onConnectivityChanged.listen((results) {
+      if (!results.contains(ConnectivityResult.none)) {
+        _retryPendingScans();
+      }
+    });
   }
 
   /// Retry pending scans when app starts or resumes
@@ -148,9 +160,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
           final mainEan = _alternativeEanToMainEan[ean] ?? ean;
           final product = _productsOfInterestMap[mainEan];
           if (product != null) {
-            _showShopConfirmationDialog(shopName, scanEventId, product,
+            // Await each dialog so multiple confirmations are shown one after
+            // the other instead of stacking on top of each other.
+            await _showShopConfirmationDialog(shopName, scanEventId, product,
                 nearbyShops: nearbyShops, shopOsmId: shopOsmId);
-            await Future.delayed(const Duration(milliseconds: 500));
           }
         }
       }
@@ -236,13 +249,13 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     );
   }
 
-  void _showShopConfirmationDialog(
+  Future<void> _showShopConfirmationDialog(
       String shopName, int scanEventId, ProductOfInterest product,
       {List<Map<String, dynamic>>? nearbyShops, String? shopOsmId}) {
     // Stop scanner while showing modal
     controller.stop();
 
-    showDialog(
+    return showDialog(
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.transparent,
@@ -494,10 +507,21 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         }
       }
     } catch (e) {
-      // Permission is granted but we couldn't obtain a position (e.g. offline
-      // or the GPS fix timed out). Don't show the "enable location" dialog —
-      // it would wrongly tell the user location is disabled. The scan is still
-      // queued (without coordinates) so it syncs later.
+      // Permission is granted but we couldn't obtain a fresh position (e.g.
+      // offline or the GPS fix timed out within 5s). Don't show the "enable
+      // location" dialog — it would wrongly tell the user location is
+      // disabled. Fall back to the last known position if it's recent enough
+      // that the user is plausibly still in the same place, so shop detection
+      // keeps working; otherwise the scan is queued without coordinates.
+      try {
+        final lastKnown = await Geolocator.getLastKnownPosition();
+        if (lastKnown != null &&
+            DateTime.now().difference(lastKnown.timestamp) <
+                const Duration(minutes: 10)) {
+          latitude = lastKnown.latitude;
+          longitude = lastKnown.longitude;
+        }
+      } catch (_) {}
     }
 
     return (
@@ -546,6 +570,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _connectivitySubscription?.cancel();
     controller.dispose();
     _confettiController.dispose();
     WidgetsBinding.instance.removeObserver(this);
@@ -554,15 +579,12 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
   Future<void> _checkVeganStatusOffline(String barcode) async {
     final product = await ProductInfoHelper.getProductInfo(barcode);
-    if (barcode.length == 8) {
-      product['is_ean8'] = true;
-    }
     setState(() {
       productInfo = product;
     });
 
-    final isVegan = product['is_vegan'];
-    if ((isVegan == 'true' || isVegan == 'false') &&
+    if ((product.status == ScanStatus.vegan ||
+            product.status == ScanStatus.notVegan) &&
         AuthService.isLoggedIn &&
         !SubscriptionService.isSubscribed) {
       await PreferencesHelper.incrementMembershipHitScanCount();
@@ -901,8 +923,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
           ),
           // EAN-8 Warning Box at top
           if (productInfo != null &&
-              productInfo?['is_ean8'] == true &&
-              productInfo?['is_vegan'] != 'unknown')
+              productInfo!.isEan8 &&
+              productInfo!.status != ScanStatus.unknown)
             Positioned(
               top: 300.h,
               left: 16,
@@ -945,10 +967,9 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ),
             ),
           // Old receipe non vegan warning box at top
-          if (productInfo != null &&
-              productInfo?['has_non_vegan_old_receipe'] == true)
+          if (productInfo?.hasNonVeganOldRecipe == true)
             Positioned(
-              top: productInfo?['is_ean8'] == true ? 450.h : 300.h,
+              top: productInfo?.isEan8 == true ? 450.h : 300.h,
               left: 16,
               right: 16,
               child: Container(
@@ -1083,8 +1104,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
             ),
           ),
           // Floating score bar — visible in camera area for vegan products only
-          if (productInfo?['is_vegan'] == 'true' &&
-              productInfo?['code'] != null)
+          if (productInfo?.status == ScanStatus.vegan)
             Positioned(
               // Non-subscribers get a reserved strip above the badges (free
               // reveal chip); raise the anchor so the badges stay in place.
@@ -1094,7 +1114,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               left: 16,
               right: 16,
               child: ProductScoresSection(
-                barcode: productInfo!['code'] as String,
+                barcode: productInfo!.code,
                 isSubscribed: SubscriptionService.isSubscribed,
                 enabled: _showScores,
                 onDisable: () => _setShowScoresPref(false),
@@ -1106,42 +1126,39 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               top: 1100.h,
               left: 16,
               right: 16,
-              child: productInfo?['is_vegan'] == 'true'
-                  ? VeganProductInfoCard(
-                      productInfo: productInfo,
-                      showBoycott: _showBoycott,
-                      onBoycottToggleChanged: (value) {
-                        setState(() {
-                          _showBoycott = value;
-                        });
-                      },
-                    )
-                  : (productInfo?['is_vegan'] == 'waiting')
-                      ? PendingProductInfoCard(productInfo: productInfo)
-                      : productInfo?['is_vegan'] == 'already_scanned'
-                          ? AlreadyScannedProductInfoCard(
-                              productInfo: productInfo)
-                          : (productInfo?['is_vegan'] == 'not_found')
-                              ? NotFoundProductInfoCard(
-                                  productInfo: productInfo)
-                              : (productInfo?['is_vegan'] == 'unknown')
-                                  ? NonVeganProductInfoCard(
-                                      key: nonVeganCardKey,
-                                      productInfo: productInfo,
-                                      confettiController: _confettiController,
-                                      onNavigateToProfile:
-                                          widget.onNavigateToProfile,
-                                      onScannerStop: () {
-                                        _scannerPausedByModal = true;
-                                        controller.stop();
-                                      },
-                                      onScannerStart: () {
-                                        _scannerPausedByModal = false;
-                                        controller.start();
-                                      },
-                                    )
-                                  : RejectedProductInfoCard(
-                                      productInfo: productInfo),
+              child: switch (productInfo!.status) {
+                ScanStatus.vegan => VeganProductInfoCard(
+                    productInfo: productInfo!,
+                    showBoycott: _showBoycott,
+                    onBoycottToggleChanged: (value) {
+                      setState(() {
+                        _showBoycott = value;
+                      });
+                    },
+                  ),
+                ScanStatus.pending =>
+                  PendingProductInfoCard(productInfo: productInfo!),
+                ScanStatus.alreadyScanned =>
+                  const AlreadyScannedProductInfoCard(),
+                ScanStatus.notFound =>
+                  NotFoundProductInfoCard(productInfo: productInfo!),
+                ScanStatus.unknown => NonVeganProductInfoCard(
+                    key: nonVeganCardKey,
+                    productInfo: productInfo!,
+                    confettiController: _confettiController,
+                    onNavigateToProfile: widget.onNavigateToProfile,
+                    onScannerStop: () {
+                      _scannerPausedByModal = true;
+                      controller.stop();
+                    },
+                    onScannerStart: () {
+                      _scannerPausedByModal = false;
+                      controller.start();
+                    },
+                  ),
+                ScanStatus.notVegan =>
+                  RejectedProductInfoCard(productInfo: productInfo!),
+              },
             )
           else // Show prompt when not loading and no data
             Positioned(
@@ -1150,15 +1167,15 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               right: 16,
               child: const NoResultCard(),
             ),
-          if (productInfo != null && productInfo?['is_vegan'] != "unknown")
+          if (productInfo != null && productInfo!.status != ScanStatus.unknown)
             Positioned(
               bottom: 240.h,
               left: 0,
               right: 0,
               child: Center(
-                child: productInfo?['is_vegan'] == "not_found"
+                child: productInfo!.status == ScanStatus.notFound
                     ? SendInfoButton(
-                        barcode: productInfo?['code'] ?? '',
+                        barcode: productInfo!.code,
                         onScannerStop: () {
                           _scannerPausedByModal = true;
                           controller.stop();
@@ -1169,7 +1186,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                         },
                       )
                     : ReportErrorButton(
-                        barcode: productInfo?['code'] ?? '',
+                        barcode: productInfo!.code,
                         onScannerStop: () {
                           _scannerPausedByModal = true;
                           controller.stop();

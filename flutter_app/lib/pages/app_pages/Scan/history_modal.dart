@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/boycott_data.dart';
+import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/models/vegan_status.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
 import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
@@ -55,7 +56,7 @@ class _HistoryModalState extends State<HistoryModal> {
     });
   }
 
-  Future<Map<String, dynamic>> _fetchProductDetails(String barcode) async {
+  Future<ScanResult> _fetchProductDetails(String barcode) async {
     return await ProductInfoHelper.getProductInfo(barcode);
   }
 
@@ -182,32 +183,29 @@ class _HistoryModalState extends State<HistoryModal> {
                               name: 'Erreur',
                               brand: 'Impossible de charger le produit',
                               scannedDate: timestamp,
-                              isVegan: null,
+                              status: null,
                               hasNonVeganOldReceipe: false,
                               problem: null,
                               isEan8: barcode.length == 8,
                             );
                           } else {
                             final productDetails =
-                                snapshot.data![0] as Map<String, dynamic>;
+                                snapshot.data![0] as ScanResult;
                             final isAlreadySent = snapshot.data![1] as bool;
 
                             return _buildProductCard(
                               context: context,
                               code: barcode,
-                              name: (productDetails['name']?.isNotEmpty ??
-                                      false)
-                                  ? productDetails['name']
-                                  : productDetails['code'] ?? 'Produit inconnu',
-                              brand:
-                                  productDetails['brand'] ?? 'Marque inconnue',
+                              name: productDetails.name.isNotEmpty
+                                  ? productDetails.name
+                                  : productDetails.code,
+                              brand: productDetails.brand,
                               scannedDate: timestamp,
-                              isVegan: productDetails['is_vegan'],
+                              status: productDetails.status,
                               hasNonVeganOldReceipe:
-                                  productDetails['has_non_vegan_old_receipe'] ??
-                                      false,
-                              problem: productDetails['problem'],
-                              biodynamie: productDetails['biodynamie'],
+                                  productDetails.hasNonVeganOldRecipe,
+                              problem: productDetails.problem,
+                              biodynamie: productDetails.biodynamic,
                               alreadySent: isAlreadySent,
                               isEan8: barcode.length == 8,
                             );
@@ -260,7 +258,7 @@ class _HistoryModalState extends State<HistoryModal> {
     required String name,
     required String brand,
     required String scannedDate,
-    required String? isVegan,
+    required ScanStatus? status,
     required bool hasNonVeganOldReceipe,
     String? problem,
     bool biodynamie = false,
@@ -277,20 +275,20 @@ class _HistoryModalState extends State<HistoryModal> {
     Color badgeColor;
     String badgeText;
 
-    switch (isVegan) {
-      case 'true':
+    switch (status) {
+      case ScanStatus.vegan:
         badgeColor = Colors.green;
         badgeText = 'Vegan';
         break;
-      case 'false':
+      case ScanStatus.notVegan:
         badgeColor = Colors.red;
         badgeText = 'Pas Vegan';
         break;
-      case 'waiting':
+      case ScanStatus.pending:
         badgeColor = Colors.orange;
         badgeText = 'En attente';
         break;
-      case 'not_found':
+      case ScanStatus.notFound:
         badgeColor = Colors.grey;
         badgeText = 'Introuvable';
         break;
@@ -468,10 +466,7 @@ class _HistoryModalState extends State<HistoryModal> {
                               onPressed: () async {
                                 await ProductHelper.tryAddDocument(
                                   context,
-                                  {
-                                    'code': name,
-                                    'name': name,
-                                  },
+                                  code,
                                   VeganStatus.vegan,
                                 );
                                 _updateHistory();
@@ -500,10 +495,7 @@ class _HistoryModalState extends State<HistoryModal> {
                               onPressed: () async {
                                 await ProductHelper.tryAddDocument(
                                   context,
-                                  {
-                                    'code': name,
-                                    'name': name,
-                                  },
+                                  code,
                                   VeganStatus.nonVegan,
                                 );
                                 _updateHistory();
@@ -554,7 +546,7 @@ class _HistoryModalState extends State<HistoryModal> {
                   ),
                 ),
             // EAN-8 Warning Box
-            if (isEan8 && isVegan != 'unknown')
+            if (isEan8 && status != ScanStatus.unknown)
               Padding(
                 padding: EdgeInsets.only(top: 12.h),
                 child: Container(
@@ -587,7 +579,7 @@ class _HistoryModalState extends State<HistoryModal> {
                 ),
               ),
             // Non vegan old receipe warning box
-            if (isVegan == 'true' && hasNonVeganOldReceipe)
+            if (status == ScanStatus.vegan && hasNonVeganOldReceipe)
               Padding(
                 padding: EdgeInsets.only(top: 12.h),
                 child: Container(

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vegan_app/models/scan_result.dart';
 
 class PendingProductInfoCard extends StatelessWidget {
-  final Map<dynamic, dynamic>? productInfo;
+  final ScanResult productInfo;
 
   const PendingProductInfoCard({
     super.key,
@@ -35,9 +36,7 @@ class PendingProductInfoCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              (productInfo?['name']?.isNotEmpty ?? false)
-                  ? productInfo!['name']
-                  : 'Nom inconnu',
+              productInfo.name.isNotEmpty ? productInfo.name : 'Nom inconnu',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 70.sp,
@@ -80,12 +79,7 @@ class PendingProductInfoCard extends StatelessWidget {
 }
 
 class AlreadyScannedProductInfoCard extends StatelessWidget {
-  final Map<dynamic, dynamic>? productInfo;
-
-  const AlreadyScannedProductInfoCard({
-    super.key,
-    required this.productInfo,
-  });
+  const AlreadyScannedProductInfoCard({super.key});
 
   @override
   Widget build(BuildContext context) {

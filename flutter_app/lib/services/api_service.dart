@@ -193,7 +193,10 @@ class ApiService {
   /// [ean] - The product's barcode
   /// [latitude] - User's latitude (optional)
   /// [longitude] - User's longitude (optional)
-  /// Automatically adds the logged-in user's ID if available
+  /// [userId] - The user who scanned. Queued offline scans must pass the id
+  /// captured at scan time: falling back to [AuthService.currentUser] here is
+  /// only correct for live scans (on a retry at app startup the profile may
+  /// not be loaded yet, and the event would be posted anonymously).
   ///
   /// Returns the parsed response body on success (2xx), or `null` when the
   /// server is reachable but rejects the request (non-2xx). Network/connection
@@ -203,17 +206,17 @@ class ApiService {
     required String ean,
     double? latitude,
     double? longitude,
+    int? userId,
   }) async {
     final url = Uri.parse('$_baseUrl/scan-events/');
 
-    // Get the current user's ID if logged in
-    final userId = AuthService.currentUser?.id;
+    final effectiveUserId = userId ?? AuthService.currentUser?.id;
 
     final body = json.encode({
       'ean': ean,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
-      if (userId != null) 'user_id': userId,
+      if (effectiveUserId != null) 'user_id': effectiveUserId,
     });
 
     // A network error here (SocketException, timeout, etc.) propagates to the

@@ -268,7 +268,6 @@ class BoycottData {
         BoycottBrand('mikado', 'Mikado'),
         BoycottBrand('belin', 'Belin'),
         BoycottBrand('heudebert', 'Heudebert'),
-        BoycottBrand('poulain', 'Poulain'),
         BoycottBrand('sour patch', 'Sour Patch'),
       ],
     ),

@@ -34,7 +34,7 @@ class ProductHelper {
 
   static Future<bool> tryAddDocument(
     BuildContext context,
-    Map<dynamic, dynamic>? productInfo,
+    String ean,
     VeganStatus? veganStatus, {
     String productName = '',
     String brand = '',
@@ -43,7 +43,7 @@ class ProductHelper {
     if (!await _checkConnectivityAndShowSnackbar(context)) return false;
     try {
       final productId = await ApiService.postProduct(
-        ean: productInfo?['code'] ?? '',
+        ean: ean,
         status:
             veganStatus?.toApiString() ?? VeganStatus.maybeVegan.toApiString(),
         productName: productName,
@@ -59,8 +59,7 @@ class ProductHelper {
           );
         }
 
-        await PreferencesHelper.addCodeToPreferences(
-            productInfo?['code'] ?? '', true);
+        await PreferencesHelper.addCodeToPreferences(ean, true);
 
         if (!context.mounted) return false;
         _showSnackbar(

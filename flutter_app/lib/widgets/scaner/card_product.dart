@@ -2,6 +2,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/helper.dart';
+import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/models/vegan_status.dart';
 import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
 import 'package:vegan_app/services/auth_service.dart';
@@ -88,7 +89,7 @@ class NoResultCard extends StatelessWidget {
 }
 
 class NotFoundProductInfoCard extends StatelessWidget {
-  final Map<dynamic, dynamic>? productInfo;
+  final ScanResult productInfo;
 
   const NotFoundProductInfoCard({
     super.key,
@@ -121,7 +122,7 @@ class NotFoundProductInfoCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              productInfo?['code'] ?? '',
+              productInfo.code,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 70.sp,
@@ -165,7 +166,7 @@ class NotFoundProductInfoCard extends StatelessWidget {
 }
 
 class NonVeganProductInfoCard extends StatefulWidget {
-  final Map<dynamic, dynamic>? productInfo;
+  final ScanResult productInfo;
   final ConfettiController confettiController;
   final VoidCallback? onNavigateToProfile;
   final VoidCallback? onScannerStop;
@@ -411,7 +412,7 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
 
       bool success = await ProductHelper.tryAddDocument(
         context,
-        widget.productInfo,
+        widget.productInfo.code,
         veganStatus,
         productName: result?.productName ?? '',
         brand: result?.brand ?? '',
@@ -623,7 +624,7 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              widget.productInfo?['name'] ?? '',
+              widget.productInfo.name,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 70.sp,
@@ -719,7 +720,7 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
 }
 
 class RejectedProductInfoCard extends StatelessWidget {
-  final Map<dynamic, dynamic>? productInfo;
+  final ScanResult productInfo;
 
   const RejectedProductInfoCard({
     super.key,
@@ -728,9 +729,8 @@ class RejectedProductInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // In the database, the reason why its not vegan is stored in the brand field; separated by '--'
-    final reason = productInfo?['problem'];
-    final brand = productInfo?['brand'];
+    final reason = productInfo.problem;
+    final brand = productInfo.brand;
 
     return Container(
       height: 740.h,
@@ -761,8 +761,8 @@ class RejectedProductInfoCard extends StatelessWidget {
           children: [
             Text(
               Helper.truncate(
-                (productInfo?['name']?.isNotEmpty ?? false)
-                    ? productInfo!['name']
+                productInfo.name.isNotEmpty
+                    ? productInfo.name
                     : 'Unnamed Product',
                 45,
               ),
@@ -775,8 +775,7 @@ class RejectedProductInfoCard extends StatelessWidget {
             ),
             Text(
               (() {
-                // Check if the brand is not null and is a non-empty string
-                if (brand != null && brand is String && brand.isNotEmpty) {
+                if (brand.isNotEmpty) {
                   // Capitalize the first letter and keep the rest
                   String formattedBrand =
                       '${brand[0].toUpperCase()}${brand.substring(1)}';
