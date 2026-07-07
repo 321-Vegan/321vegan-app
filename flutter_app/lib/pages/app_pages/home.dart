@@ -9,7 +9,6 @@ import 'package:vegan_app/pages/app_pages/Partners/partners_page.dart';
 import 'package:vegan_app/pages/app_pages/Scan/scan.dart';
 import 'package:vegan_app/pages/app_pages/map.dart';
 import 'package:vegan_app/pages/app_pages/profile.dart';
-import 'package:vegan_app/pages/app_pages/Profile/b12_reminder_settings_page.dart';
 import 'package:vegan_app/helpers/time_counter/time_counter.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
 import 'package:vegan_app/widgets/homepage/draggable_profile_bubble.dart';
@@ -290,9 +289,6 @@ class MyHomePageState extends State<MyHomePage>
     // Check for new badges on initial load
     _checkForNewBadges();
 
-    // Check and show B12 popup if needed
-    _checkAndShowB12Popup();
-
     _checkMembershipPrompt();
 
     // One-time: existing users with a vegan date who were never asked for
@@ -328,8 +324,6 @@ class MyHomePageState extends State<MyHomePage>
     }
     // Reload avatar after login
     await _loadAvatar();
-    // Check and show B12 popup if needed after login
-    _checkAndShowB12Popup();
   }
 
   Future<void> _checkNewPartners() async {
@@ -423,143 +417,6 @@ class MyHomePageState extends State<MyHomePage>
         );
       }
     }
-  }
-
-  Future<void> _checkAndShowB12Popup() async {
-    // Only show for logged-in users who haven't seen it yet
-    if (AuthService.isLoggedIn && mounted) {
-      final hasBeenShown = await PreferencesHelper.hasB12PopupBeenShown();
-      if (!hasBeenShown && mounted) {
-        // Delay to show after page is fully loaded
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            _showB12ReminderPopup();
-          }
-        });
-      }
-    }
-  }
-
-  void _showB12ReminderPopup() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28.r),
-          ),
-          child: Container(
-            padding: EdgeInsets.all(32.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28.r),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(24.w),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '💊',
-                    style: TextStyle(fontSize: 100.sp),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                Text(
-                  'Rappel pour votre B12 !',
-                  style: TextStyle(
-                    fontSize: 56.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  'Vous pouvez maintenant configurer un rappel pour ne jamais oublier de prendre votre B12',
-                  style: TextStyle(
-                    fontSize: 42.sp,
-                    color: Colors.grey[600],
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 32.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          await PreferencesHelper.markB12PopupAsShown();
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.grey[600],
-                          side: BorderSide(color: Colors.grey[300]!, width: 2),
-                          padding: EdgeInsets.symmetric(vertical: 20.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                        ),
-                        child: Text(
-                          'Plus tard',
-                          style: TextStyle(
-                            fontSize: 44.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          await PreferencesHelper.markB12PopupAsShown();
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const B12ReminderSettingsPage(),
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 20.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                        ),
-                        child: Text(
-                          'Configurer',
-                          style: TextStyle(
-                            fontSize: 44.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
   }
 
   @override

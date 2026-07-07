@@ -112,15 +112,13 @@ flutter:
     - lib/assets/scanner/e_numbers.json
     - lib/assets/cosmetics.db.gz
     - lib/assets/white_icon.png
-    - lib/assets/home_tab_icon.png
     - lib/assets/app_icon.png
     - lib/assets/logo_instagram.png
     - lib/assets/vegan_products.db.gz
-    - lib/assets/intro/additifs.gif
-    - lib/assets/intro/cosmetics.gif
-    - lib/assets/intro/scan.gif
-    - lib/assets/intro/scan_unknown.gif
-    - lib/assets/intro/accueil.gif
+    - lib/assets/intro/home-1.webp
+    - lib/assets/intro/scan-1.webp
+    - lib/assets/intro/map.webp
+    - lib/assets/intro/partners.webp
     - lib/assets/badges/500products.png
     # Badges
     - lib/assets/badges/1an.png

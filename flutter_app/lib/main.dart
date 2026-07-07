@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:vegan_app/helpers/database_helper.dart';
@@ -20,7 +21,12 @@ import 'helpers/theme_helper.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
+  // Draw behind both system bars on every Android version (Android 15+
+  // already enforces this; the explicit call aligns older versions).
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   await dotenv.load(fileName: ".env");
   await DatabaseHelper.instance.database;
   await DatabaseHelper.instance.cosmeticsDatabase;
@@ -85,6 +91,7 @@ class MyAppState extends State<MyApp> {
         oniOS: () => UpgraderAppcastStore(appcastURL: appcastURL),
       ),
     );
+    _updateSystemOverlayStyle();
     _loadTheme();
   }
 
@@ -97,6 +104,23 @@ class MyAppState extends State<MyApp> {
 
   Future<void> updateTheme() async {
     await _loadTheme();
+  }
+
+  void _updateSystemOverlayStyle() {
+    // Fully transparent bars (app content shows through) with dark icons,
+    // and the Android 15 contrast scrims disabled. Note: Xiaomi (MIUI/
+    // HyperOS) in 3-button navigation mode force-paints its own opaque nav
+    // bar and ignores all of these requests — that is a system limitation,
+    // not a bug here; gesture navigation and other devices are transparent.
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle.dark.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+        systemStatusBarContrastEnforced: false,
+        systemNavigationBarContrastEnforced: false,
+      ),
+    );
   }
 
   @override
