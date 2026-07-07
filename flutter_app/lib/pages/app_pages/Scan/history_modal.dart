@@ -3,10 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/boycott_data.dart';
 import 'package:vegan_app/models/scan_result.dart';
-import 'package:vegan_app/models/vegan_status.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
-import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
-import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
 
 class HistoryModal extends StatefulWidget {
@@ -48,22 +45,8 @@ class _HistoryModalState extends State<HistoryModal> {
     });
   }
 
-  // Update history
-  void _updateHistory() async {
-    final newHistory = await PreferencesHelper.getScanHistory();
-    setState(() {
-      _history = newHistory;
-    });
-  }
-
   Future<ScanResult> _fetchProductDetails(String barcode) async {
     return await ProductInfoHelper.getProductInfo(barcode);
-  }
-
-  // Function to check if the product is in personal database
-  Future<bool> _isProductAlredySent(String barcode) async {
-    final result = await PreferencesHelper.isCodeInPreferences(barcode);
-    return result;
   }
 
   @override
@@ -159,13 +142,8 @@ class _HistoryModalState extends State<HistoryModal> {
                       final barcode = item['barcode'];
                       final timestamp = item['timestamp'];
 
-                      return FutureBuilder<List<dynamic>>(
-                        future: Future.wait([
-                          _fetchProductDetails(
-                              barcode), // Fetch product details
-                          _isProductAlredySent(
-                              barcode), // Check if the product is already sent
-                        ]),
+                      return FutureBuilder<ScanResult>(
+                        future: _fetchProductDetails(barcode),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -189,9 +167,7 @@ class _HistoryModalState extends State<HistoryModal> {
                               isEan8: barcode.length == 8,
                             );
                           } else {
-                            final productDetails =
-                                snapshot.data![0] as ScanResult;
-                            final isAlreadySent = snapshot.data![1] as bool;
+                            final productDetails = snapshot.data!;
 
                             return _buildProductCard(
                               context: context,
@@ -206,7 +182,6 @@ class _HistoryModalState extends State<HistoryModal> {
                                   productDetails.hasNonVeganOldRecipe,
                               problem: productDetails.problem,
                               biodynamie: productDetails.biodynamic,
-                              alreadySent: isAlreadySent,
                               isEan8: barcode.length == 8,
                             );
                           }
@@ -263,7 +238,6 @@ class _HistoryModalState extends State<HistoryModal> {
     String? problem,
     bool biodynamie = false,
     required BuildContext context,
-    bool alreadySent = false,
     bool isEan8 = false,
   }) {
     final BoycottMatch? boycottMatch =
@@ -451,100 +425,6 @@ class _HistoryModalState extends State<HistoryModal> {
                   ),
                 ),
               ),
-            if (badgeText == 'Inconnu')
-              if (!alreadySent)
-                Padding(
-                  padding: EdgeInsets.only(top: 16.h),
-                  child: Container(
-                    padding: EdgeInsets.all(16.w),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        if (AuthService.isLoggedIn) ...[
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                await ProductHelper.tryAddDocument(
-                                  context,
-                                  code,
-                                  VeganStatus.vegan,
-                                );
-                                _updateHistory();
-                              },
-                              icon: const Icon(Icons.check_circle,
-                                  color: Colors.white),
-                              label: Text(
-                                'Vegan',
-                                style: TextStyle(
-                                  fontSize: 40.sp,
-                                  color: Colors.white, // Make text white
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green.shade600,
-                                padding: EdgeInsets.symmetric(vertical: 14.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.r),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 16.w),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () async {
-                                await ProductHelper.tryAddDocument(
-                                  context,
-                                  code,
-                                  VeganStatus.nonVegan,
-                                );
-                                _updateHistory();
-                              },
-                              icon:
-                                  const Icon(Icons.cancel, color: Colors.white),
-                              label: Text(
-                                'Pas Vegan',
-                                style: TextStyle(
-                                  fontSize: 40.sp,
-                                  color: Colors.white, // Make text white
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red.shade600,
-                                padding: EdgeInsets.symmetric(vertical: 14.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.r),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                )
-              else // Product already sent
-                Padding(
-                  padding: EdgeInsets.only(top: 16.h),
-                  child: Container(
-                    padding: EdgeInsets.all(16.w),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green.shade600),
-                        SizedBox(width: 8.w),
-                        Text(
-                          'Produit déjà envoyé',
-                          style: TextStyle(
-                            fontSize: 40.sp,
-                            color: Colors.green.shade600,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
             // EAN-8 Warning Box
             if (isEan8 && status != ScanStatus.unknown)
               Padding(

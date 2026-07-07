@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
@@ -67,6 +68,11 @@ class MyHomePageState extends State<MyHomePage>
       length: 5,
       vsync: this,
     );
+
+    // Swiping the TabBarView changes the index without going through the
+    // bar's onTap; rebuild so index-dependent widgets (profile bubble)
+    // stay in sync.
+    _tabController.addListener(_onTabIndexChanged);
 
     _initializeTabController();
 
@@ -225,6 +231,12 @@ class MyHomePageState extends State<MyHomePage>
     );
   }
 
+  void _onTabIndexChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   void _onAvatarChanged() {
     if (mounted) {
       setState(() {
@@ -259,6 +271,7 @@ class MyHomePageState extends State<MyHomePage>
     NotificationService.showAnniversary
         .removeListener(_onAnniversaryNotificationTap);
     WidgetsBinding.instance.removeObserver(this);
+    _tabController.removeListener(_onTabIndexChanged);
     _tabController.dispose();
     _confettiController.dispose();
     _partnersAnimationController.dispose();
@@ -877,9 +890,10 @@ class MyHomePageState extends State<MyHomePage>
                   : Theme.of(context).colorScheme.primary,
               items: [
                 const TabItem(icon: Icons.percent, title: "Promos"),
-                const TabItem(icon: Icons.home, title: "Accueil"),
-                const TabItem(icon: Icons.qr_code_scanner, title: "Scan"),
-                const TabItem(icon: Icons.map, title: "Carte"),
+                const TabItem(icon: Icons.home_rounded, title: "Accueil"),
+                const TabItem(
+                    icon: CupertinoIcons.barcode, title: "Scan"),
+                const TabItem(icon: Icons.travel_explore, title: "Carte"),
                 // Show the user's avatar on the Profil tab when logged in;
                 // logged-out users keep the default person icon. Inactive,
                 // the avatar is painted ~35% larger than its icon box so it

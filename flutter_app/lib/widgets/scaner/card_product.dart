@@ -406,17 +406,18 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
     widget.onScannerStop?.call();
 
     try {
-      // Show modal to collect additional info
+      // Show modal to collect additional info. A null result means the
+      // modal was dismissed without using a button: don't send anything.
       final result = await ProductInfoFormModal.show(context);
-      if (!mounted) return;
+      if (!mounted || result == null) return;
 
       bool success = await ProductHelper.tryAddDocument(
         context,
         widget.productInfo.code,
         veganStatus,
-        productName: result?.productName ?? '',
-        brand: result?.brand ?? '',
-        photo: result?.photo,
+        productName: result.productName,
+        brand: result.brand,
+        photo: result.photo,
       );
       if (success) {
         setState(() {

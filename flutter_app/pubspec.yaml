@@ -112,6 +112,7 @@ flutter:
     - lib/assets/scanner/e_numbers.json
     - lib/assets/cosmetics.db.gz
     - lib/assets/white_icon.png
+    - lib/assets/home_tab_icon.png
     - lib/assets/app_icon.png
     - lib/assets/logo_instagram.png
     - lib/assets/vegan_products.db.gz

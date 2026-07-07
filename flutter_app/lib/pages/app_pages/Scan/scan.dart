@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:confetti/confetti.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/services.dart';
 import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -63,7 +64,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   bool _openOnScanPage = false;
   bool _showBoycott = true;
   bool _showScores = true;
-  bool _themedNavBar = false;
   List<String> _productsOfInterest = [];
   Map<String, ProductOfInterest> _productsOfInterestMap = {};
   Map<String, String> _alternativeEanToMainEan = {};
@@ -111,7 +111,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     _loadOpenOnScanPagePref();
     _loadShowBoycottPref();
     _loadShowScoresPref();
-    _loadThemedNavBarPref();
     // Load products from already-populated cache (populated at app startup)
     _loadProductsOfInterest();
 
@@ -371,13 +370,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _loadThemedNavBarPref() async {
-    final value = await PreferencesHelper.getThemedNavBarPref();
-    setState(() {
-      _themedNavBar = value;
-    });
-  }
-
   Future<void> _loadProductsOfInterest() async {
     // Load from cache instantly, updates in background automatically
     final products = await ProductsOfInterestCache.loadProductsOfInterest();
@@ -606,12 +598,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
             },
             initialShowScores: _showScores,
             onShowScoresChanged: _setShowScoresPref,
-            initialThemedNavBar: _themedNavBar,
-            onThemedNavBarChanged: (value) {
-              setState(() {
-                _themedNavBar = value;
-              });
-            },
           ),
         );
       },
@@ -634,6 +620,14 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     setState(() {
       productInfo = product;
     });
+
+    // Products missing from the database (unknown, or already submitted by
+    // the user) don't belong in the scan history.
+    if (product.status != ScanStatus.unknown &&
+        product.status != ScanStatus.alreadyScanned) {
+      await PreferencesHelper.addBarcodeToHistory(barcode);
+      _loadScanHistory();
+    }
 
     if ((product.status == ScanStatus.vegan ||
             product.status == ScanStatus.notVegan) &&
@@ -739,7 +733,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                           color: Colors.grey.shade100,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.qr_code_2,
+                        child: Icon(CupertinoIcons.barcode,
                             size: 32, color: Colors.grey.shade700),
                       ),
                       const SizedBox(width: 12),
@@ -885,12 +879,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
       // Reset the button disabled state in NonVeganProductInfoCardState
       nonVeganCardKey.currentState?.resetButton();
 
-      PreferencesHelper.addBarcodeToHistory(barcodeValue.toString()).then((_) {
-        // Reload the history after adding the barcode
-        _loadScanHistory();
-        // Check if we should prompt the user to create an account
-        _checkAccountPrompt();
-      });
+      // Check if we should prompt the user to create an account
+      _checkAccountPrompt();
 
       // Send scan event if it's a product of interest (don't wait for it)
       _sendScanEventIfInteresting(barcodeValue.toString());
@@ -1362,7 +1352,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                     spacing: 24.h,
                     children: [
                       LiquidGlassButton(
-                        label: 'Additifs',
+                        label: 'Additifs 🔎',
                         icon: Icons.science,
                         height: 100.h,
                         fontSize: 40.sp,
@@ -1378,7 +1368,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                         ),
                       ),
                       LiquidGlassButton(
-                        label: 'Cosmétiques',
+                        label: 'Cosmétiques 🔎',
                         icon: Icons.soap_rounded,
                         height: 100.h,
                         fontSize: 40.sp,
