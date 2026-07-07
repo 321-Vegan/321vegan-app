@@ -106,21 +106,20 @@ class MyAppState extends State<MyApp> {
     await _loadTheme();
   }
 
+  /// Fully transparent system bars (app content shows through) with dark
+  /// icons, and the Android 15 contrast scrims disabled.
+  static const SystemUiOverlayStyle _overlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarBrightness: Brightness.light, // iOS: dark status bar text
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemStatusBarContrastEnforced: false,
+    systemNavigationBarContrastEnforced: false,
+  );
+
   void _updateSystemOverlayStyle() {
-    // Fully transparent bars (app content shows through) with dark icons,
-    // and the Android 15 contrast scrims disabled. Note: Xiaomi (MIUI/
-    // HyperOS) in 3-button navigation mode force-paints its own opaque nav
-    // bar and ignores all of these requests — that is a system limitation,
-    // not a bug here; gesture navigation and other devices are transparent.
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle.dark.copyWith(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarIconBrightness: Brightness.dark,
-        systemStatusBarContrastEnforced: false,
-        systemNavigationBarContrastEnforced: false,
-      ),
-    );
+    SystemChrome.setSystemUIOverlayStyle(_overlayStyle);
   }
 
   @override
@@ -138,6 +137,17 @@ class MyAppState extends State<MyApp> {
           home: CustomUpgradeAlert(
             upgrader: _upgrader,
             child: const FirstLaunchChecker(),
+          ),
+          // App-wide AnnotatedRegion: pages with an AppBar plant their own
+          // region that only carries status-bar fields, and once the engine
+          // adopts it the nav-bar styling (transparency, dark buttons) is
+          // silently dropped on the next window-focus change. Keeping this
+          // region under the whole app re-asserts the nav-bar style every
+          // frame: the AppBar wins the status-bar probe, this wins the
+          // nav-bar probe (see RenderView._updateSystemChrome).
+          builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+            value: _overlayStyle,
+            child: child!,
           ),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
