@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
+import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
 
 class SentProductsModal extends StatefulWidget {
@@ -54,31 +55,22 @@ class _SentProductsModalState extends State<SentProductsModal> {
       // Get product info using ProductInfoHelper
       final productInfo = await ProductInfoHelper.getProductInfo(code);
 
-      // Convert is_vegan status to display status
-      String status;
-      switch (productInfo['is_vegan']) {
-        case 'true':
-          status = 'Vegan';
-          break;
-        case 'false':
-          status = 'Pas Vegan';
-          break;
-        case 'waiting':
-          status = 'En attente';
-          break;
-        case 'not_found':
-          status = 'Introuvable';
-          break;
-        default:
-          status = 'En cours';
-      }
+      // Convert the scan status to display status
+      final status = switch (productInfo.status) {
+        ScanStatus.vegan => 'Vegan',
+        ScanStatus.notVegan => 'Pas Vegan',
+        ScanStatus.pending => 'En attente',
+        ScanStatus.notFound => 'Introuvable',
+        ScanStatus.alreadyScanned || ScanStatus.unknown => 'En cours',
+      };
 
       processedCodes[code] = {
-        'code': productInfo['code'],
-        'name': productInfo['name'] ?? 'Nom inconnu',
-        'brand': productInfo['brand'] ?? 'Marque inconnue',
+        'code': productInfo.code,
+        'name': productInfo.name.isNotEmpty ? productInfo.name : 'Nom inconnu',
+        'brand':
+            productInfo.brand.isNotEmpty ? productInfo.brand : 'Marque inconnue',
         'status': status,
-        'problem': productInfo['problem'],
+        'problem': productInfo.problem,
       };
     }
 
@@ -128,7 +120,7 @@ class _SentProductsModalState extends State<SentProductsModal> {
                 Icon(
                   Icons.switch_access_shortcut_add_outlined,
                   color: Colors.white,
-                  size: 40.sp,
+                  size: 80.sp,
                 ),
                 SizedBox(width: 12.w),
                 Expanded(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,7 @@ import '../../models/badge.dart' as app_badge;
 import '../../pages/app_pages/Scan/sent_products_modal.dart';
 import '../../pages/app_pages/Scan/settings_modal.dart';
 import '../../helpers/preference_helper.dart';
+import '../../services/products_of_interest_cache.dart';
 import './edit_profile_modal.dart';
 import '../shared/social_feedback_buttons.dart';
 import '../shared/shine_wrapper.dart';
@@ -42,6 +44,8 @@ class _UserProfileState extends State<UserProfile> {
   bool _showBoycott = true;
   bool _showScores = true;
   List<DateTime> _b12History = [];
+  int _b12Streak = 0;
+  Set<String> _vegandexEans = {};
 
   final List<String> _availableAvatars = [
     'lapin.png',
@@ -61,13 +65,25 @@ class _UserProfileState extends State<UserProfile> {
     _loadUserInfo();
     _loadPreferences();
     _loadB12History();
+    _loadVegandexProducts();
+  }
+
+  Future<void> _loadVegandexProducts() async {
+    final products = await ProductsOfInterestCache.loadProductsOfInterest();
+    if (mounted) {
+      setState(() {
+        _vegandexEans = products.map((p) => p.ean).toSet();
+      });
+    }
   }
 
   Future<void> _loadB12History() async {
     final history = await B12ReminderService.getB12IntakeHistory();
+    final streak = await B12ReminderService.getB12Streak();
     if (mounted) {
       setState(() {
         _b12History = history;
+        _b12Streak = streak;
       });
     }
   }
@@ -909,6 +925,49 @@ class _UserProfileState extends State<UserProfile> {
                             color: Colors.grey[500],
                           ),
                         ),
+                      if (_b12Streak >= 2) ...[
+                        SizedBox(height: 12.h),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 8.h),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.orange.shade400,
+                                Colors.deepOrange.shade400,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(20.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.orange.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '🔥',
+                                style: TextStyle(fontSize: 36.sp),
+                              ),
+                              SizedBox(width: 8.w),
+                              Text(
+                                '$_b12Streak prises d\'affilée',
+                                style: TextStyle(
+                                  fontSize: 36.sp,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1193,64 +1252,147 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget _buildVegandexCard() {
-    final scannedCount = _user?.scannedProducts?.length ?? 0;
+    final totalCount = _vegandexEans.length;
+    final scannedCount = totalCount > 0
+        ? (_user?.scannedProducts
+                ?.where((sp) => _vegandexEans.contains(sp.ean))
+                .length ??
+            0)
+        : (_user?.scannedProducts?.length ?? 0);
+    final progress =
+        totalCount > 0 ? (scannedCount / totalCount).clamp(0.0, 1.0) : 0.0;
+    final isComplete = totalCount > 0 && scannedCount >= totalCount;
+    final primary = Theme.of(context).colorScheme.primary;
+    const gold = Color(0xFFFFD700);
 
     return GestureDetector(
       onTap: _showVegandexModal,
-      child: _buildCard(
-        child: Row(
-          children: [
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.primary.withAlpha(150),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.catching_pokemon,
-                size: 56.sp,
-                color: Colors.white,
-              ),
+      child: ShineWrapper(
+        borderRadius: 28,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(28.w),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                primary,
+                primary.withAlpha(190),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            SizedBox(width: 20.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            borderRadius: BorderRadius.circular(28.r),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.35),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    'Vegandex',
-                    style: TextStyle(
-                      fontSize: 52.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                  Container(
+                    padding: EdgeInsets.all(16.w),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isComplete ? Icons.emoji_events : Icons.catching_pokemon,
+                      size: 56.sp,
+                      color: isComplete ? gold : Colors.white,
                     ),
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    scannedCount > 0
-                        ? '$scannedCount produit${scannedCount > 1 ? 's' : ''} trouvé${scannedCount > 1 ? 's' : ''}'
-                        : 'Collectionnez les produits !',
-                    style: TextStyle(
-                      fontSize: 36.sp,
-                      color: Colors.grey[600],
+                  SizedBox(width: 20.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Vegandex',
+                          style: TextStyle(
+                            fontSize: 52.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          isComplete
+                              ? 'Collection complète, bravo !'
+                              : scannedCount > 0
+                                  ? 'Continuez la collection !'
+                                  : 'Collectionnez les produits !',
+                          style: TextStyle(
+                            fontSize: 36.sp,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 48.sp,
+                    color: Colors.white70,
                   ),
                 ],
               ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 48.sp,
-              color: Colors.grey[400],
-            ),
-          ],
+              if (totalCount > 0) ...[
+                SizedBox(height: 28.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '$scannedCount / $totalCount produits',
+                      style: TextStyle(
+                        fontSize: 38.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(20.r),
+                      ),
+                      child: Text(
+                        '${(progress * 100).round()} %',
+                        style: TextStyle(
+                          fontSize: 36.sp,
+                          fontWeight: FontWeight.bold,
+                          color: isComplete ? gold : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14.r),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: progress),
+                    duration: const Duration(milliseconds: 900),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) => LinearProgressIndicator(
+                      value: value,
+                      minHeight: 28.h,
+                      backgroundColor: Colors.white.withValues(alpha: 0.25),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isComplete ? gold : Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -1553,36 +1695,84 @@ class _UserProfileState extends State<UserProfile> {
   }
 
   Widget _buildBadgeItem(app_badge.Badge badge, bool isUnlocked) {
+    final progress = badge.getProgress(
+      productsSent: _user?.nbProductsSent ?? 0,
+      veganSince: _user?.veganSince,
+      supporterLevel: _user?.supporterLevel ?? 0,
+      errorSolved: _user?.nbErrorReports ?? 0,
+    );
+
     return GestureDetector(
       onTap: () => _showBadgeDetails(badge, isUnlocked),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Badge icon
-          Container(
+          // Badge icon with progress ring while locked
+          SizedBox(
             width: 180.w,
             height: 180.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isUnlocked ? Colors.white : Colors.grey[300],
-              border: Border.all(
-                color: isUnlocked
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey[400]!,
-                width: isUnlocked ? 3 : 2,
-              ),
-              boxShadow: isUnlocked
-                  ? [
-                      BoxShadow(
-                        color:
-                            Theme.of(context).colorScheme.primary.withAlpha(80),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : [],
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isUnlocked ? Colors.white : Colors.grey[300],
+                    border: Border.all(
+                      color: isUnlocked
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey[400]!,
+                      width: isUnlocked ? 3 : 2,
+                    ),
+                    boxShadow: isUnlocked
+                        ? [
+                            BoxShadow(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withAlpha(80),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: _buildBadgeIcon(badge, isUnlocked),
+                ),
+                if (!isUnlocked && progress > 0)
+                  CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 4,
+                    strokeCap: StrokeCap.round,
+                    backgroundColor: Colors.transparent,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.orange[700]!),
+                  ),
+              ],
             ),
-            child: ClipOval(
+          ),
+
+          SizedBox(height: 8.h),
+
+          // Badge name
+          Text(
+            badge.name,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 32.sp,
+              fontWeight: isUnlocked ? FontWeight.bold : FontWeight.normal,
+              color: isUnlocked ? Colors.grey[800] : Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBadgeIcon(app_badge.Badge badge, bool isUnlocked) {
+    return ClipOval(
               child: Stack(
                 children: [
                   Padding(
@@ -1640,29 +1830,23 @@ class _UserProfileState extends State<UserProfile> {
                     ),
                 ],
               ),
-            ),
-          ),
-
-          SizedBox(height: 8.h),
-
-          // Badge name
-          Text(
-            badge.name,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 32.sp,
-              fontWeight: isUnlocked ? FontWeight.bold : FontWeight.normal,
-              color: isUnlocked ? Colors.grey[800] : Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   void _showBadgeDetails(app_badge.Badge badge, bool isUnlocked) {
+    final progress = badge.getProgress(
+      productsSent: _user?.nbProductsSent ?? 0,
+      veganSince: _user?.veganSince,
+      supporterLevel: _user?.supporterLevel ?? 0,
+      errorSolved: _user?.nbErrorReports ?? 0,
+    );
+    final progressText = badge.getProgressText(
+      productsSent: _user?.nbProductsSent ?? 0,
+      veganSince: _user?.veganSince,
+      supporterLevel: _user?.supporterLevel ?? 0,
+      errorSolved: _user?.nbErrorReports ?? 0,
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1816,6 +2000,49 @@ class _UserProfileState extends State<UserProfile> {
                 ],
               ),
             ),
+
+            // Progress toward unlocking
+            if (!isUnlocked && progressText != null) ...[
+              SizedBox(height: 24.h),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    progressText,
+                    style: TextStyle(
+                      fontSize: 40.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  Text(
+                    '${(progress * 100).round()} %',
+                    style: TextStyle(
+                      fontSize: 40.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange[700],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10.r),
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: progress),
+                  duration: const Duration(milliseconds: 700),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, _) => LinearProgressIndicator(
+                    value: value,
+                    minHeight: 20.h,
+                    backgroundColor: Colors.grey[200],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.orange[700]!,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),

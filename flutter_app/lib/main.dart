@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:vegan_app/helpers/database_helper.dart';
@@ -20,7 +21,12 @@ import 'helpers/theme_helper.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
+
   WidgetsFlutterBinding.ensureInitialized();
+  // Draw behind both system bars on every Android version (Android 15+
+  // already enforces this; the explicit call aligns older versions).
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   await dotenv.load(fileName: ".env");
   await DatabaseHelper.instance.database;
   await DatabaseHelper.instance.cosmeticsDatabase;
@@ -85,6 +91,7 @@ class MyAppState extends State<MyApp> {
         oniOS: () => UpgraderAppcastStore(appcastURL: appcastURL),
       ),
     );
+    _updateSystemOverlayStyle();
     _loadTheme();
   }
 
@@ -97,6 +104,22 @@ class MyAppState extends State<MyApp> {
 
   Future<void> updateTheme() async {
     await _loadTheme();
+  }
+
+  /// Fully transparent system bars (app content shows through) with dark
+  /// icons, and the Android 15 contrast scrims disabled.
+  static const SystemUiOverlayStyle _overlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarBrightness: Brightness.light, // iOS: dark status bar text
+    statusBarIconBrightness: Brightness.dark,
+    systemNavigationBarColor: Colors.transparent,
+    systemNavigationBarIconBrightness: Brightness.dark,
+    systemStatusBarContrastEnforced: false,
+    systemNavigationBarContrastEnforced: false,
+  );
+
+  void _updateSystemOverlayStyle() {
+    SystemChrome.setSystemUIOverlayStyle(_overlayStyle);
   }
 
   @override
@@ -114,6 +137,17 @@ class MyAppState extends State<MyApp> {
           home: CustomUpgradeAlert(
             upgrader: _upgrader,
             child: const FirstLaunchChecker(),
+          ),
+          // App-wide AnnotatedRegion: pages with an AppBar plant their own
+          // region that only carries status-bar fields, and once the engine
+          // adopts it the nav-bar styling (transparency, dark buttons) is
+          // silently dropped on the next window-focus change. Keeping this
+          // region under the whole app re-asserts the nav-bar style every
+          // frame: the AppBar wins the status-bar probe, this wins the
+          // nav-bar probe (see RenderView._updateSystemChrome).
+          builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+            value: _overlayStyle,
+            child: child!,
           ),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,

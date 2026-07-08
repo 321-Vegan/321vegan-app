@@ -102,7 +102,7 @@ class AdditivesPageState extends State<AdditivesPage> {
                 controller: searchController,
                 decoration: const InputDecoration(
                   labelText:
-                      'Rechercher un additif (par ex. e200, e120, carmine, lactate, ...)',
+                      'Rechercher un additif (par ex. e200, e120, carmin, lactate, ...)',
                   suffixIcon: Icon(Icons.search),
                 ),
                 onChanged: _searchENumber,

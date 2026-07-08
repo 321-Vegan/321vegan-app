@@ -1,5 +1,6 @@
 import 'package:vegan_app/helpers/database_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
+import 'package:vegan_app/models/scan_result.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ProductInfoHelper {
@@ -64,18 +65,7 @@ class ProductInfoHelper {
     return brandName ?? 'Marque inconnue';
   }
 
-  static Future<Map<String, dynamic>> getProductInfo(String barcode) async {
-    // Default product info for unknown products
-    Map<String, dynamic> defaultProductInfo = {
-      'code': barcode,
-      'name': barcode,
-      'brand': 'inconnue',
-      'is_vegan': 'unknown',
-      'has_non_vegan_old_receipe': false,
-      'problem': null,
-      'biodynamie': false,
-    };
-
+  static Future<ScanResult> getProductInfo(String barcode) async {
     // Query the database
     final dbResult = await DatabaseHelper.instance.queryProduct(barcode);
 
@@ -85,17 +75,20 @@ class ProductInfoHelper {
       final isAlreadyScanned =
           await PreferencesHelper.isCodeInPreferences(barcode);
       if (isAlreadyScanned) {
-        return {
-          'code': barcode,
-          'name': 'Produit inconnu',
-          'brand': 'Marque inconnue',
-          'is_vegan': 'already_scanned',
-          'has_non_vegan_old_receipe': false,
-          'problem': null,
-          'biodynamie': false,
-        };
+        return ScanResult(
+          code: barcode,
+          name: 'Produit inconnu',
+          brand: 'Marque inconnue',
+          status: ScanStatus.alreadyScanned,
+        );
       }
-      return defaultProductInfo;
+      // Default result for unknown products
+      return ScanResult(
+        code: barcode,
+        name: barcode,
+        brand: 'inconnue',
+        status: ScanStatus.unknown,
+      );
     }
 
     // Product found in database
@@ -113,30 +106,22 @@ class ProductInfoHelper {
     bool isBiodynamie = product['biodynamie'] == 'Y';
 
     // Determine vegan status based on product status
-    String veganStatus;
-    switch (status) {
-      case 'R':
-        veganStatus = 'false'; // Rejected
-        break;
-      case 'M':
-        veganStatus = 'waiting'; // Pending
-        break;
-      case 'N':
-        veganStatus = 'not_found'; // Not found
-        break;
-      default:
-        veganStatus = 'true'; // Approved
-    }
+    final scanStatus = switch (status) {
+      'R' => ScanStatus.notVegan, // Rejected
+      'M' => ScanStatus.pending, // Pending
+      'N' => ScanStatus.notFound, // Not found
+      _ => ScanStatus.vegan, // Approved
+    };
 
     // Return the product information
-    return {
-      'code': product['code'] ?? barcode,
-      'name': productName,
-      'brand': brandName,
-      'is_vegan': veganStatus,
-      'has_non_vegan_old_receipe': product['has_non_vegan_old_receipe'] == 1,
-      'problem': product['problem'],
-      'biodynamie': status != 'M' && status != 'N' ? isBiodynamie : false,
-    };
+    return ScanResult(
+      code: product['code']?.toString() ?? barcode,
+      name: productName,
+      brand: brandName,
+      status: scanStatus,
+      hasNonVeganOldRecipe: product['has_non_vegan_old_receipe'] == 1,
+      problem: product['problem'] as String?,
+      biodynamic: status != 'M' && status != 'N' ? isBiodynamie : false,
+    );
   }
 }

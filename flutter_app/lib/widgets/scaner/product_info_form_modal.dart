@@ -22,6 +22,10 @@ class ProductInfoFormModal extends StatefulWidget {
     return showModalBottomSheet<ProductInfoFormResult>(
       context: context,
       isScrollControlled: true,
+      // Dismissing the sheet would send the product without info, so force
+      // the user to close it explicitly with one of the buttons.
+      isDismissible: false,
+      enableDrag: false,
       backgroundColor: Colors.transparent,
       builder: (context) => const ProductInfoFormModal(),
     );
@@ -99,19 +103,6 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle bar
-              Center(
-                child: Container(
-                  width: 40.w,
-                  height: 4.h,
-                  margin: EdgeInsets.only(bottom: 16.h),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-
               // Header
               Row(
                 children: [
@@ -137,6 +128,10 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
                         color: Colors.black87,
                       ),
                     ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.close, color: Colors.grey.shade600),
                   ),
                 ],
               ),

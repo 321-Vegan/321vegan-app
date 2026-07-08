@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/helper.dart';
 import 'package:vegan_app/models/boycott_data.dart';
+import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
 
 class VeganProductInfoCard extends StatelessWidget {
-  final Map<dynamic, dynamic>? productInfo;
+  final ScanResult productInfo;
   final bool showBoycott;
   final Function(bool)? onBoycottToggleChanged;
 
@@ -17,8 +18,8 @@ class VeganProductInfoCard extends StatelessWidget {
   });
 
   BoycottMatch? getBoycottMatch() {
-    final brand = productInfo?['brand'];
-    if (brand != null && brand is String && brand.isNotEmpty) {
+    final brand = productInfo.brand;
+    if (brand.isNotEmpty) {
       return BoycottData.findBrand(brand);
     }
     return null;
@@ -54,8 +55,8 @@ class VeganProductInfoCard extends StatelessWidget {
           children: [
             Text(
               Helper.truncate(
-                (productInfo?['name']?.isNotEmpty ?? false)
-                    ? productInfo!['name']
+                productInfo.name.isNotEmpty
+                    ? productInfo.name
                     : 'Unnamed Product',
                 45,
               ),
@@ -69,8 +70,8 @@ class VeganProductInfoCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               (() {
-                final brand = productInfo?['brand'];
-                if (brand != null && brand is String && brand.isNotEmpty) {
+                final brand = productInfo.brand;
+                if (brand.isNotEmpty) {
                   String formattedBrand =
                       '${brand[0].toUpperCase()}${brand.substring(1)}';
                   if (formattedBrand.length > 30) {
@@ -91,9 +92,9 @@ class VeganProductInfoCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (productInfo?['biodynamie'] != true)
+                if (!productInfo.biodynamic)
                   TweenAnimationBuilder<double>(
-                    key: ValueKey(productInfo?['name']),
+                    key: ValueKey(productInfo.name),
                     duration: const Duration(milliseconds: 1000),
                     tween: Tween(begin: 0.8, end: 1.0),
                     curve: Curves.elasticOut,
@@ -158,7 +159,7 @@ class VeganProductInfoCard extends StatelessWidget {
                     ),
                   ),
                 ],
-                if (!isBoycotted && productInfo?['biodynamie'] == true) ...[
+                if (!isBoycotted && productInfo.biodynamic) ...[
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () {

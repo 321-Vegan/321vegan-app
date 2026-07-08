@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/time_counter/time_counter.dart';
 
 void main() {
@@ -16,9 +17,16 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: TimeCounter(targetDate: targetDate),
+      ScreenUtilInit(
+        designSize: const Size(1170, 2532),
+        builder: (_, __) => MaterialApp(
+          home: Scaffold(
+            // FittedBox absorbs the extra width of the test environment's
+            // fixed-width font, which is wider than any real device font.
+            body: FittedBox(
+              child: TimeCounter(targetDate: targetDate),
+            ),
+          ),
         ),
       ),
     );
@@ -33,9 +41,14 @@ void main() {
   testWidgets('TimeCounter displays zeros if targetDate is null',
       (WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(
-          body: TimeCounter(targetDate: null),
+      ScreenUtilInit(
+        designSize: const Size(1170, 2532),
+        builder: (_, __) => const MaterialApp(
+          home: Scaffold(
+            body: FittedBox(
+              child: TimeCounter(targetDate: null),
+            ),
+          ),
         ),
       ),
     );

@@ -87,6 +87,24 @@ class PreferencesHelper {
     return prefs.getBool('product_scores_enabled') ?? true;
   }
 
+  /// Fires whenever the 'themed nav bar' preference is saved, so the bottom
+  /// tab bar (in home) can restyle without being wired to the settings UI.
+  static final ValueNotifier<bool> themedNavBarNotifier = ValueNotifier(false);
+
+  // Save 'themed nav bar' preference (theme-colored bottom menu instead of
+  // the default white one)
+  static Future<void> setThemedNavBarPref(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('themed_nav_bar', value);
+    themedNavBarNotifier.value = value;
+  }
+
+  // Load 'themed nav bar' preference
+  static Future<bool> getThemedNavBarPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('themed_nav_bar') ?? false;
+  }
+
   // Method to add or remove a code based on success status
   static Future<void> addCodeToPreferences(String? code, bool success) async {
     if (code == null) return;
@@ -232,6 +250,11 @@ class PreferencesHelper {
   }
 
   // Avatar preference methods
+
+  /// Fires whenever the avatar is saved, so widgets showing it (e.g. the
+  /// bottom tab bar) can refresh without being wired to the profile UI.
+  static final ValueNotifier<String?> avatarNotifier = ValueNotifier(null);
+
   static Future<void> saveAvatar(String? avatar) async {
     final prefs = await SharedPreferences.getInstance();
     if (avatar == null) {
@@ -239,6 +262,7 @@ class PreferencesHelper {
     } else {
       await prefs.setString('user_avatar', avatar);
     }
+    avatarNotifier.value = avatar;
   }
 
   static Future<String?> getAvatar() async {
@@ -280,7 +304,7 @@ class PreferencesHelper {
   // Get the last update timestamp for partners
   static Future<DateTime?> getPartnersLastUpdate() async {
     // Change this date when new partners added
-    return DateTime(2026, 3, 20);
+    return DateTime(2026, 07, 05);
   }
 
   // Mark partners page as visited
@@ -482,21 +506,6 @@ class PreferencesHelper {
     final startedAt = DateTime.tryParse(started);
     if (startedAt == null) return null;
     return startedAt.add(mapFreeTrialDuration);
-  }
-
-  // B12 popup notification methods
-  static const String _b12PopupShownKey = 'b12_popup_shown';
-
-  // Mark B12 popup as shown
-  static Future<void> markB12PopupAsShown() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_b12PopupShownKey, true);
-  }
-
-  // Check if B12 popup has been shown
-  static Future<bool> hasB12PopupBeenShown() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_b12PopupShownKey) ?? false;
   }
 
   // Pending email change methods

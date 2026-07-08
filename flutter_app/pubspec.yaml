@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 4.6.1+1
+version: 4.7.1+1
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -33,7 +33,7 @@ dependencies:
   video_player: ^2.9.2
   share_plus: ^10.1.4
   introduction_screen: ^3.1.0
-  motion_tab_bar_v2: ^0.3.0
+  convex_bottom_bar: ^3.2.0
   shared_preferences: ^2.3.2
   intl: ^0.20.2
   flutter_localization: ^0.2.1
@@ -79,6 +79,7 @@ dependencies:
   flutter_map_marker_cluster: ^8.2.2
   flutter_map_cache: ^2.1.0
   http_cache_file_store: ^2.0.0
+  liquid_glass_easy: ^3.2.2
 
 dev_dependencies:
   flutter_test:
@@ -114,11 +115,10 @@ flutter:
     - lib/assets/app_icon.png
     - lib/assets/logo_instagram.png
     - lib/assets/vegan_products.db.gz
-    - lib/assets/intro/additifs.gif
-    - lib/assets/intro/cosmetics.gif
-    - lib/assets/intro/scan.gif
-    - lib/assets/intro/scan_unknown.gif
-    - lib/assets/intro/accueil.gif
+    - lib/assets/intro/home-1.webp
+    - lib/assets/intro/scan-1.webp
+    - lib/assets/intro/map.webp
+    - lib/assets/intro/partners.webp
     - lib/assets/badges/500products.png
     # Badges
     - lib/assets/badges/1an.png

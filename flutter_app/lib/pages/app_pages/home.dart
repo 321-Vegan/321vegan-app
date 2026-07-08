@@ -1,16 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:motion_tab_bar_v2/motion-tab-bar.dart';
-import 'package:motion_tab_bar_v2/motion-tab-controller.dart';
+import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Partners/partners_page.dart';
 import 'package:vegan_app/pages/app_pages/Scan/scan.dart';
 import 'package:vegan_app/pages/app_pages/map.dart';
 import 'package:vegan_app/pages/app_pages/profile.dart';
-import 'package:vegan_app/pages/app_pages/search.dart';
-import 'package:vegan_app/pages/app_pages/Profile/b12_reminder_settings_page.dart';
 import 'package:vegan_app/helpers/time_counter/time_counter.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
 import 'package:vegan_app/widgets/homepage/draggable_profile_bubble.dart';
@@ -43,7 +41,7 @@ class MyHomePage extends StatefulWidget {
 class MyHomePageState extends State<MyHomePage>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   DateTime? targetDate;
-  late MotionTabBarController motionTabBarController;
+  late TabController _tabController;
   late Map<String, int> _savings;
   late Timer _timer;
   late ConfettiController _confettiController;
@@ -53,6 +51,7 @@ class MyHomePageState extends State<MyHomePage>
   String? _currentAvatar;
   int _profileKey = 0;
   bool _b12NavigationHandled = false;
+  bool _themedNavBar = false;
 
   @override
   void initState() {
@@ -63,11 +62,16 @@ class MyHomePageState extends State<MyHomePage>
         const Duration(minutes: 1), (Timer t) => _updateSavings());
 
     // Initialize with default home tab, then update based on preference
-    motionTabBarController = MotionTabBarController(
+    _tabController = TabController(
       initialIndex: 1, // Default to home tab
-      length: 6,
+      length: 5,
       vsync: this,
     );
+
+    // Swiping the TabBarView changes the index without going through the
+    // bar's onTap; rebuild so index-dependent widgets (profile bubble)
+    // stay in sync.
+    _tabController.addListener(_onTabIndexChanged);
 
     _initializeTabController();
 
@@ -83,6 +87,13 @@ class MyHomePageState extends State<MyHomePage>
     _loadData();
     _checkNewPartners();
     _loadAvatar();
+    _loadThemedNavBarPref();
+
+    // Refresh the tab bar avatar as soon as it is changed in the profile page
+    PreferencesHelper.avatarNotifier.addListener(_onAvatarChanged);
+
+    // Restyle the tab bar as soon as the preference is toggled in settings
+    PreferencesHelper.themedNavBarNotifier.addListener(_onThemedNavBarChanged);
 
     // Listen for B12 notification taps → navigate to profile tab
     NotificationService.navigateToProfile.addListener(_onB12NotificationTap);
@@ -106,7 +117,7 @@ class MyHomePageState extends State<MyHomePage>
     if (shouldOpenOnScanPage && mounted) {
       // Update to scan tab if preference is set
       setState(() {
-        motionTabBarController.index = 3;
+        _tabController.index = 2;
       });
     }
   }
@@ -166,7 +177,7 @@ class MyHomePageState extends State<MyHomePage>
       NotificationService.navigateToProfile.value = false;
       _b12NavigationHandled = true;
       setState(() {
-        motionTabBarController.index = 5; // Profile tab
+        _tabController.index = 4; // Profile tab
         _profileKey++; // force ProfilePage to rebuild and re-fetch user info
       });
     }
@@ -177,7 +188,7 @@ class MyHomePageState extends State<MyHomePage>
       NotificationService.showAnniversary.value = false;
       // Make sure the home tab is visible behind the popup.
       setState(() {
-        motionTabBarController.index = 1;
+        _tabController.index = 1;
       });
       _confettiController.play();
       _presentAnniversaryDialog();
@@ -219,13 +230,48 @@ class MyHomePageState extends State<MyHomePage>
     );
   }
 
+  void _onTabIndexChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _onAvatarChanged() {
+    if (mounted) {
+      setState(() {
+        _currentAvatar = PreferencesHelper.avatarNotifier.value;
+      });
+    }
+  }
+
+  Future<void> _loadThemedNavBarPref() async {
+    final value = await PreferencesHelper.getThemedNavBarPref();
+    if (mounted) {
+      setState(() {
+        _themedNavBar = value;
+      });
+    }
+  }
+
+  void _onThemedNavBarChanged() {
+    if (mounted) {
+      setState(() {
+        _themedNavBar = PreferencesHelper.themedNavBarNotifier.value;
+      });
+    }
+  }
+
   @override
   void dispose() {
+    PreferencesHelper.avatarNotifier.removeListener(_onAvatarChanged);
+    PreferencesHelper.themedNavBarNotifier
+        .removeListener(_onThemedNavBarChanged);
     NotificationService.navigateToProfile.removeListener(_onB12NotificationTap);
     NotificationService.showAnniversary
         .removeListener(_onAnniversaryNotificationTap);
     WidgetsBinding.instance.removeObserver(this);
-    motionTabBarController.dispose();
+    _tabController.removeListener(_onTabIndexChanged);
+    _tabController.dispose();
     _confettiController.dispose();
     _partnersAnimationController.dispose();
     _timer.cancel();
@@ -242,9 +288,6 @@ class MyHomePageState extends State<MyHomePage>
 
     // Check for new badges on initial load
     _checkForNewBadges();
-
-    // Check and show B12 popup if needed
-    _checkAndShowB12Popup();
 
     _checkMembershipPrompt();
 
@@ -281,8 +324,6 @@ class MyHomePageState extends State<MyHomePage>
     }
     // Reload avatar after login
     await _loadAvatar();
-    // Check and show B12 popup if needed after login
-    _checkAndShowB12Popup();
   }
 
   Future<void> _checkNewPartners() async {
@@ -307,6 +348,22 @@ class MyHomePageState extends State<MyHomePage>
         _currentAvatar = null;
       });
     }
+  }
+
+  Widget _buildAvatarTabIcon() {
+    // Raw image, no ClipOval: the avatar assets are irregular shapes with
+    // transparency, clipping to a circle cuts them (e.g. the worm's head).
+    return Image.asset(
+      'lib/assets/avatars/${_currentAvatar ?? 'cochon.png'}',
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Icon(
+          Icons.person_sharp,
+          size: 20,
+          color: Theme.of(context).colorScheme.primary,
+        );
+      },
+    );
   }
 
   Future<void> _pickDate() async {
@@ -362,143 +419,6 @@ class MyHomePageState extends State<MyHomePage>
     }
   }
 
-  Future<void> _checkAndShowB12Popup() async {
-    // Only show for logged-in users who haven't seen it yet
-    if (AuthService.isLoggedIn && mounted) {
-      final hasBeenShown = await PreferencesHelper.hasB12PopupBeenShown();
-      if (!hasBeenShown && mounted) {
-        // Delay to show after page is fully loaded
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (mounted) {
-            _showB12ReminderPopup();
-          }
-        });
-      }
-    }
-  }
-
-  void _showB12ReminderPopup() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28.r),
-          ),
-          child: Container(
-            padding: EdgeInsets.all(32.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28.r),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(24.w),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '💊',
-                    style: TextStyle(fontSize: 100.sp),
-                  ),
-                ),
-                SizedBox(height: 24.h),
-                Text(
-                  'Rappel pour votre B12 !',
-                  style: TextStyle(
-                    fontSize: 56.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  'Vous pouvez maintenant configurer un rappel pour ne jamais oublier de prendre votre B12',
-                  style: TextStyle(
-                    fontSize: 42.sp,
-                    color: Colors.grey[600],
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 32.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          await PreferencesHelper.markB12PopupAsShown();
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.grey[600],
-                          side: BorderSide(color: Colors.grey[300]!, width: 2),
-                          padding: EdgeInsets.symmetric(vertical: 20.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                        ),
-                        child: Text(
-                          'Plus tard',
-                          style: TextStyle(
-                            fontSize: 44.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          await PreferencesHelper.markB12PopupAsShown();
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const B12ReminderSettingsPage(),
-                              ),
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 20.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                        ),
-                        child: Text(
-                          'Configurer',
-                          style: TextStyle(
-                            fontSize: 44.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -507,7 +427,7 @@ class MyHomePageState extends State<MyHomePage>
           body: Stack(
             children: [
               TabBarView(
-                controller: motionTabBarController,
+                controller: _tabController,
                 children: [
                   const PartnersPage(),
                   Center(
@@ -777,11 +697,10 @@ class MyHomePageState extends State<MyHomePage>
                       ],
                     ),
                   ),
-                  const SearchPage(),
                   ScanPage(
                     onNavigateToProfile: () {
                       setState(() {
-                        motionTabBarController.index = 5;
+                        _tabController.index = 4;
                       });
                     },
                     onLoginSuccess: _onLoginSuccess,
@@ -795,93 +714,78 @@ class MyHomePageState extends State<MyHomePage>
                 ],
               ),
               // Draggable profile bubble. only when logged in and on home tab
-              if (AuthService.isLoggedIn && motionTabBarController.index == 1)
+              if (AuthService.isLoggedIn && _tabController.index == 1)
                 DraggableProfileBubble(
                   avatar: _currentAvatar,
                   onTap: () {
                     setState(() {
-                      motionTabBarController.index = 5;
+                      _tabController.index = 4;
                     });
                   },
                 ),
             ],
           ),
-          bottomNavigationBar: Stack(
-            children: [
-              MotionTabBar(
-                controller: motionTabBarController,
-                labels: const [
-                  "Promos",
-                  "Accueil",
-                  "🔎",
-                  "Scan",
-                  "Carte",
-                  "Profil"
-                ],
-                initialSelectedTab: "Accueil",
-                tabIconColor: Colors.grey,
-                tabSelectedColor: Theme.of(context).colorScheme.primary,
-                onTabItemSelected: (int value) async {
-                  setState(() {
-                    motionTabBarController.index = value;
-                  });
-                  // Check for new badges when Accueil tab is selected
-                  if (value == 1) {
-                    _checkForNewBadges();
-                    _loadAvatar();
-                    _checkMembershipPrompt();
-                  }
-                  // Mark partners as visited when tab is selected
-                  if (value == 0 && _hasNewPartners) {
-                    await PreferencesHelper.markPartnersAsVisited();
-                    await _checkNewPartners();
-                  }
-                },
-                icons: const [
-                  Icons.percent,
-                  Icons.home,
-                  Icons.search,
-                  Icons.qr_code_scanner,
-                  Icons.map,
-                  Icons.person_sharp
-                ],
-                textStyle:
-                    TextStyle(color: Theme.of(context).colorScheme.primary),
-              ),
+          bottomNavigationBar: StyleProvider(
+            style: _TabBarStyle(),
+            child: ConvexAppBar.badge(
               // Animated notification badge for partners tab
-              if (_hasNewPartners)
-                Positioned(
-                  left: 100.w,
-                  top: 30.h,
-                  child: AnimatedBuilder(
-                    animation: _partnersAnimationController,
-                    builder: (context, child) {
-                      return Container(
-                        width: 20.w,
-                        height: 20.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.red.withValues(
-                            alpha: 0.7 +
-                                (_partnersAnimationController.value * 0.3),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.red.withValues(
-                                alpha: 0.5 * _partnersAnimationController.value,
-                              ),
-                              blurRadius:
-                                  8 * _partnersAnimationController.value,
-                              spreadRadius:
-                                  2 * _partnersAnimationController.value,
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            ],
+              _hasNewPartners
+                  ? <int, dynamic>{0: 'new'}
+                  : const <int, dynamic>{},
+              // Offsets the dot to the top-right of the centered icon.
+              badgeMargin: const EdgeInsets.only(left: 24, bottom: 24),
+              controller: _tabController,
+              // react style: enlarged active icon, no background disc — so
+              // the avatar renders as-is, unclipped, on the convex bulge.
+              style: TabStyle.react,
+              backgroundColor: _themedNavBar
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.white,
+              color: _themedNavBar ? Colors.white : Colors.grey,
+              activeColor: _themedNavBar
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.primary,
+              items: [
+                const TabItem(icon: Icons.percent, title: "Promos"),
+                const TabItem(icon: Icons.home_rounded, title: "Accueil"),
+                const TabItem(
+                    icon: CupertinoIcons.barcode, title: "Scan"),
+                const TabItem(icon: Icons.travel_explore, title: "Carte"),
+                // Show the user's avatar on the Profil tab when logged in;
+                // logged-out users keep the default person icon. Inactive,
+                // the avatar is painted ~35% larger than its icon box so it
+                // reads bigger than the plain icons.
+                if (AuthService.isLoggedIn)
+                  TabItem<Widget>(
+                    icon: Transform.scale(
+                      scale: 1.35,
+                      child: _buildAvatarTabIcon(),
+                    ),
+                    activeIcon: _buildAvatarTabIcon(),
+                    title: "Profil",
+                  )
+                else
+                  const TabItem(icon: Icons.person_sharp, title: "Profil"),
+              ],
+              onTap: (int value) async {
+                // The bar already drives _tabController; rebuild so widgets
+                // that depend on the index (profile bubble) stay in sync.
+                setState(() {});
+                // Refresh so an avatar changed in the profile page shows
+                // up in the tab bar right away
+                _loadAvatar();
+                // Check for new badges when Accueil tab is selected
+                if (value == 1) {
+                  _checkForNewBadges();
+                  _checkMembershipPrompt();
+                }
+                // Mark partners as visited when tab is selected
+                if (value == 0 && _hasNewPartners) {
+                  await PreferencesHelper.markPartnersAsVisited();
+                  await _checkNewPartners();
+                }
+              },
+            ),
           ),
         ),
       ],
@@ -928,3 +832,23 @@ class MyHomePageState extends State<MyHomePage>
     _confettiController.play();
   }
 }
+
+/// Sizing for the tab bar: smaller inactive icons, large active icon/avatar.
+/// With [TabStyle.react] there is no background disc, so [activeIconSize]
+/// applies to the icon (or avatar) itself.
+class _TabBarStyle extends StyleHook {
+  @override
+  double? get iconSize => 20;
+
+  @override
+  double get activeIconMargin => 5; // only used by the circle styles
+
+  @override
+  double get activeIconSize => 50;
+
+  @override
+  TextStyle textStyle(Color color, String? fontFamily) {
+    return TextStyle(color: color, fontFamily: 'Baloo');
+  }
+}
+
