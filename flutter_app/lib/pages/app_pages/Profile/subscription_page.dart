@@ -219,6 +219,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   if (isSubscribed && isBypass) ...[
                     _buildBypassCard(primaryColor),
                     SizedBox(height: 32.h),
+                    const SubscriptionGoalWidget(),
                   ] else if (isSubscribed) ...[
                     if (subscription != null)
                       _buildActiveSubscriptionCard(subscription, primaryColor)

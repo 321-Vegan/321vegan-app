@@ -36,6 +36,58 @@ class Badge {
     }
   }
 
+  /// Progress toward unlocking this badge, from 0.0 to 1.0
+  double getProgress({
+    required int productsSent,
+    required DateTime? veganSince,
+    required int supporterLevel,
+    required int errorSolved,
+  }) {
+    double ratio;
+    switch (type) {
+      case BadgeType.productsSent:
+        ratio = productsSent / requirement;
+        break;
+      case BadgeType.veganYears:
+        if (veganSince == null) return 0.0;
+        final days = DateTime.now().difference(veganSince).inDays;
+        ratio = days / (requirement * 365);
+        break;
+      case BadgeType.supporter:
+        ratio = supporterLevel / requirement;
+        break;
+      case BadgeType.errorReport:
+        ratio = errorSolved / requirement;
+        break;
+    }
+    return ratio.clamp(0.0, 1.0);
+  }
+
+  /// Short progress label like "37 / 50", or null for badge types
+  /// where a counter doesn't make sense (e.g. supporter)
+  String? getProgressText({
+    required int productsSent,
+    required DateTime? veganSince,
+    required int supporterLevel,
+    required int errorSolved,
+  }) {
+    switch (type) {
+      case BadgeType.productsSent:
+        return '$productsSent / $requirement';
+      case BadgeType.veganYears:
+        if (veganSince == null) return null;
+        final years = DateTime.now().difference(veganSince).inDays / 365;
+        final current = years >= requirement
+            ? '$requirement'
+            : years.toStringAsFixed(1).replaceAll('.', ',');
+        return '$current / $requirement an${requirement > 1 ? 's' : ''}';
+      case BadgeType.supporter:
+        return null;
+      case BadgeType.errorReport:
+        return '$errorSolved / $requirement';
+    }
+  }
+
   String getRequirementText() {
     switch (type) {
       case BadgeType.productsSent:

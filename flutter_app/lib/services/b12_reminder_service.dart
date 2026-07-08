@@ -430,6 +430,50 @@ class B12ReminderService {
     return dates;
   }
 
+
+
+  /// Current streak: number of consecutive on-schedule intakes ending now.
+  /// The allowed gap between intakes follows the configured reminder
+  /// frequency, so weekly or biweekly takers can build a streak too.
+  static Future<int> getB12Streak() async {
+    final history = await getB12IntakeHistory();
+    if (history.isEmpty) return 0;
+
+    final settings = await getSettings();
+    final maxGapDays = _maxGapDaysForFrequency(settings.frequency);
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // Streak is broken if the latest intake is already overdue
+    if (today.difference(history.first).inDays > maxGapDays) return 0;
+
+    int streak = 1;
+    for (int i = 0; i < history.length - 1; i++) {
+      if (history[i].difference(history[i + 1]).inDays <= maxGapDays) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  /// Maximum days between two intakes before the streak breaks
+  /// (expected interval plus a small grace period)
+  static int _maxGapDaysForFrequency(ReminderFrequency frequency) {
+    switch (frequency) {
+      case ReminderFrequency.daily:
+        return 1;
+      case ReminderFrequency.twiceWeekly:
+        return 5;
+      case ReminderFrequency.weekly:
+        return 8;
+      case ReminderFrequency.biweekly:
+        return 16;
+    }
+  }
+
   /// Check if notifications are enabled in system settings
   static Future<bool> areNotificationsEnabled() async {
     return await _notificationService.areNotificationsEnabled();
