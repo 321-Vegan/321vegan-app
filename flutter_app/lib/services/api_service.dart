@@ -286,6 +286,65 @@ class ApiService {
     }
   }
 
+  /// Increment the logged-in user's scan counter (requires user JWT).
+  /// [count] lets several scans made offline be batched into one request.
+  /// Returns the new server-side total, or null on failure.
+  static Future<int?> incrementUserScanCount({required int count}) async {
+    try {
+      final dio = await DioClient.getDio();
+      final accessToken = AuthService.accessToken;
+
+      final response = await dio.post(
+        '/users/me/scans',
+        data: {'count': count},
+        options: dio_pkg.Options(
+          headers: {
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return response.data['scan_count'] as int?;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Seed the logged-in user's scan counter from the app's local total
+  /// (requires user JWT). The server only applies it while its counter is
+  /// still 0, so an existing account is never overwritten.
+  /// Returns the server-side total, or null on failure.
+  static Future<int?> initializeUserScanCount({required int count}) async {
+    try {
+      final dio = await DioClient.getDio();
+      final accessToken = AuthService.accessToken;
+
+      final response = await dio.put(
+        '/users/me/scans',
+        data: {'count': count},
+        options: dio_pkg.Options(
+          headers: {
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300) {
+        return response.data['scan_count'] as int?;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Get all product categories
   static Future<List<ProductCategory>> getProductCategories() async {
     try {

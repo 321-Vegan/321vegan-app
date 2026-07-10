@@ -22,6 +22,7 @@ import 'package:vegan_app/models/product_of_interest.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/offline_scan_service.dart';
+import 'package:vegan_app/services/scan_count_sync_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/widgets/scaner/card_product.dart';
 import 'package:vegan_app/widgets/scaner/pending_product_info_card.dart';
@@ -135,6 +136,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     if (_isRetrying) return;
     _isRetrying = true;
     try {
+      // Also flush the user scan-counter queue (it serializes itself and
+      // no-ops when there is nothing to send).
+      unawaited(ScanCountSyncService.sync());
+
       final pendingCount = await OfflineScanService.getPendingCount();
       if (pendingCount == 0) return;
 
@@ -894,6 +899,11 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
   Future<void> _checkAccountPrompt() async {
     final totalScans = await PreferencesHelper.incrementTotalScanCount();
+
+    // Mirror the scan to the server-side user counter (queued and batched
+    // when offline, sent on the next sync trigger).
+    unawaited(ScanCountSyncService.onScanRecorded());
+
     if (totalScans % 5 != 0) return;
 
     if (AuthService.isLoggedIn) return;

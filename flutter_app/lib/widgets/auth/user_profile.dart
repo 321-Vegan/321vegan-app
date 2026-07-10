@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -39,6 +40,7 @@ class UserProfile extends StatefulWidget {
 class _UserProfileState extends State<UserProfile> {
   User? _user;
   bool _isLoading = false;
+  int _scanCount = 0;
   String? _selectedAvatar;
   bool _openOnScanPage = false;
   bool _showBoycott = true;
@@ -136,6 +138,9 @@ class _UserProfileState extends State<UserProfile> {
     final avatar = await PreferencesHelper.getAvatar();
     final randomAvatarEnabled =
         await PreferencesHelper.getRandomAvatarEnabled();
+    // The local total is the source of truth on this device, but the server
+    // counter can be higher when the account scanned on another device.
+    final localScanCount = await PreferencesHelper.getTotalScanCount();
 
     if (mounted) {
       String? finalAvatar = avatar;
@@ -153,6 +158,7 @@ class _UserProfileState extends State<UserProfile> {
         if (result.isSuccess) {
           _user = result.data;
         }
+        _scanCount = max(localScanCount, _user?.scanCount ?? 0);
       });
     }
   }
@@ -632,6 +638,17 @@ class _UserProfileState extends State<UserProfile> {
   Widget _buildStatsCards() {
     return Row(
       children: [
+        // Scanned products card
+        Expanded(
+          child: _buildStatCard(
+            icon: CupertinoIcons.barcode,
+            iconColor: Colors.teal,
+            title: 'Produits scannés',
+            value: _scanCount.toString(),
+            onTap: () {},
+          ),
+        ),
+        SizedBox(width: 16.w),
         // Products sent card
         Expanded(
           child: _buildStatCard(
@@ -957,7 +974,7 @@ class _UserProfileState extends State<UserProfile> {
                               ),
                               SizedBox(width: 8.w),
                               Text(
-                                '$_b12Streak prises d\'affilée',
+                                '$_b12Streak jours d\'affilée',
                                 style: TextStyle(
                                   fontSize: 36.sp,
                                   fontWeight: FontWeight.bold,

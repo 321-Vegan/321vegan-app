@@ -10,6 +10,7 @@ class User {
   final int? nbErrorReports;
   final int? nbProductsModified;
   final int? nbCheckings;
+  final int scanCount;
   final DateTime? veganSince;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -27,6 +28,7 @@ class User {
     required this.nbErrorReports,
     this.nbProductsModified,
     this.nbCheckings,
+    this.scanCount = 0,
     required this.veganSince,
     this.createdAt,
     this.updatedAt,
@@ -50,6 +52,7 @@ class User {
           : 0,
       nbProductsModified: json['nb_products_modified'] ?? 0,
       nbCheckings: json['nb_checkings'] ?? 0,
+      scanCount: json['scan_count'] ?? 0,
       veganSince: json['vegan_since'] != null
           ? DateTime.tryParse(json['vegan_since'])
           : null,

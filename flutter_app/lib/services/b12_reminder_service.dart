@@ -432,9 +432,12 @@ class B12ReminderService {
 
 
 
-  /// Current streak: number of consecutive on-schedule intakes ending now.
-  /// The allowed gap between intakes follows the configured reminder
-  /// frequency, so weekly or biweekly takers can build a streak too.
+  /// Current streak: number of days covered by the unbroken chain of
+  /// on-schedule intakes, from the chain's first intake through today.
+  /// Counting days (rather than intakes) keeps the streak fair across
+  /// different intake rhythms: a week on schedule is worth 7 whether it
+  /// took seven daily intakes or a single weekly one. The allowed gap
+  /// between intakes follows the configured reminder frequency.
   static Future<int> getB12Streak() async {
     final history = await getB12IntakeHistory();
     if (history.isEmpty) return 0;
@@ -448,15 +451,15 @@ class B12ReminderService {
     // Streak is broken if the latest intake is already overdue
     if (today.difference(history.first).inDays > maxGapDays) return 0;
 
-    int streak = 1;
+    DateTime chainStart = history.first;
     for (int i = 0; i < history.length - 1; i++) {
       if (history[i].difference(history[i + 1]).inDays <= maxGapDays) {
-        streak++;
+        chainStart = history[i + 1];
       } else {
         break;
       }
     }
-    return streak;
+    return today.difference(chainStart).inDays + 1;
   }
 
   /// Maximum days between two intakes before the streak breaks

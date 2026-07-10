@@ -9,6 +9,7 @@ import '../models/user.dart';
 import '../models/scanned_product.dart';
 import '../helpers/preference_helper.dart';
 import 'dio_client.dart';
+import 'scan_count_sync_service.dart';
 import 'subscription_service.dart';
 
 class AuthService {
@@ -39,9 +40,11 @@ class AuthService {
   static Future<void> init() async {
     await _loadStoredToken();
     if (isLoggedIn) {
-      // Run network calls in background — don't block app startup
+      // Run network calls in background — don't block app startup.
       unawaited(_checkAndRefreshToken());
-      unawaited(_syncUserDataToPreferences());
+      // Scan-count sync runs after the profile fetch: it needs currentUser.
+      unawaited(_syncUserDataToPreferences()
+          .then((_) => ScanCountSyncService.sync()));
     }
   }
 
@@ -178,6 +181,10 @@ class AuthService {
         // Fetch subscription status from backend
         await SubscriptionService.checkSubscriptionStatus();
 
+        // Seed/flush the server-side scan counter now that the user is known
+        // (first login seeds it from the local scan total).
+        unawaited(ScanCountSyncService.sync());
+
         return AuthResult.success(token);
       } else {
         return AuthResult.error('Mot de passe ou email incorrect');
@@ -283,6 +290,12 @@ class AuthService {
 
   // Logout
   static Future<AuthResult<String>> logout() async {
+    // Last chance to push queued scan-count increments for this account;
+    // whatever couldn't be sent is dropped below so it can't be attributed
+    // to another account logging in later on this device.
+    await ScanCountSyncService.sync();
+    await ScanCountSyncService.clearUnsynced();
+
     try {
       final dio = await DioClient.getDio();
 
@@ -313,6 +326,7 @@ class AuthService {
     if (!confirmed) {
       return AuthResult.error('Annulation de la suppression du compte');
     }
+    await ScanCountSyncService.clearUnsynced();
     try {
       final dio = await DioClient.getDio();
 
