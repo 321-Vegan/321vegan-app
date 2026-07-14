@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
+import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/badge_service.dart';
+import '../../services/error_report_badge_service.dart';
+import '../../models/error_report.dart';
 import '../../models/user.dart';
 import '../../models/badge.dart' as app_badge;
+import '../../pages/app_pages/Scan/history_modal.dart';
 import '../../pages/app_pages/Scan/sent_products_modal.dart';
 import '../../pages/app_pages/Scan/settings_modal.dart';
 import '../../helpers/preference_helper.dart';
@@ -18,6 +22,7 @@ import '../shared/shine_wrapper.dart';
 import '../vegandex/vegandex_modal.dart';
 import '../theme/theme_selector_modal.dart';
 import '../../pages/app_pages/Profile/b12_reminder_settings_page.dart';
+import '../../pages/app_pages/Profile/error_reports_modal.dart';
 import '../../pages/app_pages/Profile/subscription_page.dart';
 import '../../pages/app_pages/Profile/product_review_page.dart';
 import '../../services/b12_reminder_service.dart';
@@ -48,6 +53,8 @@ class _UserProfileState extends State<UserProfile> {
   List<DateTime> _b12History = [];
   int _b12Streak = 0;
   Set<String> _vegandexEans = {};
+  ErrorReportPaginated? _errorReportsFirstPage;
+  int _unreadErrorResponses = 0;
 
   final List<String> _availableAvatars = [
     'lapin.png',
@@ -68,6 +75,25 @@ class _UserProfileState extends State<UserProfile> {
     _loadPreferences();
     _loadB12History();
     _loadVegandexProducts();
+    _checkErrorReportResponses();
+  }
+
+  /// Fetch the recent error reports and count the treated ones whose
+  /// response the user hasn't opened yet (badge on "Mes signalements").
+  /// The fetched page is kept and handed to the listing modal so opening
+  /// it doesn't refetch the same data.
+  Future<void> _checkErrorReportResponses() async {
+    final result = await ApiService.getMyErrorReports(
+        page: 1, pageSize: ErrorReportsModal.pageSize);
+    if (result == null) return;
+    final unread =
+        await ErrorReportBadgeService.countUnseenHandled(result.items);
+    if (mounted) {
+      setState(() {
+        _errorReportsFirstPage = result;
+        _unreadErrorResponses = unread;
+      });
+    }
   }
 
   Future<void> _loadVegandexProducts() async {
@@ -150,6 +176,21 @@ class _UserProfileState extends State<UserProfile> {
         finalAvatar = _getRandomAvatar(avatar);
         // Save the new random avatar
         await PreferencesHelper.saveAvatar(finalAvatar);
+      } else if (avatar == null && result.isSuccess) {
+        // No avatar on this device (e.g. fresh install): adopt the one
+        // stored on the account, if any.
+        finalAvatar = result.data?.avatar;
+        if (finalAvatar != null) {
+          await PreferencesHelper.saveAvatar(finalAvatar);
+        }
+      }
+
+      // Keep the account's avatar in sync with what the app shows.
+      // Fire-and-forget: a network failure here must not block the page.
+      if (finalAvatar != null &&
+          result.isSuccess &&
+          finalAvatar != result.data?.avatar && !randomAvatarEnabled) {
+        AuthService.updateUser(avatar: finalAvatar);
       }
 
       setState(() {
@@ -294,6 +335,8 @@ class _UserProfileState extends State<UserProfile> {
         _buildVegandexCard(),
         SizedBox(height: 24.h),
         _buildB12HistoryCard(),
+        SizedBox(height: 24.h),
+        _buildErrorReportsCard(),
         SizedBox(height: 24.h),
         _buildBadgesSection(),
         SizedBox(height: 24.h),
@@ -645,7 +688,19 @@ class _UserProfileState extends State<UserProfile> {
             iconColor: Colors.teal,
             title: 'Produits scannés',
             value: _scanCount.toString(),
-            onTap: () {},
+            onTap: () async {
+              final history = await PreferencesHelper.getScanHistory();
+              if (!mounted) return;
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.9,
+                  child: HistoryModal(scanHistory: history),
+                ),
+              );
+            },
           ),
         ),
         SizedBox(width: 16.w),
@@ -1616,6 +1671,103 @@ class _UserProfileState extends State<UserProfile> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorReportsCard() {
+    final count = _user?.nbErrorReports ?? 0;
+    final unread = _unreadErrorResponses;
+
+    return GestureDetector(
+      onTap: () {
+        // Opening the listing acknowledges the treated reports: the
+        // "unread responses" badge disappears.
+        if (unread > 0) {
+          ErrorReportBadgeService.markHandledAsSeen(
+              _errorReportsFirstPage?.items ?? []);
+          setState(() => _unreadErrorResponses = 0);
+        }
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => SizedBox(
+            height: MediaQuery.of(context).size.height * 0.9,
+            child: ErrorReportsModal(initialData: _errorReportsFirstPage),
+          ),
+        );
+      },
+      child: _buildCard(
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.flag_outlined,
+                size: 48.sp,
+                color: Colors.orange[800],
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Mes signalements',
+                    style: TextStyle(
+                      fontSize: 52.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  Text(
+                    unread > 0
+                        ? '$unread réponse${unread > 1 ? 's' : ''} non lue${unread > 1 ? 's' : ''} !'
+                        : count > 0
+                            ? '$count signalement${count > 1 ? 's' : ''} envoyé${count > 1 ? 's' : ''}'
+                            : 'Aucun signalement envoyé',
+                    style: TextStyle(
+                      fontSize: 36.sp,
+                      color: unread > 0 ? Colors.red[700] : Colors.grey[600],
+                      fontWeight:
+                          unread > 0 ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (unread > 0) ...[
+              Container(
+                padding:
+                    EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '$unread',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 36.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16.w),
+            ],
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 48.sp,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../models/b12_reminder_settings.dart';
+import 'b12_sync_service.dart';
 import 'notification_service.dart';
 
 class B12ReminderService {
@@ -407,7 +409,34 @@ class B12ReminderService {
     if (!historyJson.contains(todayMillis)) {
       historyJson.add(todayMillis);
       await prefs.setStringList(_intakeHistoryKey, historyJson);
+
+      // Mirror the intake to the API (offline-safe, queued) with the
+      // frequency currently in effect so the server can score it fairly.
+      final settings = await getSettings();
+      unawaited(B12SyncService.onIntakeRecorded(todayDate, settings.frequency));
     }
+  }
+
+  /// Merge intake days into the local history (union, never removes).
+  /// Used to restore the server-side history on a new device or after a
+  /// reinstall. Returns the number of days actually added.
+  static Future<int> mergeIntakeHistory(List<DateTime> days) async {
+    final prefs = await SharedPreferences.getInstance();
+    final historyJson = prefs.getStringList(_intakeHistoryKey) ?? [];
+
+    var added = 0;
+    for (final day in days) {
+      final normalized = DateTime(day.year, day.month, day.day);
+      final millis = normalized.millisecondsSinceEpoch.toString();
+      if (!historyJson.contains(millis)) {
+        historyJson.add(millis);
+        added++;
+      }
+    }
+    if (added > 0) {
+      await prefs.setStringList(_intakeHistoryKey, historyJson);
+    }
+    return added;
   }
 
   /// Get B12 intake history, sorted descending (most recent first)

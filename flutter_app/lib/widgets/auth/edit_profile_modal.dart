@@ -98,13 +98,21 @@ class _EditProfileModalState extends State<EditProfileModal> {
       await PreferencesHelper.saveRandomAvatarEnabled(_randomAvatarEnabled);
 
       // Save avatar to SharedPreferences
-      if (_selectedAvatar != widget.currentAvatar) {
+      final avatarChanged = _selectedAvatar != widget.currentAvatar;
+      if (avatarChanged) {
         await PreferencesHelper.saveAvatar(_selectedAvatar);
       }
 
-      // Update nickname on backend if changed
-      if (newNickname != widget.currentNickname) {
-        final result = await AuthService.updateUser(nickname: newNickname);
+      // Update nickname/avatar on backend if changed
+      final nicknameChanged = newNickname != widget.currentNickname;
+
+      final nickname = nicknameChanged ? newNickname : null;
+      final avatar = avatarChanged ? _selectedAvatar : null;
+      if (nickname != null || avatar != null) {
+        final result = await AuthService.updateUser(
+          nickname: nicknameChanged ? newNickname : null,
+          avatar: avatarChanged ? _selectedAvatar : null,
+        );
 
         if (!result.isSuccess) {
           if (mounted) {

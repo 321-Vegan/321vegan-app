@@ -31,7 +31,8 @@ class ProductScoresSection extends StatefulWidget {
 
   /// Height reserved above the badges for the free-reveal chip, so the badges
   /// keep the same screen position whether or not the chip is shown. The
-  /// parent should raise its anchor by this amount for non-subscribers.
+  /// parent anchors this section by its bottom, so the strip grows upward
+  /// into the camera area without moving the badges.
   static double get extraHeaderHeight => 88.h;
 
   @override
