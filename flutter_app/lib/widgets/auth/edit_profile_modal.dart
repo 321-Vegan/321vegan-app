@@ -27,6 +27,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
   String? _selectedAvatar;
   bool _isLoading = false;
   bool _randomAvatarEnabled = false;
+  bool _initialRandomAvatarEnabled = false;
   String? _pendingEmail;
 
   final List<String> _availableAvatars = [
@@ -54,6 +55,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
     final enabled = await PreferencesHelper.getRandomAvatarEnabled();
     setState(() {
       _randomAvatarEnabled = enabled;
+      _initialRandomAvatarEnabled = enabled;
     });
   }
 
@@ -97,7 +99,14 @@ class _EditProfileModalState extends State<EditProfileModal> {
       // Save random avatar preference
       await PreferencesHelper.saveRandomAvatarEnabled(_randomAvatarEnabled);
 
-      final avatarChanged = _selectedAvatar != widget.currentAvatar;
+      // Turning random mode off makes the displayed avatar an explicit
+      // choice: it must reach the account too, otherwise random picks :
+      // which are only ever saved locally ; would be reverted to the
+      // account's last explicit avatar on the next profile load.
+      final randomModeDisabled =
+          _initialRandomAvatarEnabled && !_randomAvatarEnabled;
+      final avatarChanged = _selectedAvatar != widget.currentAvatar ||
+          (randomModeDisabled && _selectedAvatar != null);
       final nicknameChanged = newNickname != widget.currentNickname;
 
       final nickname = nicknameChanged ? newNickname : null;

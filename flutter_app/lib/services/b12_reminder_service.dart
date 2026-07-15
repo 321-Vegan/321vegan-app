@@ -46,6 +46,9 @@ class B12ReminderService {
   static Future<void> saveSettings(B12ReminderSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_settingsKey, json.encode(settings.toJson()));
+    // The streak and next-intake estimate depend on the frequency: make
+    // listening UI recompute
+    _notifyHistoryChanged();
   }
 
   /// Adopt [frequency] as the reminder frequency when no reminder settings
@@ -64,8 +67,6 @@ class B12ReminderService {
       frequency: frequency,
       dayOfWeek: lastIntake.weekday,
     ));
-    // The streak depends on the frequency: make listening UI recompute
-    _notifyHistoryChanged();
   }
 
   /// Schedule reminder based on settings
@@ -642,11 +643,10 @@ class B12ReminderService {
     int maxGapAfter(B12Intake intake) => _maxGapDaysForFrequency(
         reminderFrequencyFromApi(intake.frequency) ?? settings.frequency);
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final today = DateTime.now();
 
     // Streak is broken if the latest intake is already overdue
-    if (today.difference(intakes.first.date).inDays >
+    if (calendarDaysBetween(intakes.first.date, today) >
         maxGapAfter(intakes.first)) {
       return 0;
     }
@@ -654,18 +654,27 @@ class B12ReminderService {
     DateTime chainStart = intakes.first.date;
     for (int i = 0; i < intakes.length - 1; i++) {
       final older = intakes[i + 1];
-      if (intakes[i].date.difference(older.date).inDays <=
+      if (calendarDaysBetween(older.date, intakes[i].date) <=
           maxGapAfter(older)) {
         chainStart = older.date;
       } else {
         break;
       }
     }
-    final days = today.difference(chainStart).inDays + 1;
+    final days = calendarDaysBetween(chainStart, today) + 1;
     // A clock/timezone change can leave the latest intake in the future;
     // a non-empty, non-overdue history is a streak of at least 1.
     return days < 1 ? 1 : days;
   }
+
+  /// Signed count of calendar days from [from] to [to], ignoring the
+  /// time-of-day. Local `difference().inDays` is one hour short across a
+  /// DST spring-forward, silently truncating a day; diffing the dates as
+  /// UTC keeps every day exactly 24h.
+  static int calendarDaysBetween(DateTime from, DateTime to) =>
+      DateTime.utc(to.year, to.month, to.day)
+          .difference(DateTime.utc(from.year, from.month, from.day))
+          .inDays;
 
   /// Maximum days between two intakes before the streak breaks
   /// (expected interval plus a small grace period)

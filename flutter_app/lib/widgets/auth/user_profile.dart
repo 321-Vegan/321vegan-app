@@ -1372,7 +1372,7 @@ class _UserProfileState extends State<UserProfile> {
 
   Widget _buildB12HistoryTile(DateTime date, DateTime today) {
     final dayFormatter = DateFormat('EEEE d MMMM', 'fr_FR');
-    final daysAgo = today.difference(date).inDays;
+    final daysAgo = B12ReminderService.calendarDaysBetween(date, today);
     final isToday = daysAgo == 0;
     final isYesterday = daysAgo == 1;
     final primary = Theme.of(context).colorScheme.primary;
