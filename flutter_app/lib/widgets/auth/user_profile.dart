@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
+import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/badge_service.dart';
+import '../../services/error_report_badge_service.dart';
+import '../../models/error_report.dart';
 import '../../models/user.dart';
 import '../../models/badge.dart' as app_badge;
+import '../../pages/app_pages/Scan/history_modal.dart';
 import '../../pages/app_pages/Scan/sent_products_modal.dart';
 import '../../pages/app_pages/Scan/settings_modal.dart';
 import '../../helpers/preference_helper.dart';
@@ -18,6 +22,7 @@ import '../shared/shine_wrapper.dart';
 import '../vegandex/vegandex_modal.dart';
 import '../theme/theme_selector_modal.dart';
 import '../../pages/app_pages/Profile/b12_reminder_settings_page.dart';
+import '../../pages/app_pages/Profile/error_reports_modal.dart';
 import '../../pages/app_pages/Profile/subscription_page.dart';
 import '../../pages/app_pages/Profile/product_review_page.dart';
 import '../../services/b12_reminder_service.dart';
@@ -47,7 +52,10 @@ class _UserProfileState extends State<UserProfile> {
   bool _showScores = true;
   List<DateTime> _b12History = [];
   int _b12Streak = 0;
+  DateTime? _b12NextIntake;
   Set<String> _vegandexEans = {};
+  ErrorReportPaginated? _errorReportsFirstPage;
+  int _unreadErrorResponses = 0;
 
   final List<String> _availableAvatars = [
     'lapin.png',
@@ -68,6 +76,36 @@ class _UserProfileState extends State<UserProfile> {
     _loadPreferences();
     _loadB12History();
     _loadVegandexProducts();
+    _checkErrorReportResponses();
+    // Reload when the post-login sync restores the server-side history
+    // after this page has already loaded its local copy.
+    B12ReminderService.historyRevision.addListener(_onB12HistoryChanged);
+  }
+
+  @override
+  void dispose() {
+    B12ReminderService.historyRevision.removeListener(_onB12HistoryChanged);
+    super.dispose();
+  }
+
+  void _onB12HistoryChanged() => _loadB12History();
+
+  /// Fetch the recent error reports and count the treated ones whose
+  /// response the user hasn't opened yet (badge on "Mes signalements").
+  /// The fetched page is kept and handed to the listing modal so opening
+  /// it doesn't refetch the same data.
+  Future<void> _checkErrorReportResponses() async {
+    final result = await ApiService.getMyErrorReports(
+        page: 1, pageSize: ErrorReportsModal.pageSize);
+    if (result == null) return;
+    final unread =
+        await ErrorReportBadgeService.countUnseenHandled(result.items);
+    if (mounted) {
+      setState(() {
+        _errorReportsFirstPage = result;
+        _unreadErrorResponses = unread;
+      });
+    }
   }
 
   Future<void> _loadVegandexProducts() async {
@@ -82,10 +120,12 @@ class _UserProfileState extends State<UserProfile> {
   Future<void> _loadB12History() async {
     final history = await B12ReminderService.getB12IntakeHistory();
     final streak = await B12ReminderService.getB12Streak();
+    final nextIntake = await B12ReminderService.getNextExpectedIntakeDate();
     if (mounted) {
       setState(() {
         _b12History = history;
         _b12Streak = streak;
+        _b12NextIntake = nextIntake;
       });
     }
   }
@@ -150,6 +190,20 @@ class _UserProfileState extends State<UserProfile> {
         finalAvatar = _getRandomAvatar(avatar);
         // Save the new random avatar
         await PreferencesHelper.saveAvatar(finalAvatar);
+      } else if (result.isSuccess) {
+        final serverAvatar = result.data?.avatar;
+        if (serverAvatar != null && serverAvatar != finalAvatar) {
+          // The account's avatar wins over the device's: it holds the last
+          // explicit choice, possibly made on another device or before a
+          // reinstall. Explicit changes reach the account through the edit
+          // profile modal, never from here.
+          finalAvatar = serverAvatar;
+          await PreferencesHelper.saveAvatar(finalAvatar);
+        } else if (serverAvatar == null && finalAvatar != null) {
+          // Account predates avatar sync: claim the device's avatar.
+          // Fire-and-forget: a network failure must not block the page.
+          AuthService.updateUser(avatar: finalAvatar);
+        }
       }
 
       setState(() {
@@ -294,6 +348,8 @@ class _UserProfileState extends State<UserProfile> {
         _buildVegandexCard(),
         SizedBox(height: 24.h),
         _buildB12HistoryCard(),
+        SizedBox(height: 24.h),
+        _buildErrorReportsCard(),
         SizedBox(height: 24.h),
         _buildBadgesSection(),
         SizedBox(height: 24.h),
@@ -645,7 +701,19 @@ class _UserProfileState extends State<UserProfile> {
             iconColor: Colors.teal,
             title: 'Produits scannés',
             value: _scanCount.toString(),
-            onTap: () {},
+            onTap: () async {
+              final history = await PreferencesHelper.getScanHistory();
+              if (!mounted) return;
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) => SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.9,
+                  child: HistoryModal(scanHistory: history),
+                ),
+              );
+            },
           ),
         ),
         SizedBox(width: 16.w),
@@ -1052,8 +1120,28 @@ class _UserProfileState extends State<UserProfile> {
     );
   }
 
+  String _capitalizeFr(String text) =>
+      text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
+
   void _showB12HistoryModal() {
-    final formatter = DateFormat('EEEE d MMMM yyyy', 'fr_FR');
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final monthFormatter = DateFormat('MMMM yyyy', 'fr_FR');
+    final monthCount = _b12History
+        .where((d) => d.year == now.year && d.month == now.month)
+        .length;
+
+    // Flat list of month headers + intake tiles, in history order
+    final items = <Widget>[];
+    String? currentMonth;
+    for (final date in _b12History) {
+      final month = _capitalizeFr(monthFormatter.format(date));
+      if (month != currentMonth) {
+        currentMonth = month;
+        items.add(_buildB12MonthHeader(month, isFirst: items.isEmpty));
+      }
+      items.add(_buildB12HistoryTile(date, today));
+    }
 
     showModalBottomSheet(
       context: context,
@@ -1091,7 +1179,7 @@ class _UserProfileState extends State<UserProfile> {
                         Row(
                           children: [
                             Container(
-                              padding: EdgeInsets.all(16.w),
+                              padding: EdgeInsets.all(14.w),
                               decoration: BoxDecoration(
                                 color: Theme.of(context)
                                     .colorScheme
@@ -1101,40 +1189,47 @@ class _UserProfileState extends State<UserProfile> {
                               ),
                               child: Text(
                                 '💊',
-                                style: TextStyle(fontSize: 48.sp),
+                                style: TextStyle(fontSize: 44.sp),
                               ),
                             ),
                             SizedBox(width: 16.w),
                             Text(
                               'Historique B12',
                               style: TextStyle(
-                                fontSize: 56.sp,
+                                fontSize: 52.sp,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey[800],
                               ),
                             ),
-                            const Spacer(),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 16.w, vertical: 8.h),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(20.r),
-                              ),
-                              child: Text(
-                                '${_b12History.length} prise${_b12History.length > 1 ? 's' : ''}',
-                                style: TextStyle(
-                                  fontSize: 36.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
+                          ],
+                        ),
+                        SizedBox(height: 20.h),
+                        Row(
+                          children: [
+                            _buildB12StatTile(
+                              emoji: '🔥',
+                              value: '$_b12Streak',
+                              label: 'd\'affilée',
+                              highlighted: _b12Streak >= 2,
+                            ),
+                            SizedBox(width: 12.w),
+                            _buildB12StatTile(
+                              emoji: '📅',
+                              value: '$monthCount',
+                              label: 'ce mois-ci',
+                            ),
+                            SizedBox(width: 12.w),
+                            _buildB12StatTile(
+                              emoji: '✅',
+                              value: '${_b12History.length}',
+                              label: 'au total',
                             ),
                           ],
                         ),
+                        if (_b12NextIntake != null) ...[
+                          SizedBox(height: 12.h),
+                          _buildB12NextIntakeBanner(today),
+                        ],
                       ],
                     ),
                   ),
@@ -1142,32 +1237,9 @@ class _UserProfileState extends State<UserProfile> {
                   Expanded(
                     child: ListView.builder(
                       controller: scrollController,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 24.w, vertical: 16.h),
-                      itemCount: _b12History.length,
-                      itemBuilder: (context, index) {
-                        final date = _b12History[index];
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: 12.h),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle,
-                                size: 44.sp,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              SizedBox(width: 16.w),
-                              Text(
-                                formatter.format(date),
-                                style: TextStyle(
-                                  fontSize: 40.sp,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                      padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) => items[index],
                     ),
                   ),
                 ],
@@ -1175,6 +1247,201 @@ class _UserProfileState extends State<UserProfile> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildB12StatTile({
+    required String emoji,
+    required String value,
+    required String label,
+    bool highlighted = false,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 8.w),
+        decoration: BoxDecoration(
+          gradient: highlighted
+              ? LinearGradient(
+                  colors: [
+                    Colors.orange.shade400,
+                    Colors.deepOrange.shade400,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: highlighted ? null : Colors.grey[50],
+          borderRadius: BorderRadius.circular(16.r),
+          border: highlighted ? null : Border.all(color: Colors.grey[200]!),
+          boxShadow: highlighted
+              ? [
+                  BoxShadow(
+                    color: Colors.orange.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            Text(
+              '$emoji $value',
+              style: TextStyle(
+                fontSize: 44.sp,
+                fontWeight: FontWeight.bold,
+                color: highlighted ? Colors.white : Colors.grey[800],
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 28.sp,
+                fontWeight: FontWeight.w500,
+                color: highlighted
+                    ? Colors.white.withValues(alpha: 0.9)
+                    : Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildB12NextIntakeBanner(DateTime today) {
+    final next = _b12NextIntake!;
+    final nextDay = DateTime(next.year, next.month, next.day);
+    final inDays = nextDay.difference(today).inDays;
+    final String label;
+    if (inDays <= 0) {
+      label = 'aujourd\'hui';
+    } else if (inDays == 1) {
+      label = 'demain';
+    } else {
+      label = DateFormat('EEEE d MMMM', 'fr_FR').format(nextDay);
+    }
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.event_repeat, size: 40.sp, color: primary),
+          SizedBox(width: 10.w),
+          Flexible(
+            child: Text(
+              'Prochaine prise : $label',
+              style: TextStyle(
+                fontSize: 34.sp,
+                fontWeight: FontWeight.w600,
+                color: primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildB12MonthHeader(String month, {bool isFirst = false}) {
+    return Padding(
+      padding: EdgeInsets.only(top: isFirst ? 4.h : 20.h, bottom: 12.h),
+      child: Text(
+        month.toUpperCase(),
+        style: TextStyle(
+          fontSize: 30.sp,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.2,
+          color: Colors.grey[500],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildB12HistoryTile(DateTime date, DateTime today) {
+    final dayFormatter = DateFormat('EEEE d MMMM', 'fr_FR');
+    final daysAgo = B12ReminderService.calendarDaysBetween(date, today);
+    final isToday = daysAgo == 0;
+    final isYesterday = daysAgo == 1;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      decoration: BoxDecoration(
+        color: isToday ? primary.withValues(alpha: 0.08) : Colors.grey[50],
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: isToday
+              ? primary.withValues(alpha: 0.3)
+              : Colors.grey[200]!,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 90.w,
+            height: 90.w,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isToday ? primary : primary.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '${date.day}',
+              style: TextStyle(
+                fontSize: 38.sp,
+                fontWeight: FontWeight.bold,
+                color: isToday ? Colors.white : primary,
+              ),
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Text(
+              _capitalizeFr(dayFormatter.format(date)),
+              style: TextStyle(
+                fontSize: 38.sp,
+                fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                color: Colors.grey[800],
+              ),
+            ),
+          ),
+          if (isToday || isYesterday)
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: isToday ? primary : Colors.grey[200],
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Text(
+                isToday ? 'Aujourd\'hui' : 'Hier',
+                style: TextStyle(
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.w600,
+                  color: isToday ? Colors.white : Colors.grey[600],
+                ),
+              ),
+            )
+          else
+            Icon(
+              Icons.check_circle,
+              size: 40.sp,
+              color: primary.withValues(alpha: 0.5),
+            ),
+        ],
       ),
     );
   }
@@ -1616,6 +1883,103 @@ class _UserProfileState extends State<UserProfile> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorReportsCard() {
+    final count = _user?.nbErrorReports ?? 0;
+    final unread = _unreadErrorResponses;
+
+    return GestureDetector(
+      onTap: () {
+        // Opening the listing acknowledges the treated reports: the
+        // "unread responses" badge disappears.
+        if (unread > 0) {
+          ErrorReportBadgeService.markHandledAsSeen(
+              _errorReportsFirstPage?.items ?? []);
+          setState(() => _unreadErrorResponses = 0);
+        }
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (context) => SizedBox(
+            height: MediaQuery.of(context).size.height * 0.9,
+            child: ErrorReportsModal(initialData: _errorReportsFirstPage),
+          ),
+        );
+      },
+      child: _buildCard(
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.flag_outlined,
+                size: 48.sp,
+                color: Colors.orange[800],
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Mes signalements',
+                    style: TextStyle(
+                      fontSize: 52.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[800],
+                    ),
+                  ),
+                  Text(
+                    unread > 0
+                        ? '$unread réponse${unread > 1 ? 's' : ''} non lue${unread > 1 ? 's' : ''} !'
+                        : count > 0
+                            ? '$count signalement${count > 1 ? 's' : ''} envoyé${count > 1 ? 's' : ''}'
+                            : 'Aucun signalement envoyé',
+                    style: TextStyle(
+                      fontSize: 36.sp,
+                      color: unread > 0 ? Colors.red[700] : Colors.grey[600],
+                      fontWeight:
+                          unread > 0 ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (unread > 0) ...[
+              Container(
+                padding:
+                    EdgeInsets.symmetric(horizontal: 18.w, vertical: 8.h),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '$unread',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 36.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              SizedBox(width: 16.w),
+            ],
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 48.sp,
+              color: Colors.grey[400],
+            ),
+          ],
+        ),
       ),
     );
   }

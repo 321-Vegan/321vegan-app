@@ -27,6 +27,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
   String? _selectedAvatar;
   bool _isLoading = false;
   bool _randomAvatarEnabled = false;
+  bool _initialRandomAvatarEnabled = false;
   String? _pendingEmail;
 
   final List<String> _availableAvatars = [
@@ -54,6 +55,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
     final enabled = await PreferencesHelper.getRandomAvatarEnabled();
     setState(() {
       _randomAvatarEnabled = enabled;
+      _initialRandomAvatarEnabled = enabled;
     });
   }
 
@@ -97,14 +99,26 @@ class _EditProfileModalState extends State<EditProfileModal> {
       // Save random avatar preference
       await PreferencesHelper.saveRandomAvatarEnabled(_randomAvatarEnabled);
 
-      // Save avatar to SharedPreferences
-      if (_selectedAvatar != widget.currentAvatar) {
-        await PreferencesHelper.saveAvatar(_selectedAvatar);
-      }
+      // Turning random mode off makes the displayed avatar an explicit
+      // choice: it must reach the account too, otherwise random picks :
+      // which are only ever saved locally ; would be reverted to the
+      // account's last explicit avatar on the next profile load.
+      final randomModeDisabled =
+          _initialRandomAvatarEnabled && !_randomAvatarEnabled;
+      final avatarChanged = _selectedAvatar != widget.currentAvatar ||
+          (randomModeDisabled && _selectedAvatar != null);
+      final nicknameChanged = newNickname != widget.currentNickname;
 
-      // Update nickname on backend if changed
-      if (newNickname != widget.currentNickname) {
-        final result = await AuthService.updateUser(nickname: newNickname);
+      final nickname = nicknameChanged ? newNickname : null;
+      final avatar = avatarChanged ? _selectedAvatar : null;
+
+      // Update the backend first: a failed save must not leave the avatar
+      // half-applied locally while the modal reports an error.
+      if (nickname != null || avatar != null) {
+        final result = await AuthService.updateUser(
+          nickname: nickname,
+          avatar: avatar,
+        );
 
         if (!result.isSuccess) {
           if (mounted) {
@@ -118,6 +132,11 @@ class _EditProfileModalState extends State<EditProfileModal> {
           setState(() => _isLoading = false);
           return;
         }
+      }
+
+      // Save avatar to SharedPreferences
+      if (avatarChanged) {
+        await PreferencesHelper.saveAvatar(_selectedAvatar);
       }
 
       if (mounted) {

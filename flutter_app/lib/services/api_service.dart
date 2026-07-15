@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vegan_app/models/partners/partners.dart';
 import 'auth_service.dart';
 import 'dio_client.dart';
+import '../models/b12_intake.dart';
+import '../models/error_report.dart';
 import '../models/product_of_interest.dart';
 import '../models/product_category.dart';
 import '../models/subscription.dart';
@@ -168,6 +170,42 @@ class ApiService {
     }
   }
 
+  /// Get the current user's error reports, most recent first, including the
+  /// team's response once handled (requires user JWT).
+  static Future<ErrorReportPaginated?> getMyErrorReports({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final accessToken = AuthService.accessToken;
+
+      final response = await dio.get(
+        '/me/error-reports',
+        queryParameters: {
+          'page': page,
+          'page_size': pageSize,
+        },
+        options: dio_pkg.Options(
+          headers: {
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      if (response.statusCode != null &&
+          response.statusCode! >= 200 &&
+          response.statusCode! < 300 &&
+          response.data != null) {
+        return ErrorReportPaginated.fromJson(
+            response.data as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Get all interesting products (products of interest)
   static Future<List<ProductOfInterest>> getInterestingProducts() async {
     try {
@@ -232,6 +270,77 @@ class ApiService {
           as Map<String, dynamic>;
     }
     return null;
+  }
+
+  /// Record a B12 intake day for the current user (requires user JWT:
+  /// the server attributes the intake to the token's user).
+  /// [intakeDate] - The day the B12 was taken, formatted 'yyyy-MM-dd'
+  /// [frequency] - The supplementation rhythm in effect when it was taken
+  /// ("daily", "weekly", "twice_weekly", "biweekly")
+  ///
+  /// Returns the HTTP status code. 409 means the day is already recorded
+  /// server-side and can be treated as synced. Network/connection failures
+  /// are rethrown so callers can keep queued intakes for retry.
+  static Future<int> postB12Intake({
+    required String intakeDate,
+    String? frequency,
+  }) async {
+    final dio = await DioClient.getDio();
+    final accessToken = AuthService.accessToken;
+
+    try {
+      final response = await dio.post(
+        '/b12-intakes/',
+        data: {
+          'intake_date': intakeDate,
+          if (frequency != null) 'frequency': frequency,
+        },
+        options: dio_pkg.Options(
+          headers: {
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+      return response.statusCode ?? 0;
+    } on dio_pkg.DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status != null) return status;
+      rethrow;
+    }
+  }
+
+  /// Get all B12 intakes recorded server-side for the current user
+  /// (requires user JWT).
+  /// Returns the intakes (dates at local midnight, with the frequency
+  /// snapshotted at recording time), or null on failure.
+  static Future<List<B12Intake>?> getB12Intakes() async {
+    try {
+      final dio = await DioClient.getDio();
+      final accessToken = AuthService.accessToken;
+
+      final response = await dio.get(
+        '/me/b12-intakes',
+        options: dio_pkg.Options(
+          headers: {
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+
+      final data = response.data;
+      if (data is List) {
+        final intakes = <B12Intake>[];
+        for (final item in data) {
+          final date = DateTime.tryParse(item['intake_date'] ?? '');
+          if (date == null) continue;
+          intakes.add(B12Intake(date: date, frequency: item['frequency']));
+        }
+        return intakes;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   /// Confirm which shop the user is in by osm_id.

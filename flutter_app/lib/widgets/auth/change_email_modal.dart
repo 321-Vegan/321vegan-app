@@ -215,7 +215,7 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
                         ),
                 ),
 
-                SizedBox(height: 24.h),
+                SizedBox(height: 120.h),
               ],
             ),
           ),

@@ -8,6 +8,7 @@ import '../models/auth.dart';
 import '../models/user.dart';
 import '../models/scanned_product.dart';
 import '../helpers/preference_helper.dart';
+import 'b12_sync_service.dart';
 import 'dio_client.dart';
 import 'scan_count_sync_service.dart';
 import 'subscription_service.dart';
@@ -42,9 +43,12 @@ class AuthService {
     if (isLoggedIn) {
       // Run network calls in background — don't block app startup.
       unawaited(_checkAndRefreshToken());
-      // Scan-count sync runs after the profile fetch: it needs currentUser.
-      unawaited(_syncUserDataToPreferences()
-          .then((_) => ScanCountSyncService.sync()));
+      // Scan-count and B12 syncs run after the profile fetch: they need
+      // currentUser.
+      unawaited(_syncUserDataToPreferences().then((_) {
+        unawaited(ScanCountSyncService.sync());
+        unawaited(B12SyncService.sync());
+      }));
     }
   }
 
@@ -185,6 +189,9 @@ class AuthService {
         // (first login seeds it from the local scan total).
         unawaited(ScanCountSyncService.sync());
 
+        // Same for B12 intakes (first sync seeds the local intake history).
+        unawaited(B12SyncService.sync());
+
         return AuthResult.success(token);
       } else {
         return AuthResult.error('Mot de passe ou email incorrect');
@@ -290,11 +297,17 @@ class AuthService {
 
   // Logout
   static Future<AuthResult<String>> logout() async {
-    // Last chance to push queued scan-count increments for this account;
-    // whatever couldn't be sent is dropped below so it can't be attributed
-    // to another account logging in later on this device.
-    await ScanCountSyncService.sync();
-    await ScanCountSyncService.clearUnsynced();
+    // Last chance to push queued scan-count increments and B12 intakes for
+    // this account; whatever couldn't be sent is dropped below so it can't
+    // be attributed to another account logging in later on this device.
+    await Future.wait([
+      ScanCountSyncService.sync(),
+      B12SyncService.sync(),
+    ]);
+    await Future.wait([
+      ScanCountSyncService.clearUnsynced(),
+      B12SyncService.clearPending(),
+    ]);
 
     try {
       final dio = await DioClient.getDio();
@@ -326,7 +339,12 @@ class AuthService {
     if (!confirmed) {
       return AuthResult.error('Annulation de la suppression du compte');
     }
-    await ScanCountSyncService.clearUnsynced();
+    // Same as logout: queued data must not outlive the account, or it would
+    // be attributed to the next account logging in on this device.
+    await Future.wait([
+      ScanCountSyncService.clearUnsynced(),
+      B12SyncService.clearPending(),
+    ]);
     try {
       final dio = await DioClient.getDio();
 
@@ -513,20 +531,14 @@ class AuthService {
     }
   }
 
-  // Update user information
+  // Update the current user's profile (PUT /me/, authenticated with the
+  // user's JWT; email changes go through requestEmailChange instead).
   static Future<AuthResult<User>> updateUser({
-    int? userId,
     DateTime? veganSince,
     String? nickname,
-    String? email,
+    String? avatar,
   }) async {
     try {
-      // Use the current user's id if not provided
-      final id = userId ?? _currentUser?.id;
-      if (id == null) {
-        return AuthResult.error('User ID not found');
-      }
-
       final dio = await DioClient.getDio();
       final Map<String, dynamic> updates = {};
 
@@ -536,15 +548,15 @@ class AuthService {
       if (nickname != null) {
         updates['nickname'] = nickname;
       }
-      if (email != null) {
-        updates['email'] = email;
+      if (avatar != null) {
+        updates['avatar'] = avatar;
       }
 
-      final response = await dio.patch(
-        '/users/$id',
+      final response = await dio.put(
+        '/me/',
         data: updates,
         options: Options(
-          headers: _headersWithApiKey,
+          headers: {'Authorization': 'Bearer $_accessToken'},
         ),
       );
 

@@ -4,6 +4,7 @@ class User {
   final int id;
   final String email;
   final String nickname;
+  final String? avatar;
   final bool isActive;
   final int? nbProductsSent;
   final int? supporterLevel;
@@ -22,6 +23,7 @@ class User {
     required this.id,
     required this.email,
     required this.nickname,
+    this.avatar,
     required this.isActive,
     required this.nbProductsSent,
     required this.supporterLevel,
@@ -44,12 +46,11 @@ class User {
       id: json['id'] as int? ?? 0,
       email: json['email'] ?? '',
       nickname: json['nickname'] ?? '',
+      avatar: json['avatar'] as String?,
       isActive: json['is_active'] ?? false,
       nbProductsSent: json['nb_products_sent'] ?? 0,
       supporterLevel: json['supporter'] ?? 0,
-      nbErrorReports: json['error_reports'] != null
-          ? (json['error_reports'] as List).length
-          : 0,
+      nbErrorReports: json['nb_error_reports'] ?? 0,
       nbProductsModified: json['nb_products_modified'] ?? 0,
       nbCheckings: json['nb_checkings'] ?? 0,
       scanCount: json['scan_count'] ?? 0,
@@ -78,6 +79,7 @@ class User {
       'id': id,
       'email': email,
       'nickname': nickname,
+      'avatar': avatar,
       'is_active': isActive,
       'nb_products_sent': nbProductsSent,
       'supporter': supporterLevel,

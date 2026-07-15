@@ -171,7 +171,7 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
     } else {
       messenger.showSnackBar(
         const SnackBar(
-          content: Text("Signalement envoyé. Merci !"),
+          content: Text("Signalement envoyé. Merci ! Retrouvez vos signalement sur votre page de profil."),
           backgroundColor: Colors.green,
         ),
       );

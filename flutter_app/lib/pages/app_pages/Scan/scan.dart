@@ -1013,6 +1013,45 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     );
   }
 
+  Widget _buildScanWarningBox(String text) {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.9),
+        border: Border.all(color: Colors.white, width: 2),
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning,
+            color: Colors.orange[800],
+            size: 80.sp,
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 36.sp,
+                color: Colors.orange[900],
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1034,92 +1073,36 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ),
             ],
           ),
-          // EAN-8 Warning Box at top
-          if (productInfo != null &&
-              productInfo!.isEan8 &&
-              productInfo!.status != ScanStatus.unknown)
+          // Camera-area overlays (warnings + score bar) flow bottom-up in a
+          // single column ending just above the result card, so they never
+          // overlap each other whatever the device height or text length.
+          if (productInfo != null)
             Positioned(
-              top: 700.h,
+              top: 0,
               left: 16,
               right: 16,
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 16.w),
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  border: Border.all(color: Colors.white, width: 2),
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+              height: 1090.h,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                spacing: 24.h,
+                children: [
+                  if (productInfo!.isEan8 &&
+                      productInfo!.status != ScanStatus.unknown)
+                    _buildScanWarningBox(
+                      'Code EAN-8 : Ce code-barres peut correspondre à plusieurs produits différents. Vérifiez bien le nom et la marque.',
                     ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.warning,
-                      color: Colors.orange[800],
-                      size: 80.sp,
+                  if (productInfo!.hasNonVeganOldRecipe == true)
+                    _buildScanWarningBox(
+                      'Ancienne recette non vegan : il se peut qu\'il y ait encore du stock avec l\'ancienne recette. Vérifiez les ingrédients.',
                     ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        'Code EAN-8 : Ce code-barres peut correspondre à plusieurs produits différents. Vérifiez bien le nom et la marque.',
-                        style: TextStyle(
-                          fontSize: 36.sp,
-                          color: Colors.orange[900],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  if (productInfo!.status == ScanStatus.vegan)
+                    ProductScoresSection(
+                      barcode: productInfo!.code,
+                      isSubscribed: SubscriptionService.isSubscribed,
+                      enabled: _showScores,
+                      onDisable: () => _setShowScoresPref(false),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          // Old receipe non vegan warning box at top
-          if (productInfo?.hasNonVeganOldRecipe == true)
-            Positioned(
-              top: 850.h,
-              left: 16,
-              right: 16,
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 16.w),
-                padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  border: Border.all(color: Colors.white, width: 2),
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.warning,
-                      color: Colors.orange[800],
-                      size: 80.sp,
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: Text(
-                        'Ancienne recette non vegan : il se peut qu\'il y ait encore du stock avec l\'ancienne recette. Vérifiez les ingrédients.',
-                        style: TextStyle(
-                          fontSize: 36.sp,
-                          color: Colors.orange[900],
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
           // Add the floating button for Vegandex
@@ -1200,23 +1183,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ),
             ),
           ),
-          // Floating score bar — visible in camera area for vegan products only
-          if (productInfo?.status == ScanStatus.vegan)
-            Positioned(
-              // Non-subscribers get a reserved strip above the badges (free
-              // reveal chip); raise the anchor so the badges stay in place.
-              top: SubscriptionService.isSubscribed
-                  ? 0.35.sh
-                  : 0.35.sh - ProductScoresSection.extraHeaderHeight,
-              left: 16,
-              right: 16,
-              child: ProductScoresSection(
-                barcode: productInfo!.code,
-                isSubscribed: SubscriptionService.isSubscribed,
-                enabled: _showScores,
-                onDisable: () => _setShowScoresPref(false),
-              ),
-            ),
           // Result card with bottom margin
           if (productInfo != null)
             Positioned(
