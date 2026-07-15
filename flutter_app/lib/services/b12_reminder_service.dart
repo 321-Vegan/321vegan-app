@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -15,6 +16,13 @@ class B12ReminderService {
   static const String _intakeHistoryKey = 'b12_intake_history';
 
   static final NotificationService _notificationService = NotificationService();
+
+  /// Bumped whenever the locally stored intake history changes, so UI
+  /// already on screen can reload. The main case is the post-login sync
+  /// restoring the server-side history after the profile page has loaded.
+  static final ValueNotifier<int> historyRevision = ValueNotifier(0);
+
+  static void _notifyHistoryChanged() => historyRevision.value++;
 
   /// Get saved reminder settings
   static Future<B12ReminderSettings> getSettings() async {
@@ -438,6 +446,7 @@ class B12ReminderService {
     if (!history.contains(todayKey)) {
       history.add(todayKey);
       await prefs.setStringList(_intakeHistoryKey, history);
+      _notifyHistoryChanged();
 
       // Mirror the intake to the API (offline-safe, queued) with the
       // frequency currently in effect so the server can score it fairly.
@@ -454,6 +463,7 @@ class B12ReminderService {
     final historyJson =
         days.map((day) => _dayFormat.format(day)).toSet().toList();
     await prefs.setStringList(_intakeHistoryKey, historyJson);
+    _notifyHistoryChanged();
   }
 
   /// Merge intake days into the local history (union, never removes).
@@ -474,6 +484,7 @@ class B12ReminderService {
     }
     if (added > 0) {
       await prefs.setStringList(_intakeHistoryKey, history);
+      _notifyHistoryChanged();
     }
     return added;
   }
@@ -492,6 +503,42 @@ class B12ReminderService {
   }
 
 
+
+  /// Theoretical next intake day: the last recorded intake plus the
+  /// interval implied by the configured frequency. Day-of-week based
+  /// frequencies honor the configured day(s) so the date matches the
+  /// user's actual schedule. Returns null when there is no history yet.
+  static Future<DateTime?> getNextExpectedIntakeDate() async {
+    final history = await getB12IntakeHistory();
+    if (history.isEmpty) return null;
+
+    final settings = await getSettings();
+    final last = history.first;
+
+    switch (settings.frequency) {
+      case ReminderFrequency.daily:
+        return last.add(const Duration(days: 1));
+      case ReminderFrequency.weekly:
+        return _nextMatchingWeekday(last, {settings.dayOfWeek ?? last.weekday});
+      case ReminderFrequency.twiceWeekly:
+        final days = settings.daysOfWeek;
+        if (days != null && days.length == 2) {
+          return _nextMatchingWeekday(last, days.toSet());
+        }
+        return last.add(const Duration(days: 3));
+      case ReminderFrequency.biweekly:
+        return last.add(const Duration(days: 14));
+    }
+  }
+
+  /// First day strictly after [from] whose weekday is in [weekdays]
+  static DateTime _nextMatchingWeekday(DateTime from, Set<int> weekdays) {
+    var candidate = from.add(const Duration(days: 1));
+    while (!weekdays.contains(candidate.weekday)) {
+      candidate = candidate.add(const Duration(days: 1));
+    }
+    return candidate;
+  }
 
   /// Current streak: number of days covered by the unbroken chain of
   /// on-schedule intakes, from the chain's first intake through today.
