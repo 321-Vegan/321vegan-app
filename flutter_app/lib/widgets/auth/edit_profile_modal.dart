@@ -97,21 +97,18 @@ class _EditProfileModalState extends State<EditProfileModal> {
       // Save random avatar preference
       await PreferencesHelper.saveRandomAvatarEnabled(_randomAvatarEnabled);
 
-      // Save avatar to SharedPreferences
       final avatarChanged = _selectedAvatar != widget.currentAvatar;
-      if (avatarChanged) {
-        await PreferencesHelper.saveAvatar(_selectedAvatar);
-      }
-
-      // Update nickname/avatar on backend if changed
       final nicknameChanged = newNickname != widget.currentNickname;
 
       final nickname = nicknameChanged ? newNickname : null;
       final avatar = avatarChanged ? _selectedAvatar : null;
+
+      // Update the backend first: a failed save must not leave the avatar
+      // half-applied locally while the modal reports an error.
       if (nickname != null || avatar != null) {
         final result = await AuthService.updateUser(
-          nickname: nicknameChanged ? newNickname : null,
-          avatar: avatarChanged ? _selectedAvatar : null,
+          nickname: nickname,
+          avatar: avatar,
         );
 
         if (!result.isSuccess) {
@@ -126,6 +123,11 @@ class _EditProfileModalState extends State<EditProfileModal> {
           setState(() => _isLoading = false);
           return;
         }
+      }
+
+      // Save avatar to SharedPreferences
+      if (avatarChanged) {
+        await PreferencesHelper.saveAvatar(_selectedAvatar);
       }
 
       if (mounted) {

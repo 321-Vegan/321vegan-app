@@ -339,7 +339,12 @@ class AuthService {
     if (!confirmed) {
       return AuthResult.error('Annulation de la suppression du compte');
     }
-    await ScanCountSyncService.clearUnsynced();
+    // Same as logout: queued data must not outlive the account, or it would
+    // be attributed to the next account logging in on this device.
+    await Future.wait([
+      ScanCountSyncService.clearUnsynced(),
+      B12SyncService.clearPending(),
+    ]);
     try {
       final dio = await DioClient.getDio();
 

@@ -27,7 +27,8 @@ class ScanCountSyncService {
   /// The API rejects increments above this in a single request.
   static const int _maxIncrementPerRequest = 10000;
 
-  static bool _isSyncing = false;
+  /// Completes when the most recently requested sync pass has finished.
+  static Future<void> _lastSync = Future.value();
 
   /// Record one scan for the server counter. Call after the local total has
   /// been incremented. No-op when logged out: pre-account scans reach the
@@ -47,11 +48,17 @@ class ScanCountSyncService {
 
   /// Push local scan-count state to the server: seed the counter once per
   /// user, then flush any unsynced increments. Safe to call opportunistically
-  /// (app start, connectivity regained, after a scan): it serializes itself
-  /// and does nothing when there is nothing to send.
-  static Future<void> sync() async {
-    if (_isSyncing) return;
-    _isSyncing = true;
+  /// (app start, connectivity regained, after a scan): concurrent calls are
+  /// chained rather than dropped, so each caller's future only completes
+  /// after a full pass covering everything queued before the call — logout
+  /// relies on this before dropping the unsynced counter.
+  static Future<void> sync() {
+    final run = _lastSync.then((_) => _doSync());
+    _lastSync = run;
+    return run;
+  }
+
+  static Future<void> _doSync() async {
     try {
       final user = AuthService.currentUser;
       if (user == null) return;
@@ -72,8 +79,6 @@ class ScanCountSyncService {
       await _flushUnsynced(prefs);
     } catch (e) {
       debugPrint('Scan count sync failed (will retry): $e');
-    } finally {
-      _isSyncing = false;
     }
   }
 

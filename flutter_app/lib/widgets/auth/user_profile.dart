@@ -176,21 +176,20 @@ class _UserProfileState extends State<UserProfile> {
         finalAvatar = _getRandomAvatar(avatar);
         // Save the new random avatar
         await PreferencesHelper.saveAvatar(finalAvatar);
-      } else if (avatar == null && result.isSuccess) {
-        // No avatar on this device (e.g. fresh install): adopt the one
-        // stored on the account, if any.
-        finalAvatar = result.data?.avatar;
-        if (finalAvatar != null) {
+      } else if (result.isSuccess) {
+        final serverAvatar = result.data?.avatar;
+        if (serverAvatar != null && serverAvatar != finalAvatar) {
+          // The account's avatar wins over the device's: it holds the last
+          // explicit choice, possibly made on another device or before a
+          // reinstall. Explicit changes reach the account through the edit
+          // profile modal, never from here.
+          finalAvatar = serverAvatar;
           await PreferencesHelper.saveAvatar(finalAvatar);
+        } else if (serverAvatar == null && finalAvatar != null) {
+          // Account predates avatar sync: claim the device's avatar.
+          // Fire-and-forget: a network failure must not block the page.
+          AuthService.updateUser(avatar: finalAvatar);
         }
-      }
-
-      // Keep the account's avatar in sync with what the app shows.
-      // Fire-and-forget: a network failure here must not block the page.
-      if (finalAvatar != null &&
-          result.isSuccess &&
-          finalAvatar != result.data?.avatar && !randomAvatarEnabled) {
-        AuthService.updateUser(avatar: finalAvatar);
       }
 
       setState(() {

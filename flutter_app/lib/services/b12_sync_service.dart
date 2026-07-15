@@ -31,7 +31,13 @@ import 'b12_reminder_service.dart';
 class B12SyncService {
   static const String _pendingKey = 'b12_intakes_unsynced';
 
-  static bool _isSyncing = false;
+  /// Local intake history entries older than this user's first sync belong
+  /// to whoever recorded them; the owner marker prevents attributing them
+  /// to a different account that logs in later on this device.
+  static const String _historyOwnerKey = 'b12_history_owner_user_id';
+
+  /// Completes when the most recently requested sync pass has finished.
+  static Future<void> _lastSync = Future.value();
 
   /// Users already reconciled since app launch. In memory on purpose:
   /// reconciliation is cheap (one GET, usually no diff), so re-running it
@@ -57,11 +63,17 @@ class B12SyncService {
 
   /// Push queued intakes to the server, reconciling local and server
   /// histories on the first sync of a user since app launch. Safe to call
-  /// opportunistically (app start, login, after an intake): it serializes
-  /// itself and does nothing when there is nothing to send.
-  static Future<void> sync() async {
-    if (_isSyncing) return;
-    _isSyncing = true;
+  /// opportunistically (app start, login, after an intake): concurrent
+  /// calls are chained rather than dropped, so each caller's future only
+  /// completes after a full pass covering everything queued before the
+  /// call — logout relies on this before dropping the queue.
+  static Future<void> sync() {
+    final run = _lastSync.then((_) => _doSync());
+    _lastSync = run;
+    return run;
+  }
+
+  static Future<void> _doSync() async {
     try {
       final user = AuthService.currentUser;
       if (user == null) return;
@@ -72,7 +84,7 @@ class B12SyncService {
       final prefs = await SharedPreferences.getInstance();
 
       if (!_reconciledUsers.contains(user.id)) {
-        if (await _reconcile(prefs)) {
+        if (await _reconcile(prefs, user.id)) {
           _reconciledUsers.add(user.id);
         }
       }
@@ -80,8 +92,6 @@ class B12SyncService {
       await _flush(prefs);
     } catch (e) {
       debugPrint('B12 intake sync failed (will retry): $e');
-    } finally {
-      _isSyncing = false;
     }
   }
 
@@ -91,15 +101,37 @@ class B12SyncService {
   ///    approximation for days recorded before syncing existed);
   ///  - server days missing locally are merged into the local history, so
   ///    it comes back automatically after a reinstall or on a new device.
+  /// The upload direction only applies when the local history belongs to
+  /// this user (or to nobody yet — pre-account history seeds the first
+  /// account that logs in): a history recorded under another account is
+  /// replaced by this account's server history instead of being uploaded.
   /// Returns false when the server history couldn't be fetched, so the
   /// caller retries on the next sync.
-  static Future<bool> _reconcile(SharedPreferences prefs) async {
+  static Future<bool> _reconcile(SharedPreferences prefs, int userId) async {
     final serverDays = await ApiService.getB12Intakes();
     if (serverDays == null) return false;
 
+    final ownerId = prefs.getInt(_historyOwnerKey);
+    if (ownerId != null && ownerId != userId) {
+      // The device's history was recorded under another account. Adopt this
+      // account's server history, keeping only the days queued since this
+      // user logged in (their own intakes — the previous account's queue
+      // was dropped at logout).
+      final pendingDays = (prefs.getStringList(_pendingKey) ?? [])
+          .map((e) => DateTime.tryParse(
+              (json.decode(e) as Map<String, dynamic>)['date'] as String))
+          .whereType<DateTime>();
+      await B12ReminderService.replaceIntakeHistory(
+          [...serverDays, ...pendingDays]);
+      await prefs.setInt(_historyOwnerKey, userId);
+      debugPrint('👤 B12 history belonged to another account — '
+          'replaced with the server history');
+      return true;
+    }
+
     final serverSet = serverDays
         .map((date) => DateFormat('yyyy-MM-dd').format(date))
-        .toSet();    
+        .toSet();
     final history = await B12ReminderService.getB12IntakeHistory();
     final missing =
         history.where((day) => !serverSet.contains(DateFormat('yyyy-MM-dd').format(day))).toList();
@@ -113,6 +145,7 @@ class B12SyncService {
     if (restored > 0) {
       debugPrint('📥 Restored $restored B12 intake day(s) from server');
     }
+    await prefs.setInt(_historyOwnerKey, userId);
     return true;
   }
 
@@ -120,6 +153,9 @@ class B12SyncService {
   /// pending intakes are not attributed to the next account that logs in on
   /// this device. The local history itself is kept.
   static Future<void> clearPending() async {
+    // Re-reconcile on the next login even within this app session: intakes
+    // recorded while logged out only reach the server through reconcile.
+    _reconciledUsers.clear();
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_pendingKey);

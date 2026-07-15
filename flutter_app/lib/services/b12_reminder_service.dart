@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import '../models/b12_reminder_settings.dart';
@@ -395,20 +396,48 @@ class B12ReminderService {
     }
   }
 
+  /// Intake days are stored as `yyyy-MM-dd` strings: a calendar day, unlike
+  /// an epoch timestamp, means the same day in every timezone, so recorded
+  /// days can't shift (and get re-uploaded or duplicated by the sync) when
+  /// the device changes timezone.
+  static final DateFormat _dayFormat = DateFormat('yyyy-MM-dd');
+
+  /// Load the intake history as day strings, migrating legacy epoch-millis
+  /// entries (the pre-sync storage format) in place on first read. Legacy
+  /// entries are interpreted in the current timezone, matching how the old
+  /// code displayed them.
+  static Future<List<String>> _loadIntakeDays(SharedPreferences prefs) async {
+    final raw = prefs.getStringList(_intakeHistoryKey) ?? [];
+    var migrated = false;
+    final days = <String>{};
+    for (final entry in raw) {
+      if (entry.contains('-')) {
+        days.add(entry);
+        continue;
+      }
+      migrated = true;
+      final millis = int.tryParse(entry);
+      if (millis == null) continue;
+      days.add(_dayFormat.format(DateTime.fromMillisecondsSinceEpoch(millis)));
+    }
+    final list = days.toList();
+    if (migrated) await prefs.setStringList(_intakeHistoryKey, list);
+    return list;
+  }
+
   /// Record a B12 intake for today
   static Future<void> recordB12Intake() async {
     final prefs = await SharedPreferences.getInstance();
-    final historyJson = prefs.getStringList(_intakeHistoryKey) ?? [];
+    final history = await _loadIntakeDays(prefs);
 
-    // Store as day-only timestamp to avoid duplicates on the same day
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
-    final todayMillis = todayDate.millisecondsSinceEpoch.toString();
+    final todayKey = _dayFormat.format(todayDate);
 
     // Don't add duplicate for same day
-    if (!historyJson.contains(todayMillis)) {
-      historyJson.add(todayMillis);
-      await prefs.setStringList(_intakeHistoryKey, historyJson);
+    if (!history.contains(todayKey)) {
+      history.add(todayKey);
+      await prefs.setStringList(_intakeHistoryKey, history);
 
       // Mirror the intake to the API (offline-safe, queued) with the
       // frequency currently in effect so the server can score it fairly.
@@ -417,43 +446,46 @@ class B12ReminderService {
     }
   }
 
+  /// Replace the whole local history. Used when the device's history was
+  /// recorded under another account and must be swapped for the current
+  /// account's server-side history.
+  static Future<void> replaceIntakeHistory(List<DateTime> days) async {
+    final prefs = await SharedPreferences.getInstance();
+    final historyJson =
+        days.map((day) => _dayFormat.format(day)).toSet().toList();
+    await prefs.setStringList(_intakeHistoryKey, historyJson);
+  }
+
   /// Merge intake days into the local history (union, never removes).
   /// Used to restore the server-side history on a new device or after a
   /// reinstall. Returns the number of days actually added.
   static Future<int> mergeIntakeHistory(List<DateTime> days) async {
     final prefs = await SharedPreferences.getInstance();
-    final historyJson = prefs.getStringList(_intakeHistoryKey) ?? [];
+    final history = await _loadIntakeDays(prefs);
+    final existing = history.toSet();
 
     var added = 0;
     for (final day in days) {
-      final normalized = DateTime(day.year, day.month, day.day);
-      final millis = normalized.millisecondsSinceEpoch.toString();
-      if (!historyJson.contains(millis)) {
-        historyJson.add(millis);
+      final key = _dayFormat.format(day);
+      if (existing.add(key)) {
+        history.add(key);
         added++;
       }
     }
     if (added > 0) {
-      await prefs.setStringList(_intakeHistoryKey, historyJson);
+      await prefs.setStringList(_intakeHistoryKey, history);
     }
     return added;
   }
 
-  /// Get B12 intake history, sorted descending (most recent first)
+  /// Get B12 intake history, sorted descending (most recent first).
+  /// Days are returned as local-midnight [DateTime]s.
   static Future<List<DateTime>> getB12IntakeHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    final historyJson = prefs.getStringList(_intakeHistoryKey) ?? [];
+    final history = await _loadIntakeDays(prefs);
 
-    final dates = historyJson
-        .map((ms) {
-          try {
-            return DateTime.fromMillisecondsSinceEpoch(int.parse(ms));
-          } catch (e) {
-            return null;
-          }
-        })
-        .whereType<DateTime>()
-        .toList();
+    final dates =
+        history.map(DateTime.tryParse).whereType<DateTime>().toList();
 
     dates.sort((a, b) => b.compareTo(a));
     return dates;
