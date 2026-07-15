@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
+import '../models/b12_intake.dart';
 import '../models/b12_reminder_settings.dart';
 import 'b12_sync_service.dart';
 import 'notification_service.dart';
@@ -45,6 +46,26 @@ class B12ReminderService {
   static Future<void> saveSettings(B12ReminderSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_settingsKey, json.encode(settings.toJson()));
+  }
+
+  /// Adopt [frequency] as the reminder frequency when no reminder settings
+  /// were ever saved on this device (fresh install, new device), so
+  /// next-intake estimates — and the streak of intakes that predate
+  /// frequency snapshotting — follow the rhythm the history was recorded
+  /// under instead of the daily default. [lastIntake] anchors the day of
+  /// week for weekly/biweekly rhythms (the settings default would be
+  /// Monday regardless of when the user actually takes their B12).
+  /// Reminders themselves stay disabled — only the rhythm is adopted.
+  static Future<void> adoptFrequencyIfUnset(
+      ReminderFrequency frequency, DateTime lastIntake) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getString(_settingsKey) != null) return;
+    await saveSettings(B12ReminderSettings(
+      frequency: frequency,
+      dayOfWeek: lastIntake.weekday,
+    ));
+    // The streak depends on the frequency: make listening UI recompute
+    _notifyHistoryChanged();
   }
 
   /// Schedule reminder based on settings
@@ -404,102 +425,164 @@ class B12ReminderService {
     }
   }
 
-  /// Intake days are stored as `yyyy-MM-dd` strings: a calendar day, unlike
-  /// an epoch timestamp, means the same day in every timezone, so recorded
-  /// days can't shift (and get re-uploaded or duplicated by the sync) when
-  /// the device changes timezone.
+  /// Intakes are stored as JSON entries `{"date": "yyyy-MM-dd",
+  /// "frequency": "biweekly"}`. The date is a calendar day: unlike an epoch
+  /// timestamp, it means the same day in every timezone, so recorded days
+  /// can't shift (and get re-uploaded or duplicated by the sync) when the
+  /// device changes timezone. The frequency is the rhythm in effect when
+  /// the intake was recorded (null when unknown); the streak judges each
+  /// intake against it.
   static final DateFormat _dayFormat = DateFormat('yyyy-MM-dd');
 
-  /// Load the intake history as day strings, migrating legacy epoch-millis
-  /// entries (the pre-sync storage format) in place on first read. Legacy
-  /// entries are interpreted in the current timezone, matching how the old
-  /// code displayed them.
-  static Future<List<String>> _loadIntakeDays(SharedPreferences prefs) async {
+  /// Load the intake history, migrating legacy entries in place on first
+  /// read: epoch-millis (the pre-sync format, interpreted in the current
+  /// timezone, matching how the old code displayed them) and bare
+  /// `yyyy-MM-dd` strings (the pre-frequency format). Legacy entries have
+  /// an unknown (null) frequency until the sync backfills it from the
+  /// server-side snapshots.
+  static Future<List<B12Intake>> _loadIntakes(SharedPreferences prefs) async {
     final raw = prefs.getStringList(_intakeHistoryKey) ?? [];
     var migrated = false;
-    final days = <String>{};
+    final byDay = <String, B12Intake>{};
     for (final entry in raw) {
-      if (entry.contains('-')) {
-        days.add(entry);
-        continue;
+      String? day;
+      String? frequency;
+      if (entry.startsWith('{')) {
+        try {
+          final decoded = json.decode(entry) as Map<String, dynamic>;
+          day = decoded['date'] as String?;
+          frequency = decoded['frequency'] as String?;
+        } catch (e) {
+          migrated = true; // drop the unreadable entry
+          continue;
+        }
+      } else if (entry.contains('-')) {
+        migrated = true;
+        day = entry;
+      } else {
+        migrated = true;
+        final millis = int.tryParse(entry);
+        if (millis == null) continue;
+        day = _dayFormat.format(DateTime.fromMillisecondsSinceEpoch(millis));
       }
-      migrated = true;
-      final millis = int.tryParse(entry);
-      if (millis == null) continue;
-      days.add(_dayFormat.format(DateTime.fromMillisecondsSinceEpoch(millis)));
+      final date = day == null ? null : DateTime.tryParse(day);
+      if (date == null) continue;
+      _putIntake(byDay, B12Intake(date: date, frequency: frequency));
     }
-    final list = days.toList();
-    if (migrated) await prefs.setStringList(_intakeHistoryKey, list);
-    return list;
+    final intakes = byDay.values.toList();
+    if (migrated) await _saveIntakes(prefs, intakes);
+    return intakes;
   }
 
-  /// Record a B12 intake for today
+  /// Index an intake by its day, preferring an entry that knows its
+  /// frequency when the same day appears twice.
+  static void _putIntake(Map<String, B12Intake> byDay, B12Intake intake) {
+    final key = _dayFormat.format(intake.date);
+    final existing = byDay[key];
+    if (existing == null ||
+        (existing.frequency == null && intake.frequency != null)) {
+      byDay[key] = intake;
+    }
+  }
+
+  static Future<void> _saveIntakes(
+      SharedPreferences prefs, List<B12Intake> intakes) async {
+    await prefs.setStringList(
+      _intakeHistoryKey,
+      intakes
+          .map((intake) => json.encode({
+                'date': _dayFormat.format(intake.date),
+                'frequency': intake.frequency,
+              }))
+          .toList(),
+    );
+  }
+
+  /// Record a B12 intake for today, snapshotting the frequency currently
+  /// in effect: the streak judges each intake against the rhythm it was
+  /// taken under, and the server needs it to score intakes fairly.
   static Future<void> recordB12Intake() async {
     final prefs = await SharedPreferences.getInstance();
-    final history = await _loadIntakeDays(prefs);
+    final intakes = await _loadIntakes(prefs);
 
     final today = DateTime.now();
     final todayDate = DateTime(today.year, today.month, today.day);
     final todayKey = _dayFormat.format(todayDate);
 
     // Don't add duplicate for same day
-    if (!history.contains(todayKey)) {
-      history.add(todayKey);
-      await prefs.setStringList(_intakeHistoryKey, history);
-      _notifyHistoryChanged();
-
-      // Mirror the intake to the API (offline-safe, queued) with the
-      // frequency currently in effect so the server can score it fairly.
-      final settings = await getSettings();
-      unawaited(B12SyncService.onIntakeRecorded(todayDate, settings.frequency));
+    if (intakes.any((intake) => _dayFormat.format(intake.date) == todayKey)) {
+      return;
     }
+
+    final settings = await getSettings();
+    intakes.add(B12Intake(
+      date: todayDate,
+      frequency: reminderFrequencyToApi(settings.frequency),
+    ));
+    await _saveIntakes(prefs, intakes);
+    _notifyHistoryChanged();
+
+    // Mirror the intake to the API (offline-safe, queued)
+    unawaited(B12SyncService.onIntakeRecorded(todayDate, settings.frequency));
   }
 
   /// Replace the whole local history. Used when the device's history was
   /// recorded under another account and must be swapped for the current
   /// account's server-side history.
-  static Future<void> replaceIntakeHistory(List<DateTime> days) async {
+  static Future<void> replaceIntakeHistory(List<B12Intake> intakes) async {
     final prefs = await SharedPreferences.getInstance();
-    final historyJson =
-        days.map((day) => _dayFormat.format(day)).toSet().toList();
-    await prefs.setStringList(_intakeHistoryKey, historyJson);
+    final byDay = <String, B12Intake>{};
+    for (final intake in intakes) {
+      _putIntake(byDay, intake);
+    }
+    await _saveIntakes(prefs, byDay.values.toList());
     _notifyHistoryChanged();
   }
 
-  /// Merge intake days into the local history (union, never removes).
+  /// Merge intakes into the local history (union, never removes days).
   /// Used to restore the server-side history on a new device or after a
-  /// reinstall. Returns the number of days actually added.
-  static Future<int> mergeIntakeHistory(List<DateTime> days) async {
+  /// reinstall; also backfills the frequency of local days that predate
+  /// frequency tracking. Returns the number of days actually added.
+  static Future<int> mergeIntakeHistory(List<B12Intake> incoming) async {
     final prefs = await SharedPreferences.getInstance();
-    final history = await _loadIntakeDays(prefs);
-    final existing = history.toSet();
+    final intakes = await _loadIntakes(prefs);
+    final byDay = <String, B12Intake>{
+      for (final intake in intakes) _dayFormat.format(intake.date): intake,
+    };
 
     var added = 0;
-    for (final day in days) {
-      final key = _dayFormat.format(day);
-      if (existing.add(key)) {
-        history.add(key);
+    var backfilled = false;
+    for (final intake in incoming) {
+      final key = _dayFormat.format(intake.date);
+      final existing = byDay[key];
+      if (existing == null) {
+        byDay[key] = intake;
         added++;
+      } else if (existing.frequency == null && intake.frequency != null) {
+        byDay[key] = intake;
+        backfilled = true;
       }
     }
-    if (added > 0) {
-      await prefs.setStringList(_intakeHistoryKey, history);
+    if (added > 0 || backfilled) {
+      await _saveIntakes(prefs, byDay.values.toList());
       _notifyHistoryChanged();
     }
     return added;
   }
 
-  /// Get B12 intake history, sorted descending (most recent first).
-  /// Days are returned as local-midnight [DateTime]s.
-  static Future<List<DateTime>> getB12IntakeHistory() async {
+  /// Get the B12 intakes, sorted descending (most recent first).
+  /// Dates are local-midnight [DateTime]s.
+  static Future<List<B12Intake>> getB12Intakes() async {
     final prefs = await SharedPreferences.getInstance();
-    final history = await _loadIntakeDays(prefs);
+    final intakes = await _loadIntakes(prefs);
+    intakes.sort((a, b) => b.date.compareTo(a.date));
+    return intakes;
+  }
 
-    final dates =
-        history.map(DateTime.tryParse).whereType<DateTime>().toList();
-
-    dates.sort((a, b) => b.compareTo(a));
-    return dates;
+  /// Get the B12 intake days, sorted descending (most recent first).
+  static Future<List<DateTime>> getB12IntakeHistory() async {
+    final intakes = await getB12Intakes();
+    return intakes.map((intake) => intake.date).toList();
   }
 
 
@@ -544,30 +627,44 @@ class B12ReminderService {
   /// on-schedule intakes, from the chain's first intake through today.
   /// Counting days (rather than intakes) keeps the streak fair across
   /// different intake rhythms: a week on schedule is worth 7 whether it
-  /// took seven daily intakes or a single weekly one. The allowed gap
-  /// between intakes follows the configured reminder frequency.
+  /// took seven daily intakes or a single weekly one.
+  ///
+  /// Each intake allows a gap based on the frequency in effect when it was
+  /// recorded — that rhythm is what defined when the next dose was due —
+  /// so a history that mixes rhythms, or is restored onto a device
+  /// configured differently, is scored the way it was lived. Intakes with
+  /// no snapshot fall back to the configured frequency.
   static Future<int> getB12Streak() async {
-    final history = await getB12IntakeHistory();
-    if (history.isEmpty) return 0;
+    final intakes = await getB12Intakes();
+    if (intakes.isEmpty) return 0;
 
     final settings = await getSettings();
-    final maxGapDays = _maxGapDaysForFrequency(settings.frequency);
+    int maxGapAfter(B12Intake intake) => _maxGapDaysForFrequency(
+        reminderFrequencyFromApi(intake.frequency) ?? settings.frequency);
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
     // Streak is broken if the latest intake is already overdue
-    if (today.difference(history.first).inDays > maxGapDays) return 0;
+    if (today.difference(intakes.first.date).inDays >
+        maxGapAfter(intakes.first)) {
+      return 0;
+    }
 
-    DateTime chainStart = history.first;
-    for (int i = 0; i < history.length - 1; i++) {
-      if (history[i].difference(history[i + 1]).inDays <= maxGapDays) {
-        chainStart = history[i + 1];
+    DateTime chainStart = intakes.first.date;
+    for (int i = 0; i < intakes.length - 1; i++) {
+      final older = intakes[i + 1];
+      if (intakes[i].date.difference(older.date).inDays <=
+          maxGapAfter(older)) {
+        chainStart = older.date;
       } else {
         break;
       }
     }
-    return today.difference(chainStart).inDays + 1;
+    final days = today.difference(chainStart).inDays + 1;
+    // A clock/timezone change can leave the latest intake in the future;
+    // a non-empty, non-overdue history is a streak of at least 1.
+    return days < 1 ? 1 : days;
   }
 
   /// Maximum days between two intakes before the streak breaks

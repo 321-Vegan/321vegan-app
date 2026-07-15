@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import '../models/b12_intake.dart';
 import '../models/b12_reminder_settings.dart';
 import 'api_service.dart';
 import 'auth_service.dart';
@@ -108,8 +109,14 @@ class B12SyncService {
   /// Returns false when the server history couldn't be fetched, so the
   /// caller retries on the next sync.
   static Future<bool> _reconcile(SharedPreferences prefs, int userId) async {
-    final serverDays = await ApiService.getB12Intakes();
-    if (serverDays == null) return false;
+    final serverIntakes = await ApiService.getB12Intakes();
+    if (serverIntakes == null) return false;
+
+    // Adopt the server-side rhythm before anything below reads the local
+    // settings: on a device where reminders were never configured, the
+    // daily default would break weekly/biweekly streaks computed from the
+    // restored history and mislabel the local days queued for upload.
+    await _adoptServerFrequencyIfUnset(serverIntakes);
 
     final ownerId = prefs.getInt(_historyOwnerKey);
     if (ownerId != null && ownerId != userId) {
@@ -117,36 +124,70 @@ class B12SyncService {
       // account's server history, keeping only the days queued since this
       // user logged in (their own intakes — the previous account's queue
       // was dropped at logout).
-      final pendingDays = (prefs.getStringList(_pendingKey) ?? [])
-          .map((e) => DateTime.tryParse(
-              (json.decode(e) as Map<String, dynamic>)['date'] as String))
-          .whereType<DateTime>();
+      final pendingIntakes = (prefs.getStringList(_pendingKey) ?? [])
+          .map((e) => json.decode(e) as Map<String, dynamic>)
+          .map((entry) {
+        final date = DateTime.tryParse(entry['date'] as String? ?? '');
+        return date == null
+            ? null
+            : B12Intake(date: date, frequency: entry['frequency'] as String?);
+      }).whereType<B12Intake>();
       await B12ReminderService.replaceIntakeHistory(
-          [...serverDays, ...pendingDays]);
+          [...serverIntakes, ...pendingIntakes]);
       await prefs.setInt(_historyOwnerKey, userId);
       debugPrint('👤 B12 history belonged to another account — '
           'replaced with the server history');
       return true;
     }
 
-    final serverSet = serverDays
-        .map((date) => DateFormat('yyyy-MM-dd').format(date))
+    final serverSet = serverIntakes
+        .map((intake) => DateFormat('yyyy-MM-dd').format(intake.date))
         .toSet();
-    final history = await B12ReminderService.getB12IntakeHistory();
-    final missing =
-        history.where((day) => !serverSet.contains(DateFormat('yyyy-MM-dd').format(day))).toList();
+    final localIntakes = await B12ReminderService.getB12Intakes();
+    final missing = localIntakes
+        .where((intake) =>
+            !serverSet.contains(DateFormat('yyyy-MM-dd').format(intake.date)))
+        .toList();
 
     if (missing.isNotEmpty) {
+      // Upload each day with its own frequency snapshot when known; the
+      // current setting approximates days recorded before frequency
+      // tracking existed.
       final settings = await B12ReminderService.getSettings();
-      await _enqueue(prefs, missing, settings.frequency);
+      for (final intake in missing) {
+        await _enqueue(prefs, [intake.date],
+            reminderFrequencyFromApi(intake.frequency) ?? settings.frequency);
+      }
     }
 
-    final restored = await B12ReminderService.mergeIntakeHistory(serverDays);
+    final restored =
+        await B12ReminderService.mergeIntakeHistory(serverIntakes);
     if (restored > 0) {
       debugPrint('📥 Restored $restored B12 intake day(s) from server');
     }
     await prefs.setInt(_historyOwnerKey, userId);
     return true;
+  }
+
+  /// Hand the frequency snapshot of the most recent server intake to
+  /// [B12ReminderService.adoptFrequencyIfUnset], so a device where
+  /// reminders were never configured interprets the restored history with
+  /// the rhythm it was recorded under instead of the daily default.
+  static Future<void> _adoptServerFrequencyIfUnset(
+      List<B12Intake> intakes) async {
+    ReminderFrequency? frequency;
+    DateTime? latest;
+    for (final intake in intakes) {
+      final parsed = reminderFrequencyFromApi(intake.frequency);
+      if (parsed == null) continue;
+      if (latest == null || intake.date.isAfter(latest)) {
+        latest = intake.date;
+        frequency = parsed;
+      }
+    }
+    if (frequency != null) {
+      await B12ReminderService.adoptFrequencyIfUnset(frequency, latest!);
+    }
   }
 
   /// Forget queued intakes. Called on explicit logout/account deletion so
@@ -177,7 +218,7 @@ class B12SyncService {
       if (queuedDates.contains(date)) continue;
       pending.add(json.encode({
         'date': date,
-        'frequency': _frequencyToApi(frequency),
+        'frequency': reminderFrequencyToApi(frequency),
       }));
       queuedDates.add(date);
       changed = true;
@@ -221,16 +262,4 @@ class B12SyncService {
     }
   }
 
-  static String _frequencyToApi(ReminderFrequency frequency) {
-    switch (frequency) {
-      case ReminderFrequency.daily:
-        return 'daily';
-      case ReminderFrequency.weekly:
-        return 'weekly';
-      case ReminderFrequency.twiceWeekly:
-        return 'twice_weekly';
-      case ReminderFrequency.biweekly:
-        return 'biweekly';
-    }
-  }
 }

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vegan_app/models/partners/partners.dart';
 import 'auth_service.dart';
 import 'dio_client.dart';
+import '../models/b12_intake.dart';
 import '../models/error_report.dart';
 import '../models/product_of_interest.dart';
 import '../models/product_category.dart';
@@ -308,10 +309,11 @@ class ApiService {
     }
   }
 
-  /// Get all B12 intake days recorded server-side for the current user
+  /// Get all B12 intakes recorded server-side for the current user
   /// (requires user JWT).
-  /// Returns the intake dates (local midnight), or null on failure.
-  static Future<List<DateTime>?> getB12Intakes() async {
+  /// Returns the intakes (dates at local midnight, with the frequency
+  /// snapshotted at recording time), or null on failure.
+  static Future<List<B12Intake>?> getB12Intakes() async {
     try {
       final dio = await DioClient.getDio();
       final accessToken = AuthService.accessToken;
@@ -327,10 +329,13 @@ class ApiService {
 
       final data = response.data;
       if (data is List) {
-        return data
-            .map((item) => DateTime.tryParse(item['intake_date'] ?? ''))
-            .whereType<DateTime>()
-            .toList();
+        final intakes = <B12Intake>[];
+        for (final item in data) {
+          final date = DateTime.tryParse(item['intake_date'] ?? '');
+          if (date == null) continue;
+          intakes.add(B12Intake(date: date, frequency: item['frequency']));
+        }
+        return intakes;
       }
       return null;
     } catch (e) {
