@@ -838,9 +838,16 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
     final defaultDate =
         _settings.biweeklyStartDate ?? now.add(Duration(days: daysUntil));
 
+    // A previously saved start date can be in the past; showDatePicker
+    // requires initialDate >= firstDate.
+    final initialDate =
+        DateUtils.dateOnly(defaultDate).isBefore(DateUtils.dateOnly(now))
+            ? now.add(Duration(days: daysUntil))
+            : defaultDate;
+
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: defaultDate,
+      initialDate: initialDate,
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
       locale: const Locale('fr', 'FR'),

@@ -10,6 +10,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vegan_app/helpers/database_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Scan/history_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/sent_products_modal.dart';
@@ -693,8 +694,28 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
       backgroundColor: Colors.transparent,
       builder: (ctx) {
         String? errorText;
+        List<Map<String, dynamic>> suggestions = [];
+        int suggestionQueryId = 0;
         return StatefulBuilder(
           builder: (ctx, setStateDialog) {
+            void updateSuggestions(String raw) {
+              final prefix = raw.trim();
+              if (prefix.length < 3) {
+                suggestionQueryId++;
+                if (suggestions.isNotEmpty) {
+                  setStateDialog(() => suggestions = []);
+                }
+                return;
+              }
+              final queryId = ++suggestionQueryId;
+              DatabaseHelper.instance
+                  .queryProductsByCodePrefix(prefix)
+                  .then((results) {
+                if (queryId != suggestionQueryId || !ctx.mounted) return;
+                setStateDialog(() => suggestions = results);
+              });
+            }
+
             void submit() {
               final raw = textController.text.trim();
               if (isValid(raw)) {
@@ -717,143 +738,225 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                 top: 12,
                 bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
+                    const SizedBox(height: 20),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(CupertinoIcons.barcode,
+                              size: 32, color: Colors.grey.shade700),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Saisir un code-barres',
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Si le scan par caméra est impossible,\nsaisissez le code manuellement.',
+                                style: TextStyle(
+                                    fontSize: 13, color: Colors.grey.shade700),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: textController,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      autofocus: true,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 3,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '3017620422003',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade300,
+                          fontWeight: FontWeight.normal,
+                          letterSpacing: 2,
+                        ),
+                        errorText: errorText,
+                        errorStyle: const TextStyle(fontSize: 13),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 16),
+                        border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
                         ),
-                        child: Icon(CupertinoIcons.barcode,
-                            size: 32, color: Colors.grey.shade700),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Saisir un code-barres',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Si le scan par caméra est impossible,\nsaisissez le code manuellement.',
-                              style: TextStyle(
-                                  fontSize: 13, color: Colors.grey.shade700),
-                            ),
-                          ],
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF1A722E), width: 2),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: Colors.red),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              const BorderSide(color: Colors.red, width: 2),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: textController,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    autofocus: true,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 3,
+                      onChanged: (value) {
+                        if (errorText != null) {
+                          setStateDialog(() => errorText = null);
+                        }
+                        updateSuggestions(value);
+                      },
+                      onSubmitted: (_) => submit(),
                     ),
-                    decoration: InputDecoration(
-                      hintText: '3017620422003',
-                      hintStyle: TextStyle(
-                        color: Colors.grey.shade300,
-                        fontWeight: FontWeight.normal,
-                        letterSpacing: 2,
-                      ),
-                      errorText: errorText,
-                      errorStyle: const TextStyle(fontSize: 13),
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16, horizontal: 16),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: Color(0xFF1A722E), width: 2),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            const BorderSide(color: Colors.red, width: 2),
-                      ),
-                    ),
-                    onChanged: (_) {
-                      if (errorText != null) {
-                        setStateDialog(() => errorText = null);
-                      }
-                    },
-                    onSubmitted: (_) => submit(),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(ctx).pop(),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                    if (suggestions.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      ...suggestions.map((product) {
+                        final code = product['code']?.toString() ?? '';
+                        final name =
+                            ((product['name'] as String?) ?? 'Produit inconnu')
+                                .replaceAll('&quot;', "'");
+                        final brand = ((product['brand'] as String?) ?? '')
+                            .replaceAll('&quot;', "'");
+                        final statusColor = switch (product['status']) {
+                          'R' => Colors.red,
+                          'M' => Colors.orange,
+                          'N' => Colors.grey,
+                          _ => const Color(0xFF1A722E),
+                        };
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () {
+                              Navigator.of(ctx).pop();
+                              _simulateScan(code);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      color: statusColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          brand.isNotEmpty
+                                              ? '$name - $brand'
+                                              : name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          code,
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey.shade600,
+                                            letterSpacing: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Icon(Icons.chevron_right,
+                                      size: 20, color: Colors.grey.shade400),
+                                ],
+                              ),
                             ),
-                            side: BorderSide(color: Colors.grey.shade300),
-                            foregroundColor: Colors.grey.shade700,
                           ),
-                          child: const Text('Annuler',
-                              style: TextStyle(fontSize: 15)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1A722E),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text('Scanner',
-                              style: TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
+                        );
+                      }),
                     ],
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(ctx).pop(),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(color: Colors.grey.shade300),
+                              foregroundColor: Colors.grey.shade700,
+                            ),
+                            child: const Text('Annuler',
+                                style: TextStyle(fontSize: 15)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1A722E),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text('Scanner',
+                                style: TextStyle(
+                                    fontSize: 15, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             );
           },

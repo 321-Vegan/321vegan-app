@@ -36,6 +36,10 @@ class SubscriptionService {
   static const String _bypassKey = 'subscription_bypass';
   static const String _pendingReceiptsKey = 'pending_receipts';
 
+  /// How long an unverified receipt keeps granting premium access.
+  /// Past this, access waits for successful backend verification.
+  static const Duration _pendingReceiptGrace = Duration(hours: 48);
+
   static StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
   static List<ProductDetails> _products = [];
   static bool _isAvailable = false;
@@ -285,9 +289,15 @@ class SubscriptionService {
   static Future<List<Map<String, dynamic>>> _getPendingReceipts() async {
     final prefs = await SharedPreferences.getInstance();
     final receipts = prefs.getStringList(_pendingReceiptsKey) ?? [];
-    return receipts
-        .map((r) => jsonDecode(r) as Map<String, dynamic>)
-        .toList();
+    final decoded = <Map<String, dynamic>>[];
+    for (final receipt in receipts) {
+      try {
+        decoded.add(jsonDecode(receipt) as Map<String, dynamic>);
+      } catch (_) {
+        // Skip corrupt entries rather than failing the whole list.
+      }
+    }
+    return decoded;
   }
 
   static Future<void> _clearPendingReceipts() async {
@@ -305,7 +315,9 @@ class SubscriptionService {
       return;
     }
 
-    _hasPendingReceipt = true;
+    // Only receipts still within the grace period grant access while
+    // verification is pending; older ones are just retried.
+    _hasPendingReceipt = _hasReceiptWithinGrace(pending);
 
     for (final receipt in pending) {
       try {
@@ -359,12 +371,22 @@ class SubscriptionService {
   static Future<void> _loadCachedStatus() async {
     final prefs = await SharedPreferences.getInstance();
     _subscriptionBypass = prefs.getBool(_bypassKey) ?? false;
-    _hasPendingReceipt =
-        (prefs.getStringList(_pendingReceiptsKey) ?? []).isNotEmpty;
+    _hasPendingReceipt = _hasReceiptWithinGrace(await _getPendingReceipts());
     _cachedStatus = prefs.getString(_statusKey);
     final expiresAtStr = prefs.getString(_expiresAtKey);
     _cachedExpiresAt =
         expiresAtStr != null ? DateTime.tryParse(expiresAtStr) : null;
+  }
+
+  /// Whether any persisted receipt is still within the grace period.
+  /// Receipts with a missing or unparsable timestamp don't grant access.
+  static bool _hasReceiptWithinGrace(List<Map<String, dynamic>> receipts) {
+    final now = DateTime.now();
+    return receipts.any((receipt) {
+      final timestamp = DateTime.tryParse(receipt['timestamp'] ?? '');
+      return timestamp != null &&
+          now.difference(timestamp) < _pendingReceiptGrace;
+    });
   }
 
   /// Check cached subscription status

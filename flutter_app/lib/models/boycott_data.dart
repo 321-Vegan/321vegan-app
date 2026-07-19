@@ -94,6 +94,7 @@ class BoycottData {
       ],
       brands: [
         BoycottBrand('carrefour', 'Carrefour'),
+        BoycottBrand('carrefour bio', 'Carrefour'),
         BoycottBrand('reflets de france', 'Reflets de France'),
         BoycottBrand('tex', 'Tex'),
         BoycottBrand('grand jury', 'Grand Jury'),
