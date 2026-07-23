@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vegan_app/helpers/haptic_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 
 class SettingsModal extends StatefulWidget {
@@ -9,6 +10,8 @@ class SettingsModal extends StatefulWidget {
   final Function(bool) onShowBoycottChanged;
   final bool initialShowScores;
   final Function(bool) onShowScoresChanged;
+  final bool initialHapticFeedback;
+  final Function(bool) onHapticFeedbackChanged;
 
   const SettingsModal({
     super.key,
@@ -18,6 +21,8 @@ class SettingsModal extends StatefulWidget {
     required this.onShowBoycottChanged,
     required this.initialShowScores,
     required this.onShowScoresChanged,
+    required this.initialHapticFeedback,
+    required this.onHapticFeedbackChanged,
   });
 
   @override
@@ -28,6 +33,7 @@ class SettingsModalState extends State<SettingsModal> {
   late bool _openOnScanPage;
   late bool _showBoycott;
   late bool _showScores;
+  late bool _hapticFeedback;
 
   @override
   void initState() {
@@ -35,6 +41,7 @@ class SettingsModalState extends State<SettingsModal> {
     _openOnScanPage = widget.initialOpenOnScanPage;
     _showBoycott = widget.initialShowBoycott;
     _showScores = widget.initialShowScores;
+    _hapticFeedback = widget.initialHapticFeedback;
   }
 
   Future<void> _setOpenOnScanPagePref(bool value) async {
@@ -59,6 +66,18 @@ class SettingsModalState extends State<SettingsModal> {
       _showScores = value;
     });
     widget.onShowScoresChanged(value);
+  }
+
+  Future<void> _setHapticFeedbackPref(bool value) async {
+    await PreferencesHelper.setHapticFeedbackPref(value);
+    setState(() {
+      _hapticFeedback = value;
+    });
+    if (value) {
+      // Let the user feel what they just enabled
+      HapticHelper.impact();
+    }
+    widget.onHapticFeedbackChanged(value);
   }
 
   @override
@@ -213,6 +232,50 @@ class SettingsModalState extends State<SettingsModal> {
                 Switch(
                   value: _showScores,
                   onChanged: _setShowScoresPref,
+                  activeThumbColor: Colors.white,
+                  activeTrackColor: const Color(0xFF1A722E),
+                  inactiveThumbColor: Colors.white,
+                  inactiveTrackColor: Colors.grey[300],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Retour haptique',
+                        style: TextStyle(
+                          fontSize: 40.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        'Vibrer lors du scan d\'un produit',
+                        style: TextStyle(
+                          fontSize: 30.sp,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  value: _hapticFeedback,
+                  onChanged: _setHapticFeedbackPref,
                   activeThumbColor: Colors.white,
                   activeTrackColor: const Color(0xFF1A722E),
                   inactiveThumbColor: Colors.white,

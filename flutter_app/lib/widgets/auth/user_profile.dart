@@ -1,10 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
-import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/badge_service.dart';
 import '../../services/error_report_badge_service.dart';
@@ -50,6 +48,7 @@ class _UserProfileState extends State<UserProfile> {
   bool _openOnScanPage = false;
   bool _showBoycott = true;
   bool _showScores = true;
+  bool _hapticFeedback = true;
   List<DateTime> _b12History = [];
   int _b12Streak = 0;
   DateTime? _b12NextIntake;
@@ -95,15 +94,12 @@ class _UserProfileState extends State<UserProfile> {
   /// The fetched page is kept and handed to the listing modal so opening
   /// it doesn't refetch the same data.
   Future<void> _checkErrorReportResponses() async {
-    final result = await ApiService.getMyErrorReports(
-        page: 1, pageSize: ErrorReportsModal.pageSize);
+    final result = await ErrorReportBadgeService.refreshUnreadCount();
     if (result == null) return;
-    final unread =
-        await ErrorReportBadgeService.countUnseenHandled(result.items);
     if (mounted) {
       setState(() {
         _errorReportsFirstPage = result;
-        _unreadErrorResponses = unread;
+        _unreadErrorResponses = ErrorReportBadgeService.unreadCount.value;
       });
     }
   }
@@ -221,11 +217,13 @@ class _UserProfileState extends State<UserProfile> {
     final openOnScanPage = await PreferencesHelper.getOpenOnScanPagePref();
     final showBoycott = await PreferencesHelper.getShowBoycottPref();
     final showScores = await PreferencesHelper.getShowScoresPref();
+    final hapticFeedback = await PreferencesHelper.getHapticFeedbackPref();
     if (mounted) {
       setState(() {
         _openOnScanPage = openOnScanPage;
         _showBoycott = showBoycott;
         _showScores = showScores;
+        _hapticFeedback = hapticFeedback;
       });
     }
   }
@@ -255,6 +253,12 @@ class _UserProfileState extends State<UserProfile> {
             onShowScoresChanged: (value) {
               setState(() {
                 _showScores = value;
+              });
+            },
+            initialHapticFeedback: _hapticFeedback,
+            onHapticFeedbackChanged: (value) {
+              setState(() {
+                _hapticFeedback = value;
               });
             },
           ),

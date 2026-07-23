@@ -87,6 +87,18 @@ class PreferencesHelper {
     return prefs.getBool('product_scores_enabled') ?? true;
   }
 
+  // Save 'haptic feedback' preference
+  static Future<void> setHapticFeedbackPref(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('haptic_feedback_enabled', value);
+  }
+
+  // Load 'haptic feedback' preference
+  static Future<bool> getHapticFeedbackPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('haptic_feedback_enabled') ?? true;
+  }
+
   /// Fires whenever the 'themed nav bar' preference is saved, so the bottom
   /// tab bar (in home) can restyle without being wired to the settings UI.
   static final ValueNotifier<bool> themedNavBarNotifier = ValueNotifier(false);

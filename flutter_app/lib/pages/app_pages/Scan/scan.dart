@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vegan_app/helpers/database_helper.dart';
+import 'package:vegan_app/helpers/haptic_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Scan/history_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/sent_products_modal.dart';
@@ -66,6 +67,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   bool _openOnScanPage = false;
   bool _showBoycott = true;
   bool _showScores = true;
+  bool _hapticFeedback = true;
   List<String> _productsOfInterest = [];
   Map<String, ProductOfInterest> _productsOfInterestMap = {};
   Map<String, String> _alternativeEanToMainEan = {};
@@ -113,6 +115,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     _loadOpenOnScanPagePref();
     _loadShowBoycottPref();
     _loadShowScoresPref();
+    _loadHapticFeedbackPref();
     // Load products from already-populated cache (populated at app startup)
     _loadProductsOfInterest();
 
@@ -376,6 +379,13 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     });
   }
 
+  Future<void> _loadHapticFeedbackPref() async {
+    final value = await PreferencesHelper.getHapticFeedbackPref();
+    setState(() {
+      _hapticFeedback = value;
+    });
+  }
+
   Future<void> _loadProductsOfInterest() async {
     // Load from cache instantly, updates in background automatically
     final products = await ProductsOfInterestCache.loadProductsOfInterest();
@@ -604,6 +614,12 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
             },
             initialShowScores: _showScores,
             onShowScoresChanged: _setShowScoresPref,
+            initialHapticFeedback: _hapticFeedback,
+            onHapticFeedbackChanged: (value) {
+              setState(() {
+                _hapticFeedback = value;
+              });
+            },
           ),
         );
       },
@@ -626,6 +642,16 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     setState(() {
       productInfo = product;
     });
+
+    // Scan-confirmation haptic: double pulse warns that the product is not
+    // vegan, single pulse for everything else.
+    if (_hapticFeedback) {
+      if (product.status == ScanStatus.notVegan) {
+        HapticHelper.doubleImpact();
+      } else {
+        HapticHelper.impact();
+      }
+    }
 
     // Products missing from the database (unknown, or already submitted by
     // the user) don't belong in the scan history.
@@ -983,6 +1009,9 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
     if (barcodeValue != null && _lastScannedBarcode != barcodeValue) {
       _lastScannedBarcode = barcodeValue;
+
+      // The haptic fires in _checkVeganStatusOffline once the product
+      // status is known, so non-vegan products can get a distinct pattern.
 
       // Reset the button disabled state in NonVeganProductInfoCardState
       nonVeganCardKey.currentState?.resetButton();

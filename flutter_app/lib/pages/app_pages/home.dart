@@ -25,6 +25,7 @@ import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/b12_reminder_service.dart';
 import 'package:vegan_app/services/badge_service.dart';
 import 'package:vegan_app/services/notification_service.dart';
+import 'package:vegan_app/services/profile_notification_service.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/widgets/theme/seasonal_icon.dart';
 import 'package:vegan_app/widgets/shared/shine_wrapper.dart';
@@ -52,6 +53,7 @@ class MyHomePageState extends State<MyHomePage>
   int _profileKey = 0;
   bool _b12NavigationHandled = false;
   bool _themedNavBar = false;
+  int _profileNotificationCount = 0;
 
   @override
   void initState() {
@@ -88,6 +90,12 @@ class MyHomePageState extends State<MyHomePage>
     _checkNewPartners();
     _loadAvatar();
     _loadThemedNavBarPref();
+
+    // Numeric badge on the Profil tab for unread in-app notifications
+    // (signalement responses, and any future source).
+    ProfileNotificationService.listenable
+        .addListener(_onProfileNotificationsChanged);
+    ProfileNotificationService.refreshAll();
 
     // Refresh the tab bar avatar as soon as it is changed in the profile page
     PreferencesHelper.avatarNotifier.addListener(_onAvatarChanged);
@@ -261,11 +269,21 @@ class MyHomePageState extends State<MyHomePage>
     }
   }
 
+  void _onProfileNotificationsChanged() {
+    if (mounted) {
+      setState(() {
+        _profileNotificationCount = ProfileNotificationService.total;
+      });
+    }
+  }
+
   @override
   void dispose() {
     PreferencesHelper.avatarNotifier.removeListener(_onAvatarChanged);
     PreferencesHelper.themedNavBarNotifier
         .removeListener(_onThemedNavBarChanged);
+    ProfileNotificationService.listenable
+        .removeListener(_onProfileNotificationsChanged);
     NotificationService.navigateToProfile.removeListener(_onB12NotificationTap);
     NotificationService.showAnniversary
         .removeListener(_onAnniversaryNotificationTap);
@@ -324,6 +342,8 @@ class MyHomePageState extends State<MyHomePage>
     }
     // Reload avatar after login
     await _loadAvatar();
+    // The account may have unread in-app notifications.
+    await ProfileNotificationService.refreshAll();
   }
 
   Future<void> _checkNewPartners() async {
@@ -728,10 +748,13 @@ class MyHomePageState extends State<MyHomePage>
           bottomNavigationBar: StyleProvider(
             style: _TabBarStyle(),
             child: ConvexAppBar.badge(
-              // Animated notification badge for partners tab
-              _hasNewPartners
-                  ? <int, dynamic>{0: 'new'}
-                  : const <int, dynamic>{},
+              // Animated badges: 'new' dot on the partners tab, unread
+              // in-app notification count on the profile tab.
+              <int, dynamic>{
+                if (_hasNewPartners) 0: 'new',
+                if (_profileNotificationCount > 0)
+                  4: '$_profileNotificationCount',
+              },
               // Offsets the dot to the top-right of the centered icon.
               badgeMargin: const EdgeInsets.only(left: 24, bottom: 24),
               controller: _tabController,

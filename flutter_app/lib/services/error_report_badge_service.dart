@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/error_report.dart';
+import 'api_service.dart';
 
 /// Tracks which handled error reports the user has already seen, so the
 /// profile can show a "new response" badge when the team treats a report.
@@ -10,6 +11,25 @@ import '../models/error_report.dart';
 /// triggers the badge. Opening the listing marks everything as seen.
 class ErrorReportBadgeService {
   static const String _seenHandledKey = 'error_reports_seen_handled_ids';
+
+  /// Page size for the badge fetch. The listing modal reuses the fetched
+  /// page as its first page, so its pagination uses this same size.
+  static const int pageSize = 100;
+
+  /// Current number of unread responses, shared between the profile card
+  /// and the "Profil" item of the bottom tab bar.
+  static final ValueNotifier<int> unreadCount = ValueNotifier<int>(0);
+
+  /// Fetch the first page of the user's error reports and refresh
+  /// [unreadCount]. Returns the fetched page so callers can reuse it
+  /// (e.g. hand it to the listing modal) instead of refetching.
+  static Future<ErrorReportPaginated?> refreshUnreadCount() async {
+    final result = await ApiService.getMyErrorReports(
+        page: 1, pageSize: pageSize);
+    if (result == null) return null;
+    unreadCount.value = await countUnseenHandled(result.items);
+    return result;
+  }
 
   /// Number of reports in [reports] that are handled but haven't been seen
   /// yet.
@@ -39,5 +59,6 @@ class ErrorReportBadgeService {
     } catch (e) {
       debugPrint('Failed to mark error report responses as seen: $e');
     }
+    unreadCount.value = 0;
   }
 }

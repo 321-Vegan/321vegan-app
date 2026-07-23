@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:vegan_app/models/error_report.dart';
 import 'package:vegan_app/services/api_service.dart';
+import 'package:vegan_app/services/error_report_badge_service.dart';
 
 /// Lists the error reports sent by the current user, with their status and
 /// the team's response once handled (GET /me/error-reports).
@@ -12,8 +13,9 @@ import 'package:vegan_app/services/api_service.dart';
 /// refetching it; it must have been fetched with [pageSize] items.
 class ErrorReportsModal extends StatefulWidget {
   /// Page size used for every fetch; initial data must match it so the
-  /// "load more" page numbers line up.
-  static const int pageSize = 100;
+  /// "load more" page numbers line up. The badge service owns the value
+  /// because it performs the initial fetch.
+  static const int pageSize = ErrorReportBadgeService.pageSize;
 
   final ErrorReportPaginated? initialData;
 

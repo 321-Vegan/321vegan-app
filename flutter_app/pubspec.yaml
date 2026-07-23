@@ -56,7 +56,7 @@ dependencies:
   timezone: ^0.9.4
   flutter_timezone: ^5.0.1
   font_awesome_flutter: ^10.12.0
-  in_app_purchase: ^3.2.3
+  in_app_purchase: ^3.3.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -80,6 +80,7 @@ dependencies:
   flutter_map_cache: ^2.1.0
   http_cache_file_store: ^2.0.0
   liquid_glass_easy: ^3.2.2
+  vibration: ^3.2.0
 
 dev_dependencies:
   flutter_test:
