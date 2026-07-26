@@ -51,6 +51,9 @@ app.*.map.json
 /lib/assets/vegan_products.db*
 /lib/assets/cosmetics.db*
 
+/android/app/google-services.json
+/ios/GoogleService-Info.plist
+
 # Build outputs
 build/
 android/build/
