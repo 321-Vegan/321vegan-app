@@ -124,12 +124,26 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
     await _showThanksAndClose();
   }
 
-  Future<void> _handleSelectShop(String osmId) async {
-    // User selected an alternative shop - confirm via osm_id
-    await ApiService.confirmShop(
-      scanEventId: widget.scanEventId,
-      osmId: osmId,
-    );
+  Future<void> _handleSelectShop(Map<String, dynamic> shop) async {
+    // OSM-only shops carry an osm_id (confirm-shop creates and links them);
+    // shops already in DB carry an id (and may have no osm_id).
+    final osmId = shop['osm_id'] as String?;
+    final shopId = shop['id'] as int?;
+
+    if (osmId != null) {
+      await ApiService.confirmShop(
+        scanEventId: widget.scanEventId,
+        osmId: osmId,
+      );
+    } else if (shopId != null) {
+      await ApiService.updateScanEvent(
+        scanEventId: widget.scanEventId,
+        shopId: shopId,
+      );
+    } else {
+      // No usable identifier - clear the shop association instead
+      await ApiService.updateScanEvent(scanEventId: widget.scanEventId);
+    }
     await _showThanksAndClose();
   }
 
@@ -430,7 +444,7 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
               return SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () => _handleSelectShop(shop['osm_id'] as String),
+                  onPressed: () => _handleSelectShop(shop),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1A722E),
                     foregroundColor: Colors.white,
