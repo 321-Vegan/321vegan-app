@@ -19,6 +19,9 @@ migrate_working_dir/
 .idea/
 
 
+/android/app/google-services.json
+/ios/GoogleService-Info.plist
+
 .vscode/
 
 # Flutter/Dart/Pub related

@@ -6,12 +6,12 @@ import 'package:image_picker/image_picker.dart';
 class ProductInfoFormResult {
   final String productName;
   final String brand;
-  final File? photo;
+  final File photo;
 
   ProductInfoFormResult({
     required this.productName,
     required this.brand,
-    this.photo,
+    required this.photo,
   });
 }
 
@@ -22,8 +22,8 @@ class ProductInfoFormModal extends StatefulWidget {
     return showModalBottomSheet<ProductInfoFormResult>(
       context: context,
       isScrollControlled: true,
-      // Dismissing the sheet would send the product without info, so force
-      // the user to close it explicitly with one of the buttons.
+      // Prevent accidental swipe-dismiss from discarding the photo/info the
+      // user already entered; require an explicit close (X) or submit.
       isDismissible: false,
       enableDrag: false,
       backgroundColor: Colors.transparent,
@@ -69,17 +69,12 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
   }
 
   void _submit() {
+    final photo = _photo;
+    if (photo == null) return;
     Navigator.of(context).pop(ProductInfoFormResult(
       productName: _nameController.text.trim(),
       brand: _brandController.text.trim(),
-      photo: _photo,
-    ));
-  }
-
-  void _skip() {
-    Navigator.of(context).pop(ProductInfoFormResult(
-      productName: '',
-      brand: '',
+      photo: photo,
     ));
   }
 
@@ -137,7 +132,7 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
               ),
               SizedBox(height: 8.h),
               Text(
-                'Aidez-nous en fournissant des informations sur ce produit (optionnel)',
+                'Le nom et la marque sont optionnels, mais la photo des ingrédients est obligatoire.',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade600,
@@ -200,12 +195,20 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
               SizedBox(height: 16.h),
 
               // Photo section
-              const Text(
-                'Photo des ingrédients',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+              RichText(
+                text: const TextSpan(
+                  text: 'Photo des ingrédients ',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: '*',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 6.h),
@@ -286,45 +289,27 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
               SizedBox(height: 24.h),
 
               // Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: _skip,
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Envoyer sans info',
-                        style: TextStyle(fontSize: 16),
-                      ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _photo == null ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    disabledBackgroundColor: Colors.grey.shade300,
+                    padding: EdgeInsets.symmetric(vertical: 14.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade700,
-                        padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Envoyer',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                  child: const Text(
+                    'Envoyer',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
-                ],
+                ),
               ),
               SizedBox(height: 160.h),
             ],
