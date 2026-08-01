@@ -132,7 +132,7 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
               ),
               SizedBox(height: 8.h),
               Text(
-                'Le nom et la marque sont optionnels, mais la photo des ingrédients est obligatoire.',
+                'Le nom et la marque sont optionnels (mais ça nous aide si vous les renseignez !). La photo des ingrédients est obligatoire.',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade600,
@@ -211,6 +211,16 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
                   ],
                 ),
               ),
+
+              const Text(
+                'Veuillez ajouter une photo des ingrédients (ou du logo végane s\'il y en a un).',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w200,
+                  color: Colors.black87,
+                ),
+              ),
+              
               SizedBox(height: 6.h),
               if (_photo != null) ...[
                 Stack(
