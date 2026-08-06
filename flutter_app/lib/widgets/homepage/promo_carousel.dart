@@ -22,9 +22,8 @@ class PromoSlide {
 /// (edit freely — titles/subtitles/links only live here).
 const List<PromoSlide> _dummySlides = [
   PromoSlide(
-    title: '-10% !',
-    subtitle: 'Sur la boutique Comme Avant',
-    url: 'https://321vegan.fr',
+    title: 'L\'appli fait peau neuve !',
+    subtitle: 'Un tout nouveau design pour plus de clarté !',
   ),
   PromoSlide(
     title: 'Nouveau !',
@@ -68,8 +67,6 @@ class _PromoCarouselState extends State<PromoCarousel> {
 
     return Column(
       children: [
-        // Figma spec: fill width, hug height (~132), radius 20,
-        // padding 20 (v) / 15 (h) — all ×3 for ScreenUtil units.
         SizedBox(
           height: 396.h,
           child: PageView.builder(
@@ -132,19 +129,8 @@ class _PromoCard extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 60.h),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primary, primary.withAlpha(190)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: primary,
         borderRadius: BorderRadius.circular(60.r),
-        boxShadow: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
       child: Row(
         children: [

@@ -120,14 +120,13 @@ class _ShopCard extends StatelessWidget {
                   color: kTextPrimary,
                 ),
               ),
-              SizedBox(height: 30.h),
               Text(
                 partner.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(fontSize: 40.sp, color: Colors.grey[600]),
               ),
-              SizedBox(height: 30.h),
+              SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                 decoration: BoxDecoration(
@@ -135,11 +134,11 @@ class _ShopCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20.r),
                 ),
                 child: Text(
-                  'Code : ${partner.discountCode}',
+                  partner.discountCode,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 32.sp,
+                    fontSize: 40.sp,
                     color: const Color(0xFFD69A08),
                     fontWeight: FontWeight.w600,
                   ),

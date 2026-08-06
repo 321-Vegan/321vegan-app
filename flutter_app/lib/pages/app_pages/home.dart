@@ -304,8 +304,8 @@ class MyHomePageState extends State<MyHomePage>
         },
         items: const [
           AppBottomNavItem(
-            icon: CupertinoIcons.house,
-            activeIcon: CupertinoIcons.house_fill,
+            icon: Icons.home,
+            activeIcon: Icons.home_filled,
             label: 'Dashboard',
           ),
           AppBottomNavItem(

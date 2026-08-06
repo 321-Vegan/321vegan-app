@@ -230,7 +230,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   // Header illustration
                   if (!isSubscribed) ...[
                     _buildHeader(primaryColor),
-                    SizedBox(height: 24.h),
+                    SizedBox(height: 32.h),
                     const SubscriptionGoalWidget(),
                     SizedBox(height: 32.h),
 

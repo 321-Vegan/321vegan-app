@@ -75,7 +75,7 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
         children: [
           SizedBox(
             // Room for the bee overflowing above/below the slim bar.
-            height: beeSize,
+            height: beeSize + 0.02.sh,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final barWidth = constraints.maxWidth;
@@ -105,17 +105,23 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
                         ),
                         Positioned(
                           left: beeLeft,
-                          child: Image.asset(
-                            'lib/assets/images/buy-premium/bee.webp',
-                            width: beeSize,
-                            height: beeSize,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) => Icon(
-                              Icons.emoji_nature,
-                              size: beeSize,
-                              color: kAccentYellow,
-                            ),
-                          ),
+                          top: -0.0002.sh,
+                          child: 
+                          Transform.scale(
+                            scaleX: -1,
+                            child:
+                              Image.asset(
+                                'lib/assets/images/buy-premium/bee.webp',
+                                width: beeSize,
+                                height: beeSize,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => Icon(
+                                  Icons.emoji_nature,
+                                  size: beeSize,
+                                  color: kAccentYellow,
+                                ),
+                              ),
+                          )
                         ),
                       ],
                     );
