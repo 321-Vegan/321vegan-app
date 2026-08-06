@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../services/auth_service.dart';
-import '../../../services/badge_service.dart';
 import '../../../widgets/auth/login_form.dart';
 import '../../../widgets/auth/register_form.dart';
 import '../../../widgets/auth/forgot_password_form.dart';
-import '../../../widgets/auth/user_profile.dart';
+import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/social_feedback_buttons.dart';
 
-enum AuthView { login, register, forgotPassword, profile }
+enum AuthView { login, register, forgotPassword }
 
+/// Login/register/forgot-password gate shown in [SettingsPage] for
+/// logged-out users. Once a login or registration succeeds,
+/// [onLoginSuccess] fires and the parent swaps this page out for the
+/// logged-in settings view — this widget never renders an authenticated
+/// state itself.
 class AboutPage extends StatefulWidget {
-  const AboutPage({super.key, this.onDateSaved, this.onLoginSuccess});
+  const AboutPage({super.key, this.onLoginSuccess});
 
-  final Function(DateTime)? onDateSaved;
   final VoidCallback? onLoginSuccess;
 
   @override
@@ -22,82 +25,30 @@ class AboutPage extends StatefulWidget {
 
 class _AboutPageState extends State<AboutPage> {
   AuthView _currentView = AuthView.register;
-  bool _isLoggedIn = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _checkAuthStatus();
-  }
+  void _switchToRegister() => setState(() => _currentView = AuthView.register);
+  void _switchToLogin() => setState(() => _currentView = AuthView.login);
+  void _switchToForgotPassword() =>
+      setState(() => _currentView = AuthView.forgotPassword);
 
-  void _checkAuthStatus() async {
-    setState(() {
-      _isLoggedIn = AuthService.isLoggedIn;
-      _currentView = _isLoggedIn ? AuthView.profile : AuthView.register;
-    });
-
-    // If logged in but user data is not loaded, fetch it
-    if (_isLoggedIn && AuthService.currentUser == null) {
-      final result = await AuthService.getCurrentUser();
-      if (mounted) {
-        setState(() {});
-        // Only logout if authentication expired, not on network errors
-        if (!result.isSuccess && result.error == 'AUTH_EXPIRED') {
-          await AuthService.logout();
-          _checkAuthStatus();
-        } else if (result.data != null) {
-          // Initialize badge tracking for the user if logging in
-          await BadgeService.initializeBadgeTracking(result.data!);
-        }
-        // If network error, keep user logged in - they can try again later
-      }
-    }
-  }
-
-  void _onLoginSuccess() {
-    _checkAuthStatus();
-    // Notify parent that login was successful so it can reload data
-    widget.onLoginSuccess?.call();
-  }
-
-  void _onLogout() {
-    _checkAuthStatus();
-  }
-
-  void _switchToRegister() {
-    setState(() => _currentView = AuthView.register);
-  }
-
-  void _switchToLogin() {
-    setState(() => _currentView = AuthView.login);
-  }
-
-  void _switchToForgotPassword() {
-    setState(() => _currentView = AuthView.forgotPassword);
-  }
-
-  void _onRegisterSuccess() {
-    // Check auth status instead of just switching to login
-    // This handles automatic login after registration
-    _checkAuthStatus();
-    // Notify parent that registration/login was successful
-    widget.onLoginSuccess?.call();
-  }
+  void _onAuthSuccess() => widget.onLoginSuccess?.call();
 
   @override
   Widget build(BuildContext context) {
+    // The parent unmounts this page as soon as it's notified of a
+    // successful login; nothing to render for the in-between frame.
+    if (AuthService.isLoggedIn) return const SizedBox.shrink();
+
     return SafeArea(
       child: SingleChildScrollView(
         padding:
             EdgeInsets.only(top: 16.h, left: 24.w, right: 24.w, bottom: 20.h),
         child: Column(
           children: [
-            if (!_isLoggedIn) _buildHeader(),
-            _buildAuthContent(),
-            if (!_isLoggedIn) ...[
-              SizedBox(height: 32.h),
-              const SocialFeedbackButtons(showCard: false),
-            ],
+            _buildHeader(),
+            AppCard(child: _buildCurrentView()),
+            SizedBox(height: 32.h),
+            const SocialFeedbackButtons(showCard: false),
           ],
         ),
       ),
@@ -105,7 +56,7 @@ class _AboutPageState extends State<AboutPage> {
   }
 
   Widget _buildHeader() {
-    return _buildCard(
+    return AppCard(
       child: Column(
         children: [
           Image.asset(
@@ -143,58 +94,21 @@ class _AboutPageState extends State<AboutPage> {
     );
   }
 
-  Widget _buildAuthContent() {
-    return _buildCard(
-      child: _buildCurrentView(),
-    );
-  }
-
   Widget _buildCurrentView() {
     switch (_currentView) {
       case AuthView.login:
         return LoginForm(
-          onLoginSuccess: _onLoginSuccess,
+          onLoginSuccess: _onAuthSuccess,
           onSwitchToRegister: _switchToRegister,
           onSwitchToForgotPassword: _switchToForgotPassword,
         );
       case AuthView.register:
         return RegisterForm(
-          onRegisterSuccess: _onRegisterSuccess,
+          onRegisterSuccess: _onAuthSuccess,
           onSwitchToLogin: _switchToLogin,
         );
       case AuthView.forgotPassword:
-        return ForgotPasswordForm(
-          onBackToLogin: _switchToLogin,
-        );
-      case AuthView.profile:
-        return UserProfile(
-          onLogout: _onLogout,
-          onDateSaved: widget.onDateSaved,
-        );
+        return ForgotPasswordForm(onBackToLogin: _switchToLogin);
     }
-  }
-
-  Widget _buildCard({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(28.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 30,
-            offset: const Offset(0, 12),
-            spreadRadius: 0,
-          ),
-        ],
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
-        ),
-      ),
-      child: child,
-    );
   }
 }

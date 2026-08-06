@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/api_service.dart';
+import '../themes/app_colors.dart';
 
+/// Community goal progress shown on the premium page (designed for its
+/// green background): yellow bar with the bee marker at the current
+/// progress, and a caption with the supporter count.
 class SubscriptionGoalWidget extends StatefulWidget {
   final int goal;
   final VoidCallback? onTap;
@@ -63,107 +67,73 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
 
     final count = _count!;
     final goal = widget.goal;
+    final beeSize = 96.w;
 
     return GestureDetector(
       onTap: widget.onTap,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 16.w),
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20.r),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF7C3AED).withValues(alpha: 0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(Icons.person, color: Colors.white, size: 48.sp),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: Text(
-                    'Pour rémunérer un temps plein sur le projet',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 42.sp,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Baloo',
-                    ),
-                  ),
-                ),
-                if (widget.onTap != null)
-                  Icon(Icons.arrow_forward_ios,
-                      color: Colors.white70, size: 36.sp),
-              ],
-            ),
-            SizedBox(height: 14.h),
-            AnimatedBuilder(
-              animation: _progressAnim,
-              builder: (context, _) {
-                return Column(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10.r),
-                      child: LinearProgressIndicator(
-                        value: _progressAnim.value,
-                        minHeight: 14.h,
-                        backgroundColor: Colors.white.withValues(alpha: 0.25),
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.white,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        children: [
+          SizedBox(
+            // Room for the bee overflowing above/below the slim bar.
+            height: beeSize,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final barWidth = constraints.maxWidth;
+                return AnimatedBuilder(
+                  animation: _progressAnim,
+                  builder: (context, _) {
+                    final progress = _progressAnim.value;
+                    final beeLeft = (barWidth * progress - beeSize / 2)
+                        .clamp(0.0, barWidth - beeSize);
+                    return Stack(
+                      alignment: Alignment.centerLeft,
                       children: [
-                        Text(
-                          '$count soutiens',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 36.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Baloo',
+                        Container(
+                          height: 24.h,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(12.r),
                           ),
                         ),
-                        Text(
-                          'Objectif : $goal',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 34.sp,
-                            fontFamily: 'Baloo',
+                        Container(
+                          height: 24.h,
+                          width: barWidth * progress,
+                          decoration: BoxDecoration(
+                            color: kAccentYellow,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                        ),
+                        Positioned(
+                          left: beeLeft,
+                          child: Image.asset(
+                            'lib/assets/images/buy-premium/bee.webp',
+                            width: beeSize,
+                            height: beeSize,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.emoji_nature,
+                              size: beeSize,
+                              color: kAccentYellow,
+                            ),
                           ),
                         ),
                       ],
-                    ),
-                  ],
+                    );
+                  },
                 );
               },
             ),
-            SizedBox(height: 6.h),
-            Text(
-              count >= goal
-                  ? 'Objectif atteint ! Merci !'
-                  : 'Chaque abonnement compte, merci pour votre contribution ♡',
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.85),
-                fontSize: 32.sp,
-                fontStyle: FontStyle.italic,
-              ),
-              textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '$count/$goal soutiens pour être à temps plein sur l\'app',
+            style: TextStyle(
+              fontSize: 34.sp,
+              color: Colors.white.withValues(alpha: 0.8),
             ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

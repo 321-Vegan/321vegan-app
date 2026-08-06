@@ -292,56 +292,6 @@ class PreferencesHelper {
     return prefs.getBool('random_avatar_enabled') ?? false;
   }
 
-  // Profile bubble position methods
-  static Future<void> saveProfileBubblePosition(Offset position) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('profile_bubble_x', position.dx);
-    await prefs.setDouble('profile_bubble_y', position.dy);
-  }
-
-  static Future<Offset?> getProfileBubblePosition() async {
-    final prefs = await SharedPreferences.getInstance();
-    final x = prefs.getDouble('profile_bubble_x');
-    final y = prefs.getDouble('profile_bubble_y');
-
-    if (x != null && y != null) {
-      return Offset(x, y);
-    }
-    return null;
-  }
-
-  // Partners page notification methods
-  static const String _partnersLastVisitKey = 'partners_last_visit';
-
-  // Get the last update timestamp for partners
-  static Future<DateTime?> getPartnersLastUpdate() async {
-    // Change this date when new partners added
-    return DateTime(2026, 07, 05);
-  }
-
-  // Mark partners page as visited
-  static Future<void> markPartnersAsVisited() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-        _partnersLastVisitKey, DateTime.now().toIso8601String());
-  }
-
-  // Check if there are new partners to see
-  static Future<bool> hasNewPartners() async {
-    final lastUpdate = await getPartnersLastUpdate();
-    final prefs = await SharedPreferences.getInstance();
-    String? lastVisitStr = prefs.getString(_partnersLastVisitKey);
-
-    if (lastVisitStr == null) {
-      // Never visited, show notification
-      return true;
-    }
-
-    final lastVisit = DateTime.parse(lastVisitStr);
-    // Has new content if last update is after last visit
-    return lastUpdate != null && lastUpdate.isAfter(lastVisit);
-  }
-
   // Account prompt methods
   static const String _accountPromptDismissedKey = 'account_prompt_dismissed';
   static const String _totalScanCountKey = 'total_scan_count';
@@ -366,6 +316,19 @@ class PreferencesHelper {
   static Future<int> getTotalScanCount() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_totalScanCountKey) ?? 0;
+  }
+
+  // Dashboard B12 reminder banner
+  static const String _b12BannerDismissedKey = 'b12_banner_dismissed';
+
+  static Future<void> markB12BannerDismissed() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_b12BannerDismissedKey, true);
+  }
+
+  static Future<bool> hasB12BannerBeenDismissed() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_b12BannerDismissedKey) ?? false;
   }
 
   // Membership prompt methods
@@ -407,8 +370,8 @@ class PreferencesHelper {
   static Future<void> snoozeMembershipPrompt() async {
     final prefs = await SharedPreferences.getInstance();
     final count = prefs.getInt(_membershipHitScanCountKey) ?? 0;
-    await prefs.setInt(
-        _membershipPromptNextThresholdKey, count + _membershipPromptSnoozeScans);
+    await prefs.setInt(_membershipPromptNextThresholdKey,
+        count + _membershipPromptSnoozeScans);
     await prefs.setBool(_membershipPromptPendingKey, false);
   }
 
@@ -422,8 +385,7 @@ class PreferencesHelper {
   static String _notFoundReportKey(String ean, int shopId) =>
       'not_found_report_${ean}_$shopId';
 
-  static Future<void> saveProductNotFoundReport(
-      String ean, int shopId) async {
+  static Future<void> saveProductNotFoundReport(String ean, int shopId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
         _notFoundReportKey(ean, shopId), DateTime.now().toIso8601String());

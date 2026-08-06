@@ -151,6 +151,9 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
       colorScheme: toColorScheme(),
       useMaterial3: true,
       primaryColor: primaryColor,
+      // App-wide default body font. Explicit fontFamily: 'Baloo' on a
+      // TextStyle (used for prominent numbers/counters) overrides this.
+      fontFamily: 'Karla',
       extensions: [this],
     );
   }

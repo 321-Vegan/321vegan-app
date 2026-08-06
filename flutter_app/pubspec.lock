@@ -145,14 +145,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
-  convex_bottom_bar:
-    dependency: "direct main"
-    description:
-      name: convex_bottom_bar
-      sha256: ebf0f3deb1e8e99374d844fee7485d2980ec502dedfaad395c12118477933aef
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.0"
   cookie_jar:
     dependency: "direct main"
     description:

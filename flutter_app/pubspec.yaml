@@ -33,7 +33,6 @@ dependencies:
   video_player: ^2.9.2
   share_plus: ^10.1.4
   introduction_screen: ^3.1.0
-  convex_bottom_bar: ^3.2.0
   shared_preferences: ^2.3.2
   intl: ^0.20.2
   flutter_localization: ^0.2.1
@@ -166,6 +165,16 @@ flutter:
     - lib/assets/images/nutri-eco-scores/green-score-d.webp
     - lib/assets/images/nutri-eco-scores/green-score-e.webp
     - lib/assets/images/nutri-eco-scores/green-score-f.webp
+    # Stat cards
+    - lib/assets/images/stat-cards/animals.webp
+    - lib/assets/images/stat-cards/co2.webp
+    - lib/assets/images/stat-cards/forest.webp
+    - lib/assets/images/stat-cards/water.webp
+    # Premium buy page
+    - lib/assets/images/buy-premium/seed.webp
+    - lib/assets/images/buy-premium/flower.webp
+    - lib/assets/images/buy-premium/tree.webp
+    - lib/assets/images/buy-premium/bee.webp
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - .env
@@ -177,6 +186,22 @@ flutter:
     - family: Baloo
       fonts:
         - asset: fonts/Baloo-Regular.ttf
+    - family: Baloo2
+      fonts:
+        - asset: fonts/Baloo2-Regular.ttf
+        - asset: fonts/Baloo2-Medium.ttf
+          weight: 500
+        - asset: fonts/Baloo2-SemiBold.ttf
+          weight: 600
+        - asset: fonts/Baloo2-Bold.ttf
+          weight: 700
+        - asset: fonts/Baloo2-ExtraBold.ttf
+          weight: 800
+    - family: Karla
+      fonts:
+        - asset: fonts/Karla-VariableFont.ttf
+        - asset: fonts/Karla-VariableFont.ttf
+          weight: 700
     - family: OrangeJuice
       fonts:
         - asset: fonts/orangejuice.ttf

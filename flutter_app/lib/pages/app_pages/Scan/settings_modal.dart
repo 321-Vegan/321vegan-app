@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/haptic_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
+import 'package:vegan_app/widgets/settings/settings_toggle_tile.dart';
 
 class SettingsModal extends StatefulWidget {
   final bool initialOpenOnScanPage;
@@ -107,182 +108,32 @@ class SettingsModalState extends State<SettingsModal> {
             ],
           ),
           SizedBox(height: 24.h),
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Page par défaut',
-                        style: TextStyle(
-                          fontSize: 40.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Ouvrir directement sur la page de scan',
-                        style: TextStyle(
-                          fontSize: 30.sp,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _openOnScanPage,
-                  onChanged: (value) {
-                    _setOpenOnScanPagePref(value);
-                  },
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: const Color(0xFF1A722E),
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey[300],
-                ),
-              ],
-            ),
+          SettingsToggleTile(
+            title: 'Page par défaut',
+            subtitle: 'Ouvrir directement sur la page de scan',
+            value: _openOnScanPage,
+            onChanged: _setOpenOnScanPagePref,
           ),
           SizedBox(height: 16.h),
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Afficher les mentions Boycott',
-                        style: TextStyle(
-                          fontSize: 40.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Afficher les informations de boycott sur les produits',
-                        style: TextStyle(
-                          fontSize: 30.sp,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _showBoycott,
-                  onChanged: _setShowBoycottPref,
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: const Color(0xFF1A722E),
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey[300],
-                ),
-              ],
-            ),
+          SettingsToggleTile(
+            title: 'Afficher les mentions Boycott',
+            subtitle: 'Afficher les informations de boycott sur les produits',
+            value: _showBoycott,
+            onChanged: _setShowBoycottPref,
           ),
           SizedBox(height: 16.h),
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Afficher Nutriscore & Green-score®',
-                        style: TextStyle(
-                          fontSize: 40.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Scores affichés lors du scan',
-                        style: TextStyle(
-                          fontSize: 30.sp,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _showScores,
-                  onChanged: _setShowScoresPref,
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: const Color(0xFF1A722E),
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey[300],
-                ),
-              ],
-            ),
+          SettingsToggleTile(
+            title: 'Afficher Nutriscore & Green-score®',
+            subtitle: 'Scores affichés lors du scan',
+            value: _showScores,
+            onChanged: _setShowScoresPref,
           ),
           SizedBox(height: 16.h),
-          Container(
-            padding: EdgeInsets.all(16.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: Colors.grey[200]!),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Retour haptique',
-                        style: TextStyle(
-                          fontSize: 40.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        'Vibrer lors du scan d\'un produit',
-                        style: TextStyle(
-                          fontSize: 30.sp,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: _hapticFeedback,
-                  onChanged: _setHapticFeedbackPref,
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: const Color(0xFF1A722E),
-                  inactiveThumbColor: Colors.white,
-                  inactiveTrackColor: Colors.grey[300],
-                ),
-              ],
-            ),
+          SettingsToggleTile(
+            title: 'Retour haptique',
+            subtitle: 'Vibrer lors du scan d\'un produit',
+            value: _hapticFeedback,
+            onChanged: _setHapticFeedbackPref,
           ),
         ],
       ),

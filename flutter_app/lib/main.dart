@@ -74,8 +74,9 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> {
   ThemeData _currentTheme = ThemeData(
     scaffoldBackgroundColor: Colors.white,
-    colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF166534)),
+    colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF15866E)),
     useMaterial3: true,
+    fontFamily: 'Karla',
   );
 
   late final Upgrader _upgrader;

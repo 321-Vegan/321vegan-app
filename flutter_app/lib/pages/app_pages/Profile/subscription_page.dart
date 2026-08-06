@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../services/subscription_service.dart';
 import '../../../services/auth_service.dart';
+import '../../../themes/app_colors.dart';
 import '../../../widgets/auth/forgot_password_form.dart';
 import '../../../widgets/auth/login_form.dart';
 import '../../../widgets/auth/register_form.dart';
@@ -190,31 +191,24 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     final primaryColor = theme.colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.grey[800], size: 60.sp),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Soutenir & débloquer',
-          style: TextStyle(
-            fontSize: 52.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
-        ),
-        centerTitle: true,
-      ),
+      backgroundColor: primaryColor,
       body: Stack(
         children: [
           SafeArea(
             child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 16.h),
+              padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 16.h),
               child: Column(
                 children: [
+                  // Close button, top-left like the mockup.
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(Icons.close, color: Colors.white, size: 64.sp),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
                   // Already subscribed banner
                   if (isSubscribed && isBypass) ...[
                     _buildBypassCard(primaryColor),
@@ -253,7 +247,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                           'Tous les paliers débloquent les mêmes avantages. Choisissez simplement selon vos moyens !',
                           style: TextStyle(
                             fontSize: 32.sp,
-                            color: Colors.grey[500],
+                            color: Colors.white.withValues(alpha: 0.7),
                             fontStyle: FontStyle.italic,
                           ),
                           textAlign: TextAlign.center,
@@ -269,7 +263,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                             _errorMessage!,
                             style: TextStyle(
                               fontSize: 38.sp,
-                              color: Colors.red[600],
+                              color: const Color(0xFFFFC9C9),
+                              fontWeight: FontWeight.w600,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -419,21 +414,32 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildHeader(Color primaryColor) {
     return Column(
       children: [
-        Text(
-          'Profitez pleinement de 321 Vegan',
-          style: TextStyle(
-            fontSize: 60.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
-          textAlign: TextAlign.center,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              'Passez Premium !',
+              style: TextStyle(
+                fontSize: 84.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Baloo2',
+                height: 1.0,
+                letterSpacing: -1,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(width: 16.w),
+            FaIcon(FontAwesomeIcons.crown, size: 52.sp, color: Colors.white),
+          ],
         ),
-        SizedBox(height: 8.h),
+        SizedBox(height: 16.h),
         Text(
-          'Débloquez la carte des produits, les scores illimités et tous les thèmes, et faites grandir le projet !',
+          'Accédez à de nouvelles fonctionnalités\net faites grandir le projet !',
           style: TextStyle(
-            fontSize: 40.sp,
-            color: Colors.grey[500],
+            fontSize: 42.sp,
+            color: Colors.white.withValues(alpha: 0.85),
             height: 1.4,
           ),
           textAlign: TextAlign.center,
@@ -443,179 +449,87 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Widget _buildBenefits(Color primaryColor) {
-    final benefits = [
-      (
-        'Carte des produits en accès anticipé',
-        'Trouvez où acheter les produits vegan près de vous',
-        Icons.map
-      ),
-      (
-        'Nutriscore & Green-score illimités',
-        'Les scores de tous vos produits scannés, sans limite',
-        Icons.qr_code_scanner
-      ),
-      (
-        'Tous les thèmes débloqués',
-        'Printemps, Été, Automne, Hiver',
-        Icons.palette
-      ),
-      ('Badge soutien', 'Badge exclusif sur votre profil', Icons.military_tech),
-      (
-        'Soutenir le projet',
-        'Chaque abonnement nous aide à continuer',
-        Icons.favorite
-      ),
+    const benefits = [
+      'Map des produits autour de vous',
+      'NutriScore et GreenScore illimités',
+      'Tous les thèmes débloqués',
+      'Badge soutien sur votre profil',
+      'Soutien pour faire vivre l\'app',
     ];
 
-    return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ce que vous obtenez',
-            style: TextStyle(
-              fontSize: 44.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
+    return Column(
+      children: [
+        for (final benefit in benefits)
+          Padding(
+            padding: EdgeInsets.only(bottom: 24.h),
+            child: Row(
+              children: [
+                Container(
+                  width: 72.w,
+                  height: 72.w,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.check, size: 44.sp, color: primaryColor),
+                ),
+                SizedBox(width: 24.w),
+                Expanded(
+                  child: Text(
+                    benefit,
+                    style: TextStyle(
+                      fontSize: 44.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 16.h),
-          ...benefits.map((benefit) => Padding(
-                padding: EdgeInsets.only(bottom: 16.h),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(10.w),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Icon(
-                        benefit.$3,
-                        size: 48.sp,
-                        color: primaryColor,
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            benefit.$1,
-                            style: TextStyle(
-                              fontSize: 40.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[800],
-                            ),
-                          ),
-                          Text(
-                            benefit.$2,
-                            style: TextStyle(
-                              fontSize: 34.sp,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.check_circle,
-                      color: primaryColor,
-                      size: 48.sp,
-                    ),
-                  ],
-                ),
-              )),
-        ],
-      ),
+      ],
     );
   }
 
   Widget _buildBillingToggle(Color primaryColor) {
+    Widget option(String label, bool yearly) {
+      final selected = _isYearly == yearly;
+      return Expanded(
+        child: GestureDetector(
+          onTap: () => setState(() => _isYearly = yearly),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.symmetric(vertical: 14.h),
+            decoration: BoxDecoration(
+              color: selected ? Colors.white : Colors.transparent,
+              borderRadius: BorderRadius.circular(30.r),
+            ),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 42.sp,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                color: selected
+                    ? primaryColor
+                    : Colors.white.withValues(alpha: 0.85),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       padding: EdgeInsets.all(6.w),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(16.r),
+        color: Colors.black.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(34.r),
       ),
       child: Row(
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isYearly = false),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(vertical: 14.h),
-                decoration: BoxDecoration(
-                  color: !_isYearly ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: !_isYearly
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Text(
-                  'Par mois',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 42.sp,
-                    fontWeight:
-                        !_isYearly ? FontWeight.bold : FontWeight.normal,
-                    color: !_isYearly ? primaryColor : Colors.grey[600],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _isYearly = true),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(vertical: 14.h),
-                decoration: BoxDecoration(
-                  color: _isYearly ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: _isYearly
-                      ? [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : [],
-                ),
-                child: Text(
-                  'Par an',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 42.sp,
-                    fontWeight: _isYearly ? FontWeight.bold : FontWeight.normal,
-                    color: _isYearly ? primaryColor : Colors.grey[600],
-                  ),
-                ),
-              ),
-            ),
-          ),
+          option('Par mois', false),
+          option('Par an', true),
         ],
       ),
     );
@@ -626,7 +540,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       (
         tier: 1,
         title: 'Graine',
-        icon: FontAwesomeIcons.seedling,
+        subtitle: 'Un bon coup de pouce !',
+        image: 'lib/assets/images/buy-premium/seed.webp',
         monthlyId: SubscriptionService.monthlyId,
         yearlyId: SubscriptionService.yearlyId,
         isPopular: false,
@@ -634,7 +549,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       (
         tier: 2,
         title: 'Fleur',
-        icon: Icons.local_florist,
+        subtitle: 'Un soutien énorme !',
+        image: 'lib/assets/images/buy-premium/flower.webp',
         monthlyId: SubscriptionService.tier1MonthlyId,
         yearlyId: SubscriptionService.tier1YearlyId,
         isPopular: true,
@@ -642,7 +558,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       (
         tier: 3,
         title: 'Arbre',
-        icon: Icons.park,
+        subtitle: 'Pionnier du changement !',
+        image: 'lib/assets/images/buy-premium/tree.webp',
         monthlyId: SubscriptionService.tier2MonthlyId,
         yearlyId: SubscriptionService.tier2YearlyId,
         isPopular: false,
@@ -652,20 +569,20 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     return Column(
       children: [
         _buildBillingToggle(primaryColor),
-        SizedBox(height: 20.h),
+        SizedBox(height: 32.h),
         ...tiers.map((t) {
           final productId = _isYearly ? t.yearlyId : t.monthlyId;
           final product = SubscriptionService.getProduct(productId);
 
           return Padding(
-            padding: EdgeInsets.only(bottom: 12.h),
+            padding: EdgeInsets.only(bottom: 24.h),
             child: _buildTierCard(
               tier: t.tier,
               title: t.title,
-              icon: t.icon,
+              subtitle: t.subtitle,
+              image: t.image,
               price: product?.price,
               isPopular: t.isPopular,
-              primaryColor: primaryColor,
               referencePrice: _isYearly
                   ? _yearlyReferencePrice(t.monthlyId, t.yearlyId)
                   : null,
@@ -679,10 +596,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildTierCard({
     required int tier,
     required String title,
-    required IconData icon,
+    required String subtitle,
+    required String image,
     required String? price,
     required bool isPopular,
-    required Color primaryColor,
     String? referencePrice,
   }) {
     final isSelected = _selectedTier == tier;
@@ -694,96 +611,89 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 22.h),
+            padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 45.h),
             decoration: BoxDecoration(
+              // Darker overlay card on the green page; the selected tier
+              // lightens up and gets a white outline, like the mockup.
               color: isSelected
-                  ? primaryColor.withValues(alpha: 0.04)
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(20.r),
+                  ? Colors.white.withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(72.r),
               border: Border.all(
-                color: isSelected ? primaryColor : Colors.grey[200]!,
-                width: isSelected ? 2.5 : 1,
+                color: isSelected ? Colors.white : Colors.transparent,
+                width: 2,
               ),
-              boxShadow: [
-                if (isSelected)
-                  BoxShadow(
-                    color: primaryColor.withValues(alpha: 0.15),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               children: [
-                // Icon circle
-                Container(
-                  width: 100.w,
-                  height: 100.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isSelected
-                        ? primaryColor.withValues(alpha: 0.15)
-                        : Colors.grey[100],
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 48.sp,
-                    color: isSelected ? primaryColor : Colors.grey[500],
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                // Title
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 44.sp,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? primaryColor : Colors.grey[800],
+                SizedBox(
+                  width: 120.w,
+                  height: 120.w,
+                  child: Image.asset(
+                    image,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.eco,
+                      size: 60.sp,
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ),
-                // Price + period
+                SizedBox(width: 30.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 54.sp,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'Baloo2',
+                          height: 1.1,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontSize: 36.sp,
+                          color: Colors.white.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 20.w),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (referencePrice != null) ...[
-                          Text(
-                            referencePrice,
-                            style: TextStyle(
-                              fontSize: 36.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey[500],
-                              decoration: TextDecoration.lineThrough,
-                              decorationColor: Colors.grey[500],
-                            ),
-                          ),
-                          SizedBox(width: 10.w),
-                        ],
-                        Text(
-                          price ?? '...',
-                          style: TextStyle(
-                            fontSize: 50.sp,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? primaryColor : Colors.grey[800],
-                          ),
+                    if (referencePrice != null)
+                      Text(
+                        referencePrice,
+                        style: TextStyle(
+                          fontSize: 34.sp,
+                          color: Colors.white.withValues(alpha: 0.6),
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: Colors.white.withValues(alpha: 0.6),
                         ),
-                      ],
+                      ),
+                    Text(
+                      price ?? '...',
+                      style: TextStyle(
+                        fontSize: 56.sp,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Baloo2',
+                        height: 1.1,
+                        color: Colors.white,
+                      ),
                     ),
                     Text(
-                      _isYearly ? '/ an' : '/ mois',
+                      _isYearly ? '/an' : '/mois',
                       style: TextStyle(
-                        fontSize: 30.sp,
-                        color: Colors.grey[500],
+                        fontSize: 34.sp,
+                        color: Colors.white.withValues(alpha: 0.75),
                       ),
                     ),
                   ],
@@ -791,35 +701,23 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               ],
             ),
           ),
-          // "Populaire" badge
+          // "Populaire" badge (pale yellow tag, like the mockup)
           if (isPopular)
             Positioned(
-              top: -12.h,
-              right: 20.w,
+              top: -16.h,
+              right: 40.w,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.orange.shade400,
-                      Colors.deepOrange.shade400
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.orange.withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                decoration: const BoxDecoration(
+                  color: kSecondaryTag,
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
                 ),
                 child: Text(
                   'Populaire',
                   style: TextStyle(
-                    fontSize: 28.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    fontSize: 32.sp,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFD69A08),
                   ),
                 ),
               ),
@@ -835,29 +733,27 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       child: ElevatedButton(
         onPressed: _isLoading ? null : _purchase,
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(vertical: 22.h),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
+          backgroundColor: Colors.white,
+          foregroundColor: primaryColor,
+          padding: EdgeInsets.symmetric(vertical: 36.h),
+          shape: const StadiumBorder(),
           elevation: 0,
-          disabledBackgroundColor: primaryColor.withValues(alpha: 0.5),
+          disabledBackgroundColor: Colors.white.withValues(alpha: 0.6),
         ),
         child: _isLoading
             ? SizedBox(
                 height: 48.sp,
                 width: 48.sp,
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
+                child: CircularProgressIndicator(
+                  color: primaryColor,
                   strokeWidth: 2,
                 ),
               )
             : Text(
                 'S\'abonner',
                 style: TextStyle(
-                  fontSize: 48.sp,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 46.sp,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
       ),
@@ -871,17 +767,19 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           ? SizedBox(
               height: 40.sp,
               width: 40.sp,
-              child: CircularProgressIndicator(
+              child: const CircularProgressIndicator(
                 strokeWidth: 2,
-                color: Colors.grey[500],
+                color: Colors.white70,
               ),
             )
           : Text(
               'J\'ai déjà un abonnement - Restaurer mes achats',
               style: TextStyle(
-                fontSize: 38.sp,
-                color: Colors.grey[500],
+                fontSize: 40.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
                 decoration: TextDecoration.underline,
+                decorationColor: Colors.white,
               ),
             ),
     );
@@ -897,7 +795,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           'L\'abonnement se renouvelle automatiquement sauf annulation au moins 24h avant la fin de la période en cours.',
           style: TextStyle(
             fontSize: 38.sp,
-            color: Colors.grey[400],
+            color: Colors.white.withValues(alpha: 0.9),
             height: 1.4,
           ),
           textAlign: TextAlign.center,
@@ -912,8 +810,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             'Conditions d\'utilisation & Politique de confidentialité',
             style: TextStyle(
               fontSize: 40.sp,
-              color: Colors.grey[500],
+              color: Colors.white,
               decoration: TextDecoration.underline,
+              decorationColor: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -970,14 +869,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.settings, size: 40.sp, color: Colors.grey[500]),
+          Icon(Icons.settings,
+              size: 40.sp, color: Colors.white.withValues(alpha: 0.8)),
           SizedBox(width: 8.w),
           Text(
             'Gérer mon abonnement',
             style: TextStyle(
               fontSize: 38.sp,
-              color: Colors.grey[500],
+              color: Colors.white.withValues(alpha: 0.8),
               decoration: TextDecoration.underline,
+              decorationColor: Colors.white.withValues(alpha: 0.8),
             ),
           ),
         ],
