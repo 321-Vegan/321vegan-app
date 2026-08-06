@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../../helpers/preference_helper.dart';
 import '../../../models/auth.dart';
@@ -310,20 +311,18 @@ class _SettingsPageState extends State<SettingsPage> {
               children: [
                 GestureDetector(
                   onTap: _openEditProfileModal,
-                  child: ClipOval(
-                    child: Container(
-                      width: 220.w,
-                      height: 220.w,
-                      color: Colors.grey[100],
-                      padding: EdgeInsets.all(24.w),
-                      child: Image.asset(
-                        'lib/assets/avatars/${_avatar ?? 'cochon.png'}',
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.person,
-                          size: 64.sp,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                  // Raw image, no disc background: the avatar assets are
+                  // irregular shapes with transparency.
+                  child: SizedBox(
+                    width: 220.w,
+                    height: 220.w,
+                    child: Image.asset(
+                      'lib/assets/avatars/${_avatar ?? 'cochon.png'}',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.person,
+                        size: 64.sp,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -368,6 +367,11 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SettingsRowTile(
                 label: 'Thème',
+                labelSuffix: FaIcon(
+                  FontAwesomeIcons.crown,
+                  size: 42.sp,
+                  color: kAccentYellow,
+                ),
                 value: themeName,
                 onTap: _showThemeSelector,
               ),
@@ -389,7 +393,6 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               SettingsToggleTile(
                 title: 'Rappels',
-                subtitle: 'Recevoir une notification pour prendre votre B12',
                 value: _b12RemindersEnabled,
                 onChanged: _toggleB12Reminders,
               ),
@@ -460,9 +463,7 @@ class _SettingsPageState extends State<SettingsPage> {
             title: 'Scan',
             children: [
               SettingsToggleTile(
-                title: 'Afficher les mentions Boycott',
-                subtitle:
-                    'Afficher les informations de boycott sur les produits',
+                title: 'Mentions "Boycott"',
                 value: _showBoycott,
                 onChanged: (value) async {
                   await PreferencesHelper.setShowBoycottPref(value);
@@ -470,8 +471,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
               ),
               SettingsToggleTile(
-                title: 'Afficher Nutriscore & Green-score®',
-                subtitle: 'Scores affichés lors du scan',
+                title: '"NutriScore" et "GreenScore"',
                 value: _showScores,
                 onChanged: (value) async {
                   await PreferencesHelper.setShowScoresPref(value);
@@ -479,8 +479,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
               ),
               SettingsToggleTile(
-                title: 'Retour haptique',
-                subtitle: 'Vibrer lors du scan d\'un produit',
+                title: 'Vibrer lors d\'un scan produit',
                 value: _hapticFeedback,
                 onChanged: (value) async {
                   await PreferencesHelper.setHapticFeedbackPref(value);
@@ -525,8 +524,7 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   /// Green banner matching the Figma "Passez Premium !" card, with a yellow
-  /// call-to-action while not subscribed. The illustration spot (pineapple)
-  /// stays empty until the Figma assets are exported.
+  /// call-to-action while not subscribed and the pineapple illustration.
   Widget _buildPremiumBanner(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final isSubscribed = SubscriptionService.isSubscribed;
@@ -557,47 +555,77 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
           padding: EdgeInsets.all(24.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Text(
-                isSubscribed ? 'Abonnement actif' : 'Passez Premium !',
-                style: TextStyle(
-                  fontSize: 46.sp,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Baloo',
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 4.h),
-              Text(
-                isSubscribed
-                    ? 'Merci de soutenir 321Vegan !'
-                    : 'Accédez à des fonctionnalités tout en soutenant 321Vegan.',
-                style: TextStyle(
-                  fontSize: 32.sp,
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
-              ),
-              if (!isSubscribed) ...[
-                SizedBox(height: 16.h),
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 24.w, vertical: 10.h),
-                  decoration: const BoxDecoration(
-                    color: kAccentYellow,
-                    borderRadius: BorderRadius.all(Radius.circular(30)),
-                  ),
-                  child: Text(
-                    'Découvrir les offres',
-                    style: TextStyle(
-                      fontSize: 32.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            isSubscribed
+                                ? 'Abonnement actif'
+                                : 'Passez Premium !',
+                            style: TextStyle(
+                              fontSize: 80.sp,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Baloo2',
+                              height: 1.1,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 14.w),
+                        FaIcon(FontAwesomeIcons.crown,
+                            size: 64.sp, color: kAccentYellow),
+                      ],
                     ),
-                  ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      isSubscribed
+                          ? 'Merci de soutenir 321Vegan !'
+                          : 'Accédez à des fonctionnalités tout en soutenant 321Vegan.',
+                      style: TextStyle(
+                        fontSize: 42.sp,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    if (!isSubscribed) ...[
+                      SizedBox(height: 16.h),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 24.w, vertical: 10.h),
+                        decoration: const BoxDecoration(
+                          color: kAccentYellow,
+                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                        ),
+                        child: Text(
+                          'Découvrir les offres',
+                          style: TextStyle(
+                            fontSize: 42.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
+              SizedBox(width: 20.w),
+              SizedBox(
+                width: 210.w,
+                height: 260.w,
+                child: Image.asset(
+                  'lib/assets/images/buy-premium/pineapple.webp',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const SizedBox.shrink(),
+                ),
+              ),
             ],
           ),
         ),

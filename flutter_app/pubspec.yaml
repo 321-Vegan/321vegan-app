@@ -175,6 +175,7 @@ flutter:
     - lib/assets/images/buy-premium/flower.webp
     - lib/assets/images/buy-premium/tree.webp
     - lib/assets/images/buy-premium/bee.webp
+    - lib/assets/images/buy-premium/pineapple.webp
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - .env

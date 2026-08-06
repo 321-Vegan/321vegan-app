@@ -209,20 +209,21 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  // Already subscribed banner
-                  if (isSubscribed && isBypass) ...[
-                    _buildBypassCard(primaryColor),
+                  // Already subscribed: current plan card, thank-you
+                  // header, benefits recap, community goal, manage button.
+                  if (isSubscribed) ...[
+                    if (subscription != null) ...[
+                      _buildCurrentPlanCard(subscription),
+                      SizedBox(height: 56.h),
+                    ],
+                    _buildSubscribedHeader(),
+                    SizedBox(height: 56.h),
+                    _buildBenefits(primaryColor),
                     SizedBox(height: 32.h),
                     const SubscriptionGoalWidget(),
-                  ] else if (isSubscribed) ...[
-                    if (subscription != null)
-                      _buildActiveSubscriptionCard(subscription, primaryColor)
-                    else
-                      _buildBypassCard(primaryColor),
-                    SizedBox(height: 16.h),
-                    _buildManageSubscriptionButton(),
-                    SizedBox(height: 24.h),
-                    const SubscriptionGoalWidget(),
+                    SizedBox(height: 100.h),
+                    // Bypass users have no store subscription to manage.
+                    if (!isBypass) _buildManageSubscriptionButton(),
                     SizedBox(height: 32.h),
                   ],
 
@@ -298,116 +299,77 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     );
   }
 
-  Widget _buildBypassCard(Color primaryColor) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(24.w),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.check_circle, color: Colors.white, size: 120.sp),
-          SizedBox(height: 16.h),
-          Text(
-            'Accès accordé',
-            style: TextStyle(
-              fontSize: 52.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontFamily: 'Baloo',
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            'Tous les thèmes sont débloqués.',
-            style: TextStyle(
-              fontSize: 38.sp,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+  /// Tier metadata for a store product id (title, subtitle, illustration).
+  ({String title, String subtitle, String image}) _tierInfo(String productId) {
+    if (productId.contains('tier2')) {
+      return (
+        title: 'Arbre',
+        subtitle: 'Pionnier du changement !',
+        image: 'lib/assets/images/buy-premium/tree.webp',
+      );
+    }
+    if (productId.contains('tier1')) {
+      return (
+        title: 'Fleur',
+        subtitle: 'Un soutien énorme !',
+        image: 'lib/assets/images/buy-premium/flower.webp',
+      );
+    }
+    return (
+      title: 'Graine',
+      subtitle: 'Un bon coup de pouce !',
+      image: 'lib/assets/images/buy-premium/seed.webp',
     );
   }
 
-  Widget _buildActiveSubscriptionCard(subscription, Color primaryColor) {
-    final productName =
-        SubscriptionService.getProductDisplayName(subscription.productId);
-    final expiresAt = subscription.expiresAt;
+  /// The subscriber's current plan, shown highlighted at the top of the
+  /// already-subscribed view.
+  Widget _buildCurrentPlanCard(subscription) {
+    final String productId = subscription.productId;
+    final info = _tierInfo(productId);
+    return _planCard(
+      title: info.title,
+      subtitle: info.subtitle,
+      image: info.image,
+      price: SubscriptionService.getProduct(productId)?.price,
+      periodSuffix: productId.contains('yearly') ? '/an' : '/mois',
+      highlighted: true,
+    );
+  }
 
-    return Container(
-      padding: EdgeInsets.all(24.w),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(Icons.check_circle, color: Colors.white, size: 120.sp),
-          SizedBox(height: 16.h),
-          Text(
-            'Abonnement actif',
-            style: TextStyle(
-              fontSize: 52.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontFamily: 'Baloo',
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Forfait $productName',
-            style: TextStyle(
-              fontSize: 40.sp,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ),
-          if (expiresAt != null) ...[
-            SizedBox(height: 4.h),
+  Widget _buildSubscribedHeader() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
             Text(
-              'Valide jusqu\'au ${_formatDate(expiresAt)}',
+              'Vous êtes Premium !',
               style: TextStyle(
-                fontSize: 36.sp,
-                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 84.sp,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Baloo2',
+                height: 1.0,
+                letterSpacing: -1,
+                color: Colors.white,
               ),
+              textAlign: TextAlign.center,
             ),
+            SizedBox(width: 16.w),
+            FaIcon(FontAwesomeIcons.crown, size: 52.sp, color: Colors.white),
           ],
-          SizedBox(height: 16.h),
-          Text(
-            'Merci pour votre soutien ! Tous les thèmes sont débloqués.',
-            style: TextStyle(
-              fontSize: 38.sp,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-            textAlign: TextAlign.center,
+        ),
+        SizedBox(height: 16.h),
+        Text(
+          'Grâce à vous, ce projet peut continuer !',
+          style: TextStyle(
+            fontSize: 42.sp,
+            color: Colors.white.withValues(alpha: 0.85),
+            height: 1.4,
           ),
-        ],
-      ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
@@ -593,6 +555,110 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     );
   }
 
+  /// Shared plan-card body: darker overlay card on the green page;
+  /// [highlighted] lightens it up with a white outline (selected tier /
+  /// current plan).
+  Widget _planCard({
+    required String title,
+    required String subtitle,
+    required String image,
+    required String? price,
+    required String periodSuffix,
+    required bool highlighted,
+    String? referencePrice,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 45.h),
+      decoration: BoxDecoration(
+        color: highlighted
+            ? Colors.white.withValues(alpha: 0.25)
+            : Colors.black.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(72.r),
+        border: Border.all(
+          color: highlighted ? Colors.white : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 120.w,
+            height: 120.w,
+            child: Image.asset(
+              image,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.eco,
+                size: 60.sp,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+            ),
+          ),
+          SizedBox(width: 30.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 54.sp,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'Baloo2',
+                    height: 1.1,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 36.sp,
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 20.w),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (referencePrice != null)
+                Text(
+                  referencePrice,
+                  style: TextStyle(
+                    fontSize: 34.sp,
+                    color: Colors.white.withValues(alpha: 0.6),
+                    decoration: TextDecoration.lineThrough,
+                    decorationColor: Colors.white.withValues(alpha: 0.6),
+                  ),
+                ),
+              Text(
+                price ?? '...',
+                style: TextStyle(
+                  fontSize: 56.sp,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Baloo2',
+                  height: 1.1,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                periodSuffix,
+                style: TextStyle(
+                  fontSize: 34.sp,
+                  color: Colors.white.withValues(alpha: 0.75),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTierCard({
     required int tier,
     required String title,
@@ -602,104 +668,19 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     required bool isPopular,
     String? referencePrice,
   }) {
-    final isSelected = _selectedTier == tier;
-
     return GestureDetector(
       onTap: () => setState(() => _selectedTier = tier),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 45.h),
-            decoration: BoxDecoration(
-              // Darker overlay card on the green page; the selected tier
-              // lightens up and gets a white outline, like the mockup.
-              color: isSelected
-                  ? Colors.white.withValues(alpha: 0.25)
-                  : Colors.black.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(72.r),
-              border: Border.all(
-                color: isSelected ? Colors.white : Colors.transparent,
-                width: 2,
-              ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 120.w,
-                  height: 120.w,
-                  child: Image.asset(
-                    image,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Icon(
-                      Icons.eco,
-                      size: 60.sp,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 30.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 54.sp,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: 'Baloo2',
-                          height: 1.1,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 36.sp,
-                          color: Colors.white.withValues(alpha: 0.85),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 20.w),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (referencePrice != null)
-                      Text(
-                        referencePrice,
-                        style: TextStyle(
-                          fontSize: 34.sp,
-                          color: Colors.white.withValues(alpha: 0.6),
-                          decoration: TextDecoration.lineThrough,
-                          decorationColor: Colors.white.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    Text(
-                      price ?? '...',
-                      style: TextStyle(
-                        fontSize: 56.sp,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Baloo2',
-                        height: 1.1,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      _isYearly ? '/an' : '/mois',
-                      style: TextStyle(
-                        fontSize: 34.sp,
-                        color: Colors.white.withValues(alpha: 0.75),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          _planCard(
+            title: title,
+            subtitle: subtitle,
+            image: image,
+            price: price,
+            periodSuffix: _isYearly ? '/an' : '/mois',
+            highlighted: _selectedTier == tier,
+            referencePrice: referencePrice,
           ),
           // "Populaire" badge (pale yellow tag, like the mockup)
           if (isPopular)
@@ -854,34 +835,33 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     );
   }
 
+  /// Opens the platform's subscription management page (the only way to
+  /// change or cancel an in-app subscription).
   Widget _buildManageSubscriptionButton() {
-    return TextButton(
-      onPressed: () async {
-        final Uri url;
-        if (Platform.isIOS) {
-          url = Uri.parse('https://apps.apple.com/account/subscriptions');
-        } else {
-          url =
-              Uri.parse('https://play.google.com/store/account/subscriptions');
-        }
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      },
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.settings,
-              size: 40.sp, color: Colors.white.withValues(alpha: 0.8)),
-          SizedBox(width: 8.w),
-          Text(
-            'Gérer mon abonnement',
-            style: TextStyle(
-              fontSize: 38.sp,
-              color: Colors.white.withValues(alpha: 0.8),
-              decoration: TextDecoration.underline,
-              decorationColor: Colors.white.withValues(alpha: 0.8),
-            ),
-          ),
-        ],
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () async {
+          final Uri url;
+          if (Platform.isIOS) {
+            url = Uri.parse('https://apps.apple.com/account/subscriptions');
+          } else {
+            url = Uri.parse(
+                'https://play.google.com/store/account/subscriptions');
+          }
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: kAccentYellow,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: EdgeInsets.symmetric(vertical: 36.h),
+          shape: const StadiumBorder(),
+        ),
+        child: Text(
+          'Modifier mon abonnement',
+          style: TextStyle(fontSize: 44.sp, fontWeight: FontWeight.w600),
+        ),
       ),
     );
   }
@@ -1016,24 +996,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    final months = [
-      'janvier',
-      'février',
-      'mars',
-      'avril',
-      'mai',
-      'juin',
-      'juillet',
-      'août',
-      'septembre',
-      'octobre',
-      'novembre',
-      'décembre'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
 

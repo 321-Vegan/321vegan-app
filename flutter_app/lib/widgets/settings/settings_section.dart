@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../themes/app_spacing.dart';
+import '../../themes/app_text_styles.dart';
 
 /// Section header + spaced list of rows, used to group tiles under a title
 /// ("Compte", "B12", "Produits", "Scan") in the Paramètres screen.
@@ -18,18 +19,11 @@ class SettingsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 40.sp,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
-          ),
-        ),
-        SizedBox(height: 12.h),
+        Text(title, style: AppTextStyles.sectionTitle),
+        SizedBox(height: AppSpacing.afterTitle),
         for (int i = 0; i < children.length; i++) ...[
           children[i],
-          if (i != children.length - 1) SizedBox(height: 12.h),
+          if (i != children.length - 1) SizedBox(height: AppSpacing.item),
         ],
       ],
     );

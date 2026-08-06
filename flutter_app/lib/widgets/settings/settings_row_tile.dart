@@ -4,8 +4,13 @@ import '../../themes/app_colors.dart';
 
 /// A tappable row showing a label and an optional trailing value/icon, used
 /// for the "Compte", "B12" and "Produits" sections in the Paramètres screen.
+/// Figma spec: fill×59, radius 12, stroke 1 Border/Default, white bg,
+/// padding 15 (v) / 13 (h), gap 15 — all ×3 for ScreenUtil units.
 class SettingsRowTile extends StatelessWidget {
   final String label;
+
+  /// Small widget rendered right after the label (e.g. the premium crown).
+  final Widget? labelSuffix;
   final String? value;
   final Widget? trailing;
   final VoidCallback? onTap;
@@ -13,6 +18,7 @@ class SettingsRowTile extends StatelessWidget {
   const SettingsRowTile({
     super.key,
     required this.label,
+    this.labelSuffix,
     this.value,
     this.trailing,
     this.onTap,
@@ -22,41 +28,50 @@ class SettingsRowTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(14.r),
+      borderRadius: BorderRadius.circular(36.r),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14.r),
+        borderRadius: BorderRadius.circular(36.r),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 22.h),
+          padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 45.h),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14.r),
+            borderRadius: BorderRadius.circular(36.r),
             border: Border.all(color: kBorderDefault),
           ),
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 40.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        label,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 42.sp,
+                          fontWeight: FontWeight.w600,
+                          color: kTextPrimary,
+                        ),
+                      ),
+                    ),
+                    if (labelSuffix != null) ...[
+                      SizedBox(width: 12.w),
+                      labelSuffix!,
+                    ],
+                  ],
                 ),
               ),
+              SizedBox(width: 45.w),
               if (value != null)
                 Flexible(
                   child: Text(
                     value!,
                     textAlign: TextAlign.right,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 36.sp, color: Colors.grey[500]),
+                    style: TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
                   ),
                 ),
-              if (trailing != null) ...[
-                SizedBox(width: 12.w),
-                trailing!,
-              ],
+              if (trailing != null) trailing!,
             ],
           ),
         ),
