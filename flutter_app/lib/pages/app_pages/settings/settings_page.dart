@@ -20,7 +20,7 @@ import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/theme/theme_selector_modal.dart';
-import '../Profile/about_page.dart';
+import '../Profile/auth_gate_page.dart';
 import '../Profile/b12_reminder_settings_page.dart';
 import '../Scan/scan_history_page.dart';
 import '../Scan/sent_products_page.dart';
@@ -29,7 +29,7 @@ import '../Profile/error_reports_page.dart';
 import '../Profile/subscription_page.dart';
 
 /// Full-screen "Paramètres", reached from the Dashboard's gear icon.
-/// Logged-out users see the existing login/register flow ([AboutPage])
+/// Logged-out users see the existing login/register flow ([AuthGatePage])
 /// unchanged; logged-in users see the redesigned settings list.
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -289,7 +289,7 @@ class _SettingsPageState extends State<SettingsPage> {
               : AuthService.isLoggedIn
                   ? _buildLoggedInBody(context)
                   : SingleChildScrollView(
-                      child: AboutPage(onLoginSuccess: _loadAll),
+                      child: AuthGatePage(onLoginSuccess: _loadAll),
                     ),
         ),
       ),

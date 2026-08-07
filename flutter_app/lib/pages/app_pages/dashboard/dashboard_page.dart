@@ -245,7 +245,19 @@ class DashboardPageState extends State<DashboardPage> {
     _confettiController.play();
   }
 
-  void _openErrorReports() {
+  Future<void> _openErrorReports() async {
+    // Logged-out users have no reports to show — send them through the
+    // same login/create-account gate as the Paramètres tab instead of
+    // opening a page that would just error out fetching them.
+    if (!AuthService.isLoggedIn) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SettingsPage()),
+      );
+      if (mounted) refresh();
+      return;
+    }
+
     if (ErrorReportBadgeService.unreadCount.value > 0) {
       ErrorReportBadgeService.markHandledAsSeen(
           _errorReportsFirstPage?.items ?? []);
@@ -277,7 +289,7 @@ class DashboardPageState extends State<DashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(context),
-                    if (!SubscriptionService.isSubscribed) ...[
+                    if (!SubscriptionService.isSubscribed || !AuthService.isLoggedIn) ...[
                       SizedBox(height: AppSpacing.section),
                       _buildSupportButton(context),
                     ],

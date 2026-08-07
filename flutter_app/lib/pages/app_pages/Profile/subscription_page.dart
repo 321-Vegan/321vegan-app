@@ -192,109 +192,116 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
     return Scaffold(
       backgroundColor: primaryColor,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 16.h),
-              child: Column(
-                children: [
-                  // Close button, top-left like the mockup.
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      icon: Icon(Icons.close, color: Colors.white, size: 64.sp),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  // Already subscribed: current plan card, thank-you
-                  // header, benefits recap, community goal, manage button.
-                  if (isSubscribed) ...[
-                    if (subscription != null) ...[
-                      _buildCurrentPlanCard(subscription),
-                      SizedBox(height: 56.h),
-                    ],
-                    _buildSubscribedHeader(),
-                    SizedBox(height: 56.h),
-                    _buildBenefits(primaryColor),
-                    SizedBox(height: 32.h),
-                    const SubscriptionGoalWidget(),
-                    SizedBox(height: 100.h),
-                    // Bypass users have no store subscription to manage.
-                    if (!isBypass) _buildManageSubscriptionButton(),
-                    SizedBox(height: 32.h),
-                  ],
-
-                  // Header illustration
-                  if (!isSubscribed) ...[
-                    _buildHeader(primaryColor),
-                    SizedBox(height: 32.h),
-                    const SubscriptionGoalWidget(),
-                    SizedBox(height: 32.h),
-
-                    // Benefits list
-                    _buildBenefits(primaryColor),
-                    SizedBox(height: 32.h),
-
-                    // Plan cards
-                    if (SubscriptionService.products.isNotEmpty) ...[
-                      _buildPlanCards(primaryColor),
-                      SizedBox(height: 8.h),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w),
-                        child: Text(
-                          'Tous les paliers débloquent les mêmes avantages. Choisissez simplement selon vos moyens !',
-                          style: TextStyle(
-                            fontSize: 32.sp,
-                            color: Colors.white.withValues(alpha: 0.7),
-                            fontStyle: FontStyle.italic,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+      // SizedBox.expand pins the Stack to the exact viewport size instead of
+      // letting it size itself off the scrollable child, so the auth overlay
+      // below — a Positioned.fill sibling — reliably covers the whole
+      // screen instead of stopping short at the bottom.
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 16.h),
+                child: Column(
+                  children: [
+                    // Close button, top-left like the mockup.
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon:
+                            Icon(Icons.close, color: Colors.white, size: 64.sp),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      SizedBox(height: 24.h),
+                    ),
+                    SizedBox(height: 16.h),
+                    // Already subscribed: current plan card, thank-you
+                    // header, benefits recap, community goal, manage button.
+                    if (isSubscribed) ...[
+                      if (subscription != null) ...[
+                        _buildCurrentPlanCard(subscription),
+                        SizedBox(height: 56.h),
+                      ],
+                      _buildSubscribedHeader(),
+                      SizedBox(height: 56.h),
+                      _buildBenefits(primaryColor),
+                      SizedBox(height: 32.h),
+                      const SubscriptionGoalWidget(),
+                      SizedBox(height: 100.h),
+                      // Bypass users have no store subscription to manage.
+                      if (!isBypass) _buildManageSubscriptionButton(),
+                      SizedBox(height: 32.h),
+                    ],
 
-                      // Error message
-                      if (_errorMessage != null) ...[
+                    // Header illustration
+                    if (!isSubscribed) ...[
+                      _buildHeader(primaryColor),
+                      SizedBox(height: 32.h),
+                      const SubscriptionGoalWidget(),
+                      SizedBox(height: 32.h),
+
+                      // Benefits list
+                      _buildBenefits(primaryColor),
+                      SizedBox(height: 32.h),
+
+                      // Plan cards
+                      if (SubscriptionService.products.isNotEmpty) ...[
+                        _buildPlanCards(primaryColor),
+                        SizedBox(height: 8.h),
                         Padding(
-                          padding: EdgeInsets.only(bottom: 16.h),
+                          padding: EdgeInsets.symmetric(horizontal: 8.w),
                           child: Text(
-                            _errorMessage!,
+                            'Tous les paliers débloquent les mêmes avantages. Choisissez simplement selon vos moyens !',
                             style: TextStyle(
-                              fontSize: 38.sp,
-                              color: const Color(0xFFFFC9C9),
-                              fontWeight: FontWeight.w600,
+                              fontSize: 32.sp,
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontStyle: FontStyle.italic,
                             ),
                             textAlign: TextAlign.center,
                           ),
                         ),
+                        SizedBox(height: 24.h),
+
+                        // Error message
+                        if (_errorMessage != null) ...[
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 16.h),
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                fontSize: 38.sp,
+                                color: const Color(0xFFFFC9C9),
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+
+                        // Purchase button
+                        _buildPurchaseButton(primaryColor),
+                        SizedBox(height: 20.h),
+
+                        // Restore button
+                        _buildRestoreButton(),
+                        SizedBox(height: 24.h),
+
+                        // Legal links
+                        _buildLegalLinks(),
+                      ] else ...[
+                        _buildProductsUnavailable(),
                       ],
 
-                      // Purchase button
-                      _buildPurchaseButton(primaryColor),
-                      SizedBox(height: 20.h),
-
-                      // Restore button
-                      _buildRestoreButton(),
-                      SizedBox(height: 24.h),
-
-                      // Legal links
-                      _buildLegalLinks(),
-                    ] else ...[
-                      _buildProductsUnavailable(),
+                      SizedBox(height: 32.h),
                     ],
-
-                    SizedBox(height: 32.h),
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-          // Auth overlay when not logged in
-          if (!AuthService.isLoggedIn) _buildAuthOverlay(primaryColor),
-        ],
+            // Auth overlay when not logged in
+            if (!AuthService.isLoggedIn) _buildAuthOverlay(primaryColor),
+          ],
+        ),
       ),
     );
   }
@@ -867,6 +874,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Widget _buildAuthOverlay(Color primaryColor) {
+    // Frosted backdrop over the still-visible subscription page. The
+    // enclosing Stack is now pinned to the exact viewport via
+    // SizedBox.expand in build(), so this Positioned.fill reliably covers
+    // the whole screen instead of stopping short at the bottom.
     return Positioned.fill(
       child: ClipRect(
         child: BackdropFilter(
@@ -880,16 +891,21 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(24.w),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.lock_outline,
-                          size: 120.sp,
-                          color: primaryColor,
+                      Image.asset(
+                        'lib/assets/images/buy-premium/pineapple.webp',
+                        fit: BoxFit.contain,
+                        height: 200.h,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          padding: EdgeInsets.all(24.w),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.lock_outline,
+                            size: 120.sp,
+                            color: primaryColor,
+                          ),
                         ),
                       ),
                       SizedBox(height: 24.h),
@@ -898,7 +914,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                         style: TextStyle(
                           fontSize: 52.sp,
                           fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
+                          color: Colors.grey[900],
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -907,7 +923,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                         'Créez un compte ou connectez-vous pour vous abonner et débloquer tous les thèmes.',
                         style: TextStyle(
                           fontSize: 40.sp,
-                          color: Colors.grey[500],
+                          color: Colors.grey[800],
                           height: 1.4,
                         ),
                         textAlign: TextAlign.center,

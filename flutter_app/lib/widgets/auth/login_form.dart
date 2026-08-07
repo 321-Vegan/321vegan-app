@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../models/auth.dart';
+import '../../themes/app_text_styles.dart';
+import 'auth_styles.dart';
 
 class LoginForm extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -77,11 +79,7 @@ class _LoginFormState extends State<LoginForm> {
         children: [
           Text(
             'Connexion',
-            style: TextStyle(
-              fontSize: 64.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
+            style: AppTextStyles.sectionTitle,
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 32.h),
@@ -91,13 +89,11 @@ class _LoginFormState extends State<LoginForm> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'votre@email.com',
-              prefixIcon: const Icon(Icons.email_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
+            decoration: authFieldDecoration(
+              context,
+              label: 'Email',
+              hint: 'votre@email.com',
+              icon: Icons.email_outlined,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -117,19 +113,18 @@ class _LoginFormState extends State<LoginForm> {
             controller: _passwordController,
             obscureText: _obscurePassword,
             autofillHints: const [AutofillHints.password],
-            decoration: InputDecoration(
-              labelText: 'Mot de passe',
-              prefixIcon: const Icon(Icons.lock_outlined),
+            decoration: authFieldDecoration(
+              context,
+              label: 'Mot de passe',
+              icon: Icons.lock_outlined,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey[500],
                 ),
                 onPressed: () {
                   setState(() => _obscurePassword = !_obscurePassword);
                 },
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
               ),
             ),
             validator: (value) {
@@ -150,6 +145,7 @@ class _LoginFormState extends State<LoginForm> {
                 'Mot de passe oublié ?',
                 style: TextStyle(
                   fontSize: 40.sp,
+                  fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
@@ -160,14 +156,7 @@ class _LoginFormState extends State<LoginForm> {
           // Login button
           ElevatedButton(
             onPressed: _isLoading ? null : _handleLogin,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
+            style: authPrimaryButtonStyle(context),
             child: _isLoading
                 ? SizedBox(
                     height: 20.h,
@@ -177,13 +166,7 @@ class _LoginFormState extends State<LoginForm> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : Text(
-                    'Se connecter',
-                    style: TextStyle(
-                      fontSize: 48.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                : Text('Se connecter', style: authButtonTextStyle()),
           ),
           SizedBox(height: 24.h),
 
@@ -205,7 +188,7 @@ class _LoginFormState extends State<LoginForm> {
                   style: TextStyle(
                     fontSize: 40.sp,
                     color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),

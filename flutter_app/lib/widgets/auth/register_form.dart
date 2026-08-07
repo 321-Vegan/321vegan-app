@@ -3,6 +3,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../models/auth.dart';
 import '../../helpers/preference_helper.dart';
+import '../../themes/app_text_styles.dart';
+import 'auth_styles.dart';
 
 class RegisterForm extends StatefulWidget {
   final VoidCallback? onRegisterSuccess;
@@ -116,11 +118,7 @@ class _RegisterFormState extends State<RegisterForm> {
           if (widget.showTitle) ...[
             Text(
               'Créer un compte',
-              style: TextStyle(
-                fontSize: 64.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
+              style: AppTextStyles.sectionTitle,
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 32.h),
@@ -131,13 +129,11 @@ class _RegisterFormState extends State<RegisterForm> {
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'votre@email.com',
-              prefixIcon: const Icon(Icons.email_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
+            decoration: authFieldDecoration(
+              context,
+              label: 'Email',
+              hint: 'votre@email.com',
+              icon: Icons.email_outlined,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -156,13 +152,11 @@ class _RegisterFormState extends State<RegisterForm> {
           TextFormField(
             controller: _nicknameController,
             autofillHints: const [AutofillHints.username],
-            decoration: InputDecoration(
-              labelText: 'Nom d\'utilisateur',
-              hintText: 'Votre pseudo',
-              prefixIcon: const Icon(Icons.person_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
+            decoration: authFieldDecoration(
+              context,
+              label: 'Nom d\'utilisateur',
+              hint: 'Votre pseudo',
+              icon: Icons.person_outlined,
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -181,19 +175,18 @@ class _RegisterFormState extends State<RegisterForm> {
             controller: _passwordController,
             obscureText: _obscurePassword,
             autofillHints: const [AutofillHints.newPassword],
-            decoration: InputDecoration(
-              labelText: 'Mot de passe',
-              prefixIcon: const Icon(Icons.lock_outlined),
+            decoration: authFieldDecoration(
+              context,
+              label: 'Mot de passe',
+              icon: Icons.lock_outlined,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey[500],
                 ),
                 onPressed: () {
                   setState(() => _obscurePassword = !_obscurePassword);
                 },
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
               ),
             ),
             validator: (value) {
@@ -213,22 +206,21 @@ class _RegisterFormState extends State<RegisterForm> {
             controller: _confirmPasswordController,
             obscureText: _obscureConfirmPassword,
             autofillHints: const [AutofillHints.newPassword],
-            decoration: InputDecoration(
-              labelText: 'Confirmer le mot de passe',
-              prefixIcon: const Icon(Icons.lock_outlined),
+            decoration: authFieldDecoration(
+              context,
+              label: 'Confirmer le mot de passe',
+              icon: Icons.lock_outlined,
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirmPassword
                       ? Icons.visibility
                       : Icons.visibility_off,
+                  color: Colors.grey[500],
                 ),
                 onPressed: () {
                   setState(
                       () => _obscureConfirmPassword = !_obscureConfirmPassword);
                 },
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
               ),
             ),
             validator: (value) {
@@ -246,14 +238,7 @@ class _RegisterFormState extends State<RegisterForm> {
           // Register button
           ElevatedButton(
             onPressed: _isLoading ? null : _handleRegister,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
+            style: authPrimaryButtonStyle(context),
             child: _isLoading
                 ? SizedBox(
                     height: 20.h,
@@ -263,13 +248,7 @@ class _RegisterFormState extends State<RegisterForm> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : Text(
-                    'S\'inscrire',
-                    style: TextStyle(
-                      fontSize: 48.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                : Text('S\'inscrire', style: authButtonTextStyle()),
           ),
           SizedBox(height: 24.h),
 
@@ -291,7 +270,7 @@ class _RegisterFormState extends State<RegisterForm> {
                   style: TextStyle(
                     fontSize: 40.sp,
                     color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
