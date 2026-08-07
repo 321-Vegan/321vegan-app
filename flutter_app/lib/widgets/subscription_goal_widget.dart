@@ -75,7 +75,7 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
         children: [
           SizedBox(
             // Room for the bee overflowing above/below the slim bar.
-            height: beeSize + 0.02.sh,
+            height: beeSize + 50.h,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final barWidth = constraints.maxWidth;
@@ -105,7 +105,7 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
                         ),
                         Positioned(
                           left: beeLeft,
-                          top: -0.0002.sh,
+                          top: -1.h,
                           child: 
                           Transform.scale(
                             scaleX: -1,

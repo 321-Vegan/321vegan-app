@@ -272,7 +272,7 @@ class DashboardPageState extends State<DashboardPage> {
                       SizedBox(height: AppSpacing.section),
                       _buildSupportButton(context),
                     ],
-                    SizedBox(height: AppSpacing.section),
+                    SizedBox(height: 24.h),
                     const PromoCarousel(),
                     SizedBox(height: AppSpacing.section),
                     if (!_b12Enabled && !_b12BannerDismissed) ...[
@@ -565,7 +565,7 @@ class DashboardPageState extends State<DashboardPage> {
             child: Padding(
               padding: EdgeInsets.all(8.w),
               child: Icon(
-                Icons.shortcut,
+                Icons.share,
                 size: 64.sp,
                 color: Theme.of(context).colorScheme.primary,
               ),

@@ -90,9 +90,12 @@ class MapSearchBarState extends State<MapSearchBar> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
+          // Same height as the square action buttons next to it (map.dart),
+          // so the whole top row reads as one line — Figma: 48pt, radius 14.
+          height: 144.w,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(28.r),
+            borderRadius: BorderRadius.circular(42.r),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
@@ -103,10 +106,9 @@ class MapSearchBarState extends State<MapSearchBar> {
           ),
           child: Row(
             children: [
-              SizedBox(width: 14.w),
-              Icon(Icons.pin_drop,
-                  color: Theme.of(context).colorScheme.primary, size: 56.sp),
-              SizedBox(width: 8.w),
+              SizedBox(width: 24.w),
+              Icon(Icons.search, color: Colors.grey[600], size: 60.sp),
+              SizedBox(width: 12.w),
               Expanded(
                 child: TextField(
                   controller: _controller,
@@ -120,7 +122,7 @@ class MapSearchBarState extends State<MapSearchBar> {
                     hintText: 'Rechercher un lieu…',
                     hintStyle:
                         TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-                    contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ),

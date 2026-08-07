@@ -5,8 +5,6 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/widgets/settings/settings_toggle_tile.dart';
 
 class SettingsModal extends StatefulWidget {
-  final bool initialOpenOnScanPage;
-  final Function(bool) onOpenOnScanPageChanged;
   final bool initialShowBoycott;
   final Function(bool) onShowBoycottChanged;
   final bool initialShowScores;
@@ -16,8 +14,6 @@ class SettingsModal extends StatefulWidget {
 
   const SettingsModal({
     super.key,
-    required this.initialOpenOnScanPage,
-    required this.onOpenOnScanPageChanged,
     required this.initialShowBoycott,
     required this.onShowBoycottChanged,
     required this.initialShowScores,
@@ -31,7 +27,6 @@ class SettingsModal extends StatefulWidget {
 }
 
 class SettingsModalState extends State<SettingsModal> {
-  late bool _openOnScanPage;
   late bool _showBoycott;
   late bool _showScores;
   late bool _hapticFeedback;
@@ -39,18 +34,9 @@ class SettingsModalState extends State<SettingsModal> {
   @override
   void initState() {
     super.initState();
-    _openOnScanPage = widget.initialOpenOnScanPage;
     _showBoycott = widget.initialShowBoycott;
     _showScores = widget.initialShowScores;
     _hapticFeedback = widget.initialHapticFeedback;
-  }
-
-  Future<void> _setOpenOnScanPagePref(bool value) async {
-    await PreferencesHelper.setOpenOnScanPagePref(value);
-    setState(() {
-      _openOnScanPage = value;
-    });
-    widget.onOpenOnScanPageChanged(value);
   }
 
   Future<void> _setShowBoycottPref(bool value) async {
@@ -108,13 +94,6 @@ class SettingsModalState extends State<SettingsModal> {
             ],
           ),
           SizedBox(height: 24.h),
-          SettingsToggleTile(
-            title: 'Page par défaut',
-            subtitle: 'Ouvrir directement sur la page de scan',
-            value: _openOnScanPage,
-            onChanged: _setOpenOnScanPagePref,
-          ),
-          SizedBox(height: 16.h),
           SettingsToggleTile(
             title: 'Afficher les mentions Boycott',
             subtitle: 'Afficher les informations de boycott sur les produits',

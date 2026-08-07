@@ -314,8 +314,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   // Raw image, no disc background: the avatar assets are
                   // irregular shapes with transparency.
                   child: SizedBox(
-                    width: 220.w,
-                    height: 220.w,
+                    width: 320.w,
+                    height: 320.w,
                     child: Image.asset(
                       'lib/assets/avatars/${_avatar ?? 'cochon.png'}',
                       fit: BoxFit.contain,

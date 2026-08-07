@@ -23,7 +23,6 @@ import 'package:vegan_app/widgets/homepage/anniversary_dialog.dart';
 import 'package:video_player/video_player.dart';
 
 const int _dashboardTabIndex = 0;
-const int _scanTabIndex = 1;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -37,7 +36,6 @@ class MyHomePageState extends State<MyHomePage>
   DateTime? _targetDate;
   late TabController _tabController;
   late ConfettiController _confettiController;
-  bool _b12NavigationHandled = false;
   bool _themedNavBar = false;
   int _profileNotificationCount = 0;
 
@@ -55,7 +53,6 @@ class MyHomePageState extends State<MyHomePage>
     // Swiping the TabBarView changes the index without going through the
     // bar's onTap; rebuild so index-dependent widgets stay in sync.
     _tabController.addListener(_onTabIndexChanged);
-    _initializeTabController();
 
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 6));
@@ -82,21 +79,6 @@ class MyHomePageState extends State<MyHomePage>
     NotificationService.showAnniversary.addListener(_onAnniversaryNotificationTap);
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _onAnniversaryNotificationTap());
-  }
-
-  Future<void> _initializeTabController() async {
-    final shouldOpenOnScanPage =
-        await PreferencesHelper.getOpenOnScanPagePref();
-    // A B12 notification tap (cold start) must win over the scan-page
-    // preference, whether it was already handled or is still pending.
-    if (_b12NavigationHandled || NotificationService.navigateToProfile.value) {
-      return;
-    }
-    if (shouldOpenOnScanPage && mounted) {
-      setState(() {
-        _tabController.index = _scanTabIndex;
-      });
-    }
   }
 
   Future<void> _checkMembershipPrompt() async {
@@ -152,7 +134,6 @@ class MyHomePageState extends State<MyHomePage>
   void _onB12NotificationTap() {
     if (NotificationService.navigateToProfile.value && mounted) {
       NotificationService.navigateToProfile.value = false;
-      _b12NavigationHandled = true;
       setState(() {
         _tabController.index = _dashboardTabIndex;
       });

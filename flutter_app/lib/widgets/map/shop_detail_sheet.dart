@@ -11,6 +11,8 @@ import 'package:vegan_app/models/product_of_interest.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+
 
 class ShopDetailSheet extends StatefulWidget {
   final Shop shop;
@@ -31,6 +33,10 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
   final Set<String> _notFoundEans = {};
   final Set<String> _foundEans = {};
   String? _detailExpandedEan;
+
+  // Once dismissed, don't show the probability-score explainer again for the
+  // rest of the app session (any shop).
+  static bool _probaBannerDismissed = false;
 
   // Reviews tab state
   List<ShopReview> _reviews = [];
@@ -365,7 +371,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
 
   Color _scoreColor(double score) {
     if (score >= 0.7) return Colors.green;
-    if (score >= 0.4) return Colors.orange;
+    if (score >= 0.4) return kAccentYellow;
     return Colors.red;
   }
 
@@ -383,7 +389,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     return ListView(
       controller: scrollController,
       padding: EdgeInsets.fromLTRB(
-          16.w, 8.h, 16.w, 64.h + MediaQuery.of(context).padding.bottom),
+          48.w, 8.h, 48.w, 64.h + MediaQuery.of(context).padding.bottom),
       children: [
         if (grouped.isEmpty)
           Padding(
@@ -397,23 +403,81 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
               textAlign: TextAlign.center,
             ),
           )
-        else
+        else ...[
+          // Explains that tapping a probability ring expands the details
+          if (!_probaBannerDismissed)
+            Container(
+              margin: EdgeInsets.only(top: 12.h, bottom: 12.h),
+              padding:
+                  EdgeInsets.symmetric(horizontal: 36.w, vertical: 30.h),
+              decoration: BoxDecoration(
+                color: kSecondaryTag,
+                borderRadius: BorderRadius.circular(42.r),
+                border: Border.all(color: kAccentYellow),
+              ),
+              // Stack instead of a Row so the text can run as far right as
+              // possible, only clearing the close cross itself.
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(right: 64.w),
+                    child: Text(
+                      'Cliquez sur le score de probabilité pour en savoir '
+                      'plus et indiquer si vous avez trouvé l\'article.',
+                      style: TextStyle(
+                        fontSize: 40.sp,
+                        color: kAccentYellow,
+                        height: 1.3,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () =>
+                          setState(() => _probaBannerDismissed = true),
+                      child: Icon(Icons.close,
+                          size: 52.sp, color: kAccentYellow),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           for (final entry in grouped.entries) ...[
             Padding(
-              padding: EdgeInsets.only(top: 12.h, bottom: 4.h),
-              child: Text(
-                entry.key,
-                style: TextStyle(
-                  fontSize: 48.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              padding: EdgeInsets.only(top: 30.h, bottom: 12.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Text(
+                      entry.key,
+                      style: TextStyle(
+                        fontFamily: 'Baloo2',
+                        fontSize: 56.sp,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -1,
+                        color: kTextPrimary,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    'Probabilité',
+                    style: TextStyle(
+                      fontSize: 38.sp,
+                      fontWeight: FontWeight.w600,
+                      color: kAccentYellow,
+                    ),
+                  ),
+                ],
               ),
             ),
             for (final s in entry.value) ...[
               _buildProductRow(s),
             ],
           ],
+        ],
         if (unscanned.isNotEmpty) ...[
           SizedBox(height: 16.h),
           Divider(height: 1.h),
@@ -500,72 +564,50 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     );
   }
 
-  Widget _buildScorePill(ShopScanSummary summary) {
+  /// Circular presence-score gauge with the percentage inside (Figma).
+  Widget _buildScoreRing(ShopScanSummary summary) {
     final score = summary.presenceScore;
     final color = _scoreColor(score);
     final percent = (score * 100).round();
-    final isExpanded = _detailExpandedEan == summary.ean;
 
-    return Row(
-      children: [
-        Container(
-          width: 100.w,
-          height: 12.h,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(6.r),
+    return SizedBox(
+      width: 150.w,
+      height: 150.w,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          CircularProgressIndicator(
+            value: score,
+            strokeWidth: 14.w,
+            strokeCap: StrokeCap.round,
+            backgroundColor: color.withValues(alpha: 0.2),
+            color: color,
           ),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: score,
-            child: Container(
-              decoration: BoxDecoration(
+          Center(
+            child: Text(
+              '$percent%',
+              style: TextStyle(
+                fontSize: 36.sp,
+                fontWeight: FontWeight.w700,
                 color: color,
-                borderRadius: BorderRadius.circular(6.r),
               ),
             ),
           ),
-        ),
-        SizedBox(width: 8.w),
-        Text(
-          '$percent%',
-          style: TextStyle(
-            fontSize: 40.sp,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
-        SizedBox(width: 4.w),
-        Text(
-          'probabilité de présence',
-          style: TextStyle(
-            fontSize: 38.sp,
-            color: Colors.grey[500],
-          ),
-        ),
-        Icon(
-          isExpanded ? Icons.expand_less : Icons.expand_more,
-          size: 44.r,
-          color: Colors.grey[400],
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildScoreDetails(ShopScanSummary summary, bool isNotFound) {
-    final score = summary.presenceScore;
-    final color = _scoreColor(score);
     final relevantCount = summary.notFoundCount;
 
     return Container(
-      margin: EdgeInsets.only(top: 8.h),
-      padding: EdgeInsets.all(12.r),
+      margin: EdgeInsets.only(top: 18.h),
+      padding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 30.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(
-          color: color.withValues(alpha: 0.15),
-        ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(42.r),
+        border: Border.all(color: kBorderDefault),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,116 +615,42 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           _buildDetailLine(
             Icons.schedule,
             'Dernier scan il y a ${summary.daysSinceLastScan} jours',
-            Colors.blueGrey,
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 14.h),
           _buildDetailLine(
             Icons.bar_chart,
             'Scanné ${summary.scanCount} fois',
-            Colors.indigo,
           ),
-          SizedBox(height: 6.h),
+          SizedBox(height: 14.h),
           _buildDetailLine(
             Icons.search_off,
             relevantCount > 0
                 ? '$relevantCount signalement(s) d\'absence'
                 : 'Aucun signalement d\'absence',
-            relevantCount > 0 ? Colors.orange : Colors.green,
           ),
-          SizedBox(height: 12.h),
-          Divider(height: 1.h, color: color.withValues(alpha: 0.15)),
-          SizedBox(height: 10.h),
+          SizedBox(height: 24.h),
+          const Divider(height: 1, color: kBorderDefault),
+          SizedBox(height: 24.h),
           if (isNotFound)
-            Row(
-              children: [
-                Icon(Icons.check_circle,
-                    size: 44.r, color: Colors.orange.withValues(alpha: 0.8)),
-                SizedBox(width: 6.w),
-                Text(
-                  'Absence signalée',
-                  style: TextStyle(
-                    fontSize: 42.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.orange,
-                  ),
-                ),
-              ],
-            )
+            _buildReportedStatus('Absence signalée')
           else
             Row(
               children: [
-                GestureDetector(
+                _buildReportPill(
+                  icon: Icons.search_off,
+                  label: 'Pas trouvé',
+                  color: Colors.red[400]!,
                   onTap: () => _reportNotFound(summary.ean),
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.r),
-                      color: Colors.red[50],
-                      border: Border.all(color: Colors.red[300]!),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.search_off,
-                            size: 44.r, color: Colors.red[400]),
-                        SizedBox(width: 4.w),
-                        Text(
-                          'Pas trouvé',
-                          style: TextStyle(
-                            fontSize: 42.sp,
-                            color: Colors.red[400],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
-                SizedBox(width: 12.w),
+                SizedBox(width: 24.w),
                 if (_foundEans.contains(summary.ean))
-                  Row(
-                    children: [
-                      Icon(Icons.check_circle,
-                          size: 44.r,
-                          color: Colors.green.withValues(alpha: 0.8)),
-                      SizedBox(width: 6.w),
-                      Text(
-                        'Présence signalée',
-                        style: TextStyle(
-                          fontSize: 42.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  )
+                  _buildReportedStatus('Présence signalée')
                 else
-                  GestureDetector(
+                  _buildReportPill(
+                    icon: Icons.search,
+                    label: 'Trouvé',
+                    color: Theme.of(context).colorScheme.primary,
                     onTap: () => _reportFound(summary.ean),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 18.w, vertical: 12.h),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.r),
-                        color: Colors.green[50],
-                        border: Border.all(color: Colors.green[400]!),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.search,
-                              size: 44.r, color: Colors.green[600]),
-                          SizedBox(width: 4.w),
-                          Text(
-                            'Trouvé',
-                            style: TextStyle(
-                              fontSize: 42.sp,
-                              color: Colors.green[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
               ],
             ),
@@ -691,15 +659,70 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     );
   }
 
-  Widget _buildDetailLine(IconData icon, String text, Color iconColor) {
+  /// White pill with a colored border/label, matching the redesign's
+  /// secondary buttons.
+  Widget _buildReportPill({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(42.r),
+          border: Border.all(color: color),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 44.sp, color: color),
+            SizedBox(width: 10.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 40.sp,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportedStatus(String label) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.check_circle, size: 44.sp, color: primary),
+        SizedBox(width: 10.w),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 40.sp,
+            fontWeight: FontWeight.w600,
+            color: primary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDetailLine(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 42.r, color: iconColor.withValues(alpha: 0.7)),
-        SizedBox(width: 8.w),
+        Icon(icon, size: 44.sp, color: Colors.grey[500]),
+        SizedBox(width: 16.w),
         Flexible(
           child: Text(
             text,
-            style: TextStyle(fontSize: 38.sp, color: Colors.grey[700]),
+            style: TextStyle(fontSize: 40.sp, color: kTextPrimary),
           ),
         ),
       ],
@@ -719,74 +742,73 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       },
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 10.h),
-        child: Row(
+        padding: EdgeInsets.symmetric(vertical: 18.h),
+        child: Column(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8.r),
-              child: SizedBox(
-                width: 200.w,
-                height: 200.w,
-                child: product != null && product.image.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: '$_baseUrl/${product.image}',
-                        fit: BoxFit.contain,
-                        placeholder: (_, __) => Container(
-                          color: Colors.grey[200],
-                          child: Icon(Icons.image, color: Colors.grey[400]),
+            Row(
+              children: [
+                Container(
+                  width: 180.w,
+                  height: 180.w,
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(30.r),
+                  ),
+                  child: product != null && product.image.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: '$_baseUrl/${product.image}',
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) =>
+                              Icon(Icons.image, color: Colors.grey[400]),
+                          errorWidget: (_, __, ___) =>
+                              Icon(Icons.image, color: Colors.grey[400]),
+                        )
+                      : Icon(Icons.image, color: Colors.grey[400]),
+                ),
+                SizedBox(width: 30.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        product?.name ?? summary.ean,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 44.sp,
+                          fontWeight: FontWeight.w600,
+                          color: kTextPrimary,
+                          height: 1.2,
                         ),
-                        errorWidget: (_, __, ___) => Container(
-                          color: Colors.grey[200],
-                          child: Icon(Icons.image, color: Colors.grey[400]),
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: Icon(Icons.image, color: Colors.grey[400]),
                       ),
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: product?.name ?? summary.ean,
+                      if (product?.brandName != null &&
+                          product!.brandName.isNotEmpty) ...[
+                        SizedBox(height: 6.h),
+                        Text(
+                          product.brandName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontSize: 52.sp,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 38.sp,
+                            color: Colors.grey[500],
                           ),
                         ),
-                        if (product?.brandName != null &&
-                            product!.brandName.isNotEmpty)
-                          TextSpan(
-                            text: '  ${product.brandName}',
-                            style: TextStyle(
-                              fontSize: 40.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
                       ],
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    ],
                   ),
-                  SizedBox(height: 4.h),
-                  _buildScorePill(summary),
-                  AnimatedCrossFade(
-                    firstChild: const SizedBox.shrink(),
-                    secondChild: _buildScoreDetails(summary, isNotFound),
-                    crossFadeState: _detailExpandedEan == summary.ean
-                        ? CrossFadeState.showSecond
-                        : CrossFadeState.showFirst,
-                    duration: const Duration(milliseconds: 200),
-                  ),
-                ],
-              ),
+                ),
+                SizedBox(width: 30.w),
+                _buildScoreRing(summary),
+              ],
+            ),
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: _buildScoreDetails(summary, isNotFound),
+              crossFadeState: _detailExpandedEan == summary.ean
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
             ),
           ],
         ),
@@ -1093,231 +1115,173 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     final shop = widget.shop;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.5,
+      initialChildSize: 0.75,
       minChildSize: 0.3,
       maxChildSize: 0.85,
       expand: false,
       builder: (context, scrollController) {
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // White sheet surface, pushed down to leave room for the floating
-            // button to overlap its top edge while staying within hit-test bounds.
-            Padding(
-              padding: EdgeInsets.only(top: 50.h),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(72.r)),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              // Chevron handle (Figma)
+              Padding(
+                padding: EdgeInsets.only(top: 12.h),
+                child: Icon(
+                  Icons.keyboard_arrow_up,
+                  size: 60.sp,
+                  color: Colors.grey[500],
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: Column(
+              ),
+              // Shop header: name + rating, address, itinerary button
+              Padding(
+                padding:
+                    EdgeInsets.symmetric(horizontal: 48.w, vertical: 12.h),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Handle bar
-                    Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.h),
-                      child: Container(
-                        width: 40.w,
-                        height: 4.h,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2.r),
-                        ),
-                      ),
-                    ),
-                    // Shop header
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              shop.shopType == 'vegan'
-                                  ? Icon(
-                                      Icons.eco,
-                                      color: Colors.green,
-                                      size: 64.r,
-                                    )
-                                  : Icon(
-                                      Icons.storefront,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      size: 64.r,
-                                    ),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        shop.name,
-                                        style: TextStyle(
-                                          fontSize: 64.sp,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    if (shop.shopType == 'vegan')
-                                      Container(
-                                        margin: EdgeInsets.only(left: 24.w),
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 8.w,
-                                          vertical: 2.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.green.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(4.r),
-                                          border: Border.all(
-                                            color: Colors.green.shade300,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          '100% Vegan',
-                                          style: TextStyle(
-                                            fontSize: 36.sp,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.green.shade700,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
+                              Flexible(
+                                child: Text(
+                                  shop.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: 'Baloo2',
+                                    fontSize: 72.sp,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: -1,
+                                    color: kTextPrimary,
+                                  ),
                                 ),
                               ),
+                              if (_reviewSummary != null &&
+                                  _reviewSummary!.reviewCount > 0) ...[
+                                SizedBox(width: 18.w),
+                                Icon(Icons.star,
+                                    size: 48.sp, color: kAccentYellow),
+                                SizedBox(width: 6.w),
+                                Text(
+                                  _reviewSummary!.ratingAvg
+                                      .toStringAsFixed(1),
+                                  style: TextStyle(
+                                    fontSize: 44.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: kAccentYellow,
+                                  ),
+                                ),
+                                SizedBox(width: 6.w),
+                                Text(
+                                  '(${_reviewSummary!.reviewCount} avis)',
+                                  style: TextStyle(
+                                    fontSize: 40.sp,
+                                    color: Colors.grey[500],
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
-                          Padding(
-                            padding: EdgeInsets.only(top: 4.h, left: 32.w),
-                            child: Text(
-                              () {
-                                final address = [shop.address, shop.city]
-                                    .where((s) => s != null)
-                                    .join(', ');
-                                return address.isEmpty
-                                    ? 'Adresse inconnue'
-                                    : address;
-                              }(),
-                              style: TextStyle(
-                                fontSize: 50.sp,
-                                color: Colors.grey[600],
-                              ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            () {
+                              final address = [shop.address, shop.city]
+                                  .where((s) => s != null)
+                                  .join(', ');
+                              return address.isEmpty
+                                  ? 'Adresse inconnue'
+                                  : address;
+                            }(),
+                            style: TextStyle(
+                              fontSize: 42.sp,
+                              color: Colors.grey[600],
                             ),
                           ),
-                          if (_reviewSummary != null &&
-                              _reviewSummary!.reviewCount > 0)
+                          if (shop.shopType == 'vegan')
                             Padding(
-                              padding: EdgeInsets.only(top: 6.h, left: 32.w),
-                              child: Row(
-                                children: [
-                                  ...List.generate(5, (i) {
-                                    final avg = _reviewSummary!.ratingAvg;
-                                    IconData icon;
-                                    if (i < avg.floor()) {
-                                      icon = Icons.star;
-                                    } else if (i < avg && avg - i >= 0.5) {
-                                      icon = Icons.star_half;
-                                    } else {
-                                      icon = Icons.star_border;
-                                    }
-                                    return Icon(icon,
-                                        size: 44.r, color: Colors.amber);
-                                  }),
-                                  SizedBox(width: 6.w),
-                                  Text(
-                                    _reviewSummary!.ratingAvg
-                                        .toStringAsFixed(1),
-                                    style: TextStyle(
-                                      fontSize: 44.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.grey[700],
-                                    ),
+                              padding: EdgeInsets.only(top: 8.h),
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20.w,
+                                  vertical: 4.h,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  borderRadius: BorderRadius.circular(12.r),
+                                  border: Border.all(
+                                    color: Colors.green.shade300,
                                   ),
-                                  SizedBox(width: 4.w),
-                                  Text(
-                                    '(${_reviewSummary!.reviewCount})',
-                                    style: TextStyle(
-                                      fontSize: 42.sp,
-                                      color: Colors.grey[500],
-                                    ),
+                                ),
+                                child: Text(
+                                  '100% Vegan',
+                                  style: TextStyle(
+                                    fontSize: 36.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.green.shade700,
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                         ],
                       ),
                     ),
-                    // Tab bar
-                    TabBar(
-                      controller: _tabController,
-                      tabs: [
-                        const Tab(text: 'Produits'),
-                        Tab(
-                          text: _reviewSummary != null &&
-                                  _reviewSummary!.reviewCount > 0
-                              ? 'Avis (${_reviewSummary!.reviewCount})'
-                              : 'Avis',
+                    SizedBox(width: 24.w),
+                    // Square itinerary button (Figma)
+                    GestureDetector(
+                      onTap: _openItinerary,
+                      child: Container(
+                        width: 132.w,
+                        height: 132.w,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(36.r),
                         ),
-                      ],
-                    ),
-                    // Tab content
-                    Expanded(
-                      child: TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildProductsTab(scrollController),
-                          _buildReviewsTab(scrollController),
-                        ],
+                        child: Center(
+                          child: Icon(
+                            Icons.map,
+                            color: Colors.white,
+                            size: 64.sp,
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-            // Floating itinerary button (straddles the top edge)
-            Positioned(
-              top: 0,
-              right: 16.w,
-              child: GestureDetector(
-                onTap: _openItinerary,
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(24.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+              // Tab bar
+              TabBar(
+                controller: _tabController,
+                tabs: [
+                  const Tab(text: 'Produits'),
+                  Tab(
+                    text: _reviewSummary != null &&
+                            _reviewSummary!.reviewCount > 0
+                        ? 'Avis (${_reviewSummary!.reviewCount})'
+                        : 'Avis',
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.directions,
-                        color: Colors.white,
-                        size: 56.sp,
-                      ),
-                      SizedBox(width: 8.w),
-                      Text(
-                        'Itinéraire',
-                        style: TextStyle(
-                          fontSize: 45.sp,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+                ],
+              ),
+              // Tab content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildProductsTab(scrollController),
+                    _buildReviewsTab(scrollController),
+                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );

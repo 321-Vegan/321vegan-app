@@ -15,9 +15,10 @@ import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/subscription_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/widgets/map/create_shop_sheet.dart';
 import 'package:vegan_app/widgets/map/map_access_overlay.dart';
-import 'package:vegan_app/widgets/map/map_filter_sheet.dart';
+import 'package:vegan_app/widgets/map/map_filter_page.dart';
 import 'package:vegan_app/widgets/map/map_search_bar.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
@@ -264,16 +265,11 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     }
   }
 
-  void _showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.85,
-        child: MapFilterSheet(
+  void _openFilterPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapFilterPage(
           selectedEans: _selectedEans,
           onApply: (newSelection) {
             setState(() => _selectedEans = newSelection);
@@ -336,8 +332,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      // Transparent so the sheet can draw its own surface lower down, leaving
-      // room above it for the floating itinerary button to stay tappable.
+      // Transparent so the sheet's own rounded surface shows the map behind
+      // its top corners.
       backgroundColor: Colors.transparent,
       elevation: 0,
       builder: (_) => ShopDetailSheet(shop: shop),
@@ -574,181 +570,100 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               ),
             ),
           ],
+          // Recenter button, alone in the bottom-right corner (Figma)
           if (!_isPicking)
             Positioned(
-              right: 24.w,
+              right: 48.w,
               bottom: 100,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: _showFilterSheet,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 4.w, vertical: 8.h),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.search,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 100.sp),
-                            SizedBox(height: 2.h),
-                            Text('Produits',
-                                style: TextStyle(
-                                    fontSize: 28.sp,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Container(
-                        height: 1, width: 36.w, color: Colors.grey.shade300),
-                    GestureDetector(
-                      onTap: _enterPickMode,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 4.w, vertical: 8.h),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add_location_alt,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 100.sp),
-                            SizedBox(height: 2.h),
-                            Text('Créer',
-                                style: TextStyle(
-                                    fontSize: 28.sp,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Container(
-                        height: 1, width: 36.w, color: Colors.grey.shade300),
-                    Builder(
-                      builder: (context) {
-                        final canRecenter =
-                            _userLocation != null && !_isCentered;
-                        final color = canRecenter
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey;
-                        return GestureDetector(
-                          onTap: canRecenter ? _recenterMap : null,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 4.w, vertical: 8.h),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.my_location,
-                                    color: color, size: 100.sp),
-                                SizedBox(height: 2.h),
-                                Text('Recentrer',
-                                    style: TextStyle(
-                                        fontSize: 28.sp,
-                                        color: color,
-                                        fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+              child: Builder(
+                builder: (context) {
+                  final canRecenter = _userLocation != null && !_isCentered;
+                  return _MapActionButton(
+                    icon: Icons.my_location,
+                    iconColor: canRecenter ? kTextPrimary : Colors.grey,
+                    onTap: canRecenter ? _recenterMap : null,
+                  );
+                },
               ),
             ),
-          // Place search bar (fly map to a city/address)
+          // Top row: place search bar (fly map to a city/address), product
+          // filter and create-shop buttons.
           if (!_isPicking && _hasMapAccess)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 32,
-              left: 16.w,
-              right: MediaQuery.of(context).size.width * 0.45,
-              child: MapSearchBar(
-                  key: _searchBarKey, onPlaceSelected: _onPlaceSelected),
+              top: MediaQuery.of(context).padding.top + 24,
+              left: 48.w,
+              right: 48.w,
+              child: Row(
+                // The search bar grows a results dropdown below itself; keep
+                // the buttons pinned to the first line.
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: MapSearchBar(
+                        key: _searchBarKey, onPlaceSelected: _onPlaceSelected),
+                  ),
+                  SizedBox(width: 30.w),
+                  // Active filters: yellow icon + count badge (Figma)
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      _MapActionButton(
+                        icon: Icons.tune,
+                        iconColor: _selectedEans.isNotEmpty
+                            ? kAccentYellow
+                            : kTextPrimary,
+                        onTap: _openFilterPage,
+                      ),
+                      if (_selectedEans.isNotEmpty)
+                        Positioned(
+                          top: -16.w,
+                          right: -16.w,
+                          child: Container(
+                            width: 66.w,
+                            height: 66.w,
+                            decoration: const BoxDecoration(
+                              color: kAccentYellow,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${_selectedEans.length}',
+                                style: TextStyle(
+                                  fontSize: 36.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(width: 30.w),
+                  _MapActionButton(
+                    icon: Icons.add,
+                    background: Theme.of(context).colorScheme.primary,
+                    iconColor: Colors.white,
+                    onTap: _enterPickMode,
+                  ),
+                ],
+              ),
             ),
           if (_isLoading)
-            const Positioned(
-              top: 120,
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 24 + 144.w + 24.h,
               left: 0,
               right: 0,
-              child: Center(
+              child: const Center(
                 child: CircularProgressIndicator(),
               ),
             ),
-          if (_selectedEans.isNotEmpty)
-            Positioned(
-              top: 110,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: GestureDetector(
-                  onTap: _showFilterSheet,
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(20.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.filter_list,
-                            size: 42.sp, color: Colors.white),
-                        SizedBox(width: 6.w),
-                        Text(
-                          '${_selectedEans.length} filtre${_selectedEans.length > 1 ? 's' : ''} actif${_selectedEans.length > 1 ? 's' : ''}',
-                          style: TextStyle(
-                            fontSize: 42.sp,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() => _selectedEans = {});
-                            _loadShops();
-                          },
-                          child: Icon(Icons.close,
-                              size: 60.sp, color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          // Trial countdown chip
+          // Trial countdown chip, below the search/filter/create row
           if (_freeTrialActive && !SubscriptionService.isSubscribed)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 36,
-              right: 16,
+              top: MediaQuery.of(context).padding.top + 24 + 144.w + 24.h,
+              right: 48.w,
               child: GestureDetector(
                 onTap: () => Navigator.push(
                   context,
@@ -802,6 +717,47 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               },
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Square floating button overlaid on the map (filter, create, recenter).
+/// Figma spec: 48×48, radius 14, white or primary fill, soft shadow — ×3
+/// for ScreenUtil units. Must stay the same height as the MapSearchBar so
+/// the top row reads as one line.
+class _MapActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color? background;
+  final VoidCallback? onTap;
+
+  const _MapActionButton({
+    required this.icon,
+    required this.iconColor,
+    this.background,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 144.w,
+        height: 144.w,
+        decoration: BoxDecoration(
+          color: background ?? Colors.white,
+          borderRadius: BorderRadius.circular(42.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Center(child: Icon(icon, color: iconColor, size: 72.sp)),
       ),
     );
   }

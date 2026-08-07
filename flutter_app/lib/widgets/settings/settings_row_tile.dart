@@ -63,7 +63,7 @@ class SettingsRowTile extends StatelessWidget {
               ),
               SizedBox(width: 45.w),
               if (value != null)
-                Flexible(
+                Expanded(
                   child: Text(
                     value!,
                     textAlign: TextAlign.right,

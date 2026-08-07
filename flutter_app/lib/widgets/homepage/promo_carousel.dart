@@ -11,37 +11,44 @@ class PromoSlide {
   /// Opened by the "Voir plus" button; hides the button when null.
   final String? url;
 
+  /// Asset path of the slide illustration; falls back to a generic
+  /// icon-in-circle placeholder when null.
+  final String? image;
+
   const PromoSlide({
     required this.title,
     required this.subtitle,
     this.url,
+    this.image,
   });
 }
 
 /// Dummy static content until the real news source is wired
-/// (edit freely — titles/subtitles/links only live here).
+/// (edit freely — titles/subtitles/links/images only live here).
 const List<PromoSlide> _dummySlides = [
   PromoSlide(
     title: 'L\'appli fait peau neuve !',
     subtitle: 'Un tout nouveau design pour plus de clarté !',
+    image: 'lib/assets/images/buy-premium/tree.webp',
   ),
   PromoSlide(
     title: 'Nouveau !',
     subtitle: 'Collectionnez les produits du Vegandex',
+    image: 'lib/assets/images/buy-premium/bee.webp',
   ),
   PromoSlide(
     title: 'Rappel B12',
     subtitle: 'Activez vos rappels dans les paramètres',
+    image: 'lib/assets/images/buy-premium/tree.webp',
   ),
   PromoSlide(
     title: 'Merci !',
     subtitle: 'Vous êtes de plus en plus nombreux·ses',
+    image: 'lib/assets/images/buy-premium/bee.webp',
   ),
 ];
 
 /// Swipeable news carousel at the top of the Dashboard (static content).
-/// The illustration area is a placeholder until the Figma assets land —
-/// swap the `Icon` in [_PromoCard] for an `Image.asset` at that point.
 class PromoCarousel extends StatefulWidget {
   final List<PromoSlide> slides;
 
@@ -187,15 +194,23 @@ class _PromoCard extends StatelessWidget {
             ),
           ),
           SizedBox(width: 30.w),
-          Container(
-            width: 200.w,
-            height: 200.w,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
+          if (slide.image != null)
+            Image.asset(
+              slide.image!,
+              width: 240.w,
+              height: 240.w,
+              fit: BoxFit.contain,
+            )
+          else
+            Container(
+              width: 200.w,
+              height: 200.w,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.eco, color: Colors.white, size: 100.sp),
             ),
-            child: Icon(Icons.eco, color: Colors.white, size: 100.sp),
-          ),
         ],
       ),
     );

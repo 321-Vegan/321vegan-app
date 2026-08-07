@@ -64,7 +64,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   String? _lastScannedBarcode = '';
   late ConfettiController _confettiController;
   final nonVeganCardKey = GlobalKey<NonVeganProductInfoCardState>();
-  bool _openOnScanPage = false;
   bool _showBoycott = true;
   bool _showScores = true;
   bool _hapticFeedback = true;
@@ -112,7 +111,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         ConfettiController(duration: const Duration(seconds: 2));
 
     _loadScanHistory();
-    _loadOpenOnScanPagePref();
     _loadShowBoycottPref();
     _loadShowScoresPref();
     _loadHapticFeedbackPref();
@@ -348,13 +346,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     final history = await PreferencesHelper.getScanHistory();
     setState(() {
       scanHistory = history;
-    });
-  }
-
-  Future<void> _loadOpenOnScanPagePref() async {
-    final value = await PreferencesHelper.getOpenOnScanPagePref();
-    setState(() {
-      _openOnScanPage = value;
     });
   }
 
@@ -600,12 +591,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(20.0),
           ),
           child: SettingsModal(
-            initialOpenOnScanPage: _openOnScanPage,
-            onOpenOnScanPageChanged: (value) {
-              setState(() {
-                _openOnScanPage = value;
-              });
-            },
             initialShowBoycott: _showBoycott,
             onShowBoycottChanged: (value) {
               setState(() {
