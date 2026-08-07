@@ -289,7 +289,8 @@ class DashboardPageState extends State<DashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(context),
-                    if (!SubscriptionService.isSubscribed || !AuthService.isLoggedIn) ...[
+                    if (!SubscriptionService.isSubscribed ||
+                        !AuthService.isLoggedIn) ...[
                       SizedBox(height: AppSpacing.section),
                       _buildSupportButton(context),
                     ],
@@ -751,80 +752,67 @@ class DashboardPageState extends State<DashboardPage> {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(12.w),
+                padding: EdgeInsets.all(16.w),
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
+                  color: kAccentYellow,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.star, size: 48.sp, color: Colors.white),
+                child: Icon(Icons.star, size: 44.sp, color: Colors.white),
               ),
               SizedBox(width: 16.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Contributions',
-                        style: TextStyle(
-                            fontSize: 52.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800])),
+                    Text('Contributions', style: AppTextStyles.sectionTitle),
                     Text('Merci pour votre aide précieuse !',
                         style: TextStyle(
-                            fontSize: 36.sp,
-                            color: Colors.grey[600],
-                            fontStyle: FontStyle.italic)),
+                            fontSize: 36.sp, color: Colors.grey[600])),
                   ],
                 ),
               ),
             ],
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: AppSpacing.afterTitle),
           Row(
             children: [
               Expanded(
                 child: _contributorStat(
-                    nbProductsModified,
-                    'Produit${nbProductsModified > 1 ? 's' : ''}',
-                    const Color(0xFF1A722E)),
+                  nbProductsModified,
+                  'Produit${nbProductsModified > 1 ? 's' : ''}',
+                ),
               ),
-              SizedBox(width: 16.w),
+              SizedBox(width: AppSpacing.item),
               Expanded(
                 child: _contributorStat(
-                    nbCheckings,
-                    'Contact${nbCheckings > 1 ? 's' : ''}',
-                    Colors.blue.shade600),
+                  nbCheckings,
+                  'Contact${nbCheckings > 1 ? 's' : ''}',
+                ),
               ),
             ],
           ),
-          SizedBox(height: 20.h),
-          GestureDetector(
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const ProductReviewPage()),
-            ),
-            child: Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(14.r),
+          SizedBox(height: AppSpacing.item),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => const ProductReviewPage()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(vertical: 18.h),
+                shape: const StadiumBorder(),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.edit_note_outlined,
-                      size: 64.sp, color: Colors.white),
-                  SizedBox(width: 14.w),
-                  Expanded(
-                    child: Text('Valider des produits',
-                        style: TextStyle(
-                            fontSize: 44.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                  ),
-                  Icon(Icons.arrow_forward_ios,
-                      size: 40.sp, color: Colors.white70),
+                  Text('Valider des produits',
+                      style: TextStyle(
+                          fontSize: 38.sp, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -834,28 +822,24 @@ class DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _contributorStat(int value, String label, Color color) {
+  Widget _contributorStat(int value, String label) {
     return Container(
-      padding: EdgeInsets.all(20.w),
+      padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 12.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [
-          color.withValues(alpha: 0.1),
-          color.withValues(alpha: 0.05)
-        ]),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
+        color: const Color(0xFFF7F6F2),
+        borderRadius: BorderRadius.circular(24.r),
+        border: Border.all(color: kBorderDefault),
       ),
       child: Column(
         children: [
           Text('$value',
               style: TextStyle(
-                  fontSize: 56.sp, fontWeight: FontWeight.bold, color: color)),
-          SizedBox(height: 8.h),
+                  fontSize: 56.sp,
+                  fontWeight: FontWeight.bold,
+                  color: kTextPrimary)),
+          SizedBox(height: 4.h),
           Text(label,
-              style: TextStyle(
-                  fontSize: 36.sp,
-                  color: Colors.grey[700],
-                  fontWeight: FontWeight.w500),
+              style: TextStyle(fontSize: 36.sp, color: Colors.grey[600]),
               textAlign: TextAlign.center),
         ],
       ),
