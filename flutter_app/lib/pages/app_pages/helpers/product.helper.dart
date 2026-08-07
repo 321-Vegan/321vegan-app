@@ -60,6 +60,11 @@ class ProductHelper {
         }
 
         await PreferencesHelper.addCodeToPreferences(ean, true);
+        await PreferencesHelper.saveSubmittedProductInfo(
+          code: ean,
+          name: productName,
+          brand: brand,
+        );
 
         if (!context.mounted) return false;
         _showSnackbar(

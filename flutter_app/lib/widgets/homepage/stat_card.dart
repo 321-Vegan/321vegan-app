@@ -362,25 +362,3 @@ Widget _maybeSnowGlobe({SeasonalTheme? theme, required Widget child}) {
     child: child,
   );
 }
-
-class BookDividerClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    // Start with the top left corner rounded
-    path.moveTo(0, size.height / 2);
-    path.quadraticBezierTo(0, 0, size.height / 2, 0);
-    path.lineTo(size.width, 0); // Top edge
-    path.lineTo(size.width,
-        size.height - size.height / 2); // Right edge before rounding
-    // Add rounding to the bottom right corner
-    path.quadraticBezierTo(
-        size.width, size.height, size.width - size.height / 2, size.height);
-    path.lineTo(0, size.height); // Bottom edge
-    path.close(); // Close the path for a complete shape
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}

@@ -22,10 +22,10 @@ import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/theme/theme_selector_modal.dart';
 import '../Profile/about_page.dart';
 import '../Profile/b12_reminder_settings_page.dart';
-import '../Scan/history_modal.dart';
-import '../Scan/sent_products_modal.dart';
+import '../Scan/scan_history_page.dart';
+import '../Scan/sent_products_page.dart';
 import 'package:vegan_app/services/subscription_service.dart';
-import '../Profile/error_reports_modal.dart';
+import '../Profile/error_reports_page.dart';
 import '../Profile/subscription_page.dart';
 
 /// Full-screen "Paramètres", reached from the Dashboard's gear icon.
@@ -71,12 +71,14 @@ class _SettingsPageState extends State<SettingsPage> {
     final avatar = await PreferencesHelper.getAvatar();
     User? user;
     if (AuthService.isLoggedIn) {
+
+      final isFirstFetchThisSession = AuthService.currentUser == null;
       final result = await AuthService.getCurrentUser();
       if (result.isSuccess) {
         user = result.data;
-        // Guarded internally: only seeds tracking the first time (fresh
-        // login/registration or pre-existing install without a baseline).
-        if (user != null) await BadgeService.initializeBadgeTracking(user);
+        if (user != null && isFirstFetchThisSession) {
+          await BadgeService.initializeBadgeTracking(user);
+        }
       }
     }
     if (!mounted) return;
@@ -208,13 +210,10 @@ class _SettingsPageState extends State<SettingsPage> {
           _errorReportsFirstPage?.items ?? []);
       setState(() => _unreadErrorResponses = 0);
     }
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.9,
-        child: ErrorReportsModal(initialData: _errorReportsFirstPage),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ErrorReportsPage(initialData: _errorReportsFirstPage),
       ),
     );
   }
@@ -414,13 +413,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 onTap: () async {
                   final history = await PreferencesHelper.getScanHistory();
                   if (!mounted) return;
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) => SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.9,
-                      child: HistoryModal(scanHistory: history),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ScanHistoryPage(scanHistory: history),
                     ),
                   );
                 },
@@ -428,14 +424,9 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsRowTile(
                 label: 'Envoyés',
                 value: '${_user?.nbProductsSent ?? 0}',
-                onTap: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.9,
-                    child: const SentProductsModal(),
-                  ),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SentProductsPage()),
                 ),
               ),
               SettingsRowTile(

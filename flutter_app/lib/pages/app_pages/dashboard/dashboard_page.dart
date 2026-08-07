@@ -33,7 +33,7 @@ import '../../../widgets/shared/social_feedback_buttons.dart';
 import '../../../widgets/vegandex/vegandex_modal.dart';
 import '../Profile/b12_reminder_settings_page.dart';
 import '../Profile/subscription_page.dart';
-import '../Profile/error_reports_modal.dart';
+import '../Profile/error_reports_page.dart';
 import '../Profile/product_review_page.dart';
 import '../settings/settings_page.dart';
 
@@ -106,6 +106,8 @@ class DashboardPageState extends State<DashboardPage> {
       _loadUser(),
       _loadB12State(),
     ]);
+    // The vegan date may have moved enough to unlock an anniversary badge.
+    _checkForNewBadges();
   }
 
   Future<void> _loadTargetDate() async {
@@ -125,10 +127,18 @@ class DashboardPageState extends State<DashboardPage> {
     final avatar = await PreferencesHelper.getAvatar();
     User? user;
     if (AuthService.isLoggedIn) {
+      // Snapshot before the fetch: only a cold start or a fresh login (right
+      // after logout cleared the in-memory user) leaves this null. Seeding
+      // the badge baseline only in that case — not on every reload — is
+      // what lets a fresh login after logout show popups for badges the
+      // account already has, instead of silently re-marking them as seen.
+      final isFirstFetchThisSession = AuthService.currentUser == null;
       final result = await AuthService.getCurrentUser();
       if (result.isSuccess) {
         user = result.data;
-        if (user != null) await BadgeService.initializeBadgeTracking(user);
+        if (user != null && isFirstFetchThisSession) {
+          await BadgeService.initializeBadgeTracking(user);
+        }
       }
     }
     if (!mounted) return;
@@ -219,6 +229,8 @@ class DashboardPageState extends State<DashboardPage> {
       _targetDate = picked;
       _savings = computeSavings(picked);
     });
+    // Picking an earlier date can retroactively unlock an anniversary badge.
+    _checkForNewBadges();
   }
 
   Future<void> _launchCounter() async {
@@ -238,13 +250,10 @@ class DashboardPageState extends State<DashboardPage> {
       ErrorReportBadgeService.markHandledAsSeen(
           _errorReportsFirstPage?.items ?? []);
     }
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.9,
-        child: ErrorReportsModal(initialData: _errorReportsFirstPage),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ErrorReportsPage(initialData: _errorReportsFirstPage),
       ),
     );
   }
@@ -441,20 +450,27 @@ class DashboardPageState extends State<DashboardPage> {
           ),
           if (badgeCount > 0)
             Positioned(
-              right: -2,
-              top: -2,
+              right: -8.w,
+              top: -8.w,
               child: Container(
-                padding: EdgeInsets.all(6.w),
-                decoration: const BoxDecoration(
-                    color: Colors.red, shape: BoxShape.circle),
-                constraints: BoxConstraints(minWidth: 20.w, minHeight: 20.w),
-                child: Text(
-                  '$badgeCount',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.bold),
+                padding: EdgeInsets.symmetric(horizontal: 15.w),
+                height: 64.w,
+                constraints: BoxConstraints(minWidth: 44.w),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(22.w),
+                  border: Border.all(color: Colors.white, width: 3.w),
+                ),
+                child: Center(
+                  child: Text(
+                    badgeCount > 99 ? '99+' : '$badgeCount',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        height: 1),
+                  ),
                 ),
               ),
             ),

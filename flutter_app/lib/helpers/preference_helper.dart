@@ -1,6 +1,7 @@
 import 'dart:convert'; // Import for JSON encoding/decoding
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/product_scores.dart';
 import '../services/auth_service.dart';
 
 class PreferencesHelper {
@@ -87,24 +88,6 @@ class PreferencesHelper {
     return prefs.getBool('haptic_feedback_enabled') ?? true;
   }
 
-  /// Fires whenever the 'themed nav bar' preference is saved, so the bottom
-  /// tab bar (in home) can restyle without being wired to the settings UI.
-  static final ValueNotifier<bool> themedNavBarNotifier = ValueNotifier(false);
-
-  // Save 'themed nav bar' preference (theme-colored bottom menu instead of
-  // the default white one)
-  static Future<void> setThemedNavBarPref(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('themed_nav_bar', value);
-    themedNavBarNotifier.value = value;
-  }
-
-  // Load 'themed nav bar' preference
-  static Future<bool> getThemedNavBarPref() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('themed_nav_bar') ?? false;
-  }
-
   // Method to add or remove a code based on success status
   static Future<void> addCodeToPreferences(String? code, bool success) async {
     if (code == null) return;
@@ -156,6 +139,50 @@ class PreferencesHelper {
       return Map<String, bool>.from(json.decode(codesJson));
     }
     return {};
+  }
+
+  /// Saves the name/brand the user typed when submitting a product, so the
+  /// "Envoyés" page can show something better than "Nom inconnu" while the
+  /// product hasn't been reviewed and added to the local database yet.
+  static Future<void> saveSubmittedProductInfo({
+    required String code,
+    required String name,
+    required String brand,
+  }) async {
+    if (name.isEmpty && brand.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('submitted_product_info');
+    final info = raw != null
+        ? Map<String, dynamic>.from(json.decode(raw))
+        : <String, dynamic>{};
+
+    info[code] = {'name': name, 'brand': brand};
+
+    // Same cap as codes_with_status, so this can't grow unbounded.
+    if (info.length > 300) {
+      final entries = info.entries.toList();
+      entries.removeRange(0, entries.length - 300);
+      info
+        ..clear()
+        ..addEntries(entries);
+    }
+
+    await prefs.setString('submitted_product_info', json.encode(info));
+  }
+
+  /// Returns the {name, brand} the user typed for [code] when submitting it,
+  /// or null if nothing was saved (e.g. submitted before this existed).
+  static Future<Map<String, String>?> getSubmittedProductInfo(
+      String code) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('submitted_product_info');
+    if (raw == null) return null;
+
+    final info = Map<String, dynamic>.from(json.decode(raw));
+    final entry = info[code];
+    if (entry == null) return null;
+    return Map<String, String>.from(entry as Map);
   }
 
   // Method to get only successfully sent codes
@@ -229,6 +256,35 @@ class PreferencesHelper {
 
       // Save the updated history back to shared preferences
       await prefs.setString('scan_history', json.encode(history));
+    }
+  }
+
+  /// Persists the Nutriscore/Green-score fetched right after a scan onto
+  /// the matching history entry, so the history page never has to re-fetch
+  /// them from OpenFoodFacts just to display past scans. Patches the most
+  /// recent entry for [barcode] that doesn't have scores yet.
+  static Future<void> cacheScanScores(String barcode, ProductScores scores) async {
+    if (!scores.hasNutriscore && !scores.hasEcoscore) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final historyJson = prefs.getString('scan_history');
+    if (historyJson == null) return;
+
+    final history =
+        List<Map<String, dynamic>>.from(json.decode(historyJson));
+    for (var i = history.length - 1; i >= 0; i--) {
+      if (history[i]['barcode'] == barcode &&
+          history[i]['nutriscore'] == null &&
+          history[i]['ecoscore'] == null) {
+        history[i] = {
+          ...history[i],
+          if (scores.nutriscoreGrade != null)
+            'nutriscore': scores.nutriscoreGrade,
+          if (scores.ecoscoreGrade != null) 'ecoscore': scores.ecoscoreGrade,
+        };
+        await prefs.setString('scan_history', json.encode(history));
+        return;
+      }
     }
   }
 

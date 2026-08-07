@@ -68,7 +68,7 @@ class BadgesGrid extends StatelessWidget {
             const gap = 24.0;
             final size = itemWidthForVisibleCount(
               constraints.maxWidth,
-              visibleCount: 3.3,
+              visibleCount: 3.0,
               gap: gap,
             );
             return SingleChildScrollView(

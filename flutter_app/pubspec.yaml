@@ -119,18 +119,18 @@ flutter:
     - lib/assets/intro/scan-1.webp
     - lib/assets/intro/map.webp
     - lib/assets/intro/partners.webp
-    - lib/assets/badges/500products.png
     # Badges
-    - lib/assets/badges/1an.png
-    - lib/assets/badges/2ans.png
-    - lib/assets/badges/5ans.png
-    - lib/assets/badges/10ans.png
-    - lib/assets/badges/error1.png
-    - lib/assets/badges/soutien.png
-    - lib/assets/badges/1product.png
-    - lib/assets/badges/10products.png
-    - lib/assets/badges/50products.png
-    - lib/assets/badges/100products.png
+    - lib/assets/badges/1an.webp
+    - lib/assets/badges/2ans.webp
+    - lib/assets/badges/5ans.webp
+    - lib/assets/badges/10ans.webp
+    - lib/assets/badges/sherlock.webp
+    - lib/assets/badges/soutien.webp
+    - lib/assets/badges/1product.webp
+    - lib/assets/badges/10products.webp
+    - lib/assets/badges/50products.webp
+    - lib/assets/badges/100products.webp
+    - lib/assets/badges/500products.webp
     # Avatars
     - lib/assets/avatars/lapin.png
     - lib/assets/avatars/ver.png
@@ -141,15 +141,9 @@ flutter:
     - lib/assets/avatars/cochon.png
     - lib/assets/avatars/vache.png
     - lib/assets/avatars/chat.png
-    # Seasons
+    # Helpers
     - lib/assets/abonnement-popup-vid.mp4
-    - lib/assets/images/pumpkin-smile.webp
-    - lib/assets/images/pumpkin.webp
-    - lib/assets/images/marguerite.webp
-    - lib/assets/images/tulipe.webp
-    - lib/assets/images/tulipe-smile.webp
-    - lib/assets/images/papillon.webp
-    - lib/assets/images/ruche.webp
+    - lib/assets/images/sun-off.webp
     # Test with la vie featured
     - lib/assets/la-vie-logo.png
     # Nutriscores / Green-score

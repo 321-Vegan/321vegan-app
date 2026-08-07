@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/seasonal_theme.dart';
-import '../../helpers/preference_helper.dart';
 import '../../helpers/theme_helper.dart';
 import '../../main.dart';
 import '../../services/subscription_service.dart';
@@ -20,7 +19,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     with TickerProviderStateMixin {
   bool _isAutoTheme = true;
   Season? _selectedSeason;
-  bool _themedNavBar = false;
   bool _isLoading = true;
   late PageController _pageController;
   int _currentPage = 0;
@@ -58,7 +56,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
   Future<void> _loadCurrentSettings() async {
     final isAuto = await ThemeHelper.isAutoThemeEnabled();
     final savedSeason = await ThemeHelper.getSavedThemePreference();
-    final themedNavBar = await PreferencesHelper.getThemedNavBarPref();
     final allThemes = ThemeHelper.getAllThemes();
 
     final activeSeason = isAuto
@@ -71,7 +68,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
     setState(() {
       _isAutoTheme = isAuto;
-      _themedNavBar = themedNavBar;
       _selectedSeason = savedSeason ??
           (isAuto ? ThemeHelper.getCurrentSeason() : Season.defaultTheme);
       _currentPage = initialIndex;
@@ -135,15 +131,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         await myAppState.updateTheme();
       }
     }
-  }
-
-  // Applies immediately: the pref notifier restyles the bottom bar live,
-  // independently of the seasonal theme's "Appliquer" button.
-  Future<void> _setThemedNavBar(bool value) async {
-    await PreferencesHelper.setThemedNavBarPref(value);
-    setState(() {
-      _themedNavBar = value;
-    });
   }
 
   void _openSubscriptionPage() {
@@ -297,9 +284,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
               // Page indicator
               _buildPageIndicator(allThemes),
 
-              // Bottom menu color toggle
-              _buildNavBarColorToggle(currentTheme),
-
               // Info text for non-subscribers
               if (!isSubscribed)
                 Padding(
@@ -435,40 +419,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNavBarColorToggle(SeasonalTheme currentTheme) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 0),
-      child: Row(
-        children: [
-          Icon(
-            Icons.palette_outlined,
-            size: 52.sp,
-            color: Colors.grey[600],
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              'Menu de navigation aux couleurs du thème',
-              style: TextStyle(
-                fontSize: 44.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          Switch(
-            value: _themedNavBar,
-            onChanged: _setThemedNavBar,
-            activeThumbColor: Colors.white,
-            activeTrackColor: currentTheme.primaryColor,
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: Colors.grey[300],
-          ),
-        ],
       ),
     );
   }

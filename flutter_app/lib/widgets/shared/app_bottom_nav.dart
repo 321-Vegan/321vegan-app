@@ -16,8 +16,7 @@ class AppBottomNavItem {
 }
 
 /// Flat bottom navigation bar from the redesign (replaced the convex
-/// plugin bar): white background, icon above label, numeric badges, and an
-/// optional primary-colored variant (the "themed nav bar" preference).
+/// plugin bar): white background, icon above label, numeric badges.
 class AppBottomNav extends StatelessWidget {
   final List<AppBottomNavItem> items;
   final int currentIndex;
@@ -25,7 +24,6 @@ class AppBottomNav extends StatelessWidget {
 
   /// Item index → unread count; zero or absent hides the badge.
   final Map<int, int> badges;
-  final bool themed;
 
   const AppBottomNav({
     super.key,
@@ -33,18 +31,16 @@ class AppBottomNav extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     this.badges = const {},
-    this.themed = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final activeColor = themed ? Colors.white : primary;
-    final inactiveColor = themed ? Colors.white70 : Colors.grey[600];
+    final activeColor = Theme.of(context).colorScheme.primary;
+    final inactiveColor = Colors.grey[600]!;
 
     return Container(
       decoration: BoxDecoration(
-        color: themed ? primary : Colors.white,
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -65,7 +61,7 @@ class AppBottomNav extends StatelessWidget {
                     item: items[i],
                     isActive: i == currentIndex,
                     activeColor: activeColor,
-                    inactiveColor: inactiveColor!,
+                    inactiveColor: inactiveColor,
                     badgeCount: badges[i] ?? 0,
                     onTap: () => onTap(i),
                   ),

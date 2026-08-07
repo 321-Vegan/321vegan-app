@@ -13,8 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vegan_app/helpers/database_helper.dart';
 import 'package:vegan_app/helpers/haptic_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
-import 'package:vegan_app/pages/app_pages/Scan/history_modal.dart';
-import 'package:vegan_app/pages/app_pages/Scan/sent_products_modal.dart';
+import 'package:vegan_app/pages/app_pages/Scan/scan_history_page.dart';
+import 'package:vegan_app/pages/app_pages/Scan/sent_products_page.dart';
 import 'package:vegan_app/pages/app_pages/Scan/settings_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/search_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
@@ -24,6 +24,7 @@ import 'package:vegan_app/models/product_of_interest.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/offline_scan_service.dart';
+import 'package:vegan_app/services/open_food_facts_service.dart';
 import 'package:vegan_app/services/scan_count_sync_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/widgets/scaner/card_product.dart';
@@ -562,6 +563,37 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     });
   }
 
+  /// Stops the scanner, pushes the scan history page, and restarts the
+  /// scanner when it's popped — it's a full page now, not a bottom sheet.
+  void _openScanHistory() {
+    controller.stop();
+    setState(() {
+      productInfo = null;
+    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ScanHistoryPage(scanHistory: scanHistory),
+      ),
+    ).then((_) {
+      controller.start();
+    });
+  }
+
+  /// Same as [_openScanHistory], for the sent-products page.
+  void _openSentProducts() {
+    controller.stop();
+    setState(() {
+      productInfo = null;
+    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const SentProductsPage()),
+    ).then((_) {
+      controller.start();
+    });
+  }
+
   void _showSearchModal({
     required String title,
     required String subtitle,
@@ -644,6 +676,9 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         product.status != ScanStatus.alreadyScanned) {
       await PreferencesHelper.addBarcodeToHistory(barcode);
       _loadScanHistory();
+      // Fetched once now and cached on the history entry, so the history
+      // page never has to hit OpenFoodFacts again to show past scans.
+      unawaited(_cacheProductScores(barcode));
     }
 
     if ((product.status == ScanStatus.vegan ||
@@ -652,6 +687,11 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         !SubscriptionService.isSubscribed) {
       await PreferencesHelper.incrementMembershipHitScanCount();
     }
+  }
+
+  Future<void> _cacheProductScores(String barcode) async {
+    final scores = await OpenFoodFactsService.fetchScores(barcode);
+    await PreferencesHelper.cacheScanScores(barcode, scores);
   }
 
   bool isValidEAN13(String barcode) {
@@ -1429,13 +1469,11 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                     ),
                     _buildGlassIconButton(
                       icon: Icons.history,
-                      onTap: () => _showModalSheet(
-                        HistoryModal(scanHistory: scanHistory),
-                      ),
+                      onTap: _openScanHistory,
                     ),
                     _buildGlassIconButton(
                       icon: Icons.switch_access_shortcut_add_outlined,
-                      onTap: () => _showModalSheet(const SentProductsModal()),
+                      onTap: _openSentProducts,
                     ),
                   ],
                 ),

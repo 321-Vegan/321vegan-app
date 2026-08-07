@@ -36,8 +36,6 @@ class MyHomePageState extends State<MyHomePage>
   DateTime? _targetDate;
   late TabController _tabController;
   late ConfettiController _confettiController;
-  bool _themedNavBar = false;
-  int _profileNotificationCount = 0;
 
   @override
   void initState() {
@@ -57,18 +55,12 @@ class MyHomePageState extends State<MyHomePage>
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 6));
 
-    _loadThemedNavBarPref();
     _loadTargetDate();
     _checkMembershipPrompt();
 
-    // Numeric badge on the Dashboard tab for unread in-app notifications
-    // (signalement responses, and any future source).
-    ProfileNotificationService.listenable
-        .addListener(_onProfileNotificationsChanged);
+    // Populates ProfileNotificationService.total, read directly by the
+    // Dashboard header's notification bell badge.
     ProfileNotificationService.refreshAll();
-
-    // Restyle the tab bar as soon as the preference is toggled in settings
-    PreferencesHelper.themedNavBarNotifier.addListener(_onThemedNavBarChanged);
 
     // Listen for B12 notification taps → navigate to the Dashboard tab
     NotificationService.navigateToProfile.addListener(_onB12NotificationTap);
@@ -192,31 +184,6 @@ class MyHomePageState extends State<MyHomePage>
     }
   }
 
-  Future<void> _loadThemedNavBarPref() async {
-    final value = await PreferencesHelper.getThemedNavBarPref();
-    if (mounted) {
-      setState(() {
-        _themedNavBar = value;
-      });
-    }
-  }
-
-  void _onThemedNavBarChanged() {
-    if (mounted) {
-      setState(() {
-        _themedNavBar = PreferencesHelper.themedNavBarNotifier.value;
-      });
-    }
-  }
-
-  void _onProfileNotificationsChanged() {
-    if (mounted) {
-      setState(() {
-        _profileNotificationCount = ProfileNotificationService.total;
-      });
-    }
-  }
-
   Future<void> _loadTargetDate() async {
     final date = await PreferencesHelper.getSelectedDateFromPrefs();
     if (mounted) setState(() => _targetDate = date);
@@ -224,10 +191,6 @@ class MyHomePageState extends State<MyHomePage>
 
   @override
   void dispose() {
-    PreferencesHelper.themedNavBarNotifier
-        .removeListener(_onThemedNavBarChanged);
-    ProfileNotificationService.listenable
-        .removeListener(_onProfileNotificationsChanged);
     NotificationService.navigateToProfile.removeListener(_onB12NotificationTap);
     NotificationService.showAnniversary
         .removeListener(_onAnniversaryNotificationTap);
@@ -278,16 +241,11 @@ class MyHomePageState extends State<MyHomePage>
       ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _tabController.index,
-        themed: _themedNavBar,
-        badges: {
-          if (_profileNotificationCount > 0)
-            _dashboardTabIndex: _profileNotificationCount,
-        },
         items: const [
           AppBottomNavItem(
             icon: Icons.home,
             activeIcon: Icons.home_filled,
-            label: 'Dashboard',
+            label: 'Accueil',
           ),
           AppBottomNavItem(
             icon: CupertinoIcons.barcode_viewfinder,
