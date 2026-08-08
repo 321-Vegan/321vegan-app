@@ -79,83 +79,84 @@ class B12ReminderService {
       return;
     }
 
-    // Request notification permissions
+    // The user's choice to enable reminders must persist even if the OS
+    // notification permission is missing/denied — otherwise "enabled" here
+    // silently reverts to false and nothing ever appears as on. Permission
+    // only gates whether we can actually schedule the OS notification.
     final hasPermission = await _notificationService.requestPermissions();
-    if (!hasPermission) {
-      return;
+    if (hasPermission) {
+      const title = '💊 Rappel B12';
+      const body = 'N\'oubliez pas de prendre votre vitamine B12 !';
+
+      switch (settings.frequency) {
+        case ReminderFrequency.daily:
+          await _notificationService.scheduleDailyNotification(
+            id: _notificationId,
+            title: title,
+            body: body,
+            hour: settings.hour,
+            minute: settings.minute,
+            payload: 'b12_reminder',
+          );
+          break;
+
+        case ReminderFrequency.weekly:
+          if (settings.dayOfWeek != null) {
+            await _notificationService.scheduleWeeklyNotification(
+              id: _notificationId,
+              title: title,
+              body: body,
+              dayOfWeek: settings.dayOfWeek!,
+              hour: settings.hour,
+              minute: settings.minute,
+              payload: 'b12_reminder',
+            );
+          }
+          break;
+
+        case ReminderFrequency.twiceWeekly:
+          if (settings.daysOfWeek != null && settings.daysOfWeek!.length == 2) {
+            final sorted = List<int>.from(settings.daysOfWeek!)..sort();
+            // Schedule two weekly notifications, one for each selected day
+            await _notificationService.scheduleWeeklyNotification(
+              id: _notificationId,
+              title: title,
+              body: body,
+              dayOfWeek: sorted[0],
+              hour: settings.hour,
+              minute: settings.minute,
+              payload: 'b12_reminder',
+            );
+            await _notificationService.scheduleWeeklyNotification(
+              id: _biweeklyNotificationId,
+              title: title,
+              body: body,
+              dayOfWeek: sorted[1],
+              hour: settings.hour,
+              minute: settings.minute,
+              payload: 'b12_reminder',
+            );
+          }
+          break;
+
+        case ReminderFrequency.biweekly:
+          if (settings.dayOfWeek != null) {
+            await _scheduleBiweeklyNotification(
+              id: _notificationId,
+              title: title,
+              body: body,
+              dayOfWeek: settings.dayOfWeek!,
+              hour: settings.hour,
+              minute: settings.minute,
+              payload: 'b12_reminder_biweekly',
+              startDate: settings.biweeklyStartDate,
+            );
+          }
+          break;
+      }
     }
 
-    const title = '💊 Rappel B12';
-    const body = 'N\'oubliez pas de prendre votre vitamine B12 !';
-
-    switch (settings.frequency) {
-      case ReminderFrequency.daily:
-        await _notificationService.scheduleDailyNotification(
-          id: _notificationId,
-          title: title,
-          body: body,
-          hour: settings.hour,
-          minute: settings.minute,
-          payload: 'b12_reminder',
-        );
-        break;
-
-      case ReminderFrequency.weekly:
-        if (settings.dayOfWeek != null) {
-          await _notificationService.scheduleWeeklyNotification(
-            id: _notificationId,
-            title: title,
-            body: body,
-            dayOfWeek: settings.dayOfWeek!,
-            hour: settings.hour,
-            minute: settings.minute,
-            payload: 'b12_reminder',
-          );
-        }
-        break;
-
-      case ReminderFrequency.twiceWeekly:
-        if (settings.daysOfWeek != null && settings.daysOfWeek!.length == 2) {
-          final sorted = List<int>.from(settings.daysOfWeek!)..sort();
-          // Schedule two weekly notifications, one for each selected day
-          await _notificationService.scheduleWeeklyNotification(
-            id: _notificationId,
-            title: title,
-            body: body,
-            dayOfWeek: sorted[0],
-            hour: settings.hour,
-            minute: settings.minute,
-            payload: 'b12_reminder',
-          );
-          await _notificationService.scheduleWeeklyNotification(
-            id: _biweeklyNotificationId,
-            title: title,
-            body: body,
-            dayOfWeek: sorted[1],
-            hour: settings.hour,
-            minute: settings.minute,
-            payload: 'b12_reminder',
-          );
-        }
-        break;
-
-      case ReminderFrequency.biweekly:
-        if (settings.dayOfWeek != null) {
-          await _scheduleBiweeklyNotification(
-            id: _notificationId,
-            title: title,
-            body: body,
-            dayOfWeek: settings.dayOfWeek!,
-            hour: settings.hour,
-            minute: settings.minute,
-            payload: 'b12_reminder_biweekly',
-            startDate: settings.biweeklyStartDate,
-          );
-        }
-        break;
-    }
-
-    // Save the settings
+    // Save the settings regardless of whether scheduling succeeded.
     await saveSettings(settings);
   }
 
@@ -586,8 +587,6 @@ class B12ReminderService {
     return intakes.map((intake) => intake.date).toList();
   }
 
-
-
   /// Theoretical next intake day: the last recorded intake plus the
   /// interval implied by the configured frequency. Day-of-week based
   /// frequencies honor the configured day(s) so the date matches the
@@ -675,6 +674,16 @@ class B12ReminderService {
       DateTime.utc(to.year, to.month, to.day)
           .difference(DateTime.utc(from.year, from.month, from.day))
           .inDays;
+
+  /// "aujourd'hui" / "demain" / the weekday otherwise — the relative-day
+  /// phrasing shared by every screen that shows a B12 reminder date
+  /// (Paramètres, l'historique, la configuration).
+  static String relativeDayLabel(DateTime date) {
+    final inDays = calendarDaysBetween(DateTime.now(), date);
+    if (inDays <= 0) return 'aujourd\'hui';
+    if (inDays == 1) return 'demain';
+    return DateFormat('EEEE d MMMM', 'fr_FR').format(date);
+  }
 
   /// Maximum days between two intakes before the streak breaks
   /// (expected interval plus a small grace period)

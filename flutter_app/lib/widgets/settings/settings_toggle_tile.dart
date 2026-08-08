@@ -13,12 +13,18 @@ class SettingsToggleTile extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
 
+  /// Optional: makes the label area (not the switch) navigate somewhere,
+  /// e.g. "Rappels" opening the detailed B12 reminder settings while the
+  /// switch itself keeps toggling inline.
+  final VoidCallback? onTap;
+
   const SettingsToggleTile({
     super.key,
     required this.title,
     this.subtitle,
     required this.value,
     required this.onChanged,
+    this.onTap,
   });
 
   @override
@@ -33,25 +39,30 @@ class SettingsToggleTile extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 42.sp,
-                    fontWeight: FontWeight.w600,
-                    color: kTextPrimary,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  SizedBox(height: 4.h),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    subtitle!,
-                    style: TextStyle(fontSize: 30.sp, color: Colors.grey[600]),
+                    title,
+                    style: TextStyle(
+                      fontSize: 42.sp,
+                      fontWeight: FontWeight.w600,
+                      color: kTextPrimary,
+                    ),
                   ),
+                  if (subtitle != null) ...[
+                    SizedBox(height: 4.h),
+                    Text(
+                      subtitle!,
+                      style:
+                          TextStyle(fontSize: 30.sp, color: Colors.grey[600]),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
           Switch(

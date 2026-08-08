@@ -21,6 +21,7 @@ import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/theme/theme_selector_modal.dart';
 import '../Profile/auth_gate_page.dart';
+import '../Profile/b12_history_page.dart';
 import '../Profile/b12_reminder_settings_page.dart';
 import '../Scan/scan_history_page.dart';
 import '../Scan/sent_products_page.dart';
@@ -44,6 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _isLoading = true;
 
   bool _b12RemindersEnabled = false;
+  DateTime? _b12NextReminder;
   bool _showBoycott = true;
   bool _showScores = true;
   bool _hapticFeedback = true;
@@ -71,7 +73,6 @@ class _SettingsPageState extends State<SettingsPage> {
     final avatar = await PreferencesHelper.getAvatar();
     User? user;
     if (AuthService.isLoggedIn) {
-
       final isFirstFetchThisSession = AuthService.currentUser == null;
       final result = await AuthService.getCurrentUser();
       if (result.isSuccess) {
@@ -88,14 +89,27 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  /// "Prochain rappel : aujourd'hui/demain/<jour> à HH:mm" — null while
+  /// reminders are off or nothing is scheduled yet.
+  String? get _b12NextReminderLabel {
+    final next = _b12NextReminder;
+    if (!_b12RemindersEnabled || next == null) return null;
+
+    final dayLabel = B12ReminderService.relativeDayLabel(next);
+    final timeLabel = DateFormat('HH:mm').format(next);
+    return 'Prochain : $dayLabel à $timeLabel';
+  }
+
   Future<void> _loadPreferences() async {
     final b12Settings = await B12ReminderService.getSettings();
+    final b12Next = await B12ReminderService.getNextNotificationTime();
     final showBoycott = await PreferencesHelper.getShowBoycottPref();
     final showScores = await PreferencesHelper.getShowScoresPref();
     final hapticFeedback = await PreferencesHelper.getHapticFeedbackPref();
     if (!mounted) return;
     setState(() {
       _b12RemindersEnabled = b12Settings.enabled;
+      _b12NextReminder = b12Next;
       _showBoycott = showBoycott;
       _showScores = showScores;
       _hapticFeedback = hapticFeedback;
@@ -111,11 +125,23 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  // Turning the switch on needs a frequency/time first, so it opens the B12
+  // settings page instead of scheduling a reminder with whatever frequency
+  // was last configured (or none). Turning it off needs no such setup.
   Future<void> _toggleB12Reminders(bool value) async {
+    if (value) {
+      await _openB12Settings();
+      return;
+    }
     final settings = await B12ReminderService.getSettings();
     await B12ReminderService.scheduleReminder(
         settings.copyWith(enabled: value));
-    if (mounted) setState(() => _b12RemindersEnabled = value);
+    if (mounted) {
+      setState(() {
+        _b12RemindersEnabled = value;
+        _b12NextReminder = null;
+      });
+    }
   }
 
   Future<void> _pickVeganDate() async {
@@ -197,10 +223,19 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> _openB12Settings() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const B12ReminderSettingsPage()),
+    );
+    // Frequency/enabled may have changed there — resync the "Rappels" switch.
+    if (mounted) _loadPreferences();
+  }
+
   void _openB12History() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const B12ReminderSettingsPage()),
+      MaterialPageRoute(builder: (_) => const B12HistoryPage()),
     );
   }
 
@@ -331,11 +366,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   bottom: 4,
                   child: GestureDetector(
                     onTap: _openEditProfileModal,
+                    // Figma "Button/Primary/Small": hug 34, radius 12,
+                    // padding 8 — ×3 for ScreenUtil units.
                     child: Container(
-                      padding: EdgeInsets.all(12.w),
+                      padding: EdgeInsets.all(24.w),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(36.r),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.2),
@@ -344,7 +381,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ],
                       ),
-                      child: Icon(Icons.edit, size: 36.sp, color: Colors.white),
+                      child: Icon(Icons.edit, size: 54.sp, color: Colors.white),
                     ),
                   ),
                 ),
@@ -392,8 +429,10 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               SettingsToggleTile(
                 title: 'Rappels',
+                subtitle: _b12NextReminderLabel,
                 value: _b12RemindersEnabled,
                 onChanged: _toggleB12Reminders,
+                onTap: _openB12Settings,
               ),
               SettingsRowTile(
                 label: 'Historique B12',
