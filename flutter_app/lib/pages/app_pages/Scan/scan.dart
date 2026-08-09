@@ -14,12 +14,8 @@ import 'package:vegan_app/helpers/database_helper.dart';
 import 'package:vegan_app/helpers/haptic_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Scan/scan_history_page.dart';
-import 'package:vegan_app/pages/app_pages/Scan/sent_products_page.dart';
-import 'package:vegan_app/pages/app_pages/Scan/settings_modal.dart';
-import 'package:vegan_app/pages/app_pages/Scan/search_modal.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
-import 'package:vegan_app/pages/app_pages/Search/additives.dart';
-import 'package:vegan_app/pages/app_pages/Search/cosmetics.dart';
+import 'package:vegan_app/pages/app_pages/Scan/product_search_page.dart';
 import 'package:vegan_app/models/product_of_interest.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/auth_service.dart';
@@ -31,6 +27,7 @@ import 'package:vegan_app/widgets/scaner/card_product.dart';
 import 'package:vegan_app/widgets/scaner/pending_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/info_dialog_button.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/widgets/scaner/vegan_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/shop_confirmation_modal.dart';
 import 'package:vegan_app/widgets/vegandex/vegandex_modal.dart';
@@ -580,66 +577,16 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     });
   }
 
-  /// Same as [_openScanHistory], for the sent-products page.
-  void _openSentProducts() {
+  /// Stops the scanner, pushes the unified product search page (Additifs /
+  /// Cosmétiques), and restarts the scanner when it's popped.
+  void _openProductSearch() {
     controller.stop();
     setState(() {
       productInfo = null;
     });
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const SentProductsPage()),
-    ).then((_) {
-      controller.start();
-    });
-  }
-
-  void _showSearchModal({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Widget child,
-  }) {
-    _showModalSheet(SearchModal(
-      title: title,
-      subtitle: subtitle,
-      icon: icon,
-      child: child,
-    ));
-  }
-
-  void _showSettingsModal() {
-    // Stop the scanner when opening the modal
-    controller.stop();
-    setState(() {
-      productInfo = null;
-    });
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          child: SettingsModal(
-            initialShowBoycott: _showBoycott,
-            onShowBoycottChanged: (value) {
-              setState(() {
-                _showBoycott = value;
-              });
-            },
-            initialShowScores: _showScores,
-            onShowScoresChanged: _setShowScoresPref,
-            initialHapticFeedback: _hapticFeedback,
-            onHapticFeedbackChanged: (value) {
-              setState(() {
-                _hapticFeedback = value;
-              });
-            },
-          ),
-        );
-      },
+      MaterialPageRoute(builder: (_) => const ProductSearchPage()),
     ).then((_) {
       controller.start();
     });
@@ -1170,6 +1117,85 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     );
   }
 
+  /// Square top-row button (history, Vegandex). Figma spec: 48×48, radius
+  /// 14, white or primary fill, soft shadow — ×3 for ScreenUtil units. Same
+  /// height as [_buildTopSearchBar] so the row reads as one line.
+  Widget _buildSquareActionButton({
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onTap,
+    Color? background,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 144.w,
+        height: 144.w,
+        decoration: BoxDecoration(
+          color: background ?? Colors.white,
+          borderRadius: BorderRadius.circular(42.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Center(child: Icon(icon, color: iconColor, size: 72.sp)),
+      ),
+    );
+  }
+
+  /// Top search bar — tapping it opens [ProductSearchPage] (Additifs /
+  /// Cosmétiques for now, Aliment by name/barcode later). Not an editable
+  /// field here: [AbsorbPointer] keeps the whole bar a single tap target
+  /// instead of focusing the [TextField] in place. Same height/radius as
+  /// [_buildSquareActionButton] so the top row reads as one line.
+  Widget _buildTopSearchBar() {
+    return GestureDetector(
+      onTap: _openProductSearch,
+      child: AbsorbPointer(
+        child: Container(
+          height: 144.w,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(42.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              SizedBox(width: 24.w),
+              Icon(Icons.search, color: Colors.grey[600], size: 60.sp),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: TextField(
+                  textInputAction: TextInputAction.search,
+                  style: TextStyle(fontSize: 42.sp),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: "Additif, cosmétique, code-barre...",
+                    hintStyle:
+                        TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+              SizedBox(width: 24.w),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildScanWarningBox(String text) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
@@ -1262,84 +1288,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                 ],
               ),
             ),
-          // Add the floating button for Vegandex
-          Positioned(
-            top: 180.h,
-            right: 20,
-            child: Container(
-              width: 0.25.sw,
-              height: 0.05.sh,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40.r),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFFFD700), // Gold
-                    Color(0xFFFFAF00), // Darker gold
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.5),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(40.r),
-                  onTap: () => _showModalSheet(VegandexModal(
-                    onNavigateToProfile: widget.onNavigateToProfile,
-                  )),
-                  child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.catching_pokemon,
-                          color: Colors.white,
-                          size: 40.sp,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Vegandex",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 40.sp,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                blurRadius: 3,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
           // Result card with bottom margin
           if (productInfo != null)
             Positioned(
@@ -1449,73 +1397,31 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               onTap: _showManualEanDialog,
             ),
           ),
-          // Floating action cluster (positioned last to be on top):
-          // settings / history / sent products in a row, with the additives
-          // and cosmetics searches below. Single anchor point; Row/Column
-          // spacing handles the rest.
+          // Top row: product-name search (visual only for now), history and
+          // Vegandex. Figma spec, ×3 for ScreenUtil units — see
+          // _buildTopSearchBar/_buildSquareActionButton.
           Positioned(
-            top: 200.h,
-            left: 60.w,
-            child: Column(
+            top: MediaQuery.of(context).padding.top + 24,
+            left: 48.w,
+            right: 48.w,
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 40.h,
               children: [
-                Row(
-                  spacing: 60.w,
-                  children: [
-                    _buildGlassIconButton(
-                      icon: Icons.settings,
-                      onTap: _showSettingsModal,
-                    ),
-                    _buildGlassIconButton(
-                      icon: Icons.history,
-                      onTap: _openScanHistory,
-                    ),
-                    _buildGlassIconButton(
-                      icon: Icons.switch_access_shortcut_add_outlined,
-                      onTap: _openSentProducts,
-                    ),
-                  ],
+                Expanded(child: _buildTopSearchBar()),
+                SizedBox(width: 30.w),
+                _buildSquareActionButton(
+                  icon: Icons.history,
+                  iconColor: kTextPrimary,
+                  onTap: _openScanHistory,
                 ),
-                IntrinsicWidth(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 24.h,
-                    children: [
-                      LiquidGlassButton(
-                        label: 'Additifs 🔎',
-                        icon: Icons.science,
-                        height: 100.h,
-                        fontSize: 40.sp,
-                        iconSize: 80.sp,
-                        style: LiquidGlassButton.defaultStyle.copyWith(
-                          appearance: _grayGlassAppearance,
-                        ),
-                        onPressed: () => _showSearchModal(
-                          title: 'Additifs',
-                          subtitle: 'Rechercher un additif',
-                          icon: Icons.science,
-                          child: const AdditivesPage(),
-                        ),
-                      ),
-                      LiquidGlassButton(
-                        label: 'Cosmétiques 🔎',
-                        icon: Icons.soap_rounded,
-                        height: 100.h,
-                        fontSize: 40.sp,
-                        iconSize: 80.sp,
-                        style: LiquidGlassButton.defaultStyle.copyWith(
-                          appearance: _grayGlassAppearance,
-                        ),
-                        onPressed: () => _showSearchModal(
-                          title: 'Cosmétiques',
-                          subtitle: 'Rechercher une marque',
-                          icon: Icons.soap_rounded,
-                          child: const CosmeticsPage(),
-                        ),
-                      ),
-                    ],
-                  ),
+                SizedBox(width: 30.w),
+                _buildSquareActionButton(
+                  icon: Icons.catching_pokemon,
+                  iconColor: Colors.white,
+                  background: Theme.of(context).colorScheme.primary,
+                  onTap: () => _showModalSheet(VegandexModal(
+                    onNavigateToProfile: widget.onNavigateToProfile,
+                  )),
                 ),
               ],
             ),

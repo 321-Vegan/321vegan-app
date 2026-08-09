@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../themes/default_theme.dart';
 
 enum Season {
   defaultTheme,
@@ -144,13 +145,17 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
     );
   }
 
-  // Create a ThemeData from this theme
+  // Create a ThemeData from this theme. Buttons, icons and every other
+  // `Theme.of(context).colorScheme`-driven color stay the app's one base
+  // palette regardless of season — only the [SeasonalTheme] extension
+  // carried below changes with the season, for the background
+  // gradient/particles ([AppBackground]) and this modal's own previews.
   ThemeData toThemeData() {
     return ThemeData(
       scaffoldBackgroundColor: Colors.white,
-      colorScheme: toColorScheme(),
+      colorScheme: defaultTheme.toColorScheme(),
       useMaterial3: true,
-      primaryColor: primaryColor,
+      primaryColor: defaultTheme.primaryColor,
       // App-wide default body font. Explicit fontFamily: 'Baloo' on a
       // TextStyle (used for prominent numbers/counters) overrides this.
       fontFamily: 'Karla',

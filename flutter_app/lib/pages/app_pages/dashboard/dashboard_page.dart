@@ -6,7 +6,6 @@ import '../../../helpers/preference_helper.dart';
 import '../../../helpers/vegan_savings.dart';
 import '../../../models/error_report.dart';
 import '../../../models/partners/partners.dart';
-import '../../../models/seasonal_theme.dart';
 import '../../../models/user.dart';
 import '../../../services/anniversary_service.dart';
 import '../../../services/api_service.dart';
@@ -328,7 +327,6 @@ class DashboardPageState extends State<DashboardPage> {
                         context,
                         homeStats[i],
                         _savings[homeStats[i].savingsKey] ?? 0,
-                        theme: Theme.of(context).extension<SeasonalTheme>(),
                       ),
                     ],
                     SizedBox(height: AppSpacing.section),

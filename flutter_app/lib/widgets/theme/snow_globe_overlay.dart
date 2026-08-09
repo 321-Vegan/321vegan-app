@@ -11,6 +11,12 @@ class SnowGlobeOverlay extends StatefulWidget {
   final String? particleAsset;
   final BorderRadius? borderRadius;
 
+  /// Tint for icon particles and the plain-circle fallback. Defaults to
+  /// white, which reads well on the vivid gradient card previews this was
+  /// built for — callers placing it over a pale background (e.g. the app
+  /// background) should pass a darker, theme-appropriate color instead.
+  final Color particleColor;
+
   const SnowGlobeOverlay({
     super.key,
     required this.child,
@@ -18,6 +24,7 @@ class SnowGlobeOverlay extends StatefulWidget {
     this.particleIcon,
     this.particleAsset,
     this.borderRadius,
+    this.particleColor = Colors.white,
   });
 
   @override
@@ -170,12 +177,18 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
                             ? Icon(
                                 widget.particleIcon,
                                 size: size,
-                                color: Colors.white,
+                                color: widget.particleColor,
                               )
                             : Image.asset(
                                 widget.particleAsset!,
                                 width: size,
                                 height: size,
+                                // A missing/unregistered asset would otherwise
+                                // retry resolution on every animation frame
+                                // (this repaints at 60fps) instead of failing
+                                // once — silently drop that particle instead.
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const SizedBox.shrink(),
                               ),
                       ),
                     ),
@@ -190,6 +203,7 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
                   painter: _SnowGlobePainter(
                     flakes: _flakes,
                     time: elapsed,
+                    color: widget.particleColor,
                   ),
                 ),
               ),
@@ -203,15 +217,17 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
 class _SnowGlobePainter extends CustomPainter {
   final List<_Snowflake> flakes;
   final double time;
+  final Color color;
 
-  _SnowGlobePainter({required this.flakes, required this.time});
+  _SnowGlobePainter(
+      {required this.flakes, required this.time, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
     for (final f in flakes) {
       final shimmer = 0.7 + 0.3 * sin(time * f.shimmerSpeed + f.shimmerPhase);
       final paint = Paint()
-        ..color = Colors.white.withValues(alpha: f.opacity * shimmer)
+        ..color = color.withValues(alpha: f.opacity * shimmer)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(

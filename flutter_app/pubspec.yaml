@@ -170,6 +170,14 @@ flutter:
     - lib/assets/images/buy-premium/tree.webp
     - lib/assets/images/buy-premium/bee.webp
     - lib/assets/images/buy-premium/pineapple.webp
+    # Seasonal themes
+    - lib/assets/images/tulipe.webp
+    - lib/assets/images/tulipe-smile.webp
+    - lib/assets/images/marguerite.webp
+    - lib/assets/images/ruche.webp
+    - lib/assets/images/papillon.webp
+    - lib/assets/images/pumpkin.webp
+    - lib/assets/images/pumpkin-smile.webp
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - .env

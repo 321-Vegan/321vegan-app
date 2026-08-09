@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
-import 'package:vegan_app/widgets/theme/snow_globe_overlay.dart';
 
 /// Definition of one impact stat, shared between the home page cards and the
 /// share card.
@@ -90,9 +88,8 @@ const List<HomeStat> homeStats = [
 Widget buildStatCard(
   BuildContext context,
   HomeStat stat,
-  int value, {
-  SeasonalTheme? theme,
-}) {
+  int value,
+) {
   final title = stat.title;
   final unit = value;
   final unitName = stat.unitName;
@@ -110,72 +107,69 @@ Widget buildStatCard(
     },
     // Spacing between cards is owned by the Dashboard column (AppSpacing),
     // so the card carries no outer margin.
-    child: _maybeSnowGlobe(
-      theme: theme,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(36.r),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              offset: const Offset(0, 4),
-              blurRadius: 16,
-            ),
-          ],
-          border: Border.all(color: kBorderDefault, width: 1),
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 21.h),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 500),
-                    child: Text(
-                      unitName.isEmpty ? '$unit' : '$unit $unitName',
-                      key: ValueKey<int>(unit),
-                      style: TextStyle(
-                        fontSize: 64.sp,
-                        color: Colors.grey[850],
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    title,
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(36.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            offset: const Offset(0, 4),
+            blurRadius: 16,
+          ),
+        ],
+        border: Border.all(color: kBorderDefault, width: 1),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 21.h),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  child: Text(
+                    unitName.isEmpty ? '$unit' : '$unit $unitName',
+                    key: ValueKey<int>(unit),
                     style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 42.sp,
+                      fontSize: 64.sp,
+                      color: Colors.grey[850],
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
-              ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 42.sp,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(width: 30.w),
-            SizedBox(
-              width: 270.w,
-              height: 270.w,
-              child: Image.asset(
-                stat.illustration,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(icon, color: iconColor, size: 110.sp),
-                  ),
+          ),
+          SizedBox(width: 30.w),
+          SizedBox(
+            width: 270.w,
+            height: 270.w,
+            child: Image.asset(
+              stat.illustration,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Container(
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(icon, color: iconColor, size: 110.sp),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     ),
   );
@@ -346,19 +340,4 @@ class StatInfoDialog extends StatelessWidget {
       ),
     );
   }
-}
-
-Widget _maybeSnowGlobe({SeasonalTheme? theme, required Widget child}) {
-  if (theme == null) return child;
-  if (theme.snowGlobeParticleAsset == null &&
-      theme.snowGlobeParticleIcon == null &&
-      theme.particleType != ParticleType.snowflakes) {
-    return child;
-  }
-  return SnowGlobeOverlay(
-    particleAsset: theme.snowGlobeParticleAsset,
-    particleIcon: theme.snowGlobeParticleIcon,
-    particleCount: 12,
-    child: child,
-  );
 }

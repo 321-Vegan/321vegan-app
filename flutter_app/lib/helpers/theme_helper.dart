@@ -11,14 +11,15 @@ class ThemeHelper {
   static const String _themePreferenceKey = 'selected_theme';
   static const String _autoThemeKey = 'auto_theme';
 
-  // Get all available themes
+  // Get all available themes, in calendar order so the theme-switcher
+  // carousel swipes through the seasons in a natural sequence.
   static List<SeasonalTheme> getAllThemes() {
     return [
       defaultTheme,
-      winterTheme,
       springTheme,
       summerTheme,
       autumnTheme,
+      winterTheme,
     ];
   }
 
