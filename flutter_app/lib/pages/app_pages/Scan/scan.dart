@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +49,8 @@ class ScanPage extends StatefulWidget {
   ScanPageState createState() => ScanPageState();
 }
 
-class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
+class ScanPageState extends State<ScanPage>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   final MobileScannerController controller = MobileScannerController(
     formats: [
       BarcodeFormat.ean13, // EAN-13 for international products
@@ -71,6 +73,15 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   bool _scannerPausedByModal = false;
   bool _isRetrying = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+
+  /// The Vegandex button shows its label for a few seconds on page entry,
+  /// then collapses to an icon-only square to match the history button.
+  bool _vegandexExpanded = true;
+  Timer? _vegandexCollapseTimer;
+
+  /// Drives a quick decaying shake + pop on the Vegandex button, played the
+  /// instant [ProductFoundModal]'s fly-in animation lands on it.
+  late final AnimationController _vegandexShakeController;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -107,6 +118,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 2));
+    _vegandexShakeController = AnimationController(
+      duration: const Duration(milliseconds: 450),
+      vsync: this,
+    );
 
     _loadScanHistory();
     _loadShowBoycottPref();
@@ -114,6 +129,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     _loadHapticFeedbackPref();
     // Load products from already-populated cache (populated at app startup)
     _loadProductsOfInterest();
+
+    _vegandexCollapseTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted) setState(() => _vegandexExpanded = false);
+    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkLocationPermission();
@@ -421,6 +440,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         builder: (context) => ProductFoundModal(
           product: product,
           isNewDiscovery: !hadProductBefore,
+          onArrival: _shakeVegandexButton,
         ),
       );
 
@@ -595,8 +615,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
+    _vegandexCollapseTimer?.cancel();
     controller.dispose();
     _confettiController.dispose();
+    _vegandexShakeController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1147,6 +1169,112 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     );
   }
 
+  /// Vegandex button: shows its "Vegandex" label for the first couple of
+  /// seconds after the page opens (as a hint of what the icon means), then
+  /// collapses down to an icon-only square matching [_buildSquareActionButton]
+  /// (144.w, same as the history button next to it).
+  ///
+  /// [AnimatedCrossFade] (rather than a plain [AnimatedSize]) is what makes
+  /// this look right: it cross-fades the label out *while* tweening the
+  /// size, so the text eases away instead of popping out on the first frame
+  /// of the shrink — a bare `if` inside the child would swap it out
+  /// instantly and leave the icon jumping into place.
+  Widget _buildVegandexButton() {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final icon = Icon(Icons.catching_pokemon, color: Colors.white, size: 72.sp);
+    final button = GestureDetector(
+      onTap: () => _showModalSheet(VegandexModal(
+        onNavigateToProfile: widget.onNavigateToProfile,
+      )),
+      // Capped so the expanded label can never push the top row past the
+      // screen edge (font metrics differ enough across devices that sizing
+      // this to the text's natural width isn't safe) — the label ellipsizes
+      // instead in that case rather than overflowing.
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: 340.w),
+        child: Container(
+          decoration: BoxDecoration(
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(42.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: AnimatedCrossFade(
+            duration: const Duration(milliseconds: 900),
+            sizeCurve: Curves.easeInOutCubicEmphasized,
+            firstCurve: Curves.easeOut,
+            secondCurve: Curves.easeIn,
+            crossFadeState: _vegandexExpanded
+                ? CrossFadeState.showFirst
+                : CrossFadeState.showSecond,
+            firstChild: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
+              child: SizedBox(
+                height: 144.w,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        'Vegandex',
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 34.sp,
+                          fontFamily: 'Balloo2'
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    icon,
+                  ],
+                ),
+              ),
+            ),
+            secondChild: SizedBox(
+              width: 144.w,
+              height: 144.w,
+              child: Center(child: icon),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Quick decaying wiggle + pop, played on impact when
+    // ProductFoundModal's fly-in animation lands here (see
+    // _shakeVegandexButton).
+    return AnimatedBuilder(
+      animation: _vegandexShakeController,
+      builder: (context, child) {
+        final t = _vegandexShakeController.value;
+        final dx = sin(t * pi * 6) * (1 - t) * 14.w;
+        final scale = 1 + sin(t.clamp(0.0, 1.0) * pi) * 0.16;
+        return Transform.translate(
+          offset: Offset(dx, 0),
+          child: Transform.scale(scale: scale, child: child),
+        );
+      },
+      child: button,
+    );
+  }
+
+  /// Haptic buzz + [_vegandexShakeController] wiggle, fired the instant a
+  /// discovered product's modal finishes flying into the button.
+  void _shakeVegandexButton() {
+    HapticHelper.impact();
+    _vegandexShakeController.forward(from: 0);
+  }
+
   /// Top search bar — tapping it opens [ProductSearchPage] (Additifs /
   /// Cosmétiques for now, Aliment by name/barcode later). Not an editable
   /// field here: [AbsorbPointer] keeps the whole bar a single tap target
@@ -1190,6 +1318,31 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ),
               SizedBox(width: 24.w),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Viewfinder reticle shown over the live camera while idle (nothing
+  /// scanned yet) — four rounded corner brackets, no text, no card.
+  /// [IgnorePointer] keeps it from blocking taps on the camera beneath it.
+  Widget _buildScanTargetOverlay() {
+    final width = 0.7.sw;
+    final height = 0.5.sh;
+    return IgnorePointer(
+      child: Align(
+        alignment: const Alignment(0, 0.1),
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: CustomPaint(
+            painter: _ScanTargetPainter(
+              color: Colors.white,
+              strokeWidth: 6.w,
+              cornerLength: 70.w,
+              cornerRadius: 48.w,
+            ),
           ),
         ),
       ),
@@ -1240,22 +1393,17 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     return Scaffold(
       body: Stack(
         children: [
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(0.0),
-                child: SizedBox(
-                  height: 0.55.sh,
-                  child: MobileScanner(
-                    controller: controller,
-                    onDetect: (BarcodeCapture capture) {
-                      _handleBarcode(capture);
-                    },
-                  ),
-                ),
-              ),
-            ],
+          Positioned.fill(
+            child: MobileScanner(
+              controller: controller,
+              onDetect: (BarcodeCapture capture) {
+                _handleBarcode(capture);
+              },
+            ),
           ),
+          // Idle state (nothing scanned yet): just the camera behind a
+          // viewfinder reticle — no card, no instructions.
+          _buildScanTargetOverlay(),
           // Camera-area overlays (warnings + score bar) flow bottom-up in a
           // single column ending just above the result card, so they never
           // overlap each other whatever the device height or text length.
@@ -1327,13 +1475,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                 ScanStatus.notVegan =>
                   RejectedProductInfoCard(productInfo: productInfo!),
               },
-            )
-          else // Show prompt when not loading and no data
-            Positioned(
-              top: 1100.h,
-              left: 16,
-              right: 16,
-              child: const NoResultCard(),
             ),
           if (productInfo != null && productInfo!.status != ScanStatus.unknown)
             Positioned(
@@ -1415,14 +1556,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                   onTap: _openScanHistory,
                 ),
                 SizedBox(width: 30.w),
-                _buildSquareActionButton(
-                  icon: Icons.catching_pokemon,
-                  iconColor: Colors.white,
-                  background: Theme.of(context).colorScheme.primary,
-                  onTap: () => _showModalSheet(VegandexModal(
-                    onNavigateToProfile: widget.onNavigateToProfile,
-                  )),
-                ),
+                _buildVegandexButton(),
               ],
             ),
           ),
@@ -1458,4 +1592,57 @@ class _AuthSheetContentState extends State<_AuthSheetContent> {
       );
     }
   }
+}
+
+/// Paints the four rounded corner brackets of the scan viewfinder reticle.
+class _ScanTargetPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double cornerLength;
+  final double cornerRadius;
+
+  _ScanTargetPainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.cornerLength,
+    required this.cornerRadius,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Draws one L-shaped bracket at [origin], with the two arms extending
+    // toward the shape's interior along (dx, dy) and rounded off by a
+    // quarter-circle corner.
+    void drawCorner(Offset origin, double dx, double dy) {
+      final path = Path()
+        ..moveTo(origin.dx + dx * cornerLength, origin.dy)
+        ..lineTo(origin.dx + dx * cornerRadius, origin.dy)
+        ..quadraticBezierTo(
+          origin.dx,
+          origin.dy,
+          origin.dx,
+          origin.dy + dy * cornerRadius,
+        )
+        ..lineTo(origin.dx, origin.dy + dy * cornerLength);
+      canvas.drawPath(path, paint);
+    }
+
+    drawCorner(Offset.zero, 1, 1);
+    drawCorner(Offset(size.width, 0), -1, 1);
+    drawCorner(Offset(0, size.height), 1, -1);
+    drawCorner(Offset(size.width, size.height), -1, -1);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ScanTargetPainter oldDelegate) =>
+      color != oldDelegate.color ||
+      strokeWidth != oldDelegate.strokeWidth ||
+      cornerLength != oldDelegate.cornerLength ||
+      cornerRadius != oldDelegate.cornerRadius;
 }

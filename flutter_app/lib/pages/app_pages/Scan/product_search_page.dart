@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/database_helper.dart';
 import 'package:vegan_app/helpers/helper.dart';
@@ -194,7 +195,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                   children: [
                     _buildCategoryChip(
                       label: 'Code-barre',
-                      icon: Icons.shopping_bag_outlined,
+                      icon: CupertinoIcons.barcode_viewfinder,
                       isSelected: _category == _SearchCategory.aliment,
                       enabled: false,
                       onTap: () {},
@@ -292,8 +293,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
           alignment: Alignment.center,
           padding: EdgeInsets.symmetric(horizontal: 39.w),
           decoration: BoxDecoration(
-            color:
-                isSelected ? primaryColor.withValues(alpha: 0.08) : Colors.white,
+            color: isSelected ? kPrimaryTag : Colors.white,
             borderRadius: BorderRadius.circular(36.r),
             border: Border.all(
               color: isSelected ? primaryColor : kBorderDefault,

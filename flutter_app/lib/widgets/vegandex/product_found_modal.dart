@@ -1,19 +1,29 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/product_of_interest.dart';
+import '../../themes/app_colors.dart';
+import '../shared/app_card.dart';
 
 class ProductFoundModal extends StatefulWidget {
   final ProductOfInterest product;
   final bool isNewDiscovery;
   final VoidCallback? onClose;
 
+  /// Called the instant the close animation finishes — the moment the card
+  /// visually lands in the Vegandex button — so the caller can react (e.g.
+  /// make the button itself buzz/shake) right on impact.
+  final VoidCallback? onArrival;
+
   const ProductFoundModal({
     super.key,
     required this.product,
     this.isNewDiscovery = true,
     this.onClose,
+    this.onArrival,
   });
 
   @override
@@ -21,222 +31,265 @@ class ProductFoundModal extends StatefulWidget {
 }
 
 class _ProductFoundModalState extends State<ProductFoundModal>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _fadeAnimation;
+    with TickerProviderStateMixin {
+  late final AnimationController _enterController;
+  late final Animation<double> _enterScale;
+  late final Animation<double> _enterFade;
+
+  // Drives the close animation — the card shrinks and flies up into the
+  // Vegandex button in the top-right corner instead of just fading out.
+  late final AnimationController _exitController;
+  late final Animation<double> _exitMotion;
+  late final Animation<double> _exitFade;
+
+  // Measures the card's actual rendered size so the translate offset can
+  // compensate for the top-right-anchored scale below (see build()) and
+  // land the shrink point exactly on the button, not half a card-width off.
+  final GlobalKey _cardBoundsKey = GlobalKey();
+
   final baseUrl = dotenv.env['API_BASE_URL'];
 
   @override
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 800),
+    _enterController = AnimationController(
+      duration: const Duration(milliseconds: 350),
+      vsync: this,
+    )..forward();
+    _enterScale =
+        CurvedAnimation(parent: _enterController, curve: Curves.easeOutCubic);
+    _enterFade =
+        CurvedAnimation(parent: _enterController, curve: Curves.easeOut);
+
+    _exitController = AnimationController(
+      duration: const Duration(milliseconds: 550),
       vsync: this,
     );
-
-    _scaleAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.elasticOut,
+    // Motion (position/scale/rotation) runs the full duration with a sharp
+    // acceleration near the end — like something being yanked into a drain
+    // — while opacity is held near 1 until the very last moment, then drops
+    // fast. Without that split the card was visibly fading the whole trip,
+    // reading as "dissolving" rather than "sucked into the button".
+    _exitMotion =
+        CurvedAnimation(parent: _exitController, curve: Curves.easeInQuart);
+    _exitFade = CurvedAnimation(
+      parent: _exitController,
+      curve: const Interval(0.75, 1.0, curve: Curves.easeIn),
     );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    );
-
-    // Start animations
-    _controller.forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _enterController.dispose();
+    _exitController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleClose() async {
+    if (_exitController.isAnimating) return;
+    await _exitController.forward();
+    widget.onArrival?.call();
+    widget.onClose?.call();
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    // Approximate on-screen position of the Vegandex button (top row, right
+    // edge — see scan.dart's _buildVegandexButton) so the close animation
+    // reads as the card flying up and shrinking into it, rather than a
+    // generic fade-out.
+    final mq = MediaQuery.of(context);
+    final targetDx = mq.size.width / 2 - 120.w;
+    final targetDy = mq.padding.top + 24 + 72.w - mq.size.height / 2;
+
     return Material(
       type: MaterialType.transparency,
-      child: Stack(
-        children: [
-          // Dark overlay
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.7),
-            ),
-          ),
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_enterController, _exitController]),
+        builder: (context, child) {
+          final motionT = _exitMotion.value;
+          final fadeT = _exitFade.value;
+          final barrierOpacity = _enterFade.value * (1 - fadeT);
+          final cardOpacity = _enterFade.value * (1 - fadeT);
+          final baseScale = _enterScale.value * (1 - motionT) + 0.04 * motionT;
+          // Mild stretch toward the target as it travels (peaking
+          // mid-flight), on top of the overall shrink.
+          final stretch = sin(motionT * pi).clamp(0.0, 1.0) * 0.35;
+          final scaleX = baseScale * (1 - stretch);
+          final scaleY = baseScale * (1 + stretch);
 
-          // Modal content
-          Center(
-            child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 40.w),
-                padding: EdgeInsets.all(32.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 40,
-                      offset: const Offset(0, 20),
-                    ),
-                  ],
+          // The scale below pivots on the card's top-right corner, which
+          // stays fixed on screen at (halfW, -halfH) from center as long as
+          // nothing else moves it — so the translate has to travel that
+          // extra distance too, or the corner (and the shrink point) ends
+          // up half a card-width past the button instead of on it.
+          final cardBox =
+              _cardBoundsKey.currentContext?.findRenderObject() as RenderBox?;
+          final cardSize =
+              (cardBox != null && cardBox.hasSize) ? cardBox.size : Size.zero;
+          final endDx = targetDx - cardSize.width / 2;
+          final endDy = targetDy + cardSize.height / 2;
+          // Horizontal and vertical motion ease at slightly different
+          // rates so the card arcs into the corner instead of sliding
+          // along a perfectly straight diagonal.
+          final dx = endDx * Curves.easeIn.transform(motionT);
+          final dy = endDy * Curves.easeInOutCubic.transform(motionT);
+
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: Opacity(
+                  opacity: barrierOpacity,
+                  child: Container(color: Colors.black.withValues(alpha: 0.55)),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title text
-                    Text(
-                      widget.isNewDiscovery
-                          ? '🎉 Nouveau produit trouvé !'
-                          : '✨ Produit Vegandex !',
-                      style: TextStyle(
-                        fontSize: 52.sp,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A722E),
-                      ),
-                      textAlign: TextAlign.center,
+              ),
+              Center(
+                child: Transform.translate(
+                  offset: Offset(dx, dy),
+                  // Scaling pivots on the card's own top-right corner
+                  // (roughly where it's heading) instead of its center, so
+                  // it visibly shrinks *into* that corner rather than just
+                  // getting smaller while it slides — that's what actually
+                  // reads as "sucked toward a point" instead of "shrinking
+                  // in place while drifting".
+                  child: Transform(
+                    alignment: Alignment.topRight,
+                    transform: Matrix4.diagonal3Values(scaleX, scaleY, 1.0),
+                    child: Opacity(opacity: cardOpacity, child: child),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+        child: KeyedSubtree(
+          key: _cardBoundsKey,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 40.w),
+            child: AppCard(
+              padding: EdgeInsets.all(40.w),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    widget.isNewDiscovery
+                        ? 'Nouveau produit trouvé'
+                        : 'Produit Vegandex',
+                    style: TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontSize: 48.sp,
+                      fontWeight: FontWeight.w600,
+                      color: kTextPrimary,
                     ),
-
-                    SizedBox(height: 24.h),
-
-                    // Product image with glow effect
-                    Container(
-                      width: 240.w,
-                      height: 240.w,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        border: Border.all(
-                          color: const Color(0xFF1A722E),
-                          width: 4,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(0xFF1A722E).withValues(alpha: 0.5),
-                            blurRadius: 30,
-                            spreadRadius: 10,
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 28.h),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(24.r),
+                    child: Container(
+                      width: double.infinity,
+                      height: 340.w,
+                      color: Colors.grey.shade100,
+                      child: CachedNetworkImage(
+                        imageUrl: '$baseUrl/${widget.product.image}',
+                        fit: BoxFit.contain,
+                        placeholder: (context, url) => Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: primary,
                           ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: Padding(
-                          padding: EdgeInsets.all(16.w),
-                          child: CachedNetworkImage(
-                            imageUrl: '$baseUrl/${widget.product.image}',
-                            fit: BoxFit.contain,
-                            placeholder: (context, url) => const Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Color(0xFF1A722E),
-                              ),
+                        ),
+                        errorWidget: (context, url, error) => Center(
+                          child: Text(
+                            widget.product.name.isNotEmpty
+                                ? widget.product.name[0].toUpperCase()
+                                : '?',
+                            style: TextStyle(
+                              fontFamily: 'Baloo2',
+                              fontSize: 100.sp,
+                              fontWeight: FontWeight.w600,
+                              color: primary.withValues(alpha: 0.4),
                             ),
-                            errorWidget: (context, url, error) {
-                              return Icon(
-                                Icons.catching_pokemon,
-                                size: 120.sp,
-                                color: const Color(0xFF1A722E),
-                              );
-                            },
                           ),
                         ),
                       ),
                     ),
-
-                    SizedBox(height: 24.h),
-
-                    // Product name
-                    Text(
-                      widget.product.name,
+                  ),
+                  SizedBox(height: 28.h),
+                  Text(
+                    widget.product.name,
+                    style: TextStyle(
+                      fontSize: 46.sp,
+                      fontWeight: FontWeight.bold,
+                      color: kTextPrimary,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    widget.product.brandName,
+                    style: TextStyle(
+                      fontSize: 36.sp,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 24.h),
+                  Container(
+                    width: double.infinity,
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
+                    decoration: BoxDecoration(
+                      color: kPrimaryTag,
+                      borderRadius: BorderRadius.circular(16.r),
+                    ),
+                    child: Text(
+                      widget.isNewDiscovery
+                          ? 'Ce produit rejoint votre Vegandex'
+                          : 'Ce produit fait partie de votre Vegandex',
                       style: TextStyle(
-                        fontSize: 54.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[900],
+                        fontSize: 36.sp,
+                        color: primary,
+                        fontWeight: FontWeight.w600,
                       ),
                       textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
-
-                    SizedBox(height: 8.h),
-
-                    // Brand name
-                    Text(
-                      widget.product.brandName,
-                      style: TextStyle(
-                        fontSize: 46.sp,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    SizedBox(height: 20.h),
-
-                    // Message
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 20.w,
-                        vertical: 12.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1A722E).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      child: Text(
-                        widget.isNewDiscovery
-                            ? 'Vous avez trouvé un nouveau produit pour votre Vegandex ! 🌱'
-                            : 'Ce produit fait partie du Vegandex ! 🌱',
-                        style: TextStyle(
-                          fontSize: 42.sp,
-                          color: const Color(0xFF1A722E),
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                    SizedBox(height: 32.h),
-
-                    // Close button
-                    ElevatedButton(
-                      onPressed: () {
-                        widget.onClose?.call();
-                        Navigator.of(context).pop();
-                      },
+                  ),
+                  SizedBox(height: 32.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _handleClose,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1A722E),
+                        backgroundColor: primary,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 48.w,
-                          vertical: 20.h,
-                        ),
+                        padding: EdgeInsets.symmetric(vertical: 20.h),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16.r),
                         ),
-                        elevation: 4,
+                        elevation: 0,
                       ),
                       child: Text(
                         'Génial !',
                         style: TextStyle(
-                          fontSize: 48.sp,
+                          fontSize: 44.sp,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

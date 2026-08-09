@@ -13,6 +13,10 @@ const Color kAccentYellow = Color(0xFFF5BC28);
 /// (code pills) and the B12 reminder banner.
 const Color kSecondaryTag = Color(0xFFFFF8E4);
 
+/// "Color/Primary/Tag" in Figma — pale green background for the selected
+/// state of category chips (product search page).
+const Color kPrimaryTag = Color(0xFFDCF0EA);
+
 /// Default page background gradient ("Background/Shade" in Figma).
 /// TODO: fold into the seasonal-theme system when seasonal backgrounds
 /// are redesigned.
