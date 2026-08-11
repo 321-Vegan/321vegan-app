@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:vegan_app/models/product_of_interest.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 class BrandBanner extends StatelessWidget {
   final List<ProductOfInterest> products;
@@ -26,9 +28,7 @@ class BrandBanner extends StatelessWidget {
   void _showProductsModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      shape: squircleBorderOnly(topLeft: 16, topRight: 16),
       builder: (_) => Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -58,8 +58,8 @@ class BrandBanner extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 6.h),
                   child: Row(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8.r),
+                      ClipSmoothRect(
+                        radius: squircleRadius(8.r),
                         child: SizedBox(
                           width: 160.w,
                           height: 160.w,
@@ -106,14 +106,14 @@ class BrandBanner extends StatelessWidget {
       child: GestureDetector(
         onTap: () => _showProductsModal(context),
         child: Container(
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [color, endColor],
             ),
-            borderRadius: BorderRadius.circular(16.r),
-            boxShadow: [
+            shape: squircleBorder(radius: 16.r),
+            shadows: [
               BoxShadow(
                 color: color.withValues(alpha: 0.3),
                 blurRadius: 12,
@@ -131,18 +131,18 @@ class BrandBanner extends StatelessWidget {
                     if (logo != null)
                       Container(
                         padding: EdgeInsets.all(8.w),
-                        decoration: BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12.r),
+                          shape: squircleBorder(radius: 12.r),
                         ),
                         child: logo,
                       )
                     else
                       Container(
                         padding: EdgeInsets.all(10.w),
-                        decoration: BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12.r),
+                          shape: squircleBorder(radius: 12.r),
                         ),
                         child: Icon(Icons.storefront,
                             color: Colors.white, size: 32.r),

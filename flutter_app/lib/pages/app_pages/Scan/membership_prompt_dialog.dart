@@ -1,7 +1,9 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:video_player/video_player.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 class MembershipPromptDialog extends StatefulWidget {
   final VideoPlayerController videoController;
@@ -43,9 +45,9 @@ class _MembershipPromptDialogState extends State<MembershipPromptDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 32.h),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28.r),
+      shape: squircleBorder(radius: 28.r),
+      child: ClipSmoothRect(
+        radius: squircleRadius(28.r),
         child: SizedBox(
           height: 1200.h,
           child: Row(
@@ -101,9 +103,7 @@ class _MembershipPromptDialogState extends State<MembershipPromptDialog> {
                               Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 16.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
+                          shape: squircleBorder(radius: 12.r),
                         ),
                         child: Text(
                           'Débloquer ❤️',
@@ -123,9 +123,7 @@ class _MembershipPromptDialogState extends State<MembershipPromptDialog> {
                           foregroundColor: Colors.grey[600],
                           side: BorderSide(color: Colors.grey[300]!, width: 2),
                           padding: EdgeInsets.symmetric(vertical: 16.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
+                          shape: squircleBorder(radius: 12.r),
                         ),
                         child: Text(
                           'Plus tard',

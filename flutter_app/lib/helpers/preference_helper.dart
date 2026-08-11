@@ -288,6 +288,30 @@ class PreferencesHelper {
     }
   }
 
+  /// Looks up scores already cached (via [cacheScanScores]) on a past
+  /// history entry for [barcode], so the caller can skip hitting
+  /// OpenFoodFacts again for a product we've already scored. Returns null
+  /// if there's no history entry for it yet, or none with scores.
+  static Future<ProductScores?> getCachedScores(String barcode) async {
+    final prefs = await SharedPreferences.getInstance();
+    final historyJson = prefs.getString('scan_history');
+    if (historyJson == null) return null;
+
+    final history =
+        List<Map<String, dynamic>>.from(json.decode(historyJson));
+    for (var i = history.length - 1; i >= 0; i--) {
+      if (history[i]['barcode'] != barcode) continue;
+      final nutriscore = history[i]['nutriscore'] as String?;
+      final ecoscore = history[i]['ecoscore'] as String?;
+      if (nutriscore == null && ecoscore == null) continue;
+      return ProductScores(
+        nutriscoreGrade: nutriscore,
+        ecoscoreGrade: ecoscore,
+      );
+    }
+    return null;
+  }
+
   static Future<List<Map<String, dynamic>>> getScanHistory() async {
     final prefs = await SharedPreferences.getInstance();
     String? historyJson = prefs.getString('scan_history');

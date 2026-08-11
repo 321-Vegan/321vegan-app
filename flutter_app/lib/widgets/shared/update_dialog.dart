@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:upgrader/upgrader.dart';
+import '../../themes/app_shapes.dart';
 
 class CustomUpgradeAlert extends UpgradeAlert {
   CustomUpgradeAlert({
@@ -77,12 +78,12 @@ class _UpdateDialog extends StatelessWidget {
     final hasNotes = releaseNotes != null && releaseNotes!.isNotEmpty;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+      shape: squircleBorder(radius: 28.r),
       child: Container(
         padding: EdgeInsets.all(32.w),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28.r),
+          shape: squircleBorder(radius: 28.r),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -112,9 +113,9 @@ class _UpdateDialog extends StatelessWidget {
               SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20.r),
+                  shape: squircleBorder(radius: 20.r),
                 ),
                 child: Text(
                   'v$version',
@@ -144,10 +145,12 @@ class _UpdateDialog extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: Colors.blue.shade100),
+                shape: squircleBorder(
+                  radius: 12.r,
+                  side: BorderSide(color: Colors.blue.shade100),
+                ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,9 +182,7 @@ class _UpdateDialog extends StatelessWidget {
                         foregroundColor: Colors.grey[600],
                         side: BorderSide(color: Colors.grey[300]!, width: 2),
                         padding: EdgeInsets.symmetric(vertical: 20.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
+                        shape: squircleBorder(radius: 12.r),
                       ),
                       child: Text(
                         'Plus tard',
@@ -198,9 +199,7 @@ class _UpdateDialog extends StatelessWidget {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                      shape: squircleBorder(radius: 12.r),
                     ),
                     child: Text(
                       'Mettre à jour',

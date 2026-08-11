@@ -15,6 +15,7 @@ import '../../../widgets/auth/edit_profile_modal.dart';
 import '../../../widgets/settings/settings_row_tile.dart';
 import '../../../widgets/settings/settings_section.dart';
 import '../../../themes/app_colors.dart';
+import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_background.dart';
@@ -178,12 +179,9 @@ class _SettingsPageState extends State<SettingsPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
+          shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
         ),
         child: EditProfileModal(
           currentNickname: _user?.nickname ?? 'Utilisateur·ice',
@@ -370,10 +368,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     // padding 8 — ×3 for ScreenUtil units.
                     child: Container(
                       padding: EdgeInsets.all(24.w),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(36.r),
-                        boxShadow: [
+                        shape: squircleBorder(radius: 36.r),
+                        shadows: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 4,
@@ -569,14 +567,14 @@ class _SettingsPageState extends State<SettingsPage> {
       child: ShineWrapper(
         borderRadius: 24,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             gradient: LinearGradient(
               colors: [primary, primary.withAlpha(190)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(24.r),
-            boxShadow: [
+            shape: squircleBorder(radius: 20),
+            shadows: [
               BoxShadow(
                 color: primary.withValues(alpha: 0.3),
                 blurRadius: 12,
@@ -628,9 +626,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       Container(
                         padding: EdgeInsets.symmetric(
                             horizontal: 24.w, vertical: 10.h),
-                        decoration: const BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: kAccentYellow,
-                          borderRadius: BorderRadius.all(Radius.circular(30)),
+                          shape: squircleBorder(radius: 30),
                         ),
                         child: Text(
                           'Découvrir les offres',

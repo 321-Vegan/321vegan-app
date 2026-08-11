@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 
 /// One slide of the Dashboard news carousel.
 class PromoSlide {
@@ -135,9 +136,9 @@ class _PromoCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 60.h),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: primary,
-        borderRadius: BorderRadius.circular(60.r),
+        shape: squircleBorder(radius: 80.r),
       ),
       child: Row(
         children: [
@@ -179,9 +180,7 @@ class _PromoCard extends StatelessWidget {
                           horizontal: 36.w, vertical: 14.h),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30.r),
-                      ),
+                      shape: squircleBorder(radius: 30.r),
                     ),
                     child: Text(
                       'Voir plus',

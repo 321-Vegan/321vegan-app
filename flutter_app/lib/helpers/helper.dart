@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../themes/app_shapes.dart';
 
 extension StringCasingExtension on String {
   String toCapitalized() =>
@@ -36,7 +37,7 @@ class Helper {
         width: MediaQuery.of(context).size.width,
         child: Material(
           elevation: 10.0,
-          borderRadius: BorderRadius.circular(10),
+          shape: squircleBorder(radius: 10),
           child: Container(
             padding: const EdgeInsets.all(8),
             color: color,

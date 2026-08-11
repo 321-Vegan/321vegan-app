@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/product_of_interest.dart';
 import '../../services/api_service.dart';
+import '../../themes/app_shapes.dart';
 
 class ShopConfirmationModal extends StatefulWidget {
   final String shopName;
@@ -176,10 +177,10 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
               child: Container(
                 margin: EdgeInsets.symmetric(horizontal: 40.w),
                 padding: EdgeInsets.all(32.w),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(28.r),
-                  boxShadow: [
+                  shape: squircleBorder(radius: 28.r),
+                  shadows: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 40,
@@ -206,10 +207,10 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
                       horizontal: 48.w,
                       vertical: 24.h,
                     ),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: const Color(0xFF1A722E),
-                      borderRadius: BorderRadius.circular(24.r),
-                      boxShadow: [
+                      shape: squircleBorder(radius: 24.r),
+                      shadows: [
                         BoxShadow(
                           color: const Color(0xFF1A722E).withValues(alpha: 0.4),
                           blurRadius: 30,
@@ -274,9 +275,9 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
             horizontal: 20.w,
             vertical: 12.h,
           ),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12.r),
+            shape: squircleBorder(radius: 12.r),
           ),
           child: Text(
             widget.product.name,
@@ -333,9 +334,7 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
                   padding: EdgeInsets.symmetric(
                     vertical: 20.h,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
+                  shape: squircleBorder(radius: 16.r),
                   elevation: 2,
                 ),
                 child: Text(
@@ -360,9 +359,7 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
                   padding: EdgeInsets.symmetric(
                     vertical: 20.h,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
+                  shape: squircleBorder(radius: 16.r),
                   elevation: 4,
                 ),
                 child: Text(
@@ -452,9 +449,7 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
                       horizontal: 20.w,
                       vertical: 20.h,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
+                    shape: squircleBorder(radius: 14.r),
                     elevation: 4,
                   ),
                   child: Row(
@@ -513,9 +508,7 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
               backgroundColor: Colors.grey[300],
               foregroundColor: Colors.grey[800],
               padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
-              ),
+              shape: squircleBorder(radius: 16.r),
               elevation: 2,
             ),
             child: Text(

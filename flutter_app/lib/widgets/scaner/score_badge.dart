@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 /// Nutriscore + Green-score
 class ScoreBadges extends StatelessWidget {
@@ -74,9 +75,9 @@ class _ScoreImage extends StatelessWidget {
           Container(
             width: 140.w,
             height: 140.w,
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(10.r),
+              shape: squircleBorder(radius: 10.r),
             ),
             child: Center(
               child: Text(

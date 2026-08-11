@@ -1,8 +1,10 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:vegan_app/helpers/time_counter/time_counter.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
 
 /// The image that gets shared: the home page (counter + stats) inside a phone
@@ -90,10 +92,10 @@ class ShareHomeCard extends StatelessWidget {
   Widget _buildPhoneMockup() {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: const Color(0xFF1F2937),
-        borderRadius: BorderRadius.circular(38),
-        boxShadow: [
+        shape: squircleBorder(radius: 38),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.35),
             blurRadius: 18,
@@ -101,8 +103,8 @@ class ShareHomeCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+      child: ClipSmoothRect(
+        radius: squircleRadius(30),
         child: SizedBox(
           width: 234,
           height: 415,
@@ -146,10 +148,12 @@ class ShareHomeCard extends StatelessWidget {
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: kBorderDefault),
+                      shape: squircleBorder(
+                        radius: 20,
+                        side: const BorderSide(color: kBorderDefault),
+                      ),
                     ),
                     child: Text(
                       'Depuis le ${DateFormat('dd/MM/yyyy').format(targetDate)}',
@@ -197,8 +201,6 @@ class ShareHomeCard extends StatelessWidget {
         _counterColumn('${breakdown.hours}', 'heures'),
         const SizedBox(width: 8),
         _counterColumn('${breakdown.minutes}', 'min'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.seconds}', 'sec'),
       ],
     );
   }
@@ -231,11 +233,13 @@ class ShareHomeCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: kBorderDefault),
-        boxShadow: [
+        shape: squircleBorder(
+          radius: 12,
+          side: const BorderSide(color: kBorderDefault),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
             offset: const Offset(0, 2),

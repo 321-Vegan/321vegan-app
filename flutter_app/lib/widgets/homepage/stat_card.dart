@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/widgets/shared/info_box.dart';
 
 /// Definition of one impact stat, shared between the home page cards and the
 /// share card.
@@ -45,7 +47,7 @@ const List<HomeStat> homeStats = [
     illustration: 'lib/assets/images/stat-cards/animals.webp',
     avatar: 'lib/assets/avatars/cochon.png',
     info:
-        "L'industrie de l'élevage cause d'immenses souffrances aux animaux en les considérant comme des objets. Choisir le véganisme, c'est refuser cette exploitation. Ici, on souligne l'effet positif que chacun peut avoir pour un monde plus juste et durable.",
+        "L'industrie de l'élevage cause d'immenses souffrances aux animaux en les considérant comme des objets.\n\nChoisir le véganisme, c'est refuser cette exploitation.\n\nIci, on souligne l'effet positif que chacun peut avoir pour un monde plus juste et durable.",
   ),
   HomeStat(
     savingsKey: 'co2Unit',
@@ -57,7 +59,7 @@ const List<HomeStat> homeStats = [
     illustration: 'lib/assets/images/stat-cards/co2.webp',
     avatar: 'lib/assets/avatars/canard.png',
     info:
-        "L'alimentation végétale a aussi un impact sur l'environnement et permet de réduire considérablement son empreinte carbone. La quantité de CO2 économisée vient du fait que l'élevage est l'une des principales sources d'émission de gaz à effet de serre, de déforestation, de pollution de l'air et de pollution de l'eau.",
+        "L'alimentation végétale a aussi un impact sur l'environnement et permet de réduire considérablement son empreinte carbone.\n\nLa quantité de CO2 économisée vient du fait que l'élevage est l'une des principales sources d'émission de gaz à effet de serre, de déforestation, de pollution de l'air et de pollution de l'eau.",
   ),
   HomeStat(
     savingsKey: 'forestUnit',
@@ -69,7 +71,7 @@ const List<HomeStat> homeStats = [
     illustration: 'lib/assets/images/stat-cards/forest.webp',
     avatar: 'lib/assets/avatars/lapin.png',
     info:
-        "L'élevage est l'une des principales causes de déforestation. Il faut en effet énormément de place pour cultiver les céréales (notamment soja et maïs) destinés à nourrir les animaux d'élevage. Cette déforestation a des conséquences désastreuses sur la biodiversité et les communautés locales. Adopter une alimentation végétale c'est réduire la pression sur les forêts et à encourager une agriculture plus durable.",
+        "L'élevage est l'une des principales causes de déforestation. Il faut en effet énormément de place pour cultiver les céréales (notamment soja et maïs) destinés à nourrir les animaux d'élevage.\n\nCette déforestation a des conséquences désastreuses sur la biodiversité et les communautés locales.\n\nAdopter une alimentation végétale c'est réduire la pression sur les forêts et à encourager une agriculture plus durable.",
   ),
   HomeStat(
     savingsKey: 'waterUnit',
@@ -81,7 +83,7 @@ const List<HomeStat> homeStats = [
     illustration: 'lib/assets/images/stat-cards/water.webp',
     avatar: 'lib/assets/avatars/poisson.png',
     info:
-        "En choisissant d'être végétalien, vous aidez à économiser de précieuses ressources en eau. La production de produits animaux nécessite une gigantesque quantité d'eau, notamment pour l'irrigation des cultures pour les animaux d'élevage. Et cela sans parler de la pollution de l'eau due aux déjections qu'ils produisent.",
+        "En choisissant d'être végétalien, vous aidez à économiser de précieuses ressources en eau.\n\nLa production de produits animaux nécessite une gigantesque quantité d'eau, notamment pour l'irrigation des cultures pour les animaux d'élevage.\n\nEt cela sans parler de la pollution de l'eau due aux déjections qu'ils produisent.",
   ),
 ];
 
@@ -98,27 +100,31 @@ Widget buildStatCard(
   // Figma spec: width 355, height hug (~104), radius 12, stroke 1,
   // padding 7 (v) / 13 (h), gap 10 — all ×3 for ScreenUtil units.
   return InkWell(
-    borderRadius: BorderRadius.circular(36.r),
+    customBorder: squircleBorder(radius: 12),
     onTap: () {
-      showDialog(
+      showModalBottomSheet(
         context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
         builder: (context) => StatInfoDialog(stat: stat, value: value),
       );
     },
     // Spacing between cards is owned by the Dashboard column (AppSpacing),
     // so the card carries no outer margin.
     child: Container(
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(36.r),
-        boxShadow: [
+        shape: squircleBorder(
+          radius: 36.r,
+          side: const BorderSide(color: kBorderDefault, width: 1),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
             offset: const Offset(0, 4),
             blurRadius: 16,
           ),
         ],
-        border: Border.all(color: kBorderDefault, width: 1),
       ),
       padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 21.h),
       child: Row(
@@ -193,150 +199,113 @@ class StatInfoDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      child: Container(
-        padding: EdgeInsets.all(32.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28.r),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Avatar
-            Container(
-              width: 240.w,
-              height: 240.w,
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: stat.cardColor.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Image.asset(stat.avatar, fit: BoxFit.contain),
+    final valueLabel =
+        '$value ${stat.unitName}'.trim().replaceAll(RegExp(r'\s+'), ' ');
+    // Figma spec: fixed width 390, radius 12 (top corners), padding 7 (top) /
+    // 17 (h), gap 20 between children — ×3 for ScreenUtil units.
+    return Container(
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorderOnly(topLeft: 36.r, topRight: 36.r),
+      ),
+      padding: EdgeInsets.fromLTRB(
+          51.w, 21.h, 51.w, MediaQuery.of(context).viewInsets.bottom + 60.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Container(
+            width: 40.w,
+            height: 4.h,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2.r),
             ),
-            SizedBox(height: 24.h),
-            // Title
-            Text(
-              stat.title,
-              style: TextStyle(
-                fontSize: 56.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-              textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 60.h),
+          // Value + title merged into one heading
+          Text(
+            '$valueLabel ${stat.title}',
+            style: TextStyle(
+              fontSize: 56.sp,
+              fontWeight: FontWeight.bold,
+              color: kTextPrimary,
             ),
-            SizedBox(height: 8.h),
-            // Current value badge
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: stat.cardColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 60.h),
+          // Avatar
+          SizedBox(
+            height: 260.w,
+            child: Image.asset(stat.avatar, fit: BoxFit.contain),
+          ),
+          SizedBox(height: 60.h),
+          // Explanation
+          Flexible(
+            child: SingleChildScrollView(
               child: Text(
-                '$value ${stat.unitName}'.trim(),
+                stat.info,
                 style: TextStyle(
-                  color: stat.cardColor,
-                  fontSize: 36.sp,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
+                  fontSize: 42.sp,
+                  color: Colors.grey[600],
+                  height: 1.4,
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(height: 16.h),
-            // Explanation
-            Flexible(
-              child: SingleChildScrollView(
-                child: Text(
-                  stat.info,
-                  style: TextStyle(
-                    fontSize: 42.sp,
-                    color: Colors.grey[600],
-                    height: 1.4,
+          ),
+          SizedBox(height: 60.h),
+          // Sources info box
+          const InfoBox(
+            text:
+                'Les calculs sont des estimations basées sur des moyennes issues d\'études scientifiques.',
+          ),
+          SizedBox(height: 60.h),
+          // Buttons
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _openSources,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: kAccentYellow,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(vertical: 24.h),
+                    shape: const StadiumBorder(),
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            // Sources info box
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: Colors.blue.shade100),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline_rounded,
-                      color: Colors.blue.shade400, size: 42.sp),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: Text(
-                      'Les calculs sont des estimations basées sur des moyennes issues d\'études scientifiques.',
-                      style: TextStyle(
-                        fontSize: 36.sp,
-                        color: Colors.blue.shade700,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 32.h),
-            // Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _openSources,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[600],
-                      side: BorderSide(color: Colors.grey[300]!, width: 2),
-                      padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Sources',
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  child: Text(
+                    'Sources',
+                    style: TextStyle(
+                      fontSize: 44.sp,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Fermer',
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(vertical: 24.h),
+                    shape: const StadiumBorder(),
+                  ),
+                  child: Text(
+                    'D\'acc !',
+                    style: TextStyle(
+                      fontSize: 44.sp,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

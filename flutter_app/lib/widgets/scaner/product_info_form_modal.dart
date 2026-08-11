@@ -1,7 +1,9 @@
 import 'dart:io' show File;
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 class ProductInfoFormResult {
   final String productName;
@@ -85,12 +87,9 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
+          shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
         ),
         padding: EdgeInsets.all(24.w),
         child: SingleChildScrollView(
@@ -103,9 +102,9 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
                 children: [
                   Container(
                     padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(12),
+                      shape: squircleBorder(radius: 12),
                     ),
                     child: Icon(
                       Icons.info_outline,
@@ -225,8 +224,8 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
               if (_photo != null) ...[
                 Stack(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                    ClipSmoothRect(
+                      radius: squircleRadius(12),
                       child: Image.file(
                         _photo!,
                         height: 180.h,
@@ -269,12 +268,14 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
                   child: Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(vertical: 24.h),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                        width: 1.5,
+                      shape: squircleBorder(
+                        radius: 12,
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                     child: Column(
@@ -307,9 +308,7 @@ class _ProductInfoFormModalState extends State<ProductInfoFormModal> {
                     backgroundColor: Colors.green.shade700,
                     disabledBackgroundColor: Colors.grey.shade300,
                     padding: EdgeInsets.symmetric(vertical: 14.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: squircleBorder(radius: 12),
                   ),
                   child: const Text(
                     'Envoyer',

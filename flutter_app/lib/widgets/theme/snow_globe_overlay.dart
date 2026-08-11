@@ -1,15 +1,17 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import '../../themes/app_shapes.dart';
 
 class SnowGlobeOverlay extends StatefulWidget {
   final Widget child;
   final int particleCount;
   final IconData? particleIcon;
   final String? particleAsset;
-  final BorderRadius? borderRadius;
+  final SmoothBorderRadius? borderRadius;
 
   /// Tint for icon particles and the plain-circle fallback. Defaults to
   /// white, which reads well on the vivid gradient card previews this was
@@ -154,8 +156,8 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
   Widget build(BuildContext context) {
     final elapsed = _lastTick.inMilliseconds / 1000.0;
 
-    return ClipRRect(
-      borderRadius: widget.borderRadius ?? BorderRadius.circular(10),
+    return ClipSmoothRect(
+      radius: widget.borderRadius ?? squircleRadius(10),
       child: Stack(
         children: [
           widget.child,

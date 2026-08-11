@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:vegan_app/services/api_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 class CreateShopSheet extends StatefulWidget {
   final LatLng coordinates;
@@ -168,10 +169,12 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
                   children: [
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: primary.withValues(alpha: 0.2)),
+                        shape: squircleBorder(
+                          radius: 8.r,
+                          side: BorderSide(color: primary.withValues(alpha: 0.2)),
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -262,9 +265,7 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
                           backgroundColor: primary,
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 14.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
+                          shape: squircleBorder(radius: 12.r),
                         ),
                         child: _isSubmitting
                             ? const SizedBox(

@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/seasonal_theme.dart';
@@ -6,6 +7,7 @@ import '../../helpers/theme_helper.dart';
 import '../../main.dart';
 import '../../services/subscription_service.dart';
 import '../../pages/app_pages/Profile/subscription_page.dart';
+import '../../themes/app_shapes.dart';
 import 'snow_globe_overlay.dart';
 
 class ThemeSelectorModal extends StatefulWidget {
@@ -188,9 +190,9 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+          shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
         ),
         child: const Center(child: CircularProgressIndicator()),
       );
@@ -203,8 +205,8 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     final isCurrentLocked = currentTheme.isPremium && !isSubscribed;
 
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+      decoration: ShapeDecoration(
+        shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -394,9 +396,9 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: _isAutoTheme ? currentTheme.primaryColor : Colors.grey[200],
-          borderRadius: BorderRadius.circular(50.r),
+          shape: squircleBorder(radius: 50.r),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -448,14 +450,14 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         child: GestureDetector(
           onTap: isLocked ? _openSubscriptionPage : null,
           child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28.r),
+            decoration: ShapeDecoration(
+              shape: squircleBorder(radius: 28.r),
               gradient: LinearGradient(
                 colors: [theme.waveColor, theme.primaryColor],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              boxShadow: [
+              shadows: [
                 BoxShadow(
                   color: theme.primaryColor.withValues(alpha: 0.3),
                   blurRadius: 24,
@@ -464,8 +466,8 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28.r),
+            child: ClipSmoothRect(
+              radius: squircleRadius(28.r),
               child: _buildCardSnowGlobe(
                 theme: theme,
                 child: Stack(
@@ -483,9 +485,9 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 10.w, vertical: 5.h),
-                                  decoration: BoxDecoration(
+                                  decoration: ShapeDecoration(
                                     color: Colors.white.withValues(alpha: 0.25),
-                                    borderRadius: BorderRadius.circular(10.r),
+                                    shape: squircleBorder(radius: 10.r),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -509,9 +511,9 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 10.w, vertical: 5.h),
-                                  decoration: BoxDecoration(
+                                  decoration: ShapeDecoration(
                                     color: Colors.black.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(10.r),
+                                    shape: squircleBorder(radius: 10.r),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -631,9 +633,9 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 18.w, vertical: 8.h),
-                                  decoration: BoxDecoration(
+                                  decoration: ShapeDecoration(
                                     color: Colors.amber[700],
-                                    borderRadius: BorderRadius.circular(14.r),
+                                    shape: squircleBorder(radius: 14.r),
                                   ),
                                   child: Text(
                                     'Débloqué avec l\'abonnement soutien',
@@ -668,7 +670,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         theme.particleType != ParticleType.snowflakes) {
       return child;
     }
-    final br = BorderRadius.circular(28.r);
+    final br = squircleRadius(28.r);
     return SnowGlobeOverlay(
       particleAsset: theme.snowGlobeParticleAsset,
       particleIcon: theme.snowGlobeParticleIcon,
@@ -724,9 +726,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                 isLocked ? Colors.amber[700] : currentTheme.primaryColor,
             foregroundColor: Colors.white,
             padding: EdgeInsets.symmetric(vertical: 20.h),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18.r),
-            ),
+            shape: squircleBorder(radius: 18.r),
             elevation: 0,
           ),
           child: Row(

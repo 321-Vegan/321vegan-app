@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../helpers/horizontal_scroll_sizing.dart';
 import '../../models/badge.dart' as app_badge;
+import '../../themes/app_shapes.dart';
 import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../../models/user.dart';
@@ -109,9 +110,9 @@ class BadgesGrid extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.75,
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+          shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
         ),
         padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 32.h),
         child: Column(
@@ -199,8 +200,7 @@ class BadgesGrid extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+        shape: squircleBorder(radius: 20.r),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -224,14 +224,16 @@ class BadgesGrid extends StatelessWidget {
             SizedBox(height: 16.h),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: isUnlocked
                     ? Colors.green.withValues(alpha: 0.1)
                     : Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: isUnlocked ? Colors.green : Colors.orange,
-                  width: 1,
+                shape: squircleBorder(
+                  radius: 12.r,
+                  side: BorderSide(
+                    color: isUnlocked ? Colors.green : Colors.orange,
+                    width: 1,
+                  ),
                 ),
               ),
               child: Row(

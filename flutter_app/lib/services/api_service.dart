@@ -479,8 +479,8 @@ class ApiService {
   // Get all partners
   static Future<List<Partners>> getPartners() async {
     try {
-      final url =
-          Uri.parse('$_baseUrl/partners/search?is_active=true&page_size=100');
+      final url = Uri.parse(
+          '$_baseUrl/partners/search?is_active=true&page_size=100&sortby=display_order&direction=asc');
 
       final response = await http.get(
         url,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/badge.dart' as app_badge;
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 
 class BadgeUnlockModal extends StatefulWidget {
   final app_badge.Badge badge;
@@ -73,11 +74,13 @@ class _BadgeUnlockModalState extends State<BadgeUnlockModal>
               child: Container(
                 margin: EdgeInsets.symmetric(horizontal: 40.w),
                 padding: EdgeInsets.all(32.w),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(42.r),
-                  border: Border.all(color: kBorderDefault),
-                  boxShadow: [
+                  shape: squircleBorder(
+                    radius: 42.r,
+                    side: const BorderSide(color: kBorderDefault),
+                  ),
+                  shadows: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 40,
@@ -160,9 +163,7 @@ class _BadgeUnlockModalState extends State<BadgeUnlockModal>
                               Theme.of(context).colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 20.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(42.r),
-                          ),
+                          shape: squircleBorder(radius: 42.r),
                           elevation: 0,
                         ),
                         child: Text(

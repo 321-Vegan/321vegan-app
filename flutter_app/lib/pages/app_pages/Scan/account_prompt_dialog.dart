@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 class AccountPromptDialog extends StatelessWidget {
   final VoidCallback onCreateAccount;
@@ -10,14 +11,12 @@ class AccountPromptDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28.r),
-      ),
+      shape: squircleBorder(radius: 28.r),
       child: Container(
         padding: EdgeInsets.all(32.w),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(28.r),
+          shape: squircleBorder(radius: 28.r),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -69,9 +68,7 @@ class AccountPromptDialog extends StatelessWidget {
                       foregroundColor: Colors.grey[600],
                       side: BorderSide(color: Colors.grey[300]!, width: 2),
                       padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                      shape: squircleBorder(radius: 12.r),
                     ),
                     child: Text(
                       'Plus tard',
@@ -96,9 +93,7 @@ class AccountPromptDialog extends StatelessWidget {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                      shape: squircleBorder(radius: 12.r),
                     ),
                     child: Text(
                       'Créer un compte',

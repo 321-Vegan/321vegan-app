@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../services/b12_reminder_service.dart';
+import '../../themes/app_shapes.dart';
 
 /// Primary-tinted "prochain rappel/prise" pill, shared by the B12 settings
 /// and history pages so the relative-day phrasing (aujourd'hui/demain/…)
@@ -32,10 +33,12 @@ class B12NextReminderBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: primary.withValues(alpha: 0.25)),
+        shape: squircleBorder(
+          radius: 24.r,
+          side: BorderSide(color: primary.withValues(alpha: 0.25)),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

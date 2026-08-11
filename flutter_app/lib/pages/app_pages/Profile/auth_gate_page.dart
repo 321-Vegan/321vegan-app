@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../services/auth_service.dart';
+import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../widgets/auth/login_form.dart';
 import '../../../widgets/auth/register_form.dart';
@@ -72,14 +73,14 @@ class _AuthGatePageState extends State<AuthGatePage> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(28.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         gradient: LinearGradient(
           colors: [primary, primary.withAlpha(190)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(40.r),
-        boxShadow: [
+        shape: squircleBorder(radius: 40.r),
+        shadows: [
           BoxShadow(
             color: primary.withValues(alpha: 0.3),
             blurRadius: 12,

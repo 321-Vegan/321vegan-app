@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 
 /// A tappable row showing a label and an optional trailing value/icon, used
 /// for the "Compte", "B12" and "Produits" sections in the Paramètres screen.
@@ -28,15 +29,17 @@ class SettingsRowTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(36.r),
+      shape: squircleBorder(radius: 36.r),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(36.r),
+        customBorder: squircleBorder(radius: 36.r),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 45.h),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(36.r),
-            border: Border.all(color: kBorderDefault),
+          decoration: ShapeDecoration(
+            shape: squircleBorder(
+              radius: 36.r,
+              side: const BorderSide(color: kBorderDefault),
+            ),
           ),
           child: Row(
             children: [

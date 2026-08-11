@@ -19,7 +19,7 @@ const Color kPrimaryTag = Color(0xFFDCF0EA);
 
 /// Default page background gradient ("Background/Shade" in Figma).
 /// TODO: fold into the seasonal-theme system when seasonal backgrounds
-/// are redesigned.
+/// are redesigned ?
 const Color kBackgroundGradientTop = Color(0xFFF7E9CC);
 const Color kBackgroundGradientBottom = Color(0xFFFAF8F3);
 

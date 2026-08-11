@@ -4,6 +4,7 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 
 /// Full-screen page listing every product the user has submitted.
@@ -169,9 +170,7 @@ class _SentProductsPageState extends State<SentProductsPage> {
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 20.h),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(42.r),
-                  ),
+                  shape: squircleBorder(radius: 42.r),
                 ),
                 child: Text(
                   'Scanner un produit',
@@ -222,10 +221,12 @@ class _SentProductsPageState extends State<SentProductsPage> {
 
     return Container(
       padding: EdgeInsets.all(30.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(36.r),
-        border: Border.all(color: kBorderDefault),
+        shape: squircleBorder(
+          radius: 36.r,
+          side: const BorderSide(color: kBorderDefault),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

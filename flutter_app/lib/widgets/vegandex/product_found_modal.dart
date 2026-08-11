@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import '../../models/product_of_interest.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 import '../shared/app_card.dart';
 
 class ProductFoundModal extends StatefulWidget {
@@ -188,8 +190,8 @@ class _ProductFoundModalState extends State<ProductFoundModal>
                     textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 28.h),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(24.r),
+                  ClipSmoothRect(
+                    radius: squircleRadius(24.r),
                     child: Container(
                       width: double.infinity,
                       height: 340.w,
@@ -246,9 +248,9 @@ class _ProductFoundModalState extends State<ProductFoundModal>
                     width: double.infinity,
                     padding:
                         EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: kPrimaryTag,
-                      borderRadius: BorderRadius.circular(16.r),
+                      shape: squircleBorder(radius: 16.r),
                     ),
                     child: Text(
                       widget.isNewDiscovery
@@ -271,9 +273,7 @@ class _ProductFoundModalState extends State<ProductFoundModal>
                         backgroundColor: primary,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 20.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16.r),
-                        ),
+                        shape: squircleBorder(radius: 16.r),
                         elevation: 0,
                       ),
                       child: Text(

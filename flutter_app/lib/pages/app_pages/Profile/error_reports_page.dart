@@ -5,6 +5,7 @@ import 'package:vegan_app/models/error_report.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/error_report_badge_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 
 /// Full-screen page listing the error reports sent by the current user,
@@ -217,9 +218,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 20.h),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(42.r),
-                  ),
+                  shape: squircleBorder(radius: 42.r),
                 ),
                 child: Text(
                   'Réessayer',
@@ -273,10 +272,12 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
 
     return Container(
       padding: EdgeInsets.all(30.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(36.r),
-        border: Border.all(color: kBorderDefault),
+        shape: squircleBorder(
+          radius: 36.r,
+          side: const BorderSide(color: kBorderDefault),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -345,10 +346,12 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(20.w),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Colors.green.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(20.r),
-                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                shape: squircleBorder(
+                  radius: 20.r,
+                  side: BorderSide(color: Colors.green.withValues(alpha: 0.3)),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

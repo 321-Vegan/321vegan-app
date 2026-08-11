@@ -6,6 +6,7 @@ import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/models/vegan_status.dart';
 import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
 import 'package:vegan_app/services/auth_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/scaner/product_info_form_modal.dart';
 
 class NoResultCard extends StatelessWidget {
@@ -17,10 +18,10 @@ class NoResultCard extends StatelessWidget {
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       height: 1000.h,
       padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.all(Radius.circular(20)),
-        boxShadow: [
+        shape: squircleBorder(radius: 20),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
             spreadRadius: 5,
@@ -100,14 +101,14 @@ class NotFoundProductInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 850.h,
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         gradient: LinearGradient(
           colors: [Colors.white, Colors.grey.shade200],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
+        shape: squircleBorder(radius: 30),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
             spreadRadius: 5,
@@ -145,9 +146,9 @@ class NotFoundProductInfoCard extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+                shape: squircleBorder(radius: 20),
               ),
               child: const Text(
                 "Introuvable",
@@ -200,12 +201,9 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
+          shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
         ),
         padding: EdgeInsets.all(24.w),
         child: SingleChildScrollView(
@@ -218,9 +216,9 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
                 children: [
                   Container(
                     padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(12),
+                      shape: squircleBorder(radius: 12),
                     ),
                     child: Icon(
                       Icons.info_outline,
@@ -291,9 +289,7 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade700,
                     padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: squircleBorder(radius: 12),
                   ),
                   child: const Text(
                     'J\'ai compris',
@@ -333,10 +329,12 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
     return [
       Container(
         padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.blue.shade50,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.blue.shade200, width: 2),
+          shape: squircleBorder(
+            radius: 20,
+            side: BorderSide(color: Colors.blue.shade200, width: 2),
+          ),
         ),
         child: Column(
           children: [
@@ -372,9 +370,7 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade700,
                   padding: EdgeInsets.symmetric(vertical: 16.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
+                  shape: squircleBorder(radius: 15),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -444,9 +440,7 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                shape: squircleBorder(radius: 20),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -479,9 +473,7 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 20.w),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+                shape: squircleBorder(radius: 20),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -518,9 +510,7 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 24.w),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
+              shape: squircleBorder(radius: 20),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -557,12 +547,14 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
   }) {
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: iconColor.withValues(alpha: 0.3),
-          width: 1,
+        shape: squircleBorder(
+          radius: 12,
+          side: BorderSide(
+            color: iconColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
       ),
       child: Row(
@@ -603,14 +595,14 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
   Widget build(BuildContext context) {
     return Container(
       height: 1000.h,
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         gradient: LinearGradient(
           colors: [Colors.white, Colors.grey.shade200],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
+        shape: squircleBorder(radius: 30),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
             spreadRadius: 5,
@@ -650,10 +642,12 @@ class NonVeganProductInfoCardState extends State<NonVeganProductInfoCard> {
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.blue.shade200, width: 1.5),
+                    shape: squircleBorder(
+                      radius: 15,
+                      side: BorderSide(color: Colors.blue.shade200, width: 1.5),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -735,18 +729,20 @@ class RejectedProductInfoCard extends StatelessWidget {
 
     return Container(
       height: 740.h,
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         gradient: LinearGradient(
           colors: [Colors.white, Colors.grey.shade200],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: Colors.red,
-          width: 3,
+        shape: squircleBorder(
+          radius: 30,
+          side: const BorderSide(
+            color: Colors.red,
+            width: 3,
+          ),
         ),
-        boxShadow: [
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
             spreadRadius: 5,

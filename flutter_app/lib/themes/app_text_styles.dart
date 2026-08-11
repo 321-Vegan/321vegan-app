@@ -28,4 +28,14 @@ class AppTextStyles {
         letterSpacing: -1,
         color: kTextPrimary,
       );
+
+  /// "Résultats (N)" search-results counter — [sectionTitle] a size down.
+  static TextStyle get resultsCount => TextStyle(
+        fontFamily: 'Baloo2',
+        fontWeight: FontWeight.w600,
+        fontSize: 66.sp,
+        height: 1.0,
+        letterSpacing: -1,
+        color: kTextPrimary,
+      );
 }

@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
 
 /// Shows a congratulation popup celebrating the user's vegan anniversary.
@@ -116,9 +117,7 @@ class _AnniversaryDialogState extends State<_AnniversaryDialog> {
 
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28.r),
-      ),
+      shape: squircleBorder(radius: 28.r),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -144,9 +143,7 @@ class _AnniversaryDialogState extends State<_AnniversaryDialog> {
                         foregroundColor: primary,
                         side: BorderSide(color: primary, width: 2),
                         padding: EdgeInsets.symmetric(vertical: 20.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
+                        shape: squircleBorder(radius: 12.r),
                       ),
                       icon: _sharing
                           ? SizedBox(
@@ -176,9 +173,7 @@ class _AnniversaryDialogState extends State<_AnniversaryDialog> {
                         backgroundColor: primary,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 20.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
+                        shape: squircleBorder(radius: 12.r),
                       ),
                       child: Text(
                         'Merci !',
@@ -253,9 +248,9 @@ class AnniversaryCard extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.all(32.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28.r),
+        shape: squircleBorder(radius: 28.r),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -373,10 +368,12 @@ class _RecapSection extends StatelessWidget {
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Colors.grey[200]!),
+            shape: squircleBorder(
+              radius: 16.r,
+              side: BorderSide(color: Colors.grey[200]!),
+            ),
           ),
           child: Column(children: rows),
         ),

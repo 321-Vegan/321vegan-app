@@ -16,6 +16,7 @@ import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/map/create_shop_sheet.dart';
 import 'package:vegan_app/widgets/map/map_access_overlay.dart';
 import 'package:vegan_app/widgets/map/map_filter_page.dart';
@@ -350,9 +351,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: squircleBorderOnly(topLeft: 20, topRight: 20),
       builder: (_) => CreateShopSheet(coordinates: coords),
     ).then((created) {
       if (created == true) _loadShops();
@@ -481,10 +480,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(8.r),
-                        boxShadow: [
+                        shape: squircleBorder(radius: 8.r),
+                        shadows: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 4,
@@ -515,9 +514,9 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 child: Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(20.r),
+                    shape: squircleBorder(radius: 20.r),
                   ),
                   child: Text(
                     'Déplacez la carte pour positionner le magasin',
@@ -541,9 +540,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                       side: BorderSide(color: Colors.grey.shade400),
                       padding: EdgeInsets.symmetric(
                           horizontal: 20.w, vertical: 12.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24.r),
-                      ),
+                      shape: squircleBorder(radius: 24.r),
                     ),
                     child: Text('Annuler',
                         style: TextStyle(
@@ -561,9 +558,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(
                           horizontal: 20.w, vertical: 12.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24.r),
-                      ),
+                      shape: squircleBorder(radius: 24.r),
                     ),
                   ),
                 ],
@@ -672,10 +667,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 child: Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20.r),
-                    boxShadow: [
+                    shape: squircleBorder(radius: 20.r),
+                    shadows: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 6,
@@ -746,10 +741,10 @@ class _MapActionButton extends StatelessWidget {
       child: Container(
         width: 144.w,
         height: 144.w,
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: background ?? Colors.white,
-          borderRadius: BorderRadius.circular(42.r),
-          boxShadow: [
+          shape: squircleBorder(radius: 42.r),
+          shadows: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 10,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/seasonal_theme.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 import '../theme/snow_globe_overlay.dart';
 
 /// Paints the app's one basic background gradient behind [child] — the same
@@ -48,7 +49,7 @@ class AppBackground extends StatelessWidget {
         particleCount:
             seasonal.particleType == ParticleType.snowflakes ? 24 : 16,
         particleColor: seasonal.primaryColor,
-        borderRadius: BorderRadius.zero,
+        borderRadius: squircleRadius(0),
         child: backdrop,
       );
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 
 /// Dismissible nudge shown on the Dashboard while the user has no B12
 /// reminder configured yet. Purely presentational — [DashboardPage] decides
@@ -21,10 +22,12 @@ class B12ReminderBanner extends StatelessWidget {
     // Secondary/Default, bg Secondary/Tag, padding 15, gap 10 (×3 units).
     return Container(
       padding: EdgeInsets.all(45.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: kSecondaryTag,
-        borderRadius: BorderRadius.circular(48.r),
-        border: Border.all(color: kAccentYellow),
+        shape: squircleBorder(
+          radius: 48.r,
+          side: const BorderSide(color: kAccentYellow),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,9 +51,9 @@ class B12ReminderBanner extends StatelessWidget {
                   child: Container(
                     padding:
                         EdgeInsets.symmetric(horizontal: 36.w, vertical: 14.h),
-                    decoration: const BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: kAccentYellow,
-                      borderRadius: BorderRadius.all(Radius.circular(30)),
+                      shape: squircleBorder(radius: 30),
                     ),
                     child: Text(
                       'Activer les rappels',

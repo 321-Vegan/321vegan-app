@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import '../../models/product_category.dart';
 import '../../models/product_of_interest.dart';
+import '../../themes/app_shapes.dart';
 
 class CategoryProductsView extends StatelessWidget {
   final ProductCategory category;
@@ -134,22 +136,24 @@ class CategoryProductsView extends StatelessWidget {
   Widget _buildProductCard(
       ProductOfInterest product, bool isScanned, String? baseUrl) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20.r),
-        boxShadow: [
+        shape: squircleBorder(
+          radius: 20.r,
+          side: BorderSide(
+            color: isScanned
+                ? const Color(0xFF1A722E).withValues(alpha: 0.3)
+                : Colors.grey[300]!,
+            width: 2,
+          ),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(
-          color: isScanned
-              ? const Color(0xFF1A722E).withValues(alpha: 0.3)
-              : Colors.grey[300]!,
-          width: 2,
-        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -157,11 +161,8 @@ class CategoryProductsView extends StatelessWidget {
           // Product image
           Expanded(
             flex: 3,
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(18.r),
-                topRight: Radius.circular(18.r),
-              ),
+            child: ClipSmoothRect(
+              radius: squircleRadius(18.r),
               child: ColorFiltered(
                 colorFilter: isScanned
                     ? const ColorFilter.mode(
@@ -203,9 +204,9 @@ class CategoryProductsView extends StatelessWidget {
               padding: EdgeInsets.all(12.w),
               child: Container(
                 padding: EdgeInsets.all(16.w),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: isScanned ? Colors.grey.shade100 : Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(16.r),
+                  shape: squircleBorder(radius: 16.r),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 
 /// A titled row with a trailing switch, used for every on/off preference.
 /// Same card spec as [SettingsRowTile] (radius 12, Border/Default, white).
@@ -31,10 +32,12 @@ class SettingsToggleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 12.h),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(36.r),
-        border: Border.all(color: kBorderDefault),
+        shape: squircleBorder(
+          radius: 36.r,
+          side: const BorderSide(color: kBorderDefault),
+        ),
       ),
       child: Row(
         children: [

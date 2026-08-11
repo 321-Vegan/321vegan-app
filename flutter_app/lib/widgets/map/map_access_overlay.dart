@@ -1,10 +1,12 @@
 import 'dart:ui';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/subscription_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/auth/forgot_password_form.dart';
 import 'package:vegan_app/widgets/auth/login_form.dart';
 import 'package:vegan_app/widgets/auth/register_form.dart';
@@ -54,8 +56,11 @@ class _MapAccessOverlayState extends State<MapAccessOverlay> {
         initialChildSize: 0.65,
         minChildSize: 0.4,
         maxChildSize: 0.85,
-        builder: (context, scrollController) => ClipRRect(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+        builder: (context, scrollController) => ClipSmoothRect(
+          radius: SmoothBorderRadius.only(
+            topLeft: SmoothRadius(cornerRadius: 28.r, cornerSmoothing: kCornerSmoothing),
+            topRight: SmoothRadius(cornerRadius: 28.r, cornerSmoothing: kCornerSmoothing),
+          ),
           child: Scaffold(
             backgroundColor: Colors.white,
             body: SingleChildScrollView(
@@ -155,9 +160,7 @@ class _MapAccessOverlayState extends State<MapAccessOverlay> {
                               backgroundColor: primaryColor,
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 20.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
+                              shape: squircleBorder(radius: 16.r),
                               elevation: 0,
                             ),
                             child: Text(
@@ -180,9 +183,7 @@ class _MapAccessOverlayState extends State<MapAccessOverlay> {
                                 side:
                                     BorderSide(color: primaryColor, width: 1.5),
                                 padding: EdgeInsets.symmetric(vertical: 20.h),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16.r),
-                                ),
+                                shape: squircleBorder(radius: 16.r),
                               ),
                               child: Text(
                                 'Tester gratuitement pendant 6h',
@@ -203,9 +204,7 @@ class _MapAccessOverlayState extends State<MapAccessOverlay> {
                               backgroundColor: primaryColor,
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 20.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
+                              shape: squircleBorder(radius: 16.r),
                               elevation: 0,
                             ),
                             child: Text(
@@ -227,9 +226,7 @@ class _MapAccessOverlayState extends State<MapAccessOverlay> {
                               foregroundColor: primaryColor,
                               side: BorderSide(color: primaryColor, width: 1.5),
                               padding: EdgeInsets.symmetric(vertical: 20.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
+                              shape: squircleBorder(radius: 16.r),
                             ),
                             child: Text(
                               'Se connecter',

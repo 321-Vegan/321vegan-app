@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../helpers/preference_helper.dart';
+import '../../themes/app_shapes.dart';
 import './change_email_modal.dart';
 
 class EditProfileModal extends StatefulWidget {
@@ -171,12 +172,9 @@ class _EditProfileModalState extends State<EditProfileModal> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
+          shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
         ),
         child: ChangeEmailModal(
           currentEmail: widget.currentEmail,
@@ -237,12 +235,14 @@ class _EditProfileModalState extends State<EditProfileModal> {
           // password + email confirmation, so it's not part of the main save).
           InkWell(
             onTap: _isLoading ? null : _openChangeEmailModal,
-            borderRadius: BorderRadius.circular(12.r),
+            customBorder: squircleBorder(radius: 12.r),
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[400]!),
-                borderRadius: BorderRadius.circular(12.r),
+              decoration: ShapeDecoration(
+                shape: squircleBorder(
+                  radius: 12.r,
+                  side: BorderSide(color: Colors.grey[400]!),
+                ),
               ),
               child: Row(
                 children: [
@@ -267,11 +267,13 @@ class _EditProfileModalState extends State<EditProfileModal> {
                               Container(
                                 padding: EdgeInsets.symmetric(
                                     horizontal: 16.w, vertical: 6.h),
-                                decoration: BoxDecoration(
+                                decoration: ShapeDecoration(
                                   color: Colors.orange.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(20.r),
-                                  border: Border.all(
-                                    color: Colors.orange.withValues(alpha: 0.5),
+                                  shape: squircleBorder(
+                                    radius: 20.r,
+                                    side: BorderSide(
+                                      color: Colors.orange.withValues(alpha: 0.5),
+                                    ),
                                   ),
                                 ),
                                 child: Row(
@@ -430,9 +432,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
+              shape: squircleBorder(radius: 12.r),
             ),
             child: _isLoading
                 ? SizedBox(

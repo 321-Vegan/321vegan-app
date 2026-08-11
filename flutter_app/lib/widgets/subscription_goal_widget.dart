@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../services/api_service.dart';
 import '../themes/app_colors.dart';
+import '../themes/app_shapes.dart';
 
 /// Community goal progress shown on the premium page (designed for its
 /// green background): yellow bar with the bee marker at the current
@@ -90,17 +91,17 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
                       children: [
                         Container(
                           height: 24.h,
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                             color: Colors.white.withValues(alpha: 0.35),
-                            borderRadius: BorderRadius.circular(12.r),
+                            shape: squircleBorder(radius: 12.r),
                           ),
                         ),
                         Container(
                           height: 24.h,
                           width: barWidth * progress,
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                             color: kAccentYellow,
-                            borderRadius: BorderRadius.circular(12.r),
+                            shape: squircleBorder(radius: 12.r),
                           ),
                         ),
                         Positioned(

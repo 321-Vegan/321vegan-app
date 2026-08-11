@@ -1,3 +1,4 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:introduction_screen/introduction_screen.dart';
@@ -5,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/b12_reminder_settings.dart';
 import 'package:vegan_app/services/b12_reminder_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:intl/intl.dart';
 import '../app_pages/home.dart';
 import '../../widgets/auth/register_form.dart';
@@ -254,9 +256,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                      shape: squircleBorder(radius: 12.r),
                     ),
                   ),
                 ),
@@ -352,9 +352,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (ctx) => ClipRRect(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(20)),
+                      builder: (ctx) => ClipSmoothRect(
+                        radius: const SmoothBorderRadius.only(
+                          topLeft: SmoothRadius(
+                              cornerRadius: 20, cornerSmoothing: kCornerSmoothing),
+                          topRight: SmoothRadius(
+                              cornerRadius: 20, cornerSmoothing: kCornerSmoothing),
+                        ),
                         child: Scaffold(
                           backgroundColor: Colors.white,
                           body: Center(
@@ -452,9 +456,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             width: selected ? 2 : 1,
           ),
           padding: EdgeInsets.symmetric(vertical: 24.h),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.r),
-          ),
+          shape: squircleBorder(radius: 16.r),
         ),
         child: Text(
           label,

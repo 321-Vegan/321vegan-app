@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/partners/partners.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_card.dart';
@@ -129,9 +130,9 @@ class _ShopCard extends StatelessWidget {
               SizedBox(height: 8.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: kAccentYellow.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20.r),
+                  shape: squircleBorder(radius: 20.r),
                 ),
                 child: Text(
                   partner.discountCode,
@@ -139,7 +140,7 @@ class _ShopCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 40.sp,
-                    color: const Color(0xFFD69A08),
+                    color: kAccentYellow,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

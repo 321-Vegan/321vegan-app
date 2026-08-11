@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import '../../../models/product_of_interest.dart';
 import '../../../models/scanned_product.dart';
 import '../../../models/product_category.dart';
@@ -59,12 +60,10 @@ class _VegandexModalState extends State<VegandexModal> {
       barrierDismissible: true,
       builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24.r),
-          ),
+          shape: squircleBorder(radius: 24.r),
           child: Container(
             constraints: BoxConstraints(maxHeight: 2000.h),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -73,7 +72,7 @@ class _VegandexModalState extends State<VegandexModal> {
                   Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                 ],
               ),
-              borderRadius: BorderRadius.circular(24.r),
+              shape: squircleBorder(radius: 24.r),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -104,9 +103,9 @@ class _VegandexModalState extends State<VegandexModal> {
                           Container(
                             padding: EdgeInsets.symmetric(
                                 horizontal: 12.w, vertical: 4.h),
-                            decoration: BoxDecoration(
+                            decoration: ShapeDecoration(
                               color: Colors.orangeAccent,
-                              borderRadius: BorderRadius.circular(8.r),
+                              shape: squircleBorder(radius: 8.r),
                             ),
                             child: Text(
                               'BETA',
@@ -142,9 +141,9 @@ class _VegandexModalState extends State<VegandexModal> {
                         // How it works
                         Container(
                           padding: EdgeInsets.all(20.w),
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16.r),
+                            shape: squircleBorder(radius: 16.r),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,9 +185,9 @@ class _VegandexModalState extends State<VegandexModal> {
                         // Map info
                         Container(
                           padding: EdgeInsets.all(20.w),
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16.r),
+                            shape: squircleBorder(radius: 16.r),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,9 +231,9 @@ class _VegandexModalState extends State<VegandexModal> {
                         // Contact info
                         Container(
                           padding: EdgeInsets.all(20.w),
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16.r),
+                            shape: squircleBorder(radius: 16.r),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,9 +334,7 @@ class _VegandexModalState extends State<VegandexModal> {
                             foregroundColor:
                                 Theme.of(context).colorScheme.primary,
                             padding: EdgeInsets.symmetric(vertical: 16.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15.r),
-                            ),
+                            shape: squircleBorder(radius: 15.r),
                             elevation: 0,
                           ),
                           child: Text(
@@ -557,24 +554,18 @@ class _VegandexModalState extends State<VegandexModal> {
         }
       },
       child: Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(28.r),
-            topRight: Radius.circular(28.r),
-          ),
+          shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
         ),
         child: Column(
           children: [
             // Header
             Container(
               padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(28.r),
-                  topRight: Radius.circular(28.r),
-                ),
+                shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
               ),
               child: Column(
                 children: [
@@ -615,9 +606,9 @@ class _VegandexModalState extends State<VegandexModal> {
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 12.w, vertical: 4.h),
-                                  decoration: BoxDecoration(
+                                  decoration: ShapeDecoration(
                                     color: Colors.orangeAccent,
-                                    borderRadius: BorderRadius.circular(8.r),
+                                    shape: squircleBorder(radius: 8.r),
                                   ),
                                   child: Text(
                                     'BETA',
@@ -657,9 +648,9 @@ class _VegandexModalState extends State<VegandexModal> {
                     Container(
                       padding: EdgeInsets.symmetric(
                           horizontal: 24.w, vertical: 16.h),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20.r),
+                        shape: squircleBorder(radius: 20.r),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -738,9 +729,7 @@ class _VegandexModalState extends State<VegandexModal> {
                                     backgroundColor: const Color(0xFF1A722E),
                                     padding:
                                         EdgeInsets.symmetric(vertical: 16.h),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(15),
-                                    ),
+                                    shape: squircleBorder(radius: 15),
                                   ),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -818,10 +807,7 @@ class _VegandexModalState extends State<VegandexModal> {
                                             .primary,
                                         padding: EdgeInsets.symmetric(
                                             vertical: 16.h),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(15),
-                                        ),
+                                        shape: squircleBorder(radius: 15),
                                       ),
                                       child: Row(
                                         mainAxisAlignment:

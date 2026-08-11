@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,6 +9,7 @@ import 'package:vegan_app/models/e_number.dart';
 import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/translation_service.dart';
 import 'package:vegan_app/services/validator_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'constants.dart';
 import 'shared_widgets.dart';
 import 'brand_widgets.dart';
@@ -206,10 +208,10 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
               child: Container(
                 margin: EdgeInsets.symmetric(horizontal: 40.w),
                 padding: EdgeInsets.all(32.w),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(28.r),
-                  boxShadow: [
+                  shape: squircleBorder(radius: 28.r),
+                  shadows: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 40,
@@ -254,9 +256,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                             onPressed: () => Navigator.of(ctx).pop(false),
                             style: OutlinedButton.styleFrom(
                               padding: EdgeInsets.symmetric(vertical: 18.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
+                              shape: squircleBorder(radius: 16.r),
                             ),
                             child: Text('Annuler',
                                 style: TextStyle(fontSize: 42.sp, fontWeight: FontWeight.w600)),
@@ -270,9 +270,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                               backgroundColor: Colors.red[700],
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 18.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
+                              shape: squircleBorder(radius: 16.r),
                               elevation: 4,
                             ),
                             child: Text('Supprimer',
@@ -471,8 +469,8 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10.r),
+                  ClipSmoothRect(
+                    radius: squircleRadius(10.r),
                     child: CachedNetworkImage(
                       imageUrl: '$_imageBaseUrl${product.image}',
                       width: double.infinity,
@@ -501,9 +499,9 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
           SizedBox(height: 12.h),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: statusColor(product.status).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20.r),
+              shape: squircleBorder(radius: 20.r),
             ),
             child: Text(
               'Signalé comme : ${statusLabel(product.status)}',
@@ -528,7 +526,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
               side: BorderSide(
                   color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4)),
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.r)),
+              shape: squircleBorder(radius: 20.r),
             ),
           ),
         ],
@@ -609,8 +607,8 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
           SizedBox(height: 16.h),
           if (off.imageUrl != null)
             Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10.r),
+              child: ClipSmoothRect(
+                radius: squircleRadius(10.r),
                 child: CachedNetworkImage(
                   imageUrl: off.imageUrl!,
                   height: 200.h,
@@ -736,14 +734,16 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                 onTap: () => setState(() => _showTranslated = !_showTranslated),
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.3)),
+                    shape: squircleBorder(
+                      radius: 20.r,
+                      side: BorderSide(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.3)),
+                    ),
                   ),
                   child: Text(
                     _showTranslated ? 'Afficher l\'original' : 'Afficher la traduction',
@@ -759,10 +759,12 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                 onTap: () => _translateIngredients(text),
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20.r),
-                    border: Border.all(color: Colors.grey[300]!),
+                    shape: squircleBorder(
+                      radius: 20.r,
+                      side: BorderSide(color: Colors.grey[300]!),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -822,10 +824,12 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
               onTap: () => _showAdditiveDialog(upper),
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: color.withValues(alpha: 0.4)),
+                  shape: squircleBorder(
+                    radius: 8.r,
+                    side: BorderSide(color: color.withValues(alpha: 0.4)),
+                  ),
                 ),
                 child: Text(upper,
                     style: TextStyle(
@@ -853,7 +857,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        shape: squircleBorder(radius: 16.r),
         child: Padding(
           padding: EdgeInsets.all(24.w),
           child: Column(
@@ -870,10 +874,12 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                   const Spacer(),
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: stateColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20.r),
-                      border: Border.all(color: stateColor.withValues(alpha: 0.4)),
+                      shape: squircleBorder(
+                        radius: 20.r,
+                        side: BorderSide(color: stateColor.withValues(alpha: 0.4)),
+                      ),
                     ),
                     child: Text(stateLabel,
                         style: TextStyle(
@@ -932,9 +938,9 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
               Container(
                 width: 56.w,
                 height: 56.w,
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(14.r),
+                  shape: squircleBorder(radius: 14.r),
                 ),
                 child: Icon(Icons.task_alt_outlined, size: 44.sp, color: primary),
               ),
@@ -966,12 +972,14 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                 }),
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: selected ? s.color.withValues(alpha: 0.12) : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(24.r),
-                    border: Border.all(
-                      color: selected ? s.color : Colors.grey[300]!,
-                      width: selected ? 2 : 1,
+                    shape: squircleBorder(
+                      radius: 24.r,
+                      side: BorderSide(
+                        color: selected ? s.color : Colors.grey[300]!,
+                        width: selected ? 2 : 1,
+                      ),
                     ),
                   ),
                   child: Text(s.label,
@@ -1003,12 +1011,14 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                   opacity: selectable ? 1.0 : 0.35,
                   child: Container(
                     padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: selected ? s.color.withValues(alpha: 0.12) : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(24.r),
-                      border: Border.all(
-                        color: selected ? s.color : Colors.grey[300]!,
-                        width: selected ? 2 : 1,
+                      shape: squircleBorder(
+                        radius: 24.r,
+                        side: BorderSide(
+                          color: selected ? s.color : Colors.grey[300]!,
+                          width: selected ? 2 : 1,
+                        ),
                       ),
                     ),
                     child: Text(s.label,
@@ -1042,11 +1052,13 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
             SizedBox(height: 12.h),
             Container(
               padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: const Color(0xFF1565C0).withValues(alpha: 0.07),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                    color: const Color(0xFF1565C0).withValues(alpha: 0.3)),
+                shape: squircleBorder(
+                  radius: 12.r,
+                  side: BorderSide(
+                      color: const Color(0xFF1565C0).withValues(alpha: 0.3)),
+                ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1170,9 +1182,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                 backgroundColor: primary,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 18.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
+                shape: squircleBorder(radius: 14.r),
               ),
             ),
           ),
@@ -1191,9 +1201,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                 foregroundColor: Colors.red[700],
                 side: BorderSide(color: Colors.red[300]!),
                 padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
+                shape: squircleBorder(radius: 14.r),
               ),
             ),
           ),
@@ -1268,14 +1276,16 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
           onTap: () => _toggleIngredient(ingredient),
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: active
                   ? const Color(0xFFC62828)
                   : const Color(0xFFC62828).withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20.r),
-              border: Border.all(
-                color: const Color(0xFFC62828).withValues(alpha: active ? 1.0 : 0.4),
-                width: 1.5,
+              shape: squircleBorder(
+                radius: 20.r,
+                side: BorderSide(
+                  color: const Color(0xFFC62828).withValues(alpha: active ? 1.0 : 0.4),
+                  width: 1.5,
+                ),
               ),
             ),
             child: Text(
@@ -1327,10 +1337,12 @@ class _HeaderButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: color.withValues(alpha: 0.4)),
+          shape: squircleBorder(
+            radius: 20.r,
+            side: BorderSide(color: color.withValues(alpha: 0.4)),
+          ),
         ),
         child: Text(label,
             style: TextStyle(fontSize: 36.sp, fontWeight: FontWeight.w600, color: color)),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/validator_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 class BrandSelect extends StatefulWidget {
   final ValidatorBrand? initialBrand;
@@ -32,9 +33,7 @@ class _BrandSelectState extends State<BrandSelect> {
     final result = await showModalBottomSheet<ValidatorBrand>(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
+      shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
       builder: (ctx) => _BrandSelectorSheet(
         initialQuery: _selected?.name ?? widget.initialQuery,
       ),
@@ -62,18 +61,20 @@ class _BrandSelectState extends State<BrandSelect> {
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12.r),
+      decoration: ShapeDecoration(
         color: Colors.white,
+        shape: squircleBorder(
+          radius: 12.r,
+          side: BorderSide(color: Colors.grey[300]!),
+        ),
       ),
       child: Row(
         children: [
           Expanded(
             child: InkWell(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12.r),
-                bottomLeft: Radius.circular(12.r),
+              customBorder: squircleBorderOnly(
+                topLeft: 12.r,
+                bottomLeft: 12.r,
               ),
               onTap: _openSelector,
               child: Padding(
@@ -447,11 +448,13 @@ class _ParentBrandSearchState extends State<_ParentBrandSearch> {
         ),
         if (_suggestions.isNotEmpty)
           Container(
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: Colors.grey[200]!),
-              boxShadow: [
+              shape: squircleBorder(
+                radius: 8.r,
+                side: BorderSide(color: Colors.grey[200]!),
+              ),
+              shadows: [
                 BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8)
               ],
             ),

@@ -3,6 +3,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/boycott_data.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
+import 'package:vegan_app/widgets/shared/info_box.dart';
 
 class InfoModal extends StatefulWidget {
   final String description;
@@ -77,11 +80,12 @@ class _InfoModalState extends State<InfoModal> {
       TextSpan(
         style: TextStyle(
           fontSize: 40.sp,
-          color: Colors.black87,
+          color: Colors.grey[800],
           height: 1.4,
         ),
         children: spans,
       ),
+      textAlign: TextAlign.center,
     );
   }
 
@@ -99,9 +103,9 @@ class _InfoModalState extends State<InfoModal> {
     final bool isBoycott = match != null;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        shape: squircleBorderOnly(topLeft: 24, topRight: 24),
       ),
       padding: EdgeInsets.only(
         left: 24.w,
@@ -127,53 +131,23 @@ class _InfoModalState extends State<InfoModal> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 64.w,
-                        height: 64.w,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.orange.shade50,
-                        ),
-                        child: Icon(
-                          isBoycott
-                              ? Icons.warning_amber_rounded
-                              : Icons.info_outline,
-                          size: 56.sp,
-                          color: Colors.orange.shade700,
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: Text(
-                          isBoycott ? 'Marque à éviter' : 'Information',
-                          style: TextStyle(
-                            fontSize: 60.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    isBoycott ? 'Marque à éviter' : 'Information',
+                    style: AppTextStyles.sectionTitle,
                   ),
                   SizedBox(height: 20.h),
                   if (match != null) ...[
-                    Container(
+                    SizedBox(
                       width: double.infinity,
-                      padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: Colors.orange.shade200),
-                      ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             match.brandDisplay,
+                            textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 48.sp,
+                              fontSize: 52.sp,
+                              fontFamily: 'Baloo2',
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
@@ -182,6 +156,7 @@ class _InfoModalState extends State<InfoModal> {
                             SizedBox(height: 4.h),
                             Text(
                               'Appartient au groupe ${match.groupName}',
+                              textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 36.sp,
                                 fontStyle: FontStyle.italic,
@@ -194,26 +169,19 @@ class _InfoModalState extends State<InfoModal> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16.h),
-                    Divider(color: Colors.grey[200]),
-                    SizedBox(height: 16.h),
+                    SizedBox(height: 20.h),
                   ],
-                  Text(
-                    widget.description,
-                    style: TextStyle(
-                      fontSize: 36.sp,
-                      color: Colors.grey[600],
-                      height: 1.5,
-                    ),
-                  ),
+                  InfoBox(text: widget.description),
                   if (widget.showBoycottToggle) ...[
                     SizedBox(height: 20.h),
                     Container(
                       padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(color: Colors.grey[200]!),
+                        shape: squircleBorder(
+                          radius: 12.r,
+                          side: BorderSide(color: Colors.grey[200]!),
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -261,14 +229,11 @@ class _InfoModalState extends State<InfoModal> {
                         backgroundColor: const Color(0xFF1A722E),
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(vertical: 16.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14.r),
-                        ),
+                        shape: squircleBorder(radius: 14.r),
                         elevation: 2,
                       ),
-                      
                       child: Text(
-                        'Fermer',
+                        'OK !',
                         style: TextStyle(
                           fontSize: 48.sp,
                           fontWeight: FontWeight.w600,

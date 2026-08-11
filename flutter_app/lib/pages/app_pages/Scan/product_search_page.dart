@@ -1,12 +1,16 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart'
+    show rootBundle, FilteringTextInputFormatter;
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vegan_app/helpers/barcode_helper.dart';
 import 'package:vegan_app/helpers/database_helper.dart';
 import 'package:vegan_app/helpers/helper.dart';
 import 'package:vegan_app/models/e_number.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_card.dart';
 import 'package:vegan_app/widgets/shared/empty_state_view.dart';
@@ -14,10 +18,10 @@ import 'package:vegan_app/widgets/shared/empty_state_view.dart';
 enum _SearchCategory { aliment, cosmetique, additif }
 
 /// Unified product search page (Figma redesign): one search field, category
-/// chips, results below. "Aliment" (name/barcode search) isn't built yet —
-/// its chip is shown but disabled — so this currently covers Additifs and
-/// Cosmétiques, which used to be two separate bottom sheets from the Scan
-/// page.
+/// chips, results below — Additifs, Cosmétiques, and Code-barre (which used
+/// to be three separate bottom sheets/dialogs from the Scan page). Picking a
+/// barcode result (or typing a valid one) pops this page with the code so
+/// the Scan page can run it through the same pipeline as a camera scan.
 class ProductSearchPage extends StatefulWidget {
   const ProductSearchPage({super.key});
 
@@ -32,6 +36,8 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
 
   List<ENumberItem> _eNumbers = [];
   List<CosmeticItem> _cosmeticResults = [];
+  List<Map<String, dynamic>> _barcodeResults = [];
+  String? _barcodeError;
 
   @override
   void initState() {
@@ -58,9 +64,14 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   }
 
   void _onSearchChanged(String value) {
-    setState(() => _query = value);
+    setState(() {
+      _query = value;
+      _barcodeError = null;
+    });
     if (_category == _SearchCategory.cosmetique) {
       _searchCosmetics(value);
+    } else if (_category == _SearchCategory.aliment) {
+      _searchBarcodes(value);
     }
   }
 
@@ -71,10 +82,43 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
 
   void _selectCategory(_SearchCategory category) {
     if (category == _category) return;
-    setState(() => _category = category);
+    setState(() {
+      _category = category;
+      _barcodeError = null;
+    });
     if (category == _SearchCategory.cosmetique && _query.isNotEmpty) {
       _searchCosmetics(_query);
+    } else if (category == _SearchCategory.aliment && _query.isNotEmpty) {
+      _searchBarcodes(_query);
     }
+  }
+
+  Future<void> _searchBarcodes(String query) async {
+    final prefix = query.trim();
+    if (prefix.length < 3) {
+      setState(() => _barcodeResults = []);
+      return;
+    }
+    final results = await DatabaseHelper.instance
+        .queryProductsByCodePrefix(prefix, limit: 20);
+    if (!mounted) return;
+    setState(() => _barcodeResults = results);
+  }
+
+  /// Called on submit (Enter/Done) — lets the user proceed with a typed
+  /// code even if it has no local suggestion (the real lookup happens back
+  /// on the Scan page, same as a camera scan of an unknown product).
+  void _submitBarcode(String raw) {
+    if (_category != _SearchCategory.aliment) return;
+    if (!BarcodeHelper.isValid(raw)) {
+      setState(() => _barcodeError = 'Code-barres invalide (EAN-8 ou EAN-13)');
+      return;
+    }
+    Navigator.of(context).pop(raw.trim());
+  }
+
+  void _selectBarcodeResult(String code) {
+    Navigator.of(context).pop(code);
   }
 
   Future<void> _searchCosmetics(String query) async {
@@ -124,7 +168,12 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   String get _searchHint => switch (_category) {
         _SearchCategory.additif => "Rechercher un additif (ex. e200, carmin…)",
         _SearchCategory.cosmetique => "Rechercher une marque (ex. Avril, Nae…)",
-        _SearchCategory.aliment => "Nom d'un produit ou code barre…",
+        _SearchCategory.aliment => "Code-barre (ex. 3770016570121)",
+      };
+
+  String get _emptyPromptSubtitle => switch (_category) {
+        _SearchCategory.aliment => 'Tapez un code-barres pour le rechercher.',
+        _ => 'Tapez un nom pour lancer la recherche.',
       };
 
   @override
@@ -132,9 +181,10 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
     final List<Object> results = switch (_category) {
       _SearchCategory.additif => _filteredENumbers,
       _SearchCategory.cosmetique => _cosmeticResults,
-      _SearchCategory.aliment => const <Object>[],
+      _SearchCategory.aliment => _barcodeResults,
     };
     final hasQuery = _query.isNotEmpty;
+    final isAliment = _category == _SearchCategory.aliment;
 
     return AppBackground(
       child: Scaffold(
@@ -159,11 +209,18 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                 child: TextField(
                   controller: _searchController,
                   onChanged: _onSearchChanged,
+                  onSubmitted: isAliment ? _submitBarcode : null,
+                  keyboardType:
+                      isAliment ? TextInputType.number : TextInputType.text,
+                  inputFormatters: isAliment
+                      ? [FilteringTextInputFormatter.digitsOnly]
+                      : null,
                   style: TextStyle(fontSize: 42.sp),
                   decoration: InputDecoration(
                     hintText: _searchHint,
                     hintStyle:
                         TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
+                    errorText: isAliment ? _barcodeError : null,
                     prefixIcon: Icon(
                       Icons.search,
                       size: 60.sp,
@@ -197,8 +254,8 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                       label: 'Code-barre',
                       icon: CupertinoIcons.barcode_viewfinder,
                       isSelected: _category == _SearchCategory.aliment,
-                      enabled: false,
-                      onTap: () {},
+                      enabled: true,
+                      onTap: () => _selectCategory(_SearchCategory.aliment),
                     ),
                     SizedBox(width: 24.w),
                     _buildCategoryChip(
@@ -222,9 +279,9 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
               SizedBox(height: 30.h),
               Expanded(
                 child: !hasQuery
-                    ? const EmptyStateView(
+                    ? EmptyStateView(
                         title: 'Recherchez un produit',
-                        subtitle: 'Tapez un nom pour lancer la recherche.',
+                        subtitle: _emptyPromptSubtitle,
                       )
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,21 +290,26 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                             padding: EdgeInsets.symmetric(horizontal: 48.w),
                             child: Text(
                               'Résultats (${results.length})',
-                              style: TextStyle(
-                                fontSize: 44.sp,
-                                fontWeight: FontWeight.bold,
-                                color: kTextPrimary,
-                              ),
+                              style: AppTextStyles.resultsCount,
                             ),
                           ),
                           SizedBox(height: 20.h),
                           Expanded(
                             child: results.isEmpty
-                                ? const EmptyStateView(
-                                    title: 'Aucun résultat',
-                                    subtitle:
-                                        'Essayez avec un autre nom ou une autre marque.',
-                                  )
+                                ? (isAliment && BarcodeHelper.isValid(_query))
+                                    ? EmptyStateView(
+                                        title: 'Code non trouvé localement',
+                                        subtitle:
+                                            'Vous pouvez tout de même valider ce code.',
+                                        buttonLabel: 'Utiliser ce code',
+                                        onButtonTap: () =>
+                                            _submitBarcode(_query),
+                                      )
+                                    : const EmptyStateView(
+                                        title: 'Aucun résultat',
+                                        subtitle:
+                                            'Essayez avec un autre nom ou une autre marque.',
+                                      )
                                 : ListView.separated(
                                     padding: EdgeInsets.symmetric(
                                         horizontal: 48.w, vertical: 8.h),
@@ -256,10 +318,14 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                                         SizedBox(height: 20.h),
                                     itemBuilder: (context, index) {
                                       final item = results[index];
-                                      return item is CosmeticItem
-                                          ? _buildCosmeticCard(item)
-                                          : _buildAdditiveCard(
-                                              item as ENumberItem);
+                                      if (item is CosmeticItem) {
+                                        return _buildCosmeticCard(item);
+                                      }
+                                      if (item is Map<String, dynamic>) {
+                                        return _buildBarcodeCard(item);
+                                      }
+                                      return _buildAdditiveCard(
+                                          item as ENumberItem);
                                     },
                                   ),
                           ),
@@ -292,12 +358,14 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
           height: 144.w,
           alignment: Alignment.center,
           padding: EdgeInsets.symmetric(horizontal: 39.w),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: isSelected ? kPrimaryTag : Colors.white,
-            borderRadius: BorderRadius.circular(36.r),
-            border: Border.all(
-              color: isSelected ? primaryColor : kBorderDefault,
-              width: isSelected ? 1.5 : 1,
+            shape: squircleBorder(
+              radius: 36.r,
+              side: BorderSide(
+                color: isSelected ? primaryColor : kBorderDefault,
+                width: isSelected ? 1.5 : 1,
+              ),
             ),
           ),
           child: Row(
@@ -316,6 +384,64 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBarcodeCard(Map<String, dynamic> product) {
+    final code = product['code']?.toString() ?? '';
+    final name = ((product['name'] as String?) ?? 'Produit inconnu')
+        .replaceAll('&quot;', "'");
+    final brand =
+        ((product['brand'] as String?) ?? '').replaceAll('&quot;', "'");
+    final statusColor = switch (product['status']) {
+      'R' => Colors.red,
+      'M' => Colors.orange,
+      'N' => Colors.grey,
+      _ => Theme.of(context).colorScheme.primary,
+    };
+    return GestureDetector(
+      onTap: () => _selectBarcodeResult(code),
+      child: AppCard(
+        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 28.h),
+        child: Row(
+          children: [
+            Container(
+              width: 20.w,
+              height: 20.w,
+              decoration:
+                  BoxDecoration(color: statusColor, shape: BoxShape.circle),
+            ),
+            SizedBox(width: 20.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    brand.isNotEmpty ? '$name - $brand' : name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 42.sp,
+                      fontWeight: FontWeight.bold,
+                      color: kTextPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 6.h),
+                  Text(
+                    code,
+                    style: TextStyle(
+                      fontSize: 34.sp,
+                      color: Colors.grey[600],
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 48.sp, color: Colors.grey[400]),
+          ],
         ),
       ),
     );
@@ -395,9 +521,9 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   Widget _buildAlertBanner(String text) {
     return Container(
       padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.orange[100],
-        borderRadius: BorderRadius.circular(16.r),
+        shape: squircleBorder(radius: 16.r),
       ),
       child: Row(
         children: [

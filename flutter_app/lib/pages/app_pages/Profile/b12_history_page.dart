@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../themes/app_colors.dart';
+import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/b12/next_reminder_banner.dart';
@@ -132,13 +133,15 @@ class _B12HistoryPageState extends State<B12HistoryPage> {
       {bool highlighted = false}) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 8.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: highlighted
             ? kAccentYellow.withValues(alpha: 0.15)
             : const Color(0xFFF7F6F2),
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(
-          color: highlighted ? kAccentYellow : kBorderDefault,
+        shape: squircleBorder(
+          radius: 24.r,
+          side: BorderSide(
+            color: highlighted ? kAccentYellow : kBorderDefault,
+          ),
         ),
       ),
       child: Column(
@@ -276,12 +279,14 @@ class _B12HistoryPageState extends State<B12HistoryPage> {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color:
             isToday ? primary.withValues(alpha: 0.08) : const Color(0xFFF7F6F2),
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(
-          color: isToday ? primary.withValues(alpha: 0.3) : kBorderDefault,
+        shape: squircleBorder(
+          radius: 24.r,
+          side: BorderSide(
+            color: isToday ? primary.withValues(alpha: 0.3) : kBorderDefault,
+          ),
         ),
       ),
       child: Row(
@@ -317,9 +322,9 @@ class _B12HistoryPageState extends State<B12HistoryPage> {
           if (isToday || isYesterday)
             Container(
               padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20.r),
+                shape: squircleBorder(radius: 20.r),
               ),
               child: Text(
                 isToday ? 'Aujourd\'hui' : 'Hier',

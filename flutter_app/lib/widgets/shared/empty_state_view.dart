@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 
 /// The app's standard "nothing here" placeholder — sad-sun illustration,
 /// bold title, grey subtitle, and an optional CTA button. Same visual
@@ -62,9 +63,7 @@ class EmptyStateView extends StatelessWidget {
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 20.h),
                     elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(42.r),
-                    ),
+                    shape: squircleBorder(radius: 42.r),
                   ),
                   child: Text(
                     buttonLabel!,

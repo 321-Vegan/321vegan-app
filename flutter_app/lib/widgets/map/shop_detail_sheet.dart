@@ -1,3 +1,4 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,6 +13,7 @@ import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 
 class ShopDetailSheet extends StatefulWidget {
@@ -206,9 +208,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       builder: (ctx) {
         return StatefulBuilder(builder: (ctx, setSheetState) {
           return Container(
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: Theme.of(ctx).scaffoldBackgroundColor,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+              shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
             ),
             padding: EdgeInsets.only(
               left: 24.w,
@@ -276,9 +278,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                         onPressed: () => Navigator.pop(ctx, false),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 12.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
+                          shape: squircleBorder(radius: 12.r),
                         ),
                         child:
                             Text('Annuler', style: TextStyle(fontSize: 44.sp)),
@@ -292,9 +292,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                             : () => Navigator.pop(ctx, true),
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 12.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
+                          shape: squircleBorder(radius: 12.r),
                         ),
                         child:
                             Text('Envoyer', style: TextStyle(fontSize: 44.sp)),
@@ -410,10 +408,12 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
               margin: EdgeInsets.only(top: 12.h, bottom: 12.h),
               padding:
                   EdgeInsets.symmetric(horizontal: 36.w, vertical: 30.h),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: kSecondaryTag,
-                borderRadius: BorderRadius.circular(42.r),
-                border: Border.all(color: kAccentYellow),
+                shape: squircleBorder(
+                  radius: 42.r,
+                  side: const BorderSide(color: kAccentYellow),
+                ),
               ),
               // Stack instead of a Row so the text can run as far right as
               // possible, only clearing the close cross itself.
@@ -527,8 +527,8 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
         return Column(
           children: [
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8.r),
+              child: ClipSmoothRect(
+                radius: squircleRadius(8.r),
                 child: product.image.isNotEmpty
                     ? CachedNetworkImage(
                         imageUrl: '$_baseUrl/${product.image}',
@@ -604,10 +604,12 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     return Container(
       margin: EdgeInsets.only(top: 18.h),
       padding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 30.h),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(42.r),
-        border: Border.all(color: kBorderDefault),
+        shape: squircleBorder(
+          radius: 42.r,
+          side: const BorderSide(color: kBorderDefault),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -671,10 +673,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(42.r),
-          border: Border.all(color: color),
+          shape: squircleBorder(radius: 42.r, side: BorderSide(color: color)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -751,9 +752,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   width: 180.w,
                   height: 180.w,
                   clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(30.r),
+                    shape: squircleBorder(radius: 30.r),
                   ),
                   child: product != null && product.image.isNotEmpty
                       ? CachedNetworkImage(
@@ -912,9 +913,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     if (!_isLoggedIn) {
       return Container(
         padding: EdgeInsets.all(12.r),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(12.r),
+          shape: squircleBorder(radius: 12.r),
         ),
         child: Text(
           'Connectez-vous pour laisser un avis.',
@@ -927,11 +928,14 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     if (_myReview != null) {
       return Container(
         padding: EdgeInsets.all(12.r),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+          shape: squircleBorder(
+            radius: 12.r,
+            side: BorderSide(
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            ),
           ),
         ),
         child: Column(
@@ -988,9 +992,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
         onTap: () => _showReviewDialog(),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(20.r),
+            shape: squircleBorder(radius: 20.r),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1020,11 +1024,13 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     return Container(
       margin: EdgeInsets.only(bottom: 10.h),
       padding: EdgeInsets.all(12.r),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
+        shape: squircleBorder(
+          radius: 12.r,
+          side: BorderSide(color: Colors.grey[200]!),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
@@ -1121,9 +1127,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       expand: false,
       builder: (context, scrollController) {
         return Container(
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(72.r)),
+            shape: squircleBorderOnly(topLeft: 72.r, topRight: 72.r),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -1214,11 +1220,13 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                                   horizontal: 20.w,
                                   vertical: 4.h,
                                 ),
-                                decoration: BoxDecoration(
+                                decoration: ShapeDecoration(
                                   color: Colors.green.shade50,
-                                  borderRadius: BorderRadius.circular(12.r),
-                                  border: Border.all(
-                                    color: Colors.green.shade300,
+                                  shape: squircleBorder(
+                                    radius: 12.r,
+                                    side: BorderSide(
+                                      color: Colors.green.shade300,
+                                    ),
                                   ),
                                 ),
                                 child: Text(
@@ -1241,9 +1249,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                       child: Container(
                         width: 132.w,
                         height: 132.w,
-                        decoration: BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: Theme.of(context).colorScheme.primary,
-                          borderRadius: BorderRadius.circular(36.r),
+                          shape: squircleBorder(radius: 36.r),
                         ),
                         child: Center(
                           child: Icon(

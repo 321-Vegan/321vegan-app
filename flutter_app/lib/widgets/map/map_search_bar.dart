@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 /// A search bar that lets the user look up a place/city/address and fly the
 /// map there. Geocoding is debounced and backed by OpenStreetMap Nominatim.
@@ -93,10 +94,10 @@ class MapSearchBarState extends State<MapSearchBar> {
           // Same height as the square action buttons next to it (map.dart),
           // so the whole top row reads as one line — Figma: 48pt, radius 14.
           height: 144.w,
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(42.r),
-            boxShadow: [
+            shape: squircleBorder(radius: 42.r),
+            shadows: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 10,
@@ -153,10 +154,10 @@ class MapSearchBarState extends State<MapSearchBar> {
           Container(
             margin: EdgeInsets.only(top: 6.h),
             constraints: BoxConstraints(maxHeight: 0.4.sh),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
+              shape: squircleBorder(radius: 16.r),
+              shadows: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 10,

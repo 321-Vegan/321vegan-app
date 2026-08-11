@@ -1,9 +1,11 @@
 import 'dart:io' show File;
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
 import 'package:vegan_app/services/api_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 class InfoDialogButton extends StatelessWidget {
   final String barcode;
@@ -42,9 +44,7 @@ class InfoDialogButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         side: BorderSide(color: buttonColor),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: squircleBorder(radius: 12),
       ),
       onPressed: () {
         onScannerStop?.call();
@@ -185,12 +185,9 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
+          shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
         ),
         padding: EdgeInsets.all(24.w),
         child: SingleChildScrollView(
@@ -216,9 +213,9 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
                 children: [
                   Container(
                     padding: EdgeInsets.all(12.w),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: widget.buttonColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      shape: squircleBorder(radius: 12),
                     ),
                     child: Icon(
                       Icons.report_problem,
@@ -260,11 +257,13 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.amber.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.amber.withValues(alpha: 0.5),
+                    shape: squircleBorder(
+                      radius: 12,
+                      side: BorderSide(
+                        color: Colors.amber.withValues(alpha: 0.5),
+                      ),
                     ),
                   ),
                   child: Column(
@@ -392,8 +391,8 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
               if (_photo != null) ...[
                 Stack(
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                    ClipSmoothRect(
+                      radius: squircleRadius(12),
                       child: Image.file(
                         _photo!,
                         height: 180.h,
@@ -436,12 +435,14 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
                   child: Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(vertical: 24.h),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                        width: 1.5,
+                      shape: squircleBorder(
+                        radius: 12,
+                        side: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                     child: Column(
@@ -473,9 +474,7 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
                       onPressed: () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        shape: squircleBorder(radius: 12),
                       ),
                       child: const Text(
                         'Annuler',
@@ -490,9 +489,7 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: widget.buttonColor,
                         padding: EdgeInsets.symmetric(vertical: 14.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        shape: squircleBorder(radius: 12),
                       ),
                       child: Text(
                         _isSending ? 'Envoi...' : 'Envoyer',

@@ -80,6 +80,7 @@ dependencies:
   http_cache_file_store: ^2.0.0
   liquid_glass_easy: ^3.2.2
   vibration: ^3.2.0
+  figma_squircle: ^0.6.3
 
 dev_dependencies:
   flutter_test:

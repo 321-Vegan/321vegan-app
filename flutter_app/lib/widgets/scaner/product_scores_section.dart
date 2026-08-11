@@ -5,6 +5,7 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/product_scores.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/services/open_food_facts_service.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/scaner/score_badge.dart';
 import 'package:vegan_app/widgets/shared/link_row.dart';
 
@@ -84,6 +85,14 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
     }
   }
 
+  /// Scores cached on a past scan-history entry for this barcode, if any,
+  /// so a re-scan of the same product doesn't hit OpenFoodFacts again.
+  Future<ProductScores> _getScores(String barcode) async {
+    final cached = await PreferencesHelper.getCachedScores(barcode);
+    if (cached != null) return cached;
+    return OpenFoodFactsService.fetchScores(barcode);
+  }
+
   Future<void> _initForBarcode() async {
     if (widget.isSubscribed) {
       _fetchScores();
@@ -91,7 +100,7 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
     }
     // Fetch first: products without any score don't consume a free reveal
     // and there is nothing to paywall.
-    final scores = await OpenFoodFactsService.fetchScores(widget.barcode);
+    final scores = await _getScores(widget.barcode);
     if (!mounted) return;
     final hasScores =
         scores.nutriscoreGrade != null || scores.ecoscoreGrade != null;
@@ -117,7 +126,7 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
   }
 
   Future<void> _fetchScores() async {
-    final scores = await OpenFoodFactsService.fetchScores(widget.barcode);
+    final scores = await _getScores(widget.barcode);
     if (mounted) {
       setState(() {
         _scores = scores;
@@ -207,10 +216,12 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
       onTap: _openSubscriptionPage,
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white.withValues(alpha: 0.92),
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: primary.withValues(alpha: 0.4)),
+          shape: squircleBorder(
+            radius: 12.r,
+            side: BorderSide(color: primary.withValues(alpha: 0.4)),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -252,14 +263,16 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
             ),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Colors.white.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.4),
+                shape: squircleBorder(
+                  radius: 12.r,
+                  side: BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.4),
+                  ),
                 ),
               ),
               child: Column(
@@ -316,7 +329,7 @@ class _ScoresInfoDialog extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+      shape: squircleBorder(radius: 24.r),
       child: Padding(
         padding: EdgeInsets.all(28.w),
         child: Column(
@@ -380,9 +393,7 @@ class _ScoresInfoDialog extends StatelessWidget {
                   backgroundColor: primary,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 18.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
+                  shape: squircleBorder(radius: 14.r),
                   elevation: 0,
                 ),
                 child: Text(

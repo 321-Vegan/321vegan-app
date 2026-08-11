@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import '../../models/product_category.dart';
 import '../../models/product_of_interest.dart';
+import '../../themes/app_shapes.dart';
 
 class CategoryListView extends StatelessWidget {
   final List<ProductCategory> categories;
@@ -90,9 +92,9 @@ class CategoryListView extends StatelessWidget {
     return GestureDetector(
       onTap: () => onCategoryTap(category),
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20.r),
-          boxShadow: [
+        decoration: ShapeDecoration(
+          shape: squircleBorder(radius: 20.r),
+          shadows: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 15,
@@ -100,8 +102,8 @@ class CategoryListView extends StatelessWidget {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20.r),
+        child: ClipSmoothRect(
+          radius: squircleRadius(20.r),
           child: Stack(
             children: [
               CachedNetworkImage(
@@ -133,9 +135,9 @@ class CategoryListView extends StatelessWidget {
                     horizontal: 12.w,
                     vertical: 6.h,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12.r),
+                    shape: squircleBorder(radius: 12.r),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

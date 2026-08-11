@@ -5,6 +5,7 @@ import '../../../models/b12_reminder_settings.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../services/notification_service.dart';
 import '../../../themes/app_colors.dart';
+import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/b12/next_reminder_banner.dart';
@@ -201,21 +202,20 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+            shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
           ),
           child: Column(
             children: [
               Container(
                 padding: EdgeInsets.all(24.w),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: Theme.of(context)
                       .colorScheme
                       .primary
                       .withValues(alpha: 0.1),
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(28.r)),
+                  shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
                 ),
                 child: Column(
                   children: [
@@ -251,17 +251,19 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
                     children: [
                       Container(
                         padding: EdgeInsets.all(20.w),
-                        decoration: BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: Theme.of(context)
                               .colorScheme
                               .primary
                               .withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(24.r),
-                          border: Border.all(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.25),
+                          shape: squircleBorder(
+                            radius: 24.r,
+                            side: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.25),
+                            ),
                           ),
                         ),
                         child: Row(
@@ -289,10 +291,12 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
                       SizedBox(height: 16.h),
                       Container(
                         padding: EdgeInsets.all(20.w),
-                        decoration: BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: kSecondaryTag,
-                          borderRadius: BorderRadius.circular(24.r),
-                          border: Border.all(color: kAccentYellow),
+                          shape: squircleBorder(
+                            radius: 24.r,
+                            side: const BorderSide(color: kAccentYellow),
+                          ),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,28 +558,30 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
             }
           });
         },
-        borderRadius: BorderRadius.circular(24.r),
+        customBorder: squircleBorder(radius: 24.r),
         child: Container(
           padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: isSelected
                 ? primary.withValues(alpha: 0.06)
                 : const Color(0xFFF7F6F2),
-            borderRadius: BorderRadius.circular(24.r),
-            border: Border.all(
-              color: isSelected ? primary : kBorderDefault,
-              width: isSelected ? 2 : 1,
+            shape: squircleBorder(
+              radius: 24.r,
+              side: BorderSide(
+                color: isSelected ? primary : kBorderDefault,
+                width: isSelected ? 2 : 1,
+              ),
             ),
           ),
           child: Row(
             children: [
               Container(
                 padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: isSelected
                       ? primary.withValues(alpha: 0.15)
                       : Colors.white,
-                  borderRadius: BorderRadius.circular(16.r),
+                  shape: squircleBorder(radius: 16.r),
                 ),
                 child: Icon(
                   icon,

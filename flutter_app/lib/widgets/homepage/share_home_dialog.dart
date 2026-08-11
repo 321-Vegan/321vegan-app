@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart' show rootBundle;
@@ -9,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:vegan_app/helpers/theme_helper.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/homepage/share_home_card.dart';
 
 /// Opens a dialog previewing the shareable home page cards (one per seasonal
@@ -114,7 +116,7 @@ class _ShareHomeDialogState extends State<ShareHomeDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
+      shape: squircleBorder(radius: 28.r),
       child: Padding(
         padding: EdgeInsets.all(32.w),
         child: Column(
@@ -131,15 +133,15 @@ class _ShareHomeDialogState extends State<ShareHomeDialog> {
                   itemBuilder: (context, index) => Padding(
                     padding: EdgeInsets.symmetric(horizontal: 6.w),
                     child: index == _themes.length
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
+                        ? ClipSmoothRect(
+                            radius: squircleRadius(16),
                             child: Image.asset(
                               _posterAsset,
                               fit: BoxFit.contain,
                             ),
                           )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
+                        : ClipSmoothRect(
+                            radius: squircleRadius(16),
                             child: FittedBox(
                               fit: BoxFit.contain,
                               child: MediaQuery.withNoTextScaling(
@@ -188,9 +190,7 @@ class _ShareHomeDialogState extends State<ShareHomeDialog> {
                       foregroundColor: Colors.grey[600],
                       side: BorderSide(color: Colors.grey[300]!, width: 2),
                       padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                      shape: squircleBorder(radius: 12.r),
                     ),
                     child: Text(
                       'Fermer',
@@ -209,9 +209,7 @@ class _ShareHomeDialogState extends State<ShareHomeDialog> {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
+                      shape: squircleBorder(radius: 12.r),
                     ),
                     icon: _sharing
                         ? SizedBox(

@@ -11,9 +11,11 @@ import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
+import 'package:vegan_app/widgets/shared/info_box.dart';
 
 /// Full-screen page listing every scanned product, grouped by day.
 /// Pushed from the Scan page and from Settings ("Scannés" row).
@@ -64,7 +66,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(42.r)),
+        shape: squircleBorder(radius: 42.r),
         child: Padding(
           padding: EdgeInsets.fromLTRB(40.w, 48.h, 40.w, 40.h),
           child: Column(
@@ -107,9 +109,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                         foregroundColor: Colors.grey[700],
                         side: const BorderSide(color: kBorderDefault),
                         padding: EdgeInsets.symmetric(vertical: 18.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(42.r),
-                        ),
+                        shape: squircleBorder(radius: 42.r),
                       ),
                       child: Text(
                         'Annuler',
@@ -126,9 +126,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: EdgeInsets.symmetric(vertical: 18.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(42.r),
-                        ),
+                        shape: squircleBorder(radius: 42.r),
                       ),
                       child: Text(
                         'Effacer',
@@ -176,10 +174,30 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
           foregroundColor: kTextPrimary,
           actions: [
             if (_history.isNotEmpty)
-              IconButton(
-                onPressed: _confirmClearHistory,
-                icon: Icon(Icons.delete_outline,
-                    color: Colors.red[400], size: 52.sp),
+              Padding(
+                padding: EdgeInsets.only(right: 24.w),
+                child: GestureDetector(
+                  onTap: _confirmClearHistory,
+                  // Same "surface icon button" spec as the Dashboard header
+                  // (47×47, radius 12, white, subtle shadow — ×3 units).
+                  child: Container(
+                    width: 141.w,
+                    height: 141.w,
+                    decoration: ShapeDecoration(
+                      color: Colors.white,
+                      shape: squircleBorder(radius: 36.r),
+                      shadows: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(Icons.delete_outline,
+                        color: Colors.grey[700], size: 72.sp),
+                  ),
+                ),
               ),
           ],
         ),
@@ -231,9 +249,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 20.h),
                   elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(42.r),
-                  ),
+                  shape: squircleBorder(radius: 42.r),
                 ),
                 child: Text(
                   'Scanner un produit',
@@ -310,10 +326,12 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
   Widget _buildLoadingCard() {
     return Container(
       height: 180.w,
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(36.r),
-        border: Border.all(color: kBorderDefault),
+        shape: squircleBorder(
+          radius: 36.r,
+          side: const BorderSide(color: kBorderDefault),
+        ),
       ),
       child: const Center(
         child: SizedBox(
@@ -382,9 +400,9 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
           ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 14.h),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: kAccentYellow,
-              borderRadius: BorderRadius.circular(30.r),
+              shape: squircleBorder(radius: 30.r),
             ),
             child: Text(
               'Débloquer',
@@ -433,10 +451,12 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
 
     return Container(
       padding: EdgeInsets.all(30.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(36.r),
-        border: Border.all(color: kBorderDefault),
+        shape: squircleBorder(
+          radius: 36.r,
+          side: const BorderSide(color: kBorderDefault),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,10 +532,12 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
               },
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: kSecondaryTag,
-                  borderRadius: BorderRadius.circular(30.r),
-                  border: Border.all(color: kAccentYellow),
+                  shape: squircleBorder(
+                    radius: 30.r,
+                    side: const BorderSide(color: kAccentYellow),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -542,7 +564,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                 'Code EAN-8 : ce code-barres peut correspondre à plusieurs produits.'),
           if (product.status == ScanStatus.vegan && product.hasNonVeganOldRecipe)
             _buildWarningBox(
-                'Ancienne recette non vegan : il se peut qu\'il y ait encore du stock avec l\'ancienne recette. Vérifiez les ingrédients.'),
+                'Ancienne recette non vegan : il se peut qu\'il y ait encore de l\'ancienne recette. Vérifiez les ingrédients.'),
         ],
       ),
     );
@@ -551,31 +573,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
   Widget _buildWarningBox(String text) {
     return Padding(
       padding: EdgeInsets.only(top: 16.h),
-      child: Container(
-        padding: EdgeInsets.all(18.w),
-        decoration: BoxDecoration(
-          color: kSecondaryTag,
-          borderRadius: BorderRadius.circular(20.r),
-          border: Border.all(color: kAccentYellow),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.warning_amber_rounded, color: kAccentYellow, size: 44.sp),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontSize: 36.sp,
-                  fontWeight: FontWeight.w500,
-                  color: kTextPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: InfoBox(text: text, symbol: '!'),
     );
   }
 }

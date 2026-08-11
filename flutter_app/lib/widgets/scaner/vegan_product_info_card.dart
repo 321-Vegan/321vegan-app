@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/helper.dart';
 import 'package:vegan_app/models/boycott_data.dart';
 import 'package:vegan_app/models/scan_result.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
 
 class VeganProductInfoCard extends StatelessWidget {
@@ -31,15 +32,17 @@ class VeganProductInfoCard extends StatelessWidget {
     final bool isBoycotted = boycottMatch != null;
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         gradient: LinearGradient(
           colors: [Colors.white, Colors.grey.shade200],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.green, width: 3),
-        boxShadow: [
+        shape: squircleBorder(
+          radius: 30,
+          side: const BorderSide(color: Colors.green, width: 3),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
             spreadRadius: 5,
@@ -134,9 +137,7 @@ class VeganProductInfoCard extends StatelessWidget {
                       backgroundColor: Colors.orange.shade500,
                       foregroundColor: Colors.white,
                       elevation: 3,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: squircleBorder(radius: 12),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
@@ -175,11 +176,9 @@ class VeganProductInfoCard extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange.shade500,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: squircleBorder(radius: 12),
                     ),
-                    child: 
+                    child:
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

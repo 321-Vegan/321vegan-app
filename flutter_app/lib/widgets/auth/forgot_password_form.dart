@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../models/auth.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 import 'auth_styles.dart';
 
@@ -133,11 +134,13 @@ class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
             // Success message
             Container(
               padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(24.r),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                shape: squircleBorder(
+                  radius: 24.r,
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  ),
                 ),
               ),
               child: Column(

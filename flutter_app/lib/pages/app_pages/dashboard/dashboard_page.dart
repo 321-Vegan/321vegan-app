@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:confetti/confetti.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../helpers/preference_helper.dart';
@@ -17,6 +18,7 @@ import '../../../services/products_of_interest_cache.dart';
 import '../../../services/profile_notification_service.dart';
 import '../../../services/subscription_service.dart';
 import '../../../themes/app_colors.dart';
+import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/badges/badges_grid.dart';
@@ -26,6 +28,7 @@ import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/homepage/promo_carousel.dart';
 import '../../../widgets/homepage/solidarity_shops_section.dart';
 import '../../../widgets/homepage/stat_card.dart';
+import '../../../widgets/homepage/vegan_counter.dart';
 import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/social_feedback_buttons.dart';
@@ -175,10 +178,10 @@ class DashboardPageState extends State<DashboardPage> {
     if (!mounted) return;
     setState(() => _b12TakenToday = true);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Bien reçu !'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: const Text('Bien reçu !'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -320,6 +323,10 @@ class DashboardPageState extends State<DashboardPage> {
                       SizedBox(height: AppSpacing.section),
                     ],
                     _buildVeganCounterRow(context, daysSince),
+                    if (_targetDate != null) ...[
+                      SizedBox(height: AppSpacing.afterTitle),
+                      VeganCounter(targetDate: _targetDate!),
+                    ],
                     SizedBox(height: AppSpacing.afterTitle),
                     for (int i = 0; i < homeStats.length; i++) ...[
                       if (i > 0) SizedBox(height: AppSpacing.item),
@@ -446,10 +453,10 @@ class DashboardPageState extends State<DashboardPage> {
           Container(
             width: 141.w,
             height: 141.w,
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(36.r),
-              boxShadow: [
+              shape: squircleBorder(radius: 12),
+              shadows: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 8,
@@ -467,10 +474,12 @@ class DashboardPageState extends State<DashboardPage> {
                 padding: EdgeInsets.symmetric(horizontal: 15.w),
                 height: 64.w,
                 constraints: BoxConstraints(minWidth: 44.w),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: Colors.red,
-                  borderRadius: BorderRadius.circular(22.w),
-                  border: Border.all(color: Colors.white, width: 3.w),
+                  shape: squircleBorder(
+                    radius: 22.w,
+                    side: BorderSide(color: Colors.white, width: 3.w),
+                  ),
                 ),
                 child: Center(
                   child: Text(
@@ -506,14 +515,14 @@ class DashboardPageState extends State<DashboardPage> {
         child: Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(vertical: 30.h),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             gradient: const LinearGradient(
               colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(40.r),
-            boxShadow: [
+            shape: squircleBorder(radius: 40.r),
+            shadows: [
               BoxShadow(
                 color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
                 blurRadius: 12,
@@ -551,9 +560,7 @@ class DashboardPageState extends State<DashboardPage> {
           child: GestureDetector(
             onTap: daysSince == null ? null : _pickDate,
             child: Text(
-              daysSince == null
-                  ? 'Vegan depuis 0 jours'
-                  : 'Végane depuis $daysSince jour${daysSince > 1 ? 's' : ''}',
+              'Végane depuis',
               style: AppTextStyles.sectionTitle,
             ),
           ),
@@ -631,14 +638,14 @@ class DashboardPageState extends State<DashboardPage> {
         child: Container(
           width: double.infinity,
           padding: EdgeInsets.all(28.w),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             gradient: LinearGradient(
               colors: [primary, primary.withAlpha(190)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(28.r),
-            boxShadow: [
+            shape: squircleBorder(radius: 28.r),
+            shadows: [
               BoxShadow(
                   color: primary.withValues(alpha: 0.35),
                   blurRadius: 20,
@@ -703,9 +710,9 @@ class DashboardPageState extends State<DashboardPage> {
                     Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(20.r),
+                        shape: squircleBorder(radius: 20.r),
                       ),
                       child: Text('${(progress * 100).round()} %',
                           style: TextStyle(
@@ -716,8 +723,8 @@ class DashboardPageState extends State<DashboardPage> {
                   ],
                 ),
                 SizedBox(height: 16.h),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14.r),
+                ClipSmoothRect(
+                  radius: squircleRadius(14.r),
                   child: TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0.0, end: progress),
                     duration: const Duration(milliseconds: 900),
@@ -823,10 +830,12 @@ class DashboardPageState extends State<DashboardPage> {
   Widget _contributorStat(int value, String label) {
     return Container(
       padding: EdgeInsets.symmetric(vertical: 20.h, horizontal: 12.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: const Color(0xFFF7F6F2),
-        borderRadius: BorderRadius.circular(24.r),
-        border: Border.all(color: kBorderDefault),
+        shape: squircleBorder(
+          radius: 24.r,
+          side: const BorderSide(color: kBorderDefault),
+        ),
       ),
       child: Column(
         children: [

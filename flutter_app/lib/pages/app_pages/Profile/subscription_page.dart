@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../services/subscription_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../themes/app_colors.dart';
+import '../../../themes/app_shapes.dart';
 import '../../../widgets/auth/forgot_password_form.dart';
 import '../../../widgets/auth/login_form.dart';
 import '../../../widgets/auth/register_form.dart';
@@ -469,9 +471,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: EdgeInsets.symmetric(vertical: 14.h),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: selected ? Colors.white : Colors.transparent,
-              borderRadius: BorderRadius.circular(30.r),
+              shape: squircleBorder(radius: 30.r),
             ),
             child: Text(
               label,
@@ -491,9 +493,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
     return Container(
       padding: EdgeInsets.all(6.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.black.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(34.r),
+        shape: squircleBorder(radius: 34.r),
       ),
       child: Row(
         children: [
@@ -577,14 +579,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 45.h),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: highlighted
             ? Colors.white.withValues(alpha: 0.25)
             : Colors.black.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(72.r),
-        border: Border.all(
-          color: highlighted ? Colors.white : Colors.transparent,
-          width: 2,
+        shape: squircleBorder(
+          radius: 72.r,
+          side: BorderSide(
+            color: highlighted ? Colors.white : Colors.transparent,
+            width: 2,
+          ),
         ),
       ),
       child: Row(
@@ -696,9 +700,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               right: 40.w,
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-                decoration: const BoxDecoration(
+                decoration: ShapeDecoration(
                   color: kSecondaryTag,
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  shape: squircleBorder(radius: 20),
                 ),
                 child: Text(
                   'Populaire',
@@ -812,9 +816,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildProductsUnavailable() {
     return Container(
       padding: EdgeInsets.all(24.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.orange[50],
-        borderRadius: BorderRadius.circular(16.r),
+        shape: squircleBorder(radius: 16.r),
       ),
       child: Column(
         children: [
@@ -937,9 +941,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                             backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(vertical: 20.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
+                            shape: squircleBorder(radius: 16.r),
                             elevation: 0,
                           ),
                           child: Text(
@@ -960,9 +962,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                             foregroundColor: primaryColor,
                             side: BorderSide(color: primaryColor, width: 1.5),
                             padding: EdgeInsets.symmetric(vertical: 20.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16.r),
-                            ),
+                            shape: squircleBorder(radius: 16.r),
                           ),
                           child: Text(
                             'Se connecter',
@@ -993,8 +993,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         initialChildSize: 0.65,
         minChildSize: 0.4,
         maxChildSize: 0.85,
-        builder: (context, scrollController) => ClipRRect(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+        builder: (context, scrollController) => ClipSmoothRect(
+          radius: SmoothBorderRadius.only(
+            topLeft:
+                SmoothRadius(cornerRadius: 28.r, cornerSmoothing: kCornerSmoothing),
+            topRight:
+                SmoothRadius(cornerRadius: 28.r, cornerSmoothing: kCornerSmoothing),
+          ),
           child: Scaffold(
             backgroundColor: Colors.white,
             body: SingleChildScrollView(

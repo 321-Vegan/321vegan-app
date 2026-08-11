@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../helpers/preference_helper.dart';
+import '../../themes/app_shapes.dart';
 
 class ChangeEmailModal extends StatefulWidget {
   final String currentEmail;
@@ -192,9 +193,7 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
+                    shape: squircleBorder(radius: 12.r),
                   ),
                   child: _isLoading
                       ? SizedBox(

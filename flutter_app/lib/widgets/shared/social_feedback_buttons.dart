@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' show Platform;
+import '../../themes/app_shapes.dart';
 
 class SocialFeedbackButtons extends StatelessWidget {
   final bool showCard;
@@ -29,8 +30,8 @@ class SocialFeedbackButtons extends StatelessWidget {
               horizontal: 24.w,
               vertical: 16.h,
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
+            shape: squircleBorder(
+              radius: 12.r,
               side: BorderSide(color: Colors.grey[300]!),
             ),
           ),
@@ -68,9 +69,7 @@ class SocialFeedbackButtons extends StatelessWidget {
               horizontal: 24.w,
               vertical: 16.h,
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
+            shape: squircleBorder(radius: 12.r),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -102,10 +101,16 @@ class SocialFeedbackButtons extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(28.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28.r),
-        boxShadow: [
+        shape: squircleBorder(
+          radius: 28.r,
+          side: BorderSide(
+            color: Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 30,
@@ -113,10 +118,6 @@ class SocialFeedbackButtons extends StatelessWidget {
             spreadRadius: 0,
           ),
         ],
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
-        ),
       ),
       child: child,
     );

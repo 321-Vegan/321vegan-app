@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/models/scan_result.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 
 class PendingProductInfoCard extends StatelessWidget {
   final ScanResult productInfo;
@@ -14,14 +15,14 @@ class PendingProductInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 750.h,
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         gradient: LinearGradient(
           colors: [Colors.white, Colors.grey.shade200],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
+        shape: squircleBorder(radius: 30),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
             spreadRadius: 5,
@@ -58,9 +59,9 @@ class PendingProductInfoCard extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Colors.purple.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+                shape: squircleBorder(radius: 20),
               ),
               child: const Text(
                 "En vérification",
@@ -85,14 +86,14 @@ class AlreadyScannedProductInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 600.h,
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         gradient: LinearGradient(
           colors: [Colors.white, Colors.grey.shade200],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
+        shape: squircleBorder(radius: 30),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.15),
             spreadRadius: 5,
@@ -120,9 +121,9 @@ class AlreadyScannedProductInfoCard extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+                shape: squircleBorder(radius: 20),
               ),
               child: const Text(
                 "En attente",

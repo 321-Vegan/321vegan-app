@@ -7,6 +7,7 @@ import 'package:vegan_app/models/product_of_interest.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 
 /// Full-screen page to filter map shops by the products they carry.
@@ -102,14 +103,16 @@ class _MapFilterPageState extends State<MapFilterPage> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         padding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 20.h),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: isSelected
               ? primaryColor.withValues(alpha: 0.08)
               : Colors.white,
-          borderRadius: BorderRadius.circular(42.r),
-          border: Border.all(
-            color: isSelected ? primaryColor : kBorderDefault,
-            width: isSelected ? 1.5 : 1,
+          shape: squircleBorder(
+            radius: 42.r,
+            side: BorderSide(
+              color: isSelected ? primaryColor : kBorderDefault,
+              width: isSelected ? 1.5 : 1,
+            ),
           ),
         ),
         child: Row(
@@ -153,12 +156,14 @@ class _MapFilterPageState extends State<MapFilterPage> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(48.r),
-                border: Border.all(
-                  color: isSelected ? primaryColor : kBorderDefault,
-                  width: isSelected ? 2 : 1,
+                shape: squircleBorder(
+                  radius: 48.r,
+                  side: BorderSide(
+                    color: isSelected ? primaryColor : kBorderDefault,
+                    width: isSelected ? 2 : 1,
+                  ),
                 ),
               ),
               child: Stack(
@@ -193,9 +198,9 @@ class _MapFilterPageState extends State<MapFilterPage> {
                       child: Container(
                         padding: EdgeInsets.symmetric(
                             horizontal: 8.w, vertical: 4.h),
-                        decoration: BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: Colors.amber[600],
-                          borderRadius: BorderRadius.circular(12.r),
+                          shape: squircleBorder(radius: 12.r),
                         ),
                         child: Text(
                           '★',
@@ -368,10 +373,12 @@ class _MapFilterPageState extends State<MapFilterPage> {
                         child: Container(
                           padding: EdgeInsets.symmetric(
                               horizontal: 28.w, vertical: 12.h),
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(42.r),
-                            border: Border.all(color: kBorderDefault),
+                            shape: squircleBorder(
+                              radius: 42.r,
+                              side: const BorderSide(color: kBorderDefault),
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -480,9 +487,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
                       backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(42.r),
-                      ),
+                      shape: squircleBorder(radius: 42.r),
                       elevation: 0,
                     ),
                     child: Text(

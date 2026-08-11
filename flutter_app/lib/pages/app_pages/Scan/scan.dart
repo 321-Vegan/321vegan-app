@@ -2,16 +2,14 @@ import 'dart:async';
 import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:flutter/services.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vegan_app/helpers/database_helper.dart';
+import 'package:vegan_app/helpers/barcode_helper.dart';
 import 'package:vegan_app/helpers/haptic_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Scan/scan_history_page.dart';
@@ -29,6 +27,7 @@ import 'package:vegan_app/widgets/scaner/pending_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/info_dialog_button.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/scaner/vegan_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/shop_confirmation_modal.dart';
 import 'package:vegan_app/widgets/vegandex/vegandex_modal.dart';
@@ -74,10 +73,14 @@ class ScanPageState extends State<ScanPage>
   bool _isRetrying = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
-  /// The Vegandex button shows its label for a few seconds on page entry,
-  /// then collapses to an icon-only square to match the history button.
-  bool _vegandexExpanded = true;
-  Timer? _vegandexCollapseTimer;
+  // The Vegandex button used to show its label for a few seconds on page
+  // entry, then collapse to an icon-only square to match the history
+  // button. Disabled — the shrink animation didn't read well — but kept
+  // here in case we want it back. Toggling this on also requires
+  // uncommenting the timer in initState/dispose and the AnimatedCrossFade
+  // in _buildVegandexButton below.
+  // bool _vegandexExpanded = true;
+  // Timer? _vegandexCollapseTimer;
 
   /// Drives a quick decaying shake + pop on the Vegandex button, played the
   /// instant [ProductFoundModal]'s fly-in animation lands on it.
@@ -130,9 +133,9 @@ class ScanPageState extends State<ScanPage>
     // Load products from already-populated cache (populated at app startup)
     _loadProductsOfInterest();
 
-    _vegandexCollapseTimer = Timer(const Duration(milliseconds: 900), () {
-      if (mounted) setState(() => _vegandexExpanded = false);
-    });
+    // _vegandexCollapseTimer = Timer(const Duration(milliseconds: 900), () {
+    //   if (mounted) setState(() => _vegandexExpanded = false);
+    // });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkLocationPermission();
@@ -598,24 +601,31 @@ class ScanPageState extends State<ScanPage>
   }
 
   /// Stops the scanner, pushes the unified product search page (Additifs /
-  /// Cosmétiques), and restarts the scanner when it's popped.
+  /// Cosmétiques / Code-barre), and restarts the scanner when it's popped.
+  /// The "Code-barre" tab pops with the chosen barcode instead of showing
+  /// its own result — feeding it into [_simulateScan] here runs it through
+  /// the exact same pipeline as a camera scan (history, haptics, Vegandex
+  /// detection, ...) instead of duplicating that logic in the search page.
   void _openProductSearch() {
     controller.stop();
     setState(() {
       productInfo = null;
     });
-    Navigator.push(
+    Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (_) => const ProductSearchPage()),
-    ).then((_) {
+    ).then((barcode) {
       controller.start();
+      if (barcode != null && barcode.isNotEmpty) {
+        _simulateScan(barcode);
+      }
     });
   }
 
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
-    _vegandexCollapseTimer?.cancel();
+    // _vegandexCollapseTimer?.cancel();
     controller.dispose();
     _confettiController.dispose();
     _vegandexShakeController.dispose();
@@ -659,28 +669,11 @@ class ScanPageState extends State<ScanPage>
   }
 
   Future<void> _cacheProductScores(String barcode) async {
-    final scores = await OpenFoodFactsService.fetchScores(barcode);
+    // Skip the network round-trip if we already fetched this product's
+    // scores on an earlier scan.
+    final cached = await PreferencesHelper.getCachedScores(barcode);
+    final scores = cached ?? await OpenFoodFactsService.fetchScores(barcode);
     await PreferencesHelper.cacheScanScores(barcode, scores);
-  }
-
-  bool isValidEAN13(String barcode) {
-    int sum = 0;
-    for (int i = 0; i < 12; i++) {
-      int digit = int.parse(barcode[i]);
-      sum += (i % 2 == 0) ? digit : digit * 3;
-    }
-    int checksum = (10 - (sum % 10)) % 10;
-    return checksum == int.parse(barcode[12]);
-  }
-
-  bool isValidEAN8(String barcode) {
-    int sum = 0;
-    for (int i = 0; i < 7; i++) {
-      int digit = int.parse(barcode[i]);
-      sum += (i % 2 == 0) ? digit : digit * 3;
-    }
-    int checksum = (10 - (sum % 10)) % 10;
-    return checksum == int.parse(barcode[7]);
   }
 
   void _simulateScan(String rawValue) {
@@ -697,294 +690,6 @@ class ScanPageState extends State<ScanPage>
     ));
   }
 
-  void _showManualEanDialog() {
-    final textController = TextEditingController();
-
-    bool isValid(String raw) {
-      String normalized = raw;
-      if (normalized.length == 12) normalized = '0$normalized';
-      if (normalized.length == 13 && isValidEAN13(normalized)) return true;
-      if (normalized.length == 8 && isValidEAN8(normalized)) return true;
-      return false;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        String? errorText;
-        List<Map<String, dynamic>> suggestions = [];
-        int suggestionQueryId = 0;
-        return StatefulBuilder(
-          builder: (ctx, setStateDialog) {
-            void updateSuggestions(String raw) {
-              final prefix = raw.trim();
-              if (prefix.length < 3) {
-                suggestionQueryId++;
-                if (suggestions.isNotEmpty) {
-                  setStateDialog(() => suggestions = []);
-                }
-                return;
-              }
-              final queryId = ++suggestionQueryId;
-              DatabaseHelper.instance
-                  .queryProductsByCodePrefix(prefix)
-                  .then((results) {
-                if (queryId != suggestionQueryId || !ctx.mounted) return;
-                setStateDialog(() => suggestions = results);
-              });
-            }
-
-            void submit() {
-              final raw = textController.text.trim();
-              if (isValid(raw)) {
-                Navigator.of(ctx).pop();
-                _simulateScan(raw);
-              } else {
-                setStateDialog(
-                    () => errorText = 'Code-barres invalide (EAN-8 ou EAN-13)');
-              }
-            }
-
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 12,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(CupertinoIcons.barcode,
-                              size: 32, color: Colors.grey.shade700),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Saisir un code-barres',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Si le scan par caméra est impossible,\nsaisissez le code manuellement.',
-                                style: TextStyle(
-                                    fontSize: 13, color: Colors.grey.shade700),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: textController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      autofocus: true,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 3,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '3017620422003',
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade300,
-                          fontWeight: FontWeight.normal,
-                          letterSpacing: 2,
-                        ),
-                        errorText: errorText,
-                        errorStyle: const TextStyle(fontSize: 13),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 16),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: Color(0xFF1A722E), width: 2),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: Colors.red, width: 2),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        if (errorText != null) {
-                          setStateDialog(() => errorText = null);
-                        }
-                        updateSuggestions(value);
-                      },
-                      onSubmitted: (_) => submit(),
-                    ),
-                    if (suggestions.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      ...suggestions.map((product) {
-                        final code = product['code']?.toString() ?? '';
-                        final name =
-                            ((product['name'] as String?) ?? 'Produit inconnu')
-                                .replaceAll('&quot;', "'");
-                        final brand = ((product['brand'] as String?) ?? '')
-                            .replaceAll('&quot;', "'");
-                        final statusColor = switch (product['status']) {
-                          'R' => Colors.red,
-                          'M' => Colors.orange,
-                          'N' => Colors.grey,
-                          _ => const Color(0xFF1A722E),
-                        };
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () {
-                              Navigator.of(ctx).pop();
-                              _simulateScan(code);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade200),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                      color: statusColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          brand.isNotEmpty
-                                              ? '$name - $brand'
-                                              : name,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          code,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                            letterSpacing: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(Icons.chevron_right,
-                                      size: 20, color: Colors.grey.shade400),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              side: BorderSide(color: Colors.grey.shade300),
-                              foregroundColor: Colors.grey.shade700,
-                            ),
-                            child: const Text('Annuler',
-                                style: TextStyle(fontSize: 15)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1A722E),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: const Text('Scanner',
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _handleBarcode(BarcodeCapture event) {
     final barcode = event.barcodes.first;
     var barcodeValue = barcode.rawValue;
@@ -996,7 +701,7 @@ class ScanPageState extends State<ScanPage>
     }
 
     if (barcodeValue != null && barcodeValue.length == 13) {
-      if (!isValidEAN13(barcodeValue)) {
+      if (!BarcodeHelper.isValidEAN13(barcodeValue)) {
         return;
       }
     }
@@ -1069,8 +774,8 @@ class ScanPageState extends State<ScanPage>
         initialChildSize: 0.85,
         minChildSize: 0.5,
         maxChildSize: 0.95,
-        builder: (context, scrollController) => ClipRRect(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+        builder: (context, scrollController) => ClipSmoothRect(
+          radius: squircleRadius(28.r),
           child: Scaffold(
             backgroundColor: Colors.white,
             body: SingleChildScrollView(
@@ -1091,54 +796,6 @@ class ScanPageState extends State<ScanPage>
     });
   }
 
-  /// Gray tint shared by the scan page's glass buttons, so they stay
-  /// readable over bright scenes (the Vegandex button keeps its gold tint).
-  static const LiquidGlassAppearance _grayGlassAppearance =
-      LiquidGlassAppearance(
-    color: Color(0x80757575), // grey 600 at 50%
-    blur: LiquidGlassBlur(sigmaX: 3, sigmaY: 3),
-  );
-
-  /// Small square liquid-glass icon button (settings, history, ...),
-  /// styled consistently with [LiquidGlassButton].
-  Widget _buildGlassIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    double? iconSize,
-  }) {
-    return LiquidGlassLens(
-      style: LiquidGlassButton.defaultStyle.copyWith(
-        shape: LiquidGlassShape.roundedRectangle(
-          cornerRadius: 20.r,
-          borderWidth: 1.1,
-          lightIntensity: 1.2,
-          lightDirection: 80,
-          borderType: const OpticalBorder(
-            borderSaturation: 1.2,
-            ambientIntensity: 1.0,
-            borderSolidity: 0.35,
-          ),
-        ),
-        appearance: _grayGlassAppearance,
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20.r),
-          onTap: onTap,
-          child: Padding(
-            padding: EdgeInsets.all(8.w),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: iconSize ?? 80.sp,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   /// Square top-row button (history, Vegandex). Figma spec: 48×48, radius
   /// 14, white or primary fill, soft shadow — ×3 for ScreenUtil units. Same
   /// height as [_buildTopSearchBar] so the row reads as one line.
@@ -1153,10 +810,10 @@ class ScanPageState extends State<ScanPage>
       child: Container(
         width: 144.w,
         height: 144.w,
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: background ?? Colors.white,
-          borderRadius: BorderRadius.circular(42.r),
-          boxShadow: [
+          shape: squircleBorder(radius: 42.r),
+          shadows: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 10,
@@ -1169,16 +826,16 @@ class ScanPageState extends State<ScanPage>
     );
   }
 
-  /// Vegandex button: shows its "Vegandex" label for the first couple of
-  /// seconds after the page opens (as a hint of what the icon means), then
-  /// collapses down to an icon-only square matching [_buildSquareActionButton]
-  /// (144.w, same as the history button next to it).
+  /// Vegandex button: icon-only square, same shape as
+  /// [_buildSquareActionButton] (144.w, matching the history button next
+  /// to it).
   ///
-  /// [AnimatedCrossFade] (rather than a plain [AnimatedSize]) is what makes
-  /// this look right: it cross-fades the label out *while* tweening the
-  /// size, so the text eases away instead of popping out on the first frame
-  /// of the shrink — a bare `if` inside the child would swap it out
-  /// instantly and leave the icon jumping into place.
+  /// It used to show a "Vegandex" text label next to the icon, expanded on
+  /// page entry and collapsing down to this same icon-only square a couple
+  /// seconds later via an [AnimatedCrossFade] — disabled (both the label
+  /// and its shrink animation) because it didn't read well as UI. See the
+  /// commented block below to bring it back (also requires uncommenting
+  /// _vegandexExpanded/_vegandexCollapseTimer above).
   Widget _buildVegandexButton() {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final icon = Icon(Icons.catching_pokemon, color: Colors.white, size: 72.sp);
@@ -1186,67 +843,63 @@ class ScanPageState extends State<ScanPage>
       onTap: () => _showModalSheet(VegandexModal(
         onNavigateToProfile: widget.onNavigateToProfile,
       )),
-      // Capped so the expanded label can never push the top row past the
-      // screen edge (font metrics differ enough across devices that sizing
-      // this to the text's natural width isn't safe) — the label ellipsizes
-      // instead in that case rather than overflowing.
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 340.w),
-        child: Container(
-          decoration: BoxDecoration(
-            color: primaryColor,
-            borderRadius: BorderRadius.circular(42.r),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: AnimatedCrossFade(
-            duration: const Duration(milliseconds: 900),
-            sizeCurve: Curves.easeInOutCubicEmphasized,
-            firstCurve: Curves.easeOut,
-            secondCurve: Curves.easeIn,
-            crossFadeState: _vegandexExpanded
-                ? CrossFadeState.showFirst
-                : CrossFadeState.showSecond,
-            firstChild: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32.w),
-              child: SizedBox(
-                height: 144.w,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Vegandex',
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        softWrap: false,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 34.sp,
-                          fontFamily: 'Balloo2'
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 16.w),
-                    icon,
-                  ],
-                ),
-              ),
+      child: Container(
+        width: 144.w,
+        height: 144.w,
+        decoration: ShapeDecoration(
+          color: primaryColor,
+          shape: squircleBorder(radius: 12),
+          shadows: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
             ),
-            secondChild: SizedBox(
-              width: 144.w,
-              height: 144.w,
-              child: Center(child: icon),
-            ),
-          ),
+          ],
         ),
+        child: Center(child: icon),
+        // child: AnimatedCrossFade(
+        //   duration: const Duration(milliseconds: 900),
+        //   sizeCurve: Curves.easeInOutCubicEmphasized,
+        //   firstCurve: Curves.easeOut,
+        //   secondCurve: Curves.easeIn,
+        //   crossFadeState: _vegandexExpanded
+        //       ? CrossFadeState.showFirst
+        //       : CrossFadeState.showSecond,
+        //   firstChild: Padding(
+        //     padding: EdgeInsets.symmetric(horizontal: 32.w),
+        //     child: SizedBox(
+        //       height: 144.w,
+        //       child: Row(
+        //         mainAxisSize: MainAxisSize.min,
+        //         mainAxisAlignment: MainAxisAlignment.center,
+        //         children: [
+        //           Flexible(
+        //             child: Text(
+        //               'Vegandex',
+        //               overflow: TextOverflow.ellipsis,
+        //               maxLines: 1,
+        //               softWrap: false,
+        //               style: TextStyle(
+        //                 color: Colors.white,
+        //                 fontWeight: FontWeight.bold,
+        //                 fontSize: 34.sp,
+        //                 fontFamily: 'Balloo2'
+        //               ),
+        //             ),
+        //           ),
+        //           SizedBox(width: 16.w),
+        //           icon,
+        //         ],
+        //       ),
+        //     ),
+        //   ),
+        //   secondChild: SizedBox(
+        //     width: 144.w,
+        //     height: 144.w,
+        //     child: Center(child: icon),
+        //   ),
+        // ),
       ),
     );
 
@@ -1286,10 +939,10 @@ class ScanPageState extends State<ScanPage>
       child: AbsorbPointer(
         child: Container(
           height: 144.w,
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(42.r),
-            boxShadow: [
+            shape: squircleBorder(radius: 12),
+            shadows: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 10,
@@ -1352,12 +1005,14 @@ class ScanPageState extends State<ScanPage>
   Widget _buildScanWarningBox(String text) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        border: Border.all(color: Colors.white, width: 2),
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
+      padding: EdgeInsets.all(15.w),
+      decoration: ShapeDecoration(
+        color: kTextPrimary,
+        shape: squircleBorder(
+          radius: 12,
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
@@ -1368,18 +1023,18 @@ class ScanPageState extends State<ScanPage>
       child: Row(
         children: [
           Icon(
-            Icons.warning,
-            color: Colors.orange[800],
+            Icons.error_outline,
+            color: Colors.white,
             size: 80.sp,
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 10.w),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
                 fontSize: 36.sp,
-                color: Colors.orange[900],
-                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -1527,15 +1182,6 @@ class ScanPageState extends State<ScanPage>
                       Colors.yellow,
                     ],
               ),
-            ),
-          ),
-          Positioned(
-            bottom: 100.h,
-            right: 20,
-            child: _buildGlassIconButton(
-              icon: Icons.keyboard_outlined,
-              iconSize: 90.sp,
-              onTap: _showManualEanDialog,
             ),
           ),
           // Top row: product-name search (visual only for now), history and
