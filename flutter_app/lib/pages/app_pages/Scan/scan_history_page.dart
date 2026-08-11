@@ -164,9 +164,9 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Produits scannés',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,
@@ -286,7 +286,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                 padding: EdgeInsets.only(bottom: 20.h),
                 child: Text(
                   DateFormat('d MMMM yyyy', 'fr_FR').format(date),
-                  style: AppTextStyles.sectionTitle,
+                  style: AppTextStyles.baloo22,
                 ),
               ),
             ],

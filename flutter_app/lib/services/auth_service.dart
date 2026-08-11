@@ -535,6 +535,7 @@ class AuthService {
   // user's JWT; email changes go through requestEmailChange instead).
   static Future<AuthResult<User>> updateUser({
     DateTime? veganSince,
+    bool clearVeganSince = false,
     String? nickname,
     String? avatar,
   }) async {
@@ -544,6 +545,8 @@ class AuthService {
 
       if (veganSince != null) {
         updates['vegan_since'] = veganSince.toIso8601String();
+      } else if (clearVeganSince) {
+        updates['vegan_since'] = null;
       }
       if (nickname != null) {
         updates['nickname'] = nickname;

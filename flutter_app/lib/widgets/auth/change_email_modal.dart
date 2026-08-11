@@ -59,7 +59,7 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
         SnackBar(
           content: Text(result.data ??
               'Un email de confirmation a été envoyé à votre nouvelle adresse.'),
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           duration: const Duration(seconds: 6),
         ),
       );

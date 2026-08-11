@@ -70,8 +70,9 @@ class ProductHelper {
         _showSnackbar(
           context,
           'Le produit a bien été envoyé. Nous allons vérifier et l\'ajouter à la base de données.',
-          Colors.green,
-        );
+          Theme.of(context).colorScheme.primary,
+        ); 
+
 
         // Check for newly unlocked badges after sending a product
         if (AuthService.isLoggedIn && context.mounted) {

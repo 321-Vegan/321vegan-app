@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/validator_service.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'constants.dart';
 import 'shared_widgets.dart';
 import 'validating_phase.dart';
@@ -104,7 +105,7 @@ class _ProductReviewPageState extends State<ProductReviewPage> {
       appBar: AppBar(
         title: Text(
           'Validation des produits',
-          style: TextStyle(fontSize: 46.sp, fontWeight: FontWeight.bold),
+          style: AppTextStyles.baloo22,
         ),
         centerTitle: true,
         backgroundColor: Colors.white,

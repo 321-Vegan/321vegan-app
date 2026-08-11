@@ -53,6 +53,7 @@ class ShareHomeCard extends StatelessWidget {
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Baloo2',
+                  letterSpacing: -1,
                 ),
               ),
             ],
@@ -68,6 +69,7 @@ class ShareHomeCard extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.bold,
               fontFamily: 'Baloo2',
+              letterSpacing: -1,
             ),
           ),
           const SizedBox(height: 10),
@@ -134,7 +136,7 @@ class ShareHomeCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
-                      letterSpacing: -0.5,
+                      letterSpacing: -1,
                       color: kTextPrimary,
                       fontFamily: 'Baloo2',
                     ),
@@ -160,6 +162,7 @@ class ShareHomeCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 11,
                         fontFamily: 'Baloo2',
+                        letterSpacing: -1,
                         color: kTextPrimary,
                       ),
                     ),
@@ -312,6 +315,7 @@ class _FeatureChip extends StatelessWidget {
           color: Colors.white,
           fontSize: 12,
           fontFamily: 'Baloo2',
+          letterSpacing: -1,
         ),
       ),
     );

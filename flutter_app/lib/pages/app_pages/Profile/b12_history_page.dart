@@ -75,9 +75,9 @@ class _B12HistoryPageState extends State<B12HistoryPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Historique B12',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,
@@ -225,7 +225,7 @@ class _B12HistoryPageState extends State<B12HistoryPage> {
           SizedBox(height: 16.h),
           Text(
             'Aucune prise enregistrée',
-            style: AppTextStyles.sectionTitle,
+            style: AppTextStyles.baloo22,
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 8.h),

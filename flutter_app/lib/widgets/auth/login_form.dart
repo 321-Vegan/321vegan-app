@@ -52,9 +52,9 @@ class _LoginFormState extends State<LoginForm> {
 
       if (result.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Connexion réussie !'),
-            backgroundColor: Colors.green,
+         SnackBar(
+            content: const Text('Connexion réussie !'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
         widget.onLoginSuccess?.call();
@@ -79,7 +79,7 @@ class _LoginFormState extends State<LoginForm> {
         children: [
           Text(
             'Connexion',
-            style: AppTextStyles.sectionTitle,
+            style: AppTextStyles.baloo22,
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 32.h),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import '../../../helpers/preference_helper.dart';
 import '../../../models/auth.dart';
 import '../../../models/error_report.dart';
@@ -20,6 +21,7 @@ import '../../../themes/app_spacing.dart';
 import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
+import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/theme/theme_selector_modal.dart';
 import '../Profile/auth_gate_page.dart';
 import '../Profile/b12_history_page.dart';
@@ -146,14 +148,29 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _pickVeganDate() async {
-    final picked = await showDatePicker(
+    final sheetResult = await showModalBottomSheet<VeganDateResult>(
       context: context,
-      initialDate: _user?.veganSince ?? DateTime.now(),
-      firstDate: DateTime(1920),
-      lastDate: DateTime.now(),
-      locale: const Locale('fr', 'FR'),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => VeganSinceDateModal(initialDate: _user?.veganSince),
     );
-    if (picked == null || picked == _user?.veganSince) return;
+    if (sheetResult == null) return;
+
+    if (sheetResult.action == VeganDateAction.delete) {
+      if (_user?.veganSince == null) return;
+      setState(() => _isLoading = true);
+      await PreferencesHelper.removeSelectedDateFromPrefs();
+      final result = await AuthService.getCurrentUser();
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        if (result.isSuccess) _user = result.data;
+      });
+      return;
+    }
+
+    final picked = sheetResult.date!;
+    if (picked == _user?.veganSince) return;
 
     setState(() => _isLoading = true);
     await PreferencesHelper.addSelectedDateToPrefs(picked);
@@ -165,9 +182,9 @@ class _SettingsPageState extends State<SettingsPage> {
     });
     if (result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Date mise à jour avec succès !'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Date mise à jour avec succès !'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
     }
@@ -216,7 +233,7 @@ class _SettingsPageState extends State<SettingsPage> {
         content: Text(result.isSuccess
             ? 'Email de réinitialisation envoyé à ${_user!.email}'
             : result.error ?? 'Erreur lors de l\'envoi de l\'email'),
-        backgroundColor: result.isSuccess ? Colors.green : Colors.red,
+        backgroundColor: result.isSuccess ? Theme.of(context).colorScheme.primary : Colors.red,
       ),
     );
   }
@@ -259,9 +276,9 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _isLoading = false);
     if (result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Déconnexion réussie !'),
-          backgroundColor: Colors.green,
+         SnackBar(
+          content: const Text('Déconnexion réussie !'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
       setState(() => _user = null);
@@ -283,9 +300,9 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _isLoading = false);
     if (result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Compte supprimé avec succès.'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Compte supprimé avec succès.'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
       setState(() => _user = null);
@@ -306,9 +323,9 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Paramètres',
-            style: TextStyle(fontWeight: FontWeight.bold),
+             style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,
@@ -602,6 +619,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               fontWeight: FontWeight.w600,
                               fontFamily: 'Baloo2',
                               height: 1.1,
+                              letterSpacing: -1,
                               color: Colors.white,
                             ),
                           ),

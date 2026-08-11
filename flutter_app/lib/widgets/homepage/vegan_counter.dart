@@ -114,6 +114,7 @@ class _VeganCounterState extends State<VeganCounter> {
             fontWeight: FontWeight.w600,
             fontSize: 64.sp,
             height: 1.0,
+            letterSpacing: -1,
             color: kTextPrimary,
           ),
         ),

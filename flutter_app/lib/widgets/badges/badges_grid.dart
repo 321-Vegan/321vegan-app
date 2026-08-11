@@ -54,7 +54,7 @@ class BadgesGrid extends StatelessWidget {
             children: [
               Text(
                 'Badges',
-                style: AppTextStyles.sectionTitle,
+                style: AppTextStyles.baloo22,
               ),
               const Spacer(),
               Icon(Icons.arrow_forward, size: 54.sp, color: Colors.grey[600]),

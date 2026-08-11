@@ -105,9 +105,9 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
     if (success) {
       navigator.pop(true);
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Magasin ajouté avec succès !'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text('Magasin ajouté avec succès !'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
     } else {

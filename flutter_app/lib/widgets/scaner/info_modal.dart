@@ -133,7 +133,7 @@ class _InfoModalState extends State<InfoModal> {
                 children: [
                   Text(
                     isBoycott ? 'Marque à éviter' : 'Information',
-                    style: AppTextStyles.sectionTitle,
+                    style: AppTextStyles.baloo22,
                   ),
                   SizedBox(height: 20.h),
                   if (match != null) ...[
@@ -149,6 +149,7 @@ class _InfoModalState extends State<InfoModal> {
                               fontSize: 52.sp,
                               fontFamily: 'Baloo2',
                               fontWeight: FontWeight.bold,
+                              letterSpacing: -1,
                               color: Colors.black87,
                             ),
                           ),

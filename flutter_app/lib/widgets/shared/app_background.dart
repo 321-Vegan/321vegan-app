@@ -25,8 +25,9 @@ class AppBackground extends StatelessWidget {
         seasonal != null && seasonal.season != Season.defaultTheme;
 
     const gradient = LinearGradient(
-      begin: Alignment.topCenter,
-      end: Alignment.bottomCenter,
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      stops: [0.0, 0.3],
       colors: [kBackgroundGradientTop, kBackgroundGradientBottom],
     );
 

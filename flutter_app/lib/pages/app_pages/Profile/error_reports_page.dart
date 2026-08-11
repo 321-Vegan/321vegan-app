@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/error_report.dart';
 import 'package:vegan_app/services/api_service.dart';
+import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/error_report_badge_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 
 /// Full-screen page listing the error reports sent by the current user,
@@ -35,9 +38,9 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
   bool _isLoading = true;
   bool _isLoadingMore = false;
   bool _hasError = false;
-  int _total = 0;
   int _page = 1;
   int _pages = 1;
+  String? _avatar;
 
   @override
   void initState() {
@@ -46,12 +49,17 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
     if (initial != null) {
       _isLoading = false;
       _reports.addAll(initial.items);
-      _total = initial.total;
       _pages = initial.pages;
     } else {
       _loadFirstPage();
     }
     _scrollController.addListener(_onScroll);
+    _loadAvatar();
+  }
+
+  Future<void> _loadAvatar() async {
+    final avatar = await PreferencesHelper.getAvatar();
+    if (mounted) setState(() => _avatar = avatar);
   }
 
   @override
@@ -86,7 +94,6 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
           ..clear()
           ..addAll(result.items);
         _page = 1;
-        _total = result.total;
         _pages = result.pages;
       }
     });
@@ -116,9 +123,9 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Mes signalements',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,
@@ -233,42 +240,78 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
   }
 
   Widget _buildList() {
-    return ListView.builder(
+    return ListView(
       controller: _scrollController,
       padding: EdgeInsets.fromLTRB(48.w, 12.h, 48.w, 32.h),
-      itemCount: _reports.length + 1 + (_isLoadingMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: 20.h),
-            child: Text(
-              '$_total signalement${_total > 1 ? 's' : ''} au total',
-              style: TextStyle(
-                fontSize: 38.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
-              ),
-            ),
-          );
-        }
-        if (index - 1 >= _reports.length) {
-          return const Padding(
+      children: [
+        ..._buildGroupedItems(),
+        if (_isLoadingMore)
+          const Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-          );
-        }
-        return Padding(
-          padding: EdgeInsets.only(bottom: 20.h),
-          child: _buildReportCard(_reports[index - 1]),
-        );
-      },
+          ),
+      ],
     );
   }
 
+  /// Flattens [_reports] (already newest-first from the API) into a list of
+  /// date-header / card widgets, one header per calendar day — the report
+  /// card itself no longer repeats the date once it's grouped under one.
+  List<Widget> _buildGroupedItems() {
+    final items = <Widget>[];
+    DateTime? lastDay;
+    for (final report in _reports) {
+      final created = report.createdAt;
+      final day =
+          created != null ? DateTime(created.year, created.month, created.day) : null;
+      if (day != null && day != lastDay) {
+        items.add(Padding(
+          padding: EdgeInsets.only(top: lastDay == null ? 0 : 12.h, bottom: 16.h),
+          child: Text(
+            DateFormat('d MMMM y', 'fr_FR').format(day),
+            style: TextStyle(
+              fontFamily: 'Baloo2',
+              fontSize: 42.sp,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -1,
+              color: kTextPrimary,
+            ),
+          ),
+        ));
+        lastDay = day;
+      }
+      items.add(Padding(
+        padding: EdgeInsets.only(bottom: 20.h),
+        child: _buildReportCard(report),
+      ));
+    }
+    return items;
+  }
+
+  /// "Aujourd'hui/Hier à HH:mm" for a recent message, falling back to a full
+  /// date for anything older — distinct from the group header above, which
+  /// always shows the absolute date.
+  String _relativeTimeLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(date.year, date.month, date.day);
+    final time = DateFormat('HH:mm').format(date);
+    switch (today.difference(day).inDays) {
+      case 0:
+        return 'Aujourd\'hui à $time';
+      case 1:
+        return 'Hier à $time';
+      default:
+        return '${DateFormat.yMMMd('fr_FR').format(date)} à $time';
+    }
+  }
+
   Widget _buildReportCard(ErrorReport report) {
-    final statusColor = report.handled ? Colors.green[600]! : kAccentYellow;
-    final statusIcon = report.handled ? Icons.check_circle : Icons.schedule;
-    final statusLabel = report.handled ? 'Traité' : 'En attente';
+    final statusColor = report.handled ? Colors.green[700]! : kAccentYellow;
+    final statusBackground = report.handled ? kPrimaryTag : kSecondaryTag;
+    final statusLabel = report.handled ? 'Traitée' : 'En cours';
+    final nickname = AuthService.currentUser?.nickname;
+    final userName = nickname != null && nickname.isNotEmpty ? nickname : 'Vous';
 
     return Container(
       padding: EdgeInsets.all(30.w),
@@ -308,73 +351,121 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
                         style: TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
                       ),
                     ],
-                    if (report.createdAt != null) ...[
-                      SizedBox(height: 4.h),
-                      Text(
-                        DateFormat.yMMMd('fr_FR').format(report.createdAt!),
-                        style: TextStyle(fontSize: 34.sp, color: Colors.grey[400]),
-                      ),
-                    ],
                   ],
                 ),
               ),
-              SizedBox(width: 20.w),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(statusIcon, size: 40.sp, color: statusColor),
-                  SizedBox(width: 8.w),
-                  Text(
-                    statusLabel,
-                    style: TextStyle(
-                      fontSize: 38.sp,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                    ),
+              SizedBox(width: 16.w),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                decoration: ShapeDecoration(
+                  color: statusBackground,
+                  shape: squircleBorder(radius: 20.r),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    fontSize: 34.sp,
+                    fontWeight: FontWeight.w600,
+                    color: statusColor,
                   ),
-                ],
+                ),
               ),
             ],
           ),
-          SizedBox(height: 16.h),
-          Text(
-            report.comment,
-            style: TextStyle(fontSize: 40.sp, color: kTextPrimary, height: 1.3),
+          SizedBox(height: 24.h),
+          _messageRow(
+            avatar: _userAvatar(),
+            name: userName,
+            time: report.createdAt,
+            message: report.comment,
           ),
           if (report.response != null && report.response!.isNotEmpty) ...[
-            SizedBox(height: 16.h),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20.w),
-              decoration: ShapeDecoration(
-                color: Colors.green.withValues(alpha: 0.06),
-                shape: squircleBorder(
-                  radius: 20.r,
-                  side: BorderSide(color: Colors.green.withValues(alpha: 0.3)),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Réponse de l\'équipe',
-                    style: TextStyle(
-                      fontSize: 36.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.green[800],
-                    ),
-                  ),
-                  SizedBox(height: 6.h),
-                  Text(
-                    report.response!,
-                    style: TextStyle(fontSize: 40.sp, color: kTextPrimary, height: 1.3),
-                  ),
-                ],
-              ),
+            SizedBox(height: 20.h),
+            _messageRow(
+              avatar: _staffAvatar(context),
+              name: "L'équipe 321 Vegan",
+              time: report.createdAt,
+              message: report.response!,
             ),
           ],
         ],
       ),
+    );
+  }
+
+  Widget _messageRow({
+    required Widget avatar,
+    required String name,
+    required DateTime? time,
+    required String message,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        avatar,
+        SizedBox(width: 16.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 38.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green[700],
+                    ),
+                  ),
+                  if (time != null) ...[
+                    SizedBox(width: 10.w),
+                    Text(
+                      _relativeTimeLabel(time),
+                      style: TextStyle(fontSize: 32.sp, color: Colors.grey[500]),
+                    ),
+                  ],
+                ],
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                message,
+                style: TextStyle(fontSize: 40.sp, color: kTextPrimary, height: 1.3),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Same avatar shown on Settings/Dashboard, in a small chat-bubble circle.
+  /// Padded + contain-fit rather than clipped/cover: the avatar assets are
+  /// irregular transparent shapes that crop oddly under a hard circle clip.
+  Widget _userAvatar() {
+    return Container(
+      width: 64.w,
+      height: 64.w,
+      padding: EdgeInsets.all(8.w),
+      decoration: const BoxDecoration(color: kPrimaryTag, shape: BoxShape.circle),
+      child: Image.asset(
+        'lib/assets/avatars/${_avatar ?? 'cochon.png'}',
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+
+  Widget _staffAvatar(BuildContext context) {
+    return Container(
+      width: 64.w,
+      height: 64.w,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.eco, color: Colors.white, size: 34.sp),
     );
   }
 }

@@ -142,9 +142,9 @@ class _EditProfileModalState extends State<EditProfileModal> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profil mis à jour avec succès !'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Profil mis à jour avec succès !'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
         widget.onProfileUpdated();

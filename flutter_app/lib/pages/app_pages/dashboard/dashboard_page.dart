@@ -32,6 +32,7 @@ import '../../../widgets/homepage/vegan_counter.dart';
 import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/social_feedback_buttons.dart';
+import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/vegandex/vegandex_modal.dart';
 import '../Profile/b12_reminder_settings_page.dart';
 import '../Profile/subscription_page.dart';
@@ -216,14 +217,27 @@ class DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+    final result = await showModalBottomSheet<VeganDateResult>(
       context: context,
-      initialDate: _targetDate ?? DateTime.now(),
-      firstDate: DateTime(1920),
-      lastDate: DateTime.now(),
-      locale: const Locale('fr', 'FR'),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => VeganSinceDateModal(initialDate: _targetDate),
     );
-    if (picked == null || picked == _targetDate) return;
+    if (result == null) return;
+
+    if (result.action == VeganDateAction.delete) {
+      await PreferencesHelper.removeSelectedDateFromPrefs();
+      await AnniversaryService.cancel();
+      if (!mounted) return;
+      setState(() {
+        _targetDate = null;
+        _savings = computeSavings(null);
+      });
+      return;
+    }
+
+    final picked = result.date!;
+    if (picked == _targetDate) return;
     await PreferencesHelper.addSelectedDateToPrefs(picked);
     AnniversaryService.scheduleAnniversary(picked);
     if (!mounted) return;
@@ -402,7 +416,7 @@ class DashboardPageState extends State<DashboardPage> {
                       Text(
                         name,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.pageTitle,
+                        style: AppTextStyles.baloo26,
                       ),
                       if (_b12TakenToday)
                         Row(
@@ -542,6 +556,7 @@ class DashboardPageState extends State<DashboardPage> {
                   fontSize: 44.sp,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'Baloo2',
+                  letterSpacing: -1,
                 ),
               ),
             ],
@@ -561,7 +576,7 @@ class DashboardPageState extends State<DashboardPage> {
             onTap: daysSince == null ? null : _pickDate,
             child: Text(
               'Végane depuis',
-              style: AppTextStyles.sectionTitle,
+              style: AppTextStyles.baloo22,
             ),
           ),
         ),
@@ -769,7 +784,7 @@ class DashboardPageState extends State<DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Contributions', style: AppTextStyles.sectionTitle),
+                    Text('Contributions', style: AppTextStyles.baloo22),
                     Text('Merci pour votre aide précieuse !',
                         style: TextStyle(
                             fontSize: 36.sp, color: Colors.grey[600])),

@@ -190,9 +190,9 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Rechercher un produit',
-            style: TextStyle(fontFamily: 'Baloo2', fontWeight: FontWeight.bold),
+            style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,
@@ -290,7 +290,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                             padding: EdgeInsets.symmetric(horizontal: 48.w),
                             child: Text(
                               'Résultats (${results.length})',
-                              style: AppTextStyles.resultsCount,
+                              style: AppTextStyles.baloo22,
                             ),
                           ),
                           SizedBox(height: 20.h),

@@ -17,11 +17,8 @@ class HomeStat {
   final Color cardColor;
   final String info;
 
-  /// Illustration shown on the Dashboard stat card.
+  /// Illustration shown on the Dashboard stat card and the info dialog.
   final String illustration;
-
-  /// Avatar shown in the info dialog.
-  final String avatar;
 
   const HomeStat({
     required this.savingsKey,
@@ -32,7 +29,6 @@ class HomeStat {
     required this.cardColor,
     required this.info,
     required this.illustration,
-    required this.avatar,
   });
 }
 
@@ -45,7 +41,6 @@ const List<HomeStat> homeStats = [
     iconColor: Color.fromARGB(247, 255, 103, 153),
     cardColor: Colors.pinkAccent,
     illustration: 'lib/assets/images/stat-cards/animals.webp',
-    avatar: 'lib/assets/avatars/cochon.png',
     info:
         "L'industrie de l'élevage cause d'immenses souffrances aux animaux en les considérant comme des objets.\n\nChoisir le véganisme, c'est refuser cette exploitation.\n\nIci, on souligne l'effet positif que chacun peut avoir pour un monde plus juste et durable.",
   ),
@@ -57,7 +52,6 @@ const List<HomeStat> homeStats = [
     iconColor: Color.fromARGB(255, 255, 133, 133),
     cardColor: Colors.redAccent,
     illustration: 'lib/assets/images/stat-cards/co2.webp',
-    avatar: 'lib/assets/avatars/canard.png',
     info:
         "L'alimentation végétale a aussi un impact sur l'environnement et permet de réduire considérablement son empreinte carbone.\n\nLa quantité de CO2 économisée vient du fait que l'élevage est l'une des principales sources d'émission de gaz à effet de serre, de déforestation, de pollution de l'air et de pollution de l'eau.",
   ),
@@ -69,7 +63,6 @@ const List<HomeStat> homeStats = [
     iconColor: Color.fromARGB(127, 105, 240, 175),
     cardColor: Color.fromARGB(197, 36, 139, 87),
     illustration: 'lib/assets/images/stat-cards/forest.webp',
-    avatar: 'lib/assets/avatars/lapin.png',
     info:
         "L'élevage est l'une des principales causes de déforestation. Il faut en effet énormément de place pour cultiver les céréales (notamment soja et maïs) destinés à nourrir les animaux d'élevage.\n\nCette déforestation a des conséquences désastreuses sur la biodiversité et les communautés locales.\n\nAdopter une alimentation végétale c'est réduire la pression sur les forêts et à encourager une agriculture plus durable.",
   ),
@@ -81,7 +74,6 @@ const List<HomeStat> homeStats = [
     iconColor: Color.fromARGB(255, 97, 166, 250),
     cardColor: Colors.blueAccent,
     illustration: 'lib/assets/images/stat-cards/water.webp',
-    avatar: 'lib/assets/avatars/poisson.png',
     info:
         "En choisissant d'être végétalien, vous aidez à économiser de précieuses ressources en eau.\n\nLa production de produits animaux nécessite une gigantesque quantité d'eau, notamment pour l'irrigation des cultures pour les animaux d'élevage.\n\nEt cela sans parler de la pollution de l'eau due aux déjections qu'ils produisent.",
   ),
@@ -234,10 +226,10 @@ class StatInfoDialog extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 60.h),
-          // Avatar
+          // Illustration (same as the card)
           SizedBox(
             height: 260.w,
-            child: Image.asset(stat.avatar, fit: BoxFit.contain),
+            child: Image.asset(stat.illustration, fit: BoxFit.contain),
           ),
           SizedBox(height: 60.h),
           // Explanation

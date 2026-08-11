@@ -48,7 +48,7 @@ class SolidarityShopsSection extends StatelessWidget {
             children: [
               Text(
                 'Boutiques solidaires',
-                style: AppTextStyles.sectionTitle,
+                style: AppTextStyles.baloo22,
               ),
               const Spacer(),
               Icon(Icons.arrow_forward, size: 54.sp, color: Colors.grey[600]),

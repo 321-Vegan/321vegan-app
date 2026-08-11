@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product_scores.dart';
 import '../services/auth_service.dart';
+import 'helper.dart';
 
 class PreferencesHelper {
   // Internal method: saves date to local storage only (no backend update)
@@ -29,12 +30,23 @@ class PreferencesHelper {
     }
   }
 
+  // Clears the vegan-since date locally and, if logged in, on the backend.
+  static Future<void> removeSelectedDateFromPrefs() async {
+    await saveSelectedDateToPrefsOnly(null);
+    if (AuthService.isLoggedIn) {
+      await AuthService.updateUser(clearVeganSince: true);
+    }
+  }
+
   // Method to get a selected date from shared preferences
   static Future<DateTime?> getSelectedDateFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     String? dateString = prefs.getString('selected_date');
     if (dateString != null && dateString != "none") {
-      return DateTime.parse(dateString);
+      // Older/synced entries may carry an incorrect UTC "Z" suffix from the
+      // backend (see Helper's asLocalWallClock doc) — reinterpret rather
+      // than .toLocal(), which would shift an already-local value again.
+      return DateTime.parse(dateString).asLocalWallClock();
     }
     return null;
   }

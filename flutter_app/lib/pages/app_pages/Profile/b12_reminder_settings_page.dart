@@ -138,9 +138,9 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Rappel B12',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,
@@ -236,7 +236,7 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         SizedBox(width: 16.w),
-                        Text('Vitamine B12', style: AppTextStyles.sectionTitle),
+                        Text('Vitamine B12', style: AppTextStyles.baloo22),
                       ],
                     ),
                   ],
@@ -447,7 +447,7 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Vitamine B12', style: AppTextStyles.sectionTitle),
+                    Text('Vitamine B12', style: AppTextStyles.baloo22),
                     Text(
                       'N\'oubliez plus jamais de prendre votre B12 !',
                       style:

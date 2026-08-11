@@ -113,6 +113,7 @@ class _AuthGatePageState extends State<AuthGatePage> {
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Baloo2',
                         height: 1.1,
+                        letterSpacing: -1,
                         color: Colors.white,
                       ),
                     ),

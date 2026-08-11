@@ -116,7 +116,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
             'Thème mis à jour avec succès !',
             style: TextStyle(fontSize: 50.sp, fontFamily: 'Baloo'),
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           duration: const Duration(seconds: 2),
         ),
       );

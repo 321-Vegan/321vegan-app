@@ -5,6 +5,7 @@ import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 
 /// Full-screen page listing every product the user has submitted.
@@ -109,9 +110,9 @@ class _SentProductsPageState extends State<SentProductsPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Produits envoyés',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,

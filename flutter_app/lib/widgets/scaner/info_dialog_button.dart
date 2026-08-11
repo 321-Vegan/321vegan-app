@@ -170,9 +170,9 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
       );
     } else {
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text("Signalement envoyé. Merci ! Retrouvez vos signalement sur votre page de profil."),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: const Text("Signalement envoyé. Merci ! Retrouvez vos signalement sur votre page de profil."),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
     }

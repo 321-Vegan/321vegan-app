@@ -19,7 +19,7 @@ class SettingsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppTextStyles.sectionTitle),
+        Text(title, style: AppTextStyles.baloo22),
         SizedBox(height: AppSpacing.afterTitle),
         for (int i = 0; i < children.length; i++) ...[
           children[i],

@@ -2,6 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../themes/app_shapes.dart';
 
+extension LocalWallClock on DateTime {
+  /// Reinterprets this DateTime's calendar/clock fields as local time,
+  /// discarding any UTC flag instead of converting.
+  ///
+  /// The backend serializes already-local timestamps (e.g. "vegan_since")
+  /// with an incorrect trailing "Z", so `DateTime.parse` mislabels them as
+  /// UTC. Calling `.toLocal()` on that mislabeled value would shift it by
+  /// the device's timezone offset *again*, pushing it further into the
+  /// future. This keeps the same year/month/day/hour/... fields and just
+  /// drops the wrong UTC tag.
+  DateTime asLocalWallClock() => isUtc
+      ? DateTime(
+          year, month, day, hour, minute, second, millisecond, microsecond)
+      : this;
+}
+
 extension StringCasingExtension on String {
   String toCapitalized() =>
       length > 0 ? '${this[0].toUpperCase()}${substring(1).toLowerCase()}' : '';

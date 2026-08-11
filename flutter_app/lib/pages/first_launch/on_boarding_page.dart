@@ -165,7 +165,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         content: Text(saved.enabled
             ? 'Rappel B12 activé : ${saved.getDescription()}'
             : "Les notifications sont désactivées. Vous pourrez activer le rappel plus tard depuis votre profil."),
-        backgroundColor: saved.enabled ? Colors.green : null,
+        backgroundColor: saved.enabled ? Theme.of(context).colorScheme.primary : null,
       ),
     );
     _nextIntroPage();

@@ -48,9 +48,9 @@ class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
       if (result.isSuccess) {
         setState(() => _emailSent = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email de réinitialisation envoyé !'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Email de réinitialisation envoyé !'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       } else {
@@ -74,7 +74,7 @@ class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
         children: [
           Text(
             'Mot de passe oublié',
-            style: AppTextStyles.sectionTitle,
+            style: AppTextStyles.baloo22,
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 16.h),

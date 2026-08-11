@@ -94,7 +94,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               'Merci pour votre soutien !',
               style: TextStyle(fontSize: 44.sp, fontFamily: 'Baloo'),
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             duration: const Duration(seconds: 3),
           ),
         );
@@ -161,7 +161,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 'Abonnement restauré avec succès !',
                 style: TextStyle(fontSize: 44.sp, fontFamily: 'Baloo'),
               ),
-              backgroundColor: Colors.green,
+              backgroundColor: Theme.of(context).colorScheme.primary,
             ),
           );
         } else {
@@ -618,6 +618,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     fontWeight: FontWeight.w600,
                     fontFamily: 'Baloo2',
                     height: 1.1,
+                    letterSpacing: -1,
                     color: Colors.white,
                   ),
                 ),
@@ -653,6 +654,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Baloo2',
                   height: 1.1,
+                  letterSpacing: -1,
                   color: Colors.white,
                 ),
               ),
