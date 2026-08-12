@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
@@ -89,9 +90,12 @@ Widget buildStatCard(
   final unitName = stat.unitName;
   final icon = stat.icon;
   final iconColor = stat.iconColor;
+  final seasonal = Theme.of(context).extension<SeasonalTheme>();
+  final showIceDecoration =
+      seasonal?.season == Season.winter && stat.savingsKey == 'co2Unit';
   // Figma spec: width 355, height hug (~104), radius 12, stroke 1,
   // padding 7 (v) / 13 (h), gap 10 — all ×3 for ScreenUtil units.
-  return InkWell(
+  final card = InkWell(
     customBorder: squircleBorder(radius: 12),
     onTap: () {
       showModalBottomSheet(
@@ -170,6 +174,35 @@ Widget buildStatCard(
         ],
       ),
     ),
+  );
+
+  if (!showIceDecoration) return card;
+
+  return Stack(
+    clipBehavior: Clip.none,
+    children: [
+      card,
+      // A small icicle drip in the top-left corner, clipped to the card's
+      // own corner radius so square image corners don't peek out past the
+      // squircle.
+      Positioned(
+        top: -50.h,
+        left: 0,
+        child: IgnorePointer(
+          child: ClipPath(
+            clipper: ShapeBorderClipper(
+              shape: squircleBorderOnly(topLeft: 36.r),
+            ),
+            child: Image.asset(
+              'lib/assets/themes/ice_8.webp',
+              width: 580.w,
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.topLeft,
+            ),
+          ),
+        ),
+      ),
+    ],
   );
 }
 

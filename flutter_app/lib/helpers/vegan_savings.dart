@@ -4,7 +4,7 @@
 /// and the vegan-anniversary popup so both read the same constants.
 Map<String, int> computeSavings(DateTime? targetTime) {
   const double animalPer = 1.3;
-  const double co2Per = 9.0;
+  const double co2Per = 4.5;
   const double waterPer = 2.271;
   const double forestPer = 2.7;
 

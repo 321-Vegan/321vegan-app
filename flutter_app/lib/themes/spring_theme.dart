@@ -23,12 +23,14 @@ SeasonalTheme springTheme = SeasonalTheme(
   snowGlobeParticleAsset: 'lib/assets/images/marguerite.webp',
   iconTopPosition: -400.h,
   iconLeftPosition: -200.w,
+  // 192.05deg linear-gradient from Figma.
   backgroundGradient: const LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
+    begin: Alignment(0.2087, -0.978),
+    end: Alignment(-0.2087, 0.978),
+    stops: [0.0, 0.3],
     colors: [
-      Color(0xFFECFDF5),
-      Colors.white,
+      Color(0xFFC3E6A0),
+      Color(0xFFF0F8E4),
     ],
   ),
 );

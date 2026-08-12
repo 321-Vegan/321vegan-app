@@ -4,11 +4,12 @@ import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../theme/snow_globe_overlay.dart';
 
-/// Paints the app's one basic background gradient behind [child] — the same
-/// gradient for every theme, seasonal or not — and, once a seasonal theme
-/// (spring/summer/autumn/winter) is active, its drifting snow-globe
-/// particles — the same tilt-reactive effect already used on the homepage
-/// stat cards, now covering the whole screen instead of just a card.
+/// Paints the app's background gradient behind [child] — the app's default
+/// cream gradient normally, or the active season's own gradient once a
+/// seasonal theme (spring/summer/autumn/winter) is active — and, for
+/// seasonal themes, drifting snow-globe particles — the same tilt-reactive
+/// effect already used on the homepage stat cards, now covering the whole
+/// screen instead of just a card.
 /// Wrap a page's whole subtree (including its Scaffold, made transparent)
 /// so the gradient also shows through the status-bar and app-bar areas.
 class AppBackground extends StatelessWidget {
@@ -19,23 +20,25 @@ class AppBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final seasonal = Theme.of(context).extension<SeasonalTheme>();
-    // Only the particles change with the season — the background gradient
-    // itself stays the app's original cream for every theme.
     final isSeasonal =
         seasonal != null && seasonal.season != Season.defaultTheme;
 
-    const gradient = LinearGradient(
+    const defaultGradient = LinearGradient(
       begin: Alignment.topRight,
       end: Alignment.bottomLeft,
       stops: [0.0, 0.3],
       colors: [kBackgroundGradientTop, kBackgroundGradientBottom],
     );
 
+    final gradient = isSeasonal
+        ? (seasonal.backgroundGradient ?? defaultGradient)
+        : defaultGradient;
+
     // SizedBox.expand forces this to fill the available space — a childless
     // DecoratedBox collapses to zero size under the loosened constraints a
     // non-positioned Stack child gets (SnowGlobeOverlay wraps this in its
     // own Stack below), which painted nothing at all.
-    Widget backdrop = const SizedBox.expand(
+    Widget backdrop = SizedBox.expand(
       child: DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
     );
 

@@ -179,6 +179,8 @@ flutter:
     - lib/assets/images/papillon.webp
     - lib/assets/images/pumpkin.webp
     - lib/assets/images/pumpkin-smile.webp
+    # Seasonal Themes - Winter
+    - lib/assets/themes/ice_8.webp
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - .env

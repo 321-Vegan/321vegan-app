@@ -243,8 +243,8 @@ class MyHomePageState extends State<MyHomePage>
         currentIndex: _tabController.index,
         items: const [
           AppBottomNavItem(
-            icon: Icons.home,
-            activeIcon: Icons.home_filled,
+            icon: CupertinoIcons.house,
+            activeIcon: CupertinoIcons.house_fill,
             label: 'Accueil',
           ),
           AppBottomNavItem(
