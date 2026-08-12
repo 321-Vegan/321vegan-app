@@ -269,13 +269,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
           padding: EdgeInsets.only(top: lastDay == null ? 0 : 12.h, bottom: 16.h),
           child: Text(
             DateFormat('d MMMM y', 'fr_FR').format(day),
-            style: TextStyle(
-              fontFamily: 'Baloo2',
-              fontSize: 42.sp,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -1,
-              color: kTextPrimary,
-            ),
+            style: AppTextStyles.baloo22
           ),
         ));
         lastDay = day;
@@ -336,11 +330,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
                       report.productName ?? report.ean,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.w600,
-                        color: kTextPrimary,
-                      ),
+                      style: AppTextStyles.baloo17
                     ),
                     if (report.productName != null) ...[
                       SizedBox(height: 4.h),
@@ -348,7 +338,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
                         report.ean,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
+                        style: AppTextStyles.bodyLight15,
                       ),
                     ],
                   ],
@@ -444,11 +434,9 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
   /// Padded + contain-fit rather than clipped/cover: the avatar assets are
   /// irregular transparent shapes that crop oddly under a hard circle clip.
   Widget _userAvatar() {
-    return Container(
-      width: 64.w,
-      height: 64.w,
-      padding: EdgeInsets.all(8.w),
-      decoration: const BoxDecoration(color: kPrimaryTag, shape: BoxShape.circle),
+    return SizedBox(
+      width: 128.w,
+      height: 128.w,
       child: Image.asset(
         'lib/assets/avatars/${_avatar ?? 'cochon.png'}',
         fit: BoxFit.contain,
@@ -458,14 +446,15 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
 
   Widget _staffAvatar(BuildContext context) {
     return Container(
-      width: 64.w,
-      height: 64.w,
+      width: 128.w,
+      height: 128.w,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary,
         shape: BoxShape.circle,
       ),
-      child: Icon(Icons.eco, color: Colors.white, size: 34.sp),
+      child: Image.asset(
+        'lib/assets/app_icon.png'),
     );
   }
 }
