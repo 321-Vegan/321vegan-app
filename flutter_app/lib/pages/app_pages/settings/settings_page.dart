@@ -23,6 +23,7 @@ import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/theme/theme_selector_modal.dart';
+import '../../../main.dart';
 import '../Profile/auth_gate_page.dart';
 import '../Profile/b12_history_page.dart';
 import '../Profile/b12_reminder_settings_page.dart';
@@ -272,9 +273,17 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _isLoading = true);
     final result = await AuthService.logout();
     await BadgeService.clearBadgeTracking();
+    if (result.isSuccess) {
+      // Subscription status belongs to the account that just logged out —
+      // clear it and re-evaluate the theme so a premium seasonal theme
+      // doesn't keep showing for a signed-out (or now different) user.
+      await SubscriptionService.reset();
+    }
     if (!mounted) return;
     setState(() => _isLoading = false);
     if (result.isSuccess) {
+      if (mounted) await MyApp.of(context)?.updateTheme();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
          SnackBar(
           content: const Text('Déconnexion réussie !'),
@@ -296,9 +305,14 @@ class _SettingsPageState extends State<SettingsPage> {
     setState(() => _isLoading = true);
     final result = await AuthService.deleteAccount(context, _user);
     await BadgeService.clearBadgeTracking();
+    if (result.isSuccess) {
+      await SubscriptionService.reset();
+    }
     if (!mounted) return;
     setState(() => _isLoading = false);
     if (result.isSuccess) {
+      if (mounted) await MyApp.of(context)?.updateTheme();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Compte supprimé avec succès.'),

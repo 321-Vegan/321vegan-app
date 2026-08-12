@@ -416,6 +416,22 @@ class SubscriptionService {
     await prefs.remove(_productIdKey);
   }
 
+  /// Clear all subscription state — call on logout/account deletion so a
+  /// different account signing in on this device doesn't inherit the
+  /// previous user's subscription (including premium seasonal theme access).
+  static Future<void> reset() async {
+    _currentSubscription = null;
+    _subscriptionBypass = false;
+    _hasPendingReceipt = false;
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    await _clearCachedStatus();
+    await _clearPendingReceipts();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_bypassKey);
+    onSubscriptionChanged?.call();
+  }
+
   /// Dispose the service
   static void dispose() {
     _purchaseSubscription?.cancel();

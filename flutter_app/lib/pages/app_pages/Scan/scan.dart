@@ -37,6 +37,7 @@ import 'package:vegan_app/widgets/auth/login_form.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/pages/app_pages/Scan/account_prompt_dialog.dart';
+import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 
 class ScanPage extends StatefulWidget {
   final VoidCallback? onNavigateToProfile;
@@ -664,8 +665,32 @@ class ScanPageState extends State<ScanPage>
             product.status == ScanStatus.notVegan) &&
         AuthService.isLoggedIn &&
         !SubscriptionService.isSubscribed) {
-      await PreferencesHelper.incrementMembershipHitScanCount();
+      final shouldPrompt =
+          await PreferencesHelper.incrementMembershipHitScanCount();
+      if (shouldPrompt) {
+        _showMembershipPromptAfterDelay();
+      }
     }
+  }
+
+  Future<void> _showMembershipPromptAfterDelay() async {
+    // Small delay so the scan result shows first
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    await PreferencesHelper.snoozeMembershipPrompt();
+    if (!mounted) return;
+
+    controller.stop();
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SubscriptionPage(
+          title: 'Vous scannez souvent,\npassez Premium !',
+        ),
+      ),
+    );
+    if (mounted) controller.start();
   }
 
   Future<void> _cacheProductScores(String barcode) async {

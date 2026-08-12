@@ -51,8 +51,12 @@ class AppBackground extends StatelessWidget {
         particleAsset: seasonal.snowGlobeParticleAsset,
         particleIcon: seasonal.snowGlobeParticleIcon,
         particleCount:
-            seasonal.particleType == ParticleType.snowflakes ? 24 : 16,
-        particleColor: seasonal.primaryColor,
+            seasonal.particleType == ParticleType.snowflakes ? 200 : 16,
+        // Snowflakes read better as white/icy against winter's pale blue
+        // gradient than the theme's saturated primary blue.
+        particleColor: seasonal.particleType == ParticleType.snowflakes
+            ? Colors.white
+            : seasonal.primaryColor,
         borderRadius: squircleRadius(0),
         child: backdrop,
       );

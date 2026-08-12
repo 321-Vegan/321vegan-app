@@ -16,11 +16,7 @@ import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/b12_reminder_service.dart';
 import 'package:vegan_app/services/notification_service.dart';
 import 'package:vegan_app/services/profile_notification_service.dart';
-import 'package:vegan_app/services/subscription_service.dart';
-import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
-import 'package:vegan_app/pages/app_pages/Scan/membership_prompt_dialog.dart';
 import 'package:vegan_app/widgets/homepage/anniversary_dialog.dart';
-import 'package:video_player/video_player.dart';
 
 const int _dashboardTabIndex = 0;
 
@@ -56,7 +52,6 @@ class MyHomePageState extends State<MyHomePage>
         ConfettiController(duration: const Duration(seconds: 6));
 
     _loadTargetDate();
-    _checkMembershipPrompt();
 
     // Populates ProfileNotificationService.total, read directly by the
     // Dashboard header's notification bell badge.
@@ -73,53 +68,10 @@ class MyHomePageState extends State<MyHomePage>
         .addPostFrameCallback((_) => _onAnniversaryNotificationTap());
   }
 
-  Future<void> _checkMembershipPrompt() async {
-    if (!AuthService.isLoggedIn) return;
-    if (SubscriptionService.isSubscribed) return;
-
-    final pending = await PreferencesHelper.isMembershipPromptPending();
-    if (!pending) return;
-
-    await PreferencesHelper.clearMembershipPromptPending();
-
-    if (!mounted) return;
-
-    // Pre-initialize video before opening dialog so it plays immediately
-    final videoController = VideoPlayerController.asset(
-      'lib/assets/abonnement-popup-vid.mp4',
-    );
-    await videoController.initialize();
-    videoController.setLooping(true);
-    videoController.setVolume(0);
-    videoController.play();
-
-    if (!mounted) {
-      videoController.dispose();
-      return;
-    }
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => MembershipPromptDialog(
-        videoController: videoController,
-        onSupport: () {
-          Navigator.of(context).pop();
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const SubscriptionPage()),
-          );
-        },
-        onLater: () => Navigator.of(context).pop(),
-      ),
-    );
-  }
-
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       B12ReminderService.checkAndRescheduleIfNeeded();
-      _checkMembershipPrompt();
     }
   }
 
@@ -257,9 +209,6 @@ class MyHomePageState extends State<MyHomePage>
           setState(() {
             _tabController.index = value;
           });
-          if (value == _dashboardTabIndex) {
-            _checkMembershipPrompt();
-          }
         },
       ),
     );

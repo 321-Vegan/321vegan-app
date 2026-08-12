@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import '../../../services/subscription_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../themes/app_colors.dart';
@@ -15,7 +15,9 @@ import '../../../widgets/auth/register_form.dart';
 import '../../../widgets/subscription_goal_widget.dart';
 
 class SubscriptionPage extends StatefulWidget {
-  const SubscriptionPage({super.key});
+  final String? title;
+
+  const SubscriptionPage({super.key, this.title});
 
   @override
   State<SubscriptionPage> createState() => _SubscriptionPageState();
@@ -351,21 +353,23 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              'Vous êtes Premium !',
-              style: TextStyle(
-                fontSize: 84.sp,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Baloo2',
-                height: 1.0,
-                letterSpacing: -1,
-                color: Colors.white,
+            Flexible(
+              child: Text(
+                'Vous êtes Premium !',
+                style: AppTextStyles.baloo36,
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
             SizedBox(width: 16.w),
-            FaIcon(FontAwesomeIcons.crown, size: 52.sp, color: Colors.white),
+            Image.asset(
+              'lib/assets/images/icons/crown-line.webp',
+              width: 72.sp,
+              height: 72.sp,
+              color: Colors.white,
+              colorBlendMode: BlendMode.srcIn,
+            ),
           ],
         ),
         SizedBox(height: 16.h),
@@ -389,20 +393,28 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              'Passez Premium !',
-              style: TextStyle(
-                fontSize: 84.sp,
-                fontWeight: FontWeight.w600,
-                fontFamily: 'Baloo2',
-                height: 1.0,
-                letterSpacing: -1,
-                color: Colors.white,
+            Flexible(
+              child: Text(
+                widget.title ?? 'Passez Premium !',
+                style: TextStyle(
+                  fontSize: 84.sp,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'Baloo2',
+                  height: 1.0,
+                  letterSpacing: -1,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
             SizedBox(width: 16.w),
-            FaIcon(FontAwesomeIcons.crown, size: 52.sp, color: Colors.white),
+            Image.asset(
+              'lib/assets/images/icons/crown-line.webp',
+              width: 72.sp,
+              height: 72.sp,
+              color: Colors.white,
+              colorBlendMode: BlendMode.srcIn,
+            ),
           ],
         ),
         SizedBox(height: 16.h),
@@ -891,93 +903,110 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           child: Container(
             color: Colors.white.withValues(alpha: 0.6),
             child: SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 32.w),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'lib/assets/images/buy-premium/pineapple.webp',
-                        fit: BoxFit.contain,
-                        height: 200.h,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          padding: EdgeInsets.all(24.w),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.lock_outline,
-                            size: 120.sp,
-                            color: primaryColor,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 24.h),
-                      Text(
-                        'Connectez-vous pour soutenir 321 Vegan',
-                        style: TextStyle(
-                          fontSize: 52.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[900],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 12.h),
-                      Text(
-                        'Créez un compte ou connectez-vous pour vous abonner et débloquer tous les thèmes.',
-                        style: TextStyle(
-                          fontSize: 40.sp,
-                          color: Colors.grey[800],
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 32.h),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => _showAuthSheet(showRegister: true),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 20.h),
-                            shape: squircleBorder(radius: 16.r),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            'Créer un compte',
-                            style: TextStyle(
-                              fontSize: 46.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 12.h),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () => _showAuthSheet(showRegister: false),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: primaryColor,
-                            side: BorderSide(color: primaryColor, width: 1.5),
-                            padding: EdgeInsets.symmetric(vertical: 20.h),
-                            shape: squircleBorder(radius: 16.r),
-                          ),
-                          child: Text(
-                            'Se connecter',
-                            style: TextStyle(
-                              fontSize: 46.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+              child: Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.topLeft,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      icon: Icon(Icons.close,
+                          color: Colors.grey[900], size: 64.sp),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
-                ),
+                  Center(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: 32.w),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'lib/assets/images/buy-premium/pineapple.webp',
+                            fit: BoxFit.contain,
+                            height: 200.h,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              padding: EdgeInsets.all(24.w),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.lock_outline,
+                                size: 120.sp,
+                                color: primaryColor,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 24.h),
+                          Text(
+                            'Connectez-vous pour soutenir 321 Vegan',
+                            style: TextStyle(
+                              fontSize: 52.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[900],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 12.h),
+                          Text(
+                            'Créez un compte ou connectez-vous pour vous abonner et débloquer tous les thèmes.',
+                            style: TextStyle(
+                              fontSize: 40.sp,
+                              color: Colors.grey[800],
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          SizedBox(height: 32.h),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () =>
+                                  _showAuthSheet(showRegister: true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 20.h),
+                                shape: squircleBorder(radius: 16.r),
+                                elevation: 0,
+                              ),
+                              child: Text(
+                                'Créer un compte',
+                                style: TextStyle(
+                                  fontSize: 46.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 12.h),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () =>
+                                  _showAuthSheet(showRegister: false),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: primaryColor,
+                                side:
+                                    BorderSide(color: primaryColor, width: 1.5),
+                                padding: EdgeInsets.symmetric(vertical: 20.h),
+                                shape: squircleBorder(radius: 16.r),
+                              ),
+                              child: Text(
+                                'Se connecter',
+                                style: TextStyle(
+                                  fontSize: 46.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -997,10 +1026,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         maxChildSize: 0.85,
         builder: (context, scrollController) => ClipSmoothRect(
           radius: SmoothBorderRadius.only(
-            topLeft:
-                SmoothRadius(cornerRadius: 28.r, cornerSmoothing: kCornerSmoothing),
-            topRight:
-                SmoothRadius(cornerRadius: 28.r, cornerSmoothing: kCornerSmoothing),
+            topLeft: SmoothRadius(
+                cornerRadius: 28.r, cornerSmoothing: kCornerSmoothing),
+            topRight: SmoothRadius(
+                cornerRadius: 28.r, cornerSmoothing: kCornerSmoothing),
           ),
           child: Scaffold(
             backgroundColor: Colors.white,

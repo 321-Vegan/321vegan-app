@@ -413,38 +413,22 @@ class PreferencesHelper {
 
   // Membership prompt methods
   static const String _membershipHitScanCountKey = 'membership_hit_scan_count';
-  static const String _membershipPromptDismissedKey =
-      'membership_prompt_dismissed';
-  static const String _membershipPromptPendingKey = 'membership_prompt_pending';
   static const String _membershipPromptNextThresholdKey =
       'membership_prompt_next_threshold';
   static const int _membershipPromptInitialThreshold = 5;
   static const int _membershipPromptSnoozeScans = 10;
 
-  static Future<void> incrementMembershipHitScanCount() async {
+  /// Increments the scan counter and returns whether this scan just crossed
+  /// the next threshold, i.e. the subscription prompt should be shown now.
+  static Future<bool> incrementMembershipHitScanCount() async {
     final prefs = await SharedPreferences.getInstance();
-    final dismissed = prefs.getBool(_membershipPromptDismissedKey) ?? false;
-
-    if (dismissed) return;
 
     final count = (prefs.getInt(_membershipHitScanCountKey) ?? 0) + 1;
     await prefs.setInt(_membershipHitScanCountKey, count);
 
     final nextThreshold = prefs.getInt(_membershipPromptNextThresholdKey) ??
         _membershipPromptInitialThreshold;
-    if (count >= nextThreshold) {
-      await prefs.setBool(_membershipPromptPendingKey, true);
-    }
-  }
-
-  static Future<bool> isMembershipPromptPending() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_membershipPromptPendingKey) ?? false;
-  }
-
-  static Future<void> clearMembershipPromptPending() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_membershipPromptPendingKey, false);
+    return count >= nextThreshold;
   }
 
   static Future<void> snoozeMembershipPrompt() async {
@@ -452,13 +436,6 @@ class PreferencesHelper {
     final count = prefs.getInt(_membershipHitScanCountKey) ?? 0;
     await prefs.setInt(_membershipPromptNextThresholdKey,
         count + _membershipPromptSnoozeScans);
-    await prefs.setBool(_membershipPromptPendingKey, false);
-  }
-
-  static Future<void> markMembershipPromptDismissed() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_membershipPromptDismissedKey, true);
-    await prefs.setBool(_membershipPromptPendingKey, false);
   }
 
   // Product not-found report methods

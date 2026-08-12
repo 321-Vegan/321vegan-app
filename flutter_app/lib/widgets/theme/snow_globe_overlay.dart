@@ -227,9 +227,8 @@ class _SnowGlobePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final f in flakes) {
-      final shimmer = 0.7 + 0.3 * sin(time * f.shimmerSpeed + f.shimmerPhase);
       final paint = Paint()
-        ..color = color.withValues(alpha: f.opacity * shimmer)
+        ..color = color.withValues(alpha: f.opacity)
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(

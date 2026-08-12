@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../models/seasonal_theme.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 
@@ -133,7 +134,9 @@ class _PromoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-    return Container(
+    final isWinter =
+        Theme.of(context).extension<SeasonalTheme>()?.season == Season.winter;
+    final card = Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 60.h),
       decoration: ShapeDecoration(
@@ -212,6 +215,32 @@ class _PromoCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+
+    if (!isWinter) return card;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        card,
+        Positioned(
+          top: -20.h,
+          right: 18.w,
+          child: IgnorePointer(
+            child: ClipPath(
+              clipper: ShapeBorderClipper(
+                shape: squircleBorderOnly(topRight: 80.r),
+              ),
+              child: Image.asset(
+                'lib/assets/themes/ice_2.webp',
+                width: 900.w,
+                fit: BoxFit.fitWidth,
+                alignment: Alignment.topRight,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

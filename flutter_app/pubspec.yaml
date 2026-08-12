@@ -143,7 +143,6 @@ flutter:
     - lib/assets/avatars/vache.png
     - lib/assets/avatars/chat.png
     # Helpers
-    - lib/assets/abonnement-popup-vid.mp4
     - lib/assets/images/sun-off.webp
     # Test with la vie featured
     - lib/assets/la-vie-logo.png
@@ -181,6 +180,9 @@ flutter:
     - lib/assets/images/pumpkin-smile.webp
     # Seasonal Themes - Winter
     - lib/assets/themes/ice_8.webp
+    - lib/assets/themes/ice_2.webp
+    # Icons
+    - lib/assets/images/icons/crown-line.webp
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - .env
