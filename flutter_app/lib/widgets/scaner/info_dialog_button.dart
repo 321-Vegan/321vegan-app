@@ -1,11 +1,11 @@
 import 'dart:io' show File;
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/widgets/shared/photo_picker_box.dart';
 
 class InfoDialogButton extends StatelessWidget {
   final String barcode;
@@ -388,82 +388,12 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
                 ),
               ),
               SizedBox(height: 6.h),
-              if (_photo != null) ...[
-                Stack(
-                  children: [
-                    ClipSmoothRect(
-                      radius: squircleRadius(12),
-                      child: Image.file(
-                        _photo!,
-                        height: 180.h,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: () => setState(() => _photo = null),
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: _isTakingPhoto ? null : _takePhoto,
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Reprendre la photo'),
-                  ),
-                ),
-              ] else
-                GestureDetector(
-                  onTap: _isTakingPhoto ? null : _takePhoto,
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: 24.h),
-                    decoration: ShapeDecoration(
-                      color: Colors.grey.shade100,
-                      shape: squircleBorder(
-                        radius: 12,
-                        side: BorderSide(
-                          color: Colors.grey.shade300,
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.camera_alt,
-                          size: 40,
-                          color: Colors.grey.shade500,
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'Prendre une photo des ingrédients',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              PhotoPickerBox(
+                photo: _photo,
+                isLoading: _isTakingPhoto,
+                onPickPhoto: _takePhoto,
+                onRemovePhoto: () => setState(() => _photo = null),
+              ),
               SizedBox(height: 24.h),
 
               // Buttons
@@ -534,34 +464,6 @@ class ReportErrorButton extends StatelessWidget {
       commentHint: "Ex: Ce produit n'est pas vegan, il contient...",
       buttonColor: Colors.orange,
       showPreReportNotice: true,
-      onScannerStop: onScannerStop,
-      onScannerStart: onScannerStart,
-    );
-  }
-}
-
-class SendInfoButton extends StatelessWidget {
-  final String barcode;
-  final VoidCallback? onScannerStop;
-  final VoidCallback? onScannerStart;
-
-  const SendInfoButton({
-    super.key,
-    required this.barcode,
-    this.onScannerStop,
-    this.onScannerStart,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InfoDialogButton(
-      barcode: barcode,
-      buttonLabel: "Envoyer des infos",
-      dialogTitle: "Envoyer une info",
-      commentTitle: "Quel est ce produit? ",
-      commentHint: "Décrivez le produit",
-      buttonColor: Colors.blue,
-      icon: Icons.info_outline,
       onScannerStop: onScannerStop,
       onScannerStart: onScannerStart,
     );

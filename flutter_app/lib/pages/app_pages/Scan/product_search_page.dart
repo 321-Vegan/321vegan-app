@@ -298,9 +298,9 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                             child: results.isEmpty
                                 ? (isAliment && BarcodeHelper.isValid(_query))
                                     ? EmptyStateView(
-                                        title: 'Code non trouvé localement',
+                                        title: 'Ce code ne correspond à rien dans nos données.',
                                         subtitle:
-                                            'Vous pouvez tout de même valider ce code.',
+                                            'Vous pouvez tout de même le scanner.',
                                         buttonLabel: 'Utiliser ce code',
                                         onButtonTap: () =>
                                             _submitBarcode(_query),

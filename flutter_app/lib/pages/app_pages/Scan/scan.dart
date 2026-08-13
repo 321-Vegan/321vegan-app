@@ -25,6 +25,7 @@ import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/widgets/scaner/card_product.dart';
 import 'package:vegan_app/widgets/scaner/pending_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/info_dialog_button.dart';
+import 'package:vegan_app/widgets/scaner/unknown_product_modal.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
@@ -63,7 +64,6 @@ class ScanPageState extends State<ScanPage>
   List<Map<String, dynamic>> scanHistory = [];
   String? _lastScannedBarcode = '';
   late ConfettiController _confettiController;
-  final nonVeganCardKey = GlobalKey<NonVeganProductInfoCardState>();
   bool _showBoycott = true;
   bool _showScores = true;
   bool _hapticFeedback = true;
@@ -73,6 +73,14 @@ class ScanPageState extends State<ScanPage>
   bool _scannerPausedByModal = false;
   bool _isRetrying = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+
+  /// Grace period before an unknown/not-found result actually opens
+  /// [UnknownProductModal]. The scanner sometimes misreads a barcode for a
+  /// frame or two before landing on the right one — this lets a follow-up
+  /// scan of a different barcode cancel the pending sheet instead of the
+  /// user getting locked into a modal for a misread. See
+  /// _scheduleUnknownProductModal.
+  Timer? _pendingUnknownModalTimer;
 
   // The Vegandex button used to show its label for a few seconds on page
   // entry, then collapse to an icon-only square to match the history
@@ -626,6 +634,7 @@ class ScanPageState extends State<ScanPage>
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
+    _pendingUnknownModalTimer?.cancel();
     // _vegandexCollapseTimer?.cancel();
     controller.dispose();
     _confettiController.dispose();
@@ -636,13 +645,26 @@ class ScanPageState extends State<ScanPage>
 
   Future<void> _checkVeganStatusOffline(String barcode) async {
     final product = await ProductInfoHelper.getProductInfo(barcode);
+
+    // A newer scan may have already superseded this one while the lookup
+    // was in flight (e.g. the scanner misread a barcode, then read the
+    // correct one a moment later before this call returned). Acting on a
+    // stale result here would flash the wrong product, log a bogus haptic/
+    // history entry, or schedule UnknownProductModal for a barcode nobody
+    // is looking at anymore.
+    if (!mounted || barcode != _lastScannedBarcode) return;
+
     setState(() {
       productInfo = product;
     });
 
     // Scan-confirmation haptic: double pulse warns that the product is not
-    // vegan, single pulse for everything else.
-    if (_hapticFeedback) {
+    // vegan, single pulse for everything else. Skipped for unknown/notFound
+    // — a misread barcode landing on these statuses shouldn't buzz the user
+    // before the debounce even confirms it's worth acting on.
+    if (_hapticFeedback &&
+        product.status != ScanStatus.unknown &&
+        product.status != ScanStatus.notFound) {
       if (product.status == ScanStatus.notVegan) {
         HapticHelper.doubleImpact();
       } else {
@@ -671,6 +693,53 @@ class ScanPageState extends State<ScanPage>
         _showMembershipPromptAfterDelay();
       }
     }
+
+    // Product missing from the database — either never submitted, or
+    // submitted before but still unidentified: open the submission sheet,
+    // after a short grace period so a misread barcode doesn't lock the
+    // scanner out from self-correcting on the next frame.
+    if (product.status == ScanStatus.unknown ||
+        product.status == ScanStatus.notFound) {
+      _scheduleUnknownProductModal(barcode, product.status);
+    }
+  }
+
+  /// Delays opening [UnknownProductModal] briefly, so a follow-up scan of a
+  /// different barcode (the scanner correcting a misread) can cancel it via
+  /// [_pendingUnknownModalTimer] before the sheet — and the controller.stop()
+  /// that comes with it — ever appears.
+  void _scheduleUnknownProductModal(String barcode, ScanStatus status) {
+    _pendingUnknownModalTimer?.cancel();
+    _pendingUnknownModalTimer = Timer(const Duration(milliseconds: 700), () {
+      _pendingUnknownModalTimer = null;
+      _showUnknownProductModal(barcode, status);
+    });
+  }
+
+  /// Shows [UnknownProductModal] over the camera and, once it's dismissed
+  /// (submitted or cancelled), clears [productInfo] and resumes scanning.
+  Future<void> _showUnknownProductModal(String barcode, ScanStatus status) async {
+    if (!mounted) return;
+    _scannerPausedByModal = true;
+    controller.stop();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => UnknownProductModal(
+        barcode: barcode,
+        alreadySubmitted: status == ScanStatus.notFound,
+        onNavigateToProfile: widget.onNavigateToProfile,
+      ),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      productInfo = null;
+    });
+    _scannerPausedByModal = false;
+    controller.start();
   }
 
   Future<void> _showMembershipPromptAfterDelay() async {
@@ -734,11 +803,14 @@ class ScanPageState extends State<ScanPage>
     if (barcodeValue != null && _lastScannedBarcode != barcodeValue) {
       _lastScannedBarcode = barcodeValue;
 
+      // A fresh read supersedes whatever the previous one was about to do —
+      // in particular, cancel a not-yet-opened UnknownProductModal from a
+      // misread barcode so this new (possibly correct) read gets a chance
+      // to resolve instead of getting locked out by the sheet.
+      _pendingUnknownModalTimer?.cancel();
+
       // The haptic fires in _checkVeganStatusOffline once the product
       // status is known, so non-vegan products can get a distinct pattern.
-
-      // Reset the button disabled state in NonVeganProductInfoCardState
-      nonVeganCardKey.currentState?.resetButton();
 
       // Check if we should prompt the user to create an account
       _checkAccountPrompt();
@@ -1136,55 +1208,33 @@ class ScanPageState extends State<ScanPage>
                   PendingProductInfoCard(productInfo: productInfo!),
                 ScanStatus.alreadyScanned =>
                   const AlreadyScannedProductInfoCard(),
-                ScanStatus.notFound =>
-                  NotFoundProductInfoCard(productInfo: productInfo!),
-                ScanStatus.unknown => NonVeganProductInfoCard(
-                    key: nonVeganCardKey,
-                    productInfo: productInfo!,
-                    confettiController: _confettiController,
-                    onNavigateToProfile: widget.onNavigateToProfile,
-                    onScannerStop: () {
-                      _scannerPausedByModal = true;
-                      controller.stop();
-                    },
-                    onScannerStart: () {
-                      _scannerPausedByModal = false;
-                      controller.start();
-                    },
-                  ),
+                // Handled by _showUnknownProductModal instead of an inline
+                // card — see _checkVeganStatusOffline.
+                ScanStatus.notFound => const SizedBox.shrink(),
+                ScanStatus.unknown => const SizedBox.shrink(),
                 ScanStatus.notVegan =>
                   RejectedProductInfoCard(productInfo: productInfo!),
               },
             ),
-          if (productInfo != null && productInfo!.status != ScanStatus.unknown)
+          if (productInfo != null &&
+              productInfo!.status != ScanStatus.unknown &&
+              productInfo!.status != ScanStatus.notFound)
             Positioned(
               bottom: 240.h,
               left: 0,
               right: 0,
               child: Center(
-                child: productInfo!.status == ScanStatus.notFound
-                    ? SendInfoButton(
-                        barcode: productInfo!.code,
-                        onScannerStop: () {
-                          _scannerPausedByModal = true;
-                          controller.stop();
-                        },
-                        onScannerStart: () {
-                          _scannerPausedByModal = false;
-                          controller.start();
-                        },
-                      )
-                    : ReportErrorButton(
-                        barcode: productInfo!.code,
-                        onScannerStop: () {
-                          _scannerPausedByModal = true;
-                          controller.stop();
-                        },
-                        onScannerStart: () {
-                          _scannerPausedByModal = false;
-                          controller.start();
-                        },
-                      ),
+                child: ReportErrorButton(
+                  barcode: productInfo!.code,
+                  onScannerStop: () {
+                    _scannerPausedByModal = true;
+                    controller.stop();
+                  },
+                  onScannerStart: () {
+                    _scannerPausedByModal = false;
+                    controller.start();
+                  },
+                ),
               ),
             ),
           Positioned.fill(

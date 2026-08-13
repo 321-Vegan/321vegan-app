@@ -28,3 +28,11 @@ const Color kTextPrimary = Color(0xFF313337);
 
 /// "Border/Default" in Figma — 1px hairline on white cards.
 const Color kBorderDefault = Color(0xFFE7E5E1);
+
+/// "Color/Semantic/Error" in Figma — errors, destructive actions, "non-végane"/
+/// "à éviter" states. Use instead of ad-hoc `Colors.red*`.
+const Color kSemanticError = Color(0xFFD6484B);
+
+/// "Color/Semantic/Success" in Figma — success states, "vegan" confirmation.
+/// Use instead of ad-hoc `Colors.green*`.
+const Color kSemanticSuccess = Color(0xFF15866E);

@@ -142,6 +142,10 @@ flutter:
     - lib/assets/avatars/cochon.png
     - lib/assets/avatars/vache.png
     - lib/assets/avatars/chat.png
+    # Characters
+    - lib/assets/images/characters/lemon-vgn.webp
+    - lib/assets/images/characters/lemon-not.webp
+    - lib/assets/images/characters/lemon-mby.webp
     # Helpers
     - lib/assets/images/sun-off.webp
     # Test with la vie featured

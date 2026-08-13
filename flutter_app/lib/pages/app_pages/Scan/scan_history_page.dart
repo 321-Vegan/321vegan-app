@@ -530,30 +530,16 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                   ),
                 );
               },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-                decoration: ShapeDecoration(
-                  color: kSecondaryTag,
-                  shape: squircleBorder(
-                    radius: 30.r,
-                    side: const BorderSide(color: kAccentYellow),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.thumb_down, color: Colors.red[400], size: 40.sp),
+                  SizedBox(width: 8.w),
+                  Text(
+                    'À éviter',
+                    style: AppTextStyles.bodyMedium15.copyWith(color: Colors.red[400])
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'À éviter',
-                      style: TextStyle(
-                        fontSize: 36.sp,
-                        fontWeight: FontWeight.w600,
-                        color: kAccentYellow,
-                      ),
-                    ),
-                    SizedBox(width: 6.w),
-                    Icon(Icons.info_outline, color: kAccentYellow, size: 64.sp),
-                  ],
-                ),
+                ],
               ),
             ),
           ],
