@@ -81,18 +81,40 @@ const List<HomeStat> homeStats = [
   ),
 ];
 
-/// The "Forêt préservée" card illustration swaps for a season-matched leaf
-/// (Figma redesign); every other stat keeps its fixed illustration.
+/// Season-matched illustration assets for stat cards that have a themed set
+/// (Figma redesign), keyed by [HomeStat.savingsKey]. Seasons without a
+/// design yet fall back to that card's `basic` asset, so a card can ship
+/// with only "basic" + one seasonal variant and grow the rest over time.
+const Map<String, String> _statThemeAssetPrefix = {
+  'forestUnit': 'lib/assets/themes/cards/leaf',
+  'waterUnit': 'lib/assets/themes/cards/water',
+};
+
 String seasonalStatIllustration(HomeStat stat, Season? season) {
-  if (stat.savingsKey != 'forestUnit') return stat.illustration;
-  return switch (season) {
-    Season.autumn => 'lib/assets/themes/cards/leaf-autumn.png',
-    Season.summer => 'lib/assets/themes/cards/leaf-summer.png',
-    Season.spring => 'lib/assets/themes/cards/leaf-spring.png',
-    Season.winter => 'lib/assets/themes/cards/leaf-winter.png',
-    _ => 'lib/assets/themes/cards/leaf-basic.png',
+  final prefix = _statThemeAssetPrefix[stat.savingsKey];
+  if (prefix == null) return stat.illustration;
+  final suffix = switch (season) {
+    Season.autumn => 'autumn',
+    Season.summer => 'summer',
+    Season.spring => 'spring',
+    Season.winter => 'winter',
+    _ => 'basic',
   };
+  final asset = '$prefix-$suffix.png';
+  return _themeAssetsWithDesign.contains(asset) ? asset : '$prefix-basic.png';
 }
+
+/// Assets that actually exist on disk for each themed card — every card in
+/// [_statThemeAssetPrefix] must at least have its `-basic.png` here.
+const Set<String> _themeAssetsWithDesign = {
+  'lib/assets/themes/cards/leaf-autumn.png',
+  'lib/assets/themes/cards/leaf-basic.png',
+  'lib/assets/themes/cards/leaf-spring.png',
+  'lib/assets/themes/cards/leaf-summer.png',
+  'lib/assets/themes/cards/leaf-winter.png',
+  'lib/assets/themes/cards/water-basic.png',
+  'lib/assets/themes/cards/water-summer.png',
+};
 
 Widget buildStatCard(
   BuildContext context,

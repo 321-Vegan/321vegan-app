@@ -591,6 +591,11 @@ class B12ReminderService {
   /// interval implied by the configured frequency. Day-of-week based
   /// frequencies honor the configured day(s) so the date matches the
   /// user's actual schedule. Returns null when there is no history yet.
+  ///
+  /// When that interval math lands in the past (the user missed one or
+  /// more intakes and hasn't recorded one since), the practical next
+  /// intake is "as soon as possible" — today — rather than the stale date,
+  /// so the result is clamped forward to today in that case.
   static Future<DateTime?> getNextExpectedIntakeDate() async {
     final history = await getB12IntakeHistory();
     if (history.isEmpty) return null;
@@ -598,20 +603,25 @@ class B12ReminderService {
     final settings = await getSettings();
     final last = history.first;
 
+    final DateTime candidate;
     switch (settings.frequency) {
       case ReminderFrequency.daily:
-        return last.add(const Duration(days: 1));
+        candidate = last.add(const Duration(days: 1));
       case ReminderFrequency.weekly:
-        return _nextMatchingWeekday(last, {settings.dayOfWeek ?? last.weekday});
+        candidate =
+            _nextMatchingWeekday(last, {settings.dayOfWeek ?? last.weekday});
       case ReminderFrequency.twiceWeekly:
         final days = settings.daysOfWeek;
-        if (days != null && days.length == 2) {
-          return _nextMatchingWeekday(last, days.toSet());
-        }
-        return last.add(const Duration(days: 3));
+        candidate = (days != null && days.length == 2)
+            ? _nextMatchingWeekday(last, days.toSet())
+            : last.add(const Duration(days: 3));
       case ReminderFrequency.biweekly:
-        return last.add(const Duration(days: 14));
+        candidate = last.add(const Duration(days: 14));
     }
+
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    return candidate.isBefore(todayOnly) ? todayOnly : candidate;
   }
 
   /// First day strictly after [from] whose weekday is in [weekdays]
@@ -703,5 +713,37 @@ class B12ReminderService {
   /// Check if notifications are enabled in system settings
   static Future<bool> areNotificationsEnabled() async {
     return await _notificationService.areNotificationsEnabled();
+  }
+
+  /// Whether [day] was an expected intake day under [settings] — lets the
+  /// history calendar tell a genuinely missed day (due, not taken) from one
+  /// the configured rhythm never required (not due, not taken). Always
+  /// false when reminders were never enabled: there's no rhythm to be due
+  /// against, so nothing should read as "missed".
+  ///
+  /// Frequency isn't tracked historically (only per-intake, at the moment
+  /// it was recorded — see [B12Intake.frequency]), so this projects the
+  /// *current* settings back across the whole calendar, same as the streak
+  /// calculation's snapshot fallback.
+  static bool isDueDay(DateTime day, B12ReminderSettings settings) {
+    if (!settings.enabled) return false;
+    switch (settings.frequency) {
+      case ReminderFrequency.daily:
+        return true;
+      case ReminderFrequency.weekly:
+        return settings.dayOfWeek != null && day.weekday == settings.dayOfWeek;
+      case ReminderFrequency.twiceWeekly:
+        return settings.daysOfWeek?.contains(day.weekday) ?? false;
+      case ReminderFrequency.biweekly:
+        if (settings.dayOfWeek == null || day.weekday != settings.dayOfWeek) {
+          return false;
+        }
+        final start = settings.biweeklyStartDate;
+        if (start == null) return true;
+        final startDay = DateTime(start.year, start.month, start.day);
+        final dayOnly = DateTime(day.year, day.month, day.day);
+        final weeksDiff = calendarDaysBetween(startDay, dayOnly) ~/ 7;
+        return weeksDiff % 2 == 0;
+    }
   }
 }

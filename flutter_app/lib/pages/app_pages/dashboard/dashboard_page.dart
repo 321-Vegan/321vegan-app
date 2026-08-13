@@ -26,13 +26,13 @@ import '../../../widgets/homepage/b12_reminder_banner.dart';
 import '../../../widgets/homepage/share_home_dialog.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/app_button.dart';
+import '../../../widgets/shared/square_icon_button.dart';
 import '../../../widgets/homepage/promo_carousel.dart';
 import '../../../widgets/homepage/solidarity_shops_section.dart';
 import '../../../widgets/homepage/stat_card.dart';
 import '../../../widgets/homepage/vegan_counter.dart';
 import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
-import '../../../widgets/shared/social_feedback_buttons.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/vegandex/vegandex_modal.dart';
 import '../Profile/b12_reminder_settings_page.dart';
@@ -355,14 +355,12 @@ class DashboardPageState extends State<DashboardPage> {
                     SolidarityShopsSection(partners: _partners),
                     SizedBox(height: AppSpacing.section),
                     BadgesGrid(user: _user),
-                    SizedBox(height: AppSpacing.section),
-                    _buildVegandexCard(context),
+                    //SizedBox(height: AppSpacing.section),
+                    //_buildVegandexCard(context),
                     if (_user?.isContributor ?? false) ...[
                       SizedBox(height: AppSpacing.section),
                       _buildContributorCard(context),
                     ],
-                    SizedBox(height: AppSpacing.section),
-                    const SocialFeedbackButtons(showCard: true),
                   ],
                 ),
               ),
@@ -459,58 +457,40 @@ class DashboardPageState extends State<DashboardPage> {
     required VoidCallback onTap,
     int badgeCount = 0,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Figma spec: 47×47, radius 12, padding 11.5 (×3 units).
-          Container(
-            width: 141.w,
-            height: 141.w,
-            decoration: ShapeDecoration(
-              color: Colors.white,
-              shape: squircleBorder(radius: 12),
-              shadows: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        SquareIconButton.action(
+            icon: icon, onTap: onTap, iconColor: Colors.grey[700]!),
+        if (badgeCount > 0)
+          Positioned(
+            right: -8.w,
+            top: -8.w,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 15.w),
+              height: 64.w,
+              constraints: BoxConstraints(minWidth: 44.w),
+              decoration: ShapeDecoration(
+                color: Colors.red,
+                shape: squircleBorder(
+                  radius: 22.w,
+                  side: BorderSide(color: Colors.white, width: 3.w),
                 ),
-              ],
-            ),
-            child: Icon(icon, color: Colors.grey[700], size: 72.sp),
-          ),
-          if (badgeCount > 0)
-            Positioned(
-              right: -8.w,
-              top: -8.w,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 15.w),
-                height: 64.w,
-                constraints: BoxConstraints(minWidth: 44.w),
-                decoration: ShapeDecoration(
-                  color: Colors.red,
-                  shape: squircleBorder(
-                    radius: 22.w,
-                    side: BorderSide(color: Colors.white, width: 3.w),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    badgeCount > 99 ? '99+' : '$badgeCount',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.bold,
-                        height: 1),
-                  ),
+              ),
+              child: Center(
+                child: Text(
+                  badgeCount > 99 ? '99+' : '$badgeCount',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                      height: 1),
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 

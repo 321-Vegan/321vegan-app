@@ -188,11 +188,21 @@ flutter:
     - lib/assets/themes/cards/leaf-spring.png
     - lib/assets/themes/cards/leaf-winter.png
     - lib/assets/themes/cards/leaf-basic.png
+    - lib/assets/themes/cards/water-basic.png
+    - lib/assets/themes/cards/water-summer.png
     # Seasonal Themes - Winter
     - lib/assets/themes/ice_8.webp
     - lib/assets/themes/ice_2.webp
     # Icons
     - lib/assets/images/icons/crown-line.webp
+    - lib/assets/images/icons/solid-close.webp
+    - lib/assets/images/icons/info-circle.webp
+    - lib/assets/images/icons/alert-circle.webp
+    - lib/assets/images/icons/solid-check.webp
+    - lib/assets/images/icons/pokeball.webp
+    - lib/assets/images/icons/calendar.webp
+    - lib/assets/images/icons/award-line.webp
+    - lib/assets/images/icons/clipboard-check.webp
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - .env

@@ -27,7 +27,8 @@ import '../../../widgets/theme/theme_selector_modal.dart';
 import '../../../main.dart';
 import '../Profile/auth_gate_page.dart';
 import '../Profile/avatar_selection_page.dart';
-import '../Profile/b12_history_page.dart';
+import '../Profile/b12_history_sheet.dart';
+import '../Profile/b12_info_page.dart';
 import '../Profile/b12_reminder_settings_page.dart';
 import '../Scan/scan_history_page.dart';
 import '../Scan/sent_products_page.dart';
@@ -259,9 +260,18 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _openB12History() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const B12HistorySheet(),
+    );
+  }
+
+  void _openB12Info() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const B12HistoryPage()),
+      MaterialPageRoute(builder: (_) => const B12InfoPage()),
     );
   }
 
@@ -349,7 +359,7 @@ class _SettingsPageState extends State<SettingsPage> {
         appBar: AppBar(
           title: Text(
             'Paramètres',
-             style: AppTextStyles.baloo22,
+            style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,
@@ -485,6 +495,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 trailing: Icon(Icons.arrow_forward_ios,
                     size: 32.sp, color: Colors.grey[400]),
                 onTap: _openB12History,
+              ),
+              SettingsRowTile(
+                label: 'Plus d\'informations',
+                trailing: Icon(Icons.arrow_forward_ios,
+                    size: 32.sp, color: Colors.grey[400]),
+                onTap: _openB12Info,
               ),
             ],
           ),
@@ -627,7 +643,8 @@ class _SettingsPageState extends State<SettingsPage> {
                             isSubscribed
                                 ? 'Abonnement actif'
                                 : 'Passez Premium !',
-                            style: AppTextStyles.baloo26.copyWith(color: Colors.white),
+                            style: AppTextStyles.baloo26
+                                .copyWith(color: Colors.white),
                           ),
                         ),
                         SizedBox(width: 14.w),

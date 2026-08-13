@@ -38,6 +38,7 @@ import 'package:vegan_app/widgets/auth/login_form.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/pages/app_pages/Scan/account_prompt_dialog.dart';
+import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 
 class ScanPage extends StatefulWidget {
@@ -718,7 +719,8 @@ class ScanPageState extends State<ScanPage>
 
   /// Shows [UnknownProductModal] over the camera and, once it's dismissed
   /// (submitted or cancelled), clears [productInfo] and resumes scanning.
-  Future<void> _showUnknownProductModal(String barcode, ScanStatus status) async {
+  Future<void> _showUnknownProductModal(
+      String barcode, ScanStatus status) async {
     if (!mounted) return;
     _scannerPausedByModal = true;
     controller.stop();
@@ -893,39 +895,8 @@ class ScanPageState extends State<ScanPage>
     });
   }
 
-  /// Square top-row button (history, Vegandex). Figma spec: 48×48, radius
-  /// 14, white or primary fill, soft shadow — ×3 for ScreenUtil units. Same
-  /// height as [_buildTopSearchBar] so the row reads as one line.
-  Widget _buildSquareActionButton({
-    required IconData icon,
-    required Color iconColor,
-    required VoidCallback onTap,
-    Color? background,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 144.w,
-        height: 144.w,
-        decoration: ShapeDecoration(
-          color: background ?? Colors.white,
-          shape: squircleBorder(radius: 42.r),
-          shadows: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Center(child: Icon(icon, color: iconColor, size: 72.sp)),
-      ),
-    );
-  }
-
-  /// Vegandex button: icon-only square, same shape as
-  /// [_buildSquareActionButton] (144.w, matching the history button next
-  /// to it).
+  /// Vegandex button: icon-only square, same shape as the history button
+  /// next to it ([SquareIconButton.action]).
   ///
   /// It used to show a "Vegandex" text label next to the icon, expanded on
   /// page entry and collapsing down to this same icon-only square a couple
@@ -935,69 +906,61 @@ class ScanPageState extends State<ScanPage>
   /// _vegandexExpanded/_vegandexCollapseTimer above).
   Widget _buildVegandexButton() {
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final icon = Icon(Icons.catching_pokemon, color: Colors.white, size: 72.sp);
-    final button = GestureDetector(
+    final pokeballImage = Image.asset(
+      'lib/assets/images/icons/pokeball.webp',
+      width: 84.w,
+      height: 84.w,
+      color: Colors.white,
+      colorBlendMode: BlendMode.srcIn,
+    );
+    final button = SquareIconButton.action(
       onTap: () => _showModalSheet(VegandexModal(
         onNavigateToProfile: widget.onNavigateToProfile,
       )),
-      child: Container(
-        width: 144.w,
-        height: 144.w,
-        decoration: ShapeDecoration(
-          color: primaryColor,
-          shape: squircleBorder(radius: 12),
-          shadows: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Center(child: icon),
-        // child: AnimatedCrossFade(
-        //   duration: const Duration(milliseconds: 900),
-        //   sizeCurve: Curves.easeInOutCubicEmphasized,
-        //   firstCurve: Curves.easeOut,
-        //   secondCurve: Curves.easeIn,
-        //   crossFadeState: _vegandexExpanded
-        //       ? CrossFadeState.showFirst
-        //       : CrossFadeState.showSecond,
-        //   firstChild: Padding(
-        //     padding: EdgeInsets.symmetric(horizontal: 32.w),
-        //     child: SizedBox(
-        //       height: 144.w,
-        //       child: Row(
-        //         mainAxisSize: MainAxisSize.min,
-        //         mainAxisAlignment: MainAxisAlignment.center,
-        //         children: [
-        //           Flexible(
-        //             child: Text(
-        //               'Vegandex',
-        //               overflow: TextOverflow.ellipsis,
-        //               maxLines: 1,
-        //               softWrap: false,
-        //               style: TextStyle(
-        //                 color: Colors.white,
-        //                 fontWeight: FontWeight.bold,
-        //                 fontSize: 34.sp,
-        //                 fontFamily: 'Balloo2'
-        //               ),
-        //             ),
-        //           ),
-        //           SizedBox(width: 16.w),
-        //           icon,
-        //         ],
-        //       ),
-        //     ),
-        //   ),
-        //   secondChild: SizedBox(
-        //     width: 144.w,
-        //     height: 144.w,
-        //     child: Center(child: icon),
-        //   ),
-        // ),
-      ),
+      backgroundColor: primaryColor,
+      child: pokeballImage,
+      // child: AnimatedCrossFade(
+      //   duration: const Duration(milliseconds: 900),
+      //   sizeCurve: Curves.easeInOutCubicEmphasized,
+      //   firstCurve: Curves.easeOut,
+      //   secondCurve: Curves.easeIn,
+      //   crossFadeState: _vegandexExpanded
+      //       ? CrossFadeState.showFirst
+      //       : CrossFadeState.showSecond,
+      //   firstChild: Padding(
+      //     padding: EdgeInsets.symmetric(horizontal: 32.w),
+      //     child: SizedBox(
+      //       height: 144.w,
+      //       child: Row(
+      //         mainAxisSize: MainAxisSize.min,
+      //         mainAxisAlignment: MainAxisAlignment.center,
+      //         children: [
+      //           Flexible(
+      //             child: Text(
+      //               'Vegandex',
+      //               overflow: TextOverflow.ellipsis,
+      //               maxLines: 1,
+      //               softWrap: false,
+      //               style: TextStyle(
+      //                 color: Colors.white,
+      //                 fontWeight: FontWeight.bold,
+      //                 fontSize: 34.sp,
+      //                 fontFamily: 'Balloo2'
+      //               ),
+      //             ),
+      //           ),
+      //           SizedBox(width: 16.w),
+      //           icon,
+      //         ],
+      //       ),
+      //     ),
+      //   ),
+      //   secondChild: SizedBox(
+      //     width: 144.w,
+      //     height: 144.w,
+      //     child: Center(child: icon),
+      //   ),
+      // ),
     );
 
     // Quick decaying wiggle + pop, played on impact when
@@ -1029,7 +992,7 @@ class ScanPageState extends State<ScanPage>
   /// Cosmétiques for now, Aliment by name/barcode later). Not an editable
   /// field here: [AbsorbPointer] keeps the whole bar a single tap target
   /// instead of focusing the [TextField] in place. Same height/radius as
-  /// [_buildSquareActionButton] so the top row reads as one line.
+  /// [SquareIconButton.action] so the top row reads as one line.
   Widget _buildTopSearchBar() {
     return GestureDetector(
       onTap: _openProductSearch,
@@ -1261,7 +1224,7 @@ class ScanPageState extends State<ScanPage>
           ),
           // Top row: product-name search (visual only for now), history and
           // Vegandex. Figma spec, ×3 for ScreenUtil units — see
-          // _buildTopSearchBar/_buildSquareActionButton.
+          // _buildTopSearchBar/[SquareIconButton.action].
           Positioned(
             top: MediaQuery.of(context).padding.top + 24,
             left: 48.w,
@@ -1271,7 +1234,7 @@ class ScanPageState extends State<ScanPage>
               children: [
                 Expanded(child: _buildTopSearchBar()),
                 SizedBox(width: 30.w),
-                _buildSquareActionButton(
+                SquareIconButton.action(
                   icon: Icons.history,
                   iconColor: kTextPrimary,
                   onTap: _openScanHistory,

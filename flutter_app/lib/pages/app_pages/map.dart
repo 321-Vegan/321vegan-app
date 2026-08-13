@@ -23,6 +23,7 @@ import 'package:vegan_app/widgets/map/map_filter_page.dart';
 import 'package:vegan_app/widgets/map/map_search_bar.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
+import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
 class MapPage extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -573,7 +574,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               child: Builder(
                 builder: (context) {
                   final canRecenter = _userLocation != null && !_isCentered;
-                  return _MapActionButton(
+                  return SquareIconButton.action(
                     icon: Icons.my_location,
                     iconColor: canRecenter ? kTextPrimary : Colors.grey,
                     onTap: canRecenter ? _recenterMap : null,
@@ -602,7 +603,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      _MapActionButton(
+                      SquareIconButton.action(
                         icon: Icons.tune,
                         iconColor: _selectedEans.isNotEmpty
                             ? kAccentYellow
@@ -636,9 +637,9 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     ],
                   ),
                   SizedBox(width: 30.w),
-                  _MapActionButton(
+                  SquareIconButton.action(
                     icon: Icons.add,
-                    background: Theme.of(context).colorScheme.primary,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     iconColor: Colors.white,
                     onTap: _enterPickMode,
                   ),
@@ -712,47 +713,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               },
             ),
         ],
-      ),
-    );
-  }
-}
-
-/// Square floating button overlaid on the map (filter, create, recenter).
-/// Figma spec: 48×48, radius 14, white or primary fill, soft shadow — ×3
-/// for ScreenUtil units. Must stay the same height as the MapSearchBar so
-/// the top row reads as one line.
-class _MapActionButton extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final Color? background;
-  final VoidCallback? onTap;
-
-  const _MapActionButton({
-    required this.icon,
-    required this.iconColor,
-    this.background,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 144.w,
-        height: 144.w,
-        decoration: ShapeDecoration(
-          color: background ?? Colors.white,
-          shape: squircleBorder(radius: 42.r),
-          shadows: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Center(child: Icon(icon, color: iconColor, size: 72.sp)),
       ),
     );
   }

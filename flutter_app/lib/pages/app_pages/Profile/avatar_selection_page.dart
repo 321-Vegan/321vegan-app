@@ -125,7 +125,7 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                         children: [
                           Expanded(
                             child: Text(
-                              'Illustrations réalisées par '
+                              'Illustrations par '
                               '@vilainevegane.illustration, '
                               '@kodasmarket.art et @ancielouille.',
                               style: TextStyle(

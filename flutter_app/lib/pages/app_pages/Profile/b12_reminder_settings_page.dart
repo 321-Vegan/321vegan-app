@@ -12,6 +12,7 @@ import '../../../widgets/b12/next_reminder_banner.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/app_card.dart';
+import 'b12_info_page.dart';
 
 class B12ReminderSettingsPage extends StatefulWidget {
   const B12ReminderSettingsPage({super.key});
@@ -193,239 +194,10 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
     );
   }
 
-  void _showB12InfoModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.8,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => Container(
-          decoration: ShapeDecoration(
-            color: Colors.white,
-            shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: EdgeInsets.all(24.w),
-                decoration: ShapeDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: 0.1),
-                  shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 60.w,
-                      height: 6.h,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(3.r),
-                      ),
-                    ),
-                    SizedBox(height: 20.h),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.medication_rounded,
-                          size: 64.sp,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        SizedBox(width: 16.w),
-                        Text('Vitamine B12', style: AppTextStyles.baloo22),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: EdgeInsets.all(24.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(20.w),
-                        decoration: ShapeDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.08),
-                          shape: squircleBorder(
-                            radius: 24.r,
-                            side: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.25),
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.check_circle,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 48.sp,
-                            ),
-                            SizedBox(width: 16.w),
-                            Expanded(
-                              child: Text(
-                                'Informations validées par Astrid Prévost, diététicienne spécialisée en nutrition végétale. \nInstagram @astrid_nutrition_militante',
-                                style: TextStyle(
-                                  fontSize: 38.sp,
-                                  color: kTextPrimary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 16.h),
-                      Container(
-                        padding: EdgeInsets.all(20.w),
-                        decoration: ShapeDecoration(
-                          color: kSecondaryTag,
-                          shape: squircleBorder(
-                            radius: 24.r,
-                            side: const BorderSide(color: kAccentYellow),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              color: kAccentYellow,
-                              size: 48.sp,
-                            ),
-                            SizedBox(width: 16.w),
-                            Expanded(
-                              child: Text(
-                                'Ces informations sont à titre indicatif et ne se substituent pas à un avis médical.',
-                                style: TextStyle(
-                                  fontSize: 38.sp,
-                                  color: kAccentYellow,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 24.h),
-                      _buildInfoSection(
-                        'Pourquoi prendre un complément ?',
-                        Text(
-                          'La complémentation en vitamine B12 est essentielle car cette vitamine est absente de l\'alimentation végétale. Sans complémentation, une carence arrivera tôt ou tard et peut avoir des conséquences graves.',
-                          style: TextStyle(
-                            fontSize: 42.sp,
-                            color: Colors.grey[700],
-                            height: 1.5,
-                          ),
-                        ),
-                        Icons.info_outline,
-                      ),
-                      SizedBox(height: 24.h),
-                      _buildInfoSection(
-                        'Dosages recommandés :',
-                        Text.rich(
-                          TextSpan(
-                            style: TextStyle(
-                              fontSize: 42.sp,
-                              color: Colors.grey[700],
-                              height: 1.5,
-                            ),
-                            children: [
-                              const TextSpan(
-                                text: '• Par jour : 25 µg\n'
-                                    '• Par semaine : 2000 µg (en une prise)\n'
-                                    '• Tous les 15 jours : 5000 µg (en une prise)\n',
-                              ),
-                              TextSpan(
-                                text:
-                                    'Pour les enfants : de 6 à 24 mois doses divisées par 4, de 2 à 12 ans doses divisées par 2.',
-                                style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 40.sp,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icons.ads_click_outlined,
-                      ),
-                      SizedBox(height: 24.h),
-                      _buildInfoSection(
-                        'Pour une bonne absorption :',
-                        Text(
-                          '• La prise quotidienne permet une meilleure absorption et, hormis les adultes en bonne santé, toutes les catégories de population devraient la privilégier.\n•Pour une absorption optimale, le mieux est de prendre sa B12 pendant ou après un repas.\n•La spiruline ne contient pas de B12 et en limite l\'absorption. Si vous en prenez le matin : prenez votre B12 le soir, et inversement.',
-                          style: TextStyle(
-                            fontSize: 42.sp,
-                            color: Colors.grey[700],
-                            height: 1.5,
-                          ),
-                        ),
-                        Icons.pin_drop,
-                      ),
-                      SizedBox(height: 24.h),
-                      _buildInfoSection(
-                        'Où trouver la B12 ?',
-                        Text(
-                          'Pour une prise quotidienne, la Veg1 est très populaire et contient d\'autres vitamines. Pour une prescription médicale remboursable, vous pouvez demander les ampoules de Gerda à votre médecin (attention, la forme en comprimés contient du lactose).',
-                          style: TextStyle(
-                            fontSize: 42.sp,
-                            color: Colors.grey[700],
-                            height: 1.5,
-                          ),
-                        ),
-                        Icons.pin_drop,
-                      ),
-                      SizedBox(height: 50.h),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoSection(String title, Widget content, IconData icon) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              icon,
-              size: 48.sp,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            SizedBox(width: 12.w),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 48.sp,
-                fontWeight: FontWeight.bold,
-                color: kTextPrimary,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 12.h),
-        content,
-      ],
+  void _openB12Info() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const B12InfoPage()),
     );
   }
 
@@ -468,7 +240,7 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
               backgroundColor: Colors.white,
               foregroundColor: Theme.of(context).colorScheme.primary,
               borderColor: Theme.of(context).colorScheme.primary,
-              onPressed: _showB12InfoModal,
+              onPressed: _openB12Info,
             ),
           ),
         ],

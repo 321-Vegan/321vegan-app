@@ -14,7 +14,7 @@ import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
-
+import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
 class ShopDetailSheet extends StatefulWidget {
   final Shop shop;
@@ -406,8 +406,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           if (!_probaBannerDismissed)
             Container(
               margin: EdgeInsets.only(top: 12.h, bottom: 12.h),
-              padding:
-                  EdgeInsets.symmetric(horizontal: 36.w, vertical: 30.h),
+              padding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 30.h),
               decoration: ShapeDecoration(
                 color: kSecondaryTag,
                 shape: squircleBorder(
@@ -435,10 +434,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                     top: 0,
                     right: 0,
                     child: GestureDetector(
-                      onTap: () =>
-                          setState(() => _probaBannerDismissed = true),
-                      child: Icon(Icons.close,
-                          size: 52.sp, color: kAccentYellow),
+                      onTap: () => setState(() => _probaBannerDismissed = true),
+                      child:
+                          Icon(Icons.close, size: 52.sp, color: kAccentYellow),
                     ),
                   ),
                 ],
@@ -1145,8 +1143,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
               ),
               // Shop header: name + rating, address, itinerary button
               Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 48.w, vertical: 12.h),
+                padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 12.h),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1178,8 +1175,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                                     size: 48.sp, color: kAccentYellow),
                                 SizedBox(width: 6.w),
                                 Text(
-                                  _reviewSummary!.ratingAvg
-                                      .toStringAsFixed(1),
+                                  _reviewSummary!.ratingAvg.toStringAsFixed(1),
                                   style: TextStyle(
                                     fontSize: 44.sp,
                                     fontWeight: FontWeight.w600,
@@ -1221,11 +1217,13 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                                   vertical: 4.h,
                                 ),
                                 decoration: ShapeDecoration(
-                                  color: kSemanticSuccess.withValues(alpha: 0.1),
+                                  color:
+                                      kSemanticSuccess.withValues(alpha: 0.1),
                                   shape: squircleBorder(
                                     radius: 12.r,
                                     side: BorderSide(
-                                      color: kSemanticSuccess.withValues(alpha: 0.3),
+                                      color: kSemanticSuccess.withValues(
+                                          alpha: 0.3),
                                     ),
                                   ),
                                 ),
@@ -1244,22 +1242,13 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                     ),
                     SizedBox(width: 24.w),
                     // Square itinerary button (Figma)
-                    GestureDetector(
+                    SquareIconButton.action(
                       onTap: _openItinerary,
-                      child: Container(
-                        width: 132.w,
-                        height: 132.w,
-                        decoration: ShapeDecoration(
-                          color: Theme.of(context).colorScheme.primary,
-                          shape: squircleBorder(radius: 36.r),
-                        ),
-                        child: Center(
-                          child: Icon(
-                            Icons.map,
-                            color: Colors.white,
-                            size: 64.sp,
-                          ),
-                        ),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      child: Icon(
+                        Icons.map,
+                        color: Colors.white,
+                        size: 64.sp,
                       ),
                     ),
                   ],

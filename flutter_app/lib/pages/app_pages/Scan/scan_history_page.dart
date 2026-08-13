@@ -16,6 +16,7 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
+import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
 /// Full-screen page listing every scanned product, grouped by day.
 /// Pushed from the Scan page and from Settings ("Scannés" row).
@@ -96,7 +97,8 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
               SizedBox(height: 12.h),
               Text(
                 'Tous les produits scannés seront supprimés de votre historique. Cette action est irréversible.',
-                style: TextStyle(fontSize: 38.sp, color: Colors.grey[600], height: 1.4),
+                style: TextStyle(
+                    fontSize: 38.sp, color: Colors.grey[600], height: 1.4),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 36.h),
@@ -113,7 +115,8 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                       ),
                       child: Text(
                         'Annuler',
-                        style: TextStyle(fontSize: 40.sp, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            fontSize: 40.sp, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -130,7 +133,8 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                       ),
                       child: Text(
                         'Effacer',
-                        style: TextStyle(fontSize: 40.sp, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            fontSize: 40.sp, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -176,27 +180,10 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
             if (_history.isNotEmpty)
               Padding(
                 padding: EdgeInsets.only(right: 24.w),
-                child: GestureDetector(
+                child: SquareIconButton.action(
+                  icon: Icons.delete_outline,
+                  iconColor: Colors.grey[700]!,
                   onTap: _confirmClearHistory,
-                  // Same "surface icon button" spec as the Dashboard header
-                  // (47×47, radius 12, white, subtle shadow — ×3 units).
-                  child: Container(
-                    width: 141.w,
-                    height: 141.w,
-                    decoration: ShapeDecoration(
-                      color: Colors.white,
-                      shape: squircleBorder(radius: 36.r),
-                      shadows: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Icon(Icons.delete_outline,
-                        color: Colors.grey[700], size: 72.sp),
-                  ),
                 ),
               ),
           ],
@@ -253,7 +240,8 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                 ),
                 child: Text(
                   'Scanner un produit',
-                  style: TextStyle(fontSize: 42.sp, fontWeight: FontWeight.bold),
+                  style:
+                      TextStyle(fontSize: 42.sp, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -347,10 +335,19 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
       ScanStatus status, String? problem) {
     switch (status) {
       case ScanStatus.vegan:
-        return (icon: Icons.check_circle, color: kSemanticSuccess, label: 'Végane');
+        return (
+          icon: Icons.check_circle,
+          color: kSemanticSuccess,
+          label: 'Végane'
+        );
       case ScanStatus.notVegan:
-        final reason = (problem != null && problem.isNotEmpty) ? ' : $problem' : '';
-        return (icon: Icons.cancel, color: kSemanticError, label: 'Non-végane$reason');
+        final reason =
+            (problem != null && problem.isNotEmpty) ? ' : $problem' : '';
+        return (
+          icon: Icons.cancel,
+          color: kSemanticError,
+          label: 'Non-végane$reason'
+        );
       case ScanStatus.pending:
         return (
           icon: Icons.schedule,
@@ -358,7 +355,11 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
           label: 'En attente de vérification'
         );
       case ScanStatus.notFound:
-        return (icon: Icons.help_outline, color: Colors.grey, label: 'Introuvable');
+        return (
+          icon: Icons.help_outline,
+          color: Colors.grey,
+          label: 'Introuvable'
+        );
       case ScanStatus.alreadyScanned:
         return (
           icon: Icons.info_outline,
@@ -366,7 +367,11 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
           label: 'Produit inconnu, déjà signalé'
         );
       case ScanStatus.unknown:
-        return (icon: Icons.help_outline, color: Colors.grey, label: 'Statut inconnu');
+        return (
+          icon: Icons.help_outline,
+          color: Colors.grey,
+          label: 'Statut inconnu'
+        );
     }
   }
 
@@ -484,7 +489,8 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                         brand,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
+                        style:
+                            TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
                       ),
                     ],
                     SizedBox(height: 14.h),
@@ -535,20 +541,19 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                 children: [
                   Icon(Icons.thumb_down, color: kSemanticError, size: 40.sp),
                   SizedBox(width: 8.w),
-                  Text(
-                    'À éviter',
-                    style: AppTextStyles.bodyMedium15.copyWith(color: kSemanticError)
-                  ),
+                  Text('À éviter',
+                      style: AppTextStyles.bodyMedium15
+                          .copyWith(color: kSemanticError)),
                 ],
               ),
             ),
           ],
-          if (product.biodynamic)
-            _buildWarningBox('Agriculture biodynamique'),
+          if (product.biodynamic) _buildWarningBox('Agriculture biodynamique'),
           if (isEan8 && product.status != ScanStatus.unknown)
             _buildWarningBox(
                 'Code EAN-8 : ce code-barres peut correspondre à plusieurs produits.'),
-          if (product.status == ScanStatus.vegan && product.hasNonVeganOldRecipe)
+          if (product.status == ScanStatus.vegan &&
+              product.hasNonVeganOldRecipe)
             _buildWarningBox(
                 'Ancienne recette non vegan : il se peut qu\'il y ait encore de l\'ancienne recette. Vérifiez les ingrédients.'),
         ],

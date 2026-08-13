@@ -10,12 +10,21 @@ import '../../themes/app_shapes.dart';
 class InfoBox extends StatelessWidget {
   final String text;
 
-  /// Single glyph shown in the circle badge (e.g. 'i', '!').
+  /// Single glyph shown in the circle badge (e.g. 'i', '!'). Ignored when
+  /// [iconAsset] is set.
   final String symbol;
+
+  /// Path to an icon asset shown instead of [symbol], e.g.
+  /// `lib/assets/images/icons/solid-check.webp`. These assets already bake
+  /// in their own badge shape (a circle, or — for the alert triangle — no
+  /// circle at all), so unlike [symbol] it's rendered without an extra
+  /// wrapping circle.
+  final String? iconAsset;
 
   const InfoBox({
     required this.text,
     this.symbol = 'i',
+    this.iconAsset,
     super.key,
   });
 
@@ -32,6 +41,7 @@ class InfoBox extends StatelessWidget {
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Text(
@@ -44,25 +54,34 @@ class InfoBox extends StatelessWidget {
             ),
           ),
           SizedBox(width: 30.w),
-          Container(
-            width: 56.w,
-            height: 56.w,
-            decoration: const BoxDecoration(
+          if (iconAsset != null)
+            Image.asset(
+              iconAsset!,
+              width: 56.w,
+              height: 56.w,
               color: kAccentYellow,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                symbol,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 34.sp,
-                  fontWeight: FontWeight.bold,
-                  height: 1,
+              colorBlendMode: BlendMode.srcIn,
+            )
+          else
+            Container(
+              width: 56.w,
+              height: 56.w,
+              decoration: const BoxDecoration(
+                color: kAccentYellow,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  symbol,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 34.sp,
+                    fontWeight: FontWeight.bold,
+                    height: 1,
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
