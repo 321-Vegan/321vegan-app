@@ -8,6 +8,7 @@ import '../models/auth.dart';
 import '../models/user.dart';
 import '../models/scanned_product.dart';
 import '../helpers/preference_helper.dart';
+import '../themes/app_colors.dart';
 import 'b12_sync_service.dart';
 import 'dio_client.dart';
 import 'scan_count_sync_service.dart';
@@ -389,7 +390,7 @@ class AuthService {
                   onPressed: () => Navigator.of(dialogContext).pop(false),
                 ),
                 TextButton(
-                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  style: TextButton.styleFrom(foregroundColor: kSemanticError),
                   onPressed: () => Navigator.of(dialogContext).pop(true),
                   child: const Text('Supprimer'),
                 ),

@@ -122,7 +122,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[500],
+                        backgroundColor: kSemanticError,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: EdgeInsets.symmetric(vertical: 18.h),
@@ -347,10 +347,10 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
       ScanStatus status, String? problem) {
     switch (status) {
       case ScanStatus.vegan:
-        return (icon: Icons.check_circle, color: Colors.green[600]!, label: 'Végane');
+        return (icon: Icons.check_circle, color: kSemanticSuccess, label: 'Végane');
       case ScanStatus.notVegan:
         final reason = (problem != null && problem.isNotEmpty) ? ' : $problem' : '';
-        return (icon: Icons.cancel, color: Colors.red[400]!, label: 'Non-végane$reason');
+        return (icon: Icons.cancel, color: kSemanticError, label: 'Non-végane$reason');
       case ScanStatus.pending:
         return (
           icon: Icons.schedule,
@@ -533,11 +533,11 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.thumb_down, color: Colors.red[400], size: 40.sp),
+                  Icon(Icons.thumb_down, color: kSemanticError, size: 40.sp),
                   SizedBox(width: 8.w),
                   Text(
                     'À éviter',
-                    style: AppTextStyles.bodyMedium15.copyWith(color: Colors.red[400])
+                    style: AppTextStyles.bodyMedium15.copyWith(color: kSemanticError)
                   ),
                 ],
               ),

@@ -9,6 +9,7 @@ import 'package:vegan_app/models/e_number.dart';
 import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/translation_service.dart';
 import 'package:vegan_app/services/validator_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'constants.dart';
 import 'shared_widgets.dart';
@@ -227,10 +228,10 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                       height: 160.w,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.red[50],
-                        border: Border.all(color: Colors.red[200]!, width: 3),
+                        color: kSemanticError.withValues(alpha: 0.1),
+                        border: Border.all(color: kSemanticError.withValues(alpha: 0.3), width: 3),
                       ),
-                      child: Icon(Icons.delete_outline, size: 80.sp, color: Colors.red[700]),
+                      child: Icon(Icons.delete_outline, size: 80.sp, color: kSemanticError),
                     ),
                     SizedBox(height: 28.h),
                     Text(
@@ -267,7 +268,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                           child: ElevatedButton(
                             onPressed: () => Navigator.of(ctx).pop(true),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[700],
+                              backgroundColor: kSemanticError,
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 18.h),
                               shape: squircleBorder(radius: 16.r),
@@ -306,7 +307,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
   void _showSnack(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? Colors.red : Colors.grey[800],
+      backgroundColor: isError ? kSemanticError : Colors.grey[800],
     ));
   }
 
@@ -404,7 +405,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                   ],
                   _HeaderButton(label: 'Passer', color: Colors.grey[600]!, onTap: widget.onSkip),
                   SizedBox(width: 12.w),
-                  _HeaderButton(label: 'Quitter', color: Colors.red[600]!, onTap: widget.onQuit),
+                  _HeaderButton(label: 'Quitter', color: kSemanticError, onTap: widget.onQuit),
                 ],
               ),
             ],
@@ -796,11 +797,11 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
     if (item == null) return Colors.grey[600]!;
     switch (item.state) {
       case 'carniste':
-        return const Color(0xFFC62828);
+        return kSemanticError;
       case 'Ça dépend':
         return const Color(0xFFF57C00);
       case 'vegan':
-        return Colors.green[700]!;
+        return kSemanticSuccess;
       default:
         return Colors.grey[600]!;
     }
@@ -1198,8 +1199,8 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
               label: Text('Supprimer le produit',
                   style: TextStyle(fontSize: 40.sp, fontWeight: FontWeight.w600)),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red[700],
-                side: BorderSide(color: Colors.red[300]!),
+                foregroundColor: kSemanticError,
+                side: BorderSide(color: kSemanticError.withValues(alpha: 0.5)),
                 padding: EdgeInsets.symmetric(vertical: 16.h),
                 shape: squircleBorder(radius: 14.r),
               ),
@@ -1234,7 +1235,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
           Text('*',
               style: TextStyle(
                   fontSize: 40.sp,
-                  color: Colors.red[600],
+                  color: kSemanticError,
                   fontWeight: FontWeight.bold)),
         ],
       ],

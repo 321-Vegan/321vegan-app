@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/helper.dart';
 import 'package:vegan_app/models/scan_result.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 
 class NoResultCard extends StatelessWidget {
@@ -108,7 +109,7 @@ class RejectedProductInfoCard extends StatelessWidget {
         shape: squircleBorder(
           radius: 30,
           side: const BorderSide(
-            color: Colors.red,
+            color: kSemanticError,
             width: 3,
           ),
         ),
@@ -169,7 +170,7 @@ class RejectedProductInfoCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 80.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.red,
+                color: kSemanticError,
               ),
             ),
             if (reason != null)
@@ -179,7 +180,7 @@ class RejectedProductInfoCard extends StatelessWidget {
                   reason,
                   style: const TextStyle(
                     fontSize: 16,
-                    color: Colors.red,
+                    color: kSemanticError,
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,

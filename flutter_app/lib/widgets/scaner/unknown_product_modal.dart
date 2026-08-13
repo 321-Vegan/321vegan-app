@@ -112,10 +112,9 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
     required String label,
   }) {
     final isSelected = _status == status;
-    final primaryColor = Theme.of(context).colorScheme.primary;
     final (selectedBackground, selectedBorder) = switch (status) {
-      VeganStatus.vegan => (kPrimaryTag, primaryColor),
-      VeganStatus.nonVegan => (Colors.red.shade50, Colors.red.shade700),
+      VeganStatus.vegan => (kPrimaryTag, kSemanticSuccess),
+      VeganStatus.nonVegan => (kSemanticError.withValues(alpha: 0.1), kSemanticError),
       VeganStatus.maybeVegan => (Colors.orange.shade50, kAccentYellow),
     };
     return Expanded(

@@ -396,7 +396,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
     final brand =
         ((product['brand'] as String?) ?? '').replaceAll('&quot;', "'");
     final statusColor = switch (product['status']) {
-      'R' => Colors.red,
+      'R' => kSemanticError,
       'M' => Colors.orange,
       'N' => Colors.grey,
       _ => Theme.of(context).colorScheme.primary,
@@ -470,14 +470,14 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
           if (cosmetic.crueltyFree) ...[
             _buildStatusRow(
               icon: cosmetic.vegan ? Icons.check_circle : Icons.info,
-              color: cosmetic.vegan ? Colors.green : Colors.orange,
+              color: cosmetic.vegan ? kSemanticSuccess : Colors.orange,
               text: cosmetic.vegan ? '100% Vegan' : 'Vérifiez le produit',
             ),
             SizedBox(height: 8.h),
           ],
           _buildStatusRow(
             icon: cosmetic.crueltyFree ? Icons.check_circle : Icons.close,
-            color: cosmetic.crueltyFree ? Colors.green : Colors.red,
+            color: cosmetic.crueltyFree ? kSemanticSuccess : kSemanticError,
             text: cosmetic.crueltyFree ? 'Cruelty-Free 🐰' : 'Pas cruelty-free',
           ),
         ],
@@ -559,8 +559,8 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   }
 
   Color _stateColor(String state) => switch (state) {
-        'vegan' => Colors.green,
-        'carniste' => Colors.red,
+        'vegan' => kSemanticSuccess,
+        'carniste' => kSemanticError,
         'Ça dépend' => Colors.orange,
         _ => Colors.grey,
       };

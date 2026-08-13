@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/b12_reminder_settings.dart';
 import 'package:vegan_app/services/b12_reminder_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:intl/intl.dart';
 import '../app_pages/home.dart';
@@ -165,7 +166,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         content: Text(saved.enabled
             ? 'Rappel B12 activé : ${saved.getDescription()}'
             : "Les notifications sont désactivées. Vous pourrez activer le rappel plus tard depuis votre profil."),
-        backgroundColor: saved.enabled ? Theme.of(context).colorScheme.primary : null,
+        backgroundColor: saved.enabled ? kSemanticSuccess : null,
       ),
     );
     _nextIntroPage();

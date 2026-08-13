@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../models/auth.dart';
 import '../../helpers/preference_helper.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
 import 'auth_styles.dart';
 
@@ -79,18 +80,18 @@ class _RegisterFormState extends State<RegisterForm> {
 
         if (loginResult.isSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Compte créé et connecté avec succès !'),
-              backgroundColor: Theme.of(context).colorScheme.primary,
+            const SnackBar(
+              content: Text('Compte créé et connecté avec succès !'),
+              backgroundColor: kSemanticSuccess,
             ),
           );
           widget.onRegisterSuccess?.call();
         } else {
           // Registration succeeded but login failed
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Compte créé ! Vous pouvez vous connecter.'),
-              backgroundColor: Theme.of(context).colorScheme.primary,
+            const SnackBar(
+              content: Text('Compte créé ! Vous pouvez vous connecter.'),
+              backgroundColor: kSemanticSuccess,
             ),
           );
           widget.onRegisterSuccess?.call();
@@ -100,7 +101,7 @@ class _RegisterFormState extends State<RegisterForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.error ?? 'Erreur lors de l\'inscription'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }

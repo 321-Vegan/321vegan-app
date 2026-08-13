@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../helpers/preference_helper.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import './change_email_modal.dart';
 
@@ -88,7 +89,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Le pseudo ne peut pas être vide'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
       return;
@@ -126,7 +127,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(result.error ?? 'Erreur lors de la mise à jour'),
-                backgroundColor: Colors.red,
+                backgroundColor: kSemanticError,
               ),
             );
           }
@@ -142,9 +143,9 @@ class _EditProfileModalState extends State<EditProfileModal> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Profil mis à jour avec succès !'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+          const SnackBar(
+            content: Text('Profil mis à jour avec succès !'),
+            backgroundColor: kSemanticSuccess,
           ),
         );
         widget.onProfileUpdated();
@@ -155,7 +156,7 @@ class _EditProfileModalState extends State<EditProfileModal> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }

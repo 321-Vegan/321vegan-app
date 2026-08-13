@@ -5,6 +5,7 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/badge_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import '../../../models/vegan_status.dart';
 
 class ProductHelper {
@@ -70,7 +71,7 @@ class ProductHelper {
         _showSnackbar(
           context,
           'Le produit a bien été envoyé. Nous allons vérifier et l\'ajouter à la base de données.',
-          Theme.of(context).colorScheme.primary,
+          kSemanticSuccess,
         ); 
 
 
@@ -94,7 +95,7 @@ class ProductHelper {
         _showSnackbar(
           context,
           'Une erreur est survenue lors de l\'ajout du produit. Veuillez réessayer.',
-          Colors.red,
+          kSemanticError,
         );
         return false;
       }
@@ -103,7 +104,7 @@ class ProductHelper {
       _showSnackbar(
         context,
         'Une erreur est survenue lors de l\'ajout du produit. Veuillez réessayer.',
-        Colors.red,
+        kSemanticError,
       );
       return false;
     }

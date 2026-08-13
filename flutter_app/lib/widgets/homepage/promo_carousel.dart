@@ -125,7 +125,7 @@ class _PromoCard extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Impossible d\'ouvrir le lien'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     }

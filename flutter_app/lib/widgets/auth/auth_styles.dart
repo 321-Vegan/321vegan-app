@@ -30,7 +30,7 @@ InputDecoration authFieldDecoration(
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: radius,
-      borderSide: const BorderSide(color: Colors.redAccent),
+      borderSide: const BorderSide(color: kSemanticError),
     ),
   );
 }

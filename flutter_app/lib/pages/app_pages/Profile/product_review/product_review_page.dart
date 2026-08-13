@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/validator_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'constants.dart';
@@ -160,7 +161,7 @@ class _ProductReviewPageState extends State<ProductReviewPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 100.sp, color: Colors.red),
+          Icon(Icons.error_outline, size: 100.sp, color: kSemanticError),
           SizedBox(height: 16.h),
           Text('Erreur de chargement',
               style: TextStyle(fontSize: 48.sp, fontWeight: FontWeight.bold)),

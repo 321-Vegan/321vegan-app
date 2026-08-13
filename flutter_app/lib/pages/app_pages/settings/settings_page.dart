@@ -183,9 +183,9 @@ class _SettingsPageState extends State<SettingsPage> {
     });
     if (result.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Date mise à jour avec succès !'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+        const SnackBar(
+          content: Text('Date mise à jour avec succès !'),
+          backgroundColor: kSemanticSuccess,
         ),
       );
     }
@@ -234,7 +234,7 @@ class _SettingsPageState extends State<SettingsPage> {
         content: Text(result.isSuccess
             ? 'Email de réinitialisation envoyé à ${_user!.email}'
             : result.error ?? 'Erreur lors de l\'envoi de l\'email'),
-        backgroundColor: result.isSuccess ? Theme.of(context).colorScheme.primary : Colors.red,
+        backgroundColor: result.isSuccess ? kSemanticSuccess : kSemanticError,
       ),
     );
   }
@@ -285,9 +285,9 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) await MyApp.of(context)?.updateTheme();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
-          content: const Text('Déconnexion réussie !'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+        const SnackBar(
+          content: Text('Déconnexion réussie !'),
+          backgroundColor: kSemanticSuccess,
         ),
       );
       setState(() => _user = null);
@@ -295,7 +295,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.error ?? 'Erreur lors de la déconnexion'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     }
@@ -314,9 +314,9 @@ class _SettingsPageState extends State<SettingsPage> {
       if (mounted) await MyApp.of(context)?.updateTheme();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Compte supprimé avec succès.'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+        const SnackBar(
+          content: Text('Compte supprimé avec succès.'),
+          backgroundColor: kSemanticSuccess,
         ),
       );
       setState(() => _user = null);
@@ -325,7 +325,7 @@ class _SettingsPageState extends State<SettingsPage> {
         SnackBar(
           content:
               Text(result.error ?? 'Erreur lors de la suppression du compte'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     }

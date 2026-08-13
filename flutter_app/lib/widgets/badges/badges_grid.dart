@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../helpers/horizontal_scroll_sizing.dart';
 import '../../models/badge.dart' as app_badge;
+import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
@@ -226,12 +227,12 @@ class BadgesGrid extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: ShapeDecoration(
                 color: isUnlocked
-                    ? Colors.green.withValues(alpha: 0.1)
+                    ? kSemanticSuccess.withValues(alpha: 0.1)
                     : Colors.orange.withValues(alpha: 0.1),
                 shape: squircleBorder(
                   radius: 12.r,
                   side: BorderSide(
-                    color: isUnlocked ? Colors.green : Colors.orange,
+                    color: isUnlocked ? kSemanticSuccess : Colors.orange,
                     width: 1,
                   ),
                 ),
@@ -242,7 +243,7 @@ class BadgesGrid extends StatelessWidget {
                   Icon(
                     isUnlocked ? Icons.check_circle : Icons.lock_outline,
                     size: 44.sp,
-                    color: isUnlocked ? Colors.green : Colors.orange,
+                    color: isUnlocked ? kSemanticSuccess : Colors.orange,
                   ),
                   SizedBox(width: 8.w),
                   Flexible(
@@ -255,7 +256,7 @@ class BadgesGrid extends StatelessWidget {
                         fontSize: 40.sp,
                         fontWeight: FontWeight.w600,
                         color:
-                            isUnlocked ? Colors.green[700] : Colors.orange[700],
+                            isUnlocked ? kSemanticSuccess : Colors.orange[700],
                       ),
                     ),
                   ),

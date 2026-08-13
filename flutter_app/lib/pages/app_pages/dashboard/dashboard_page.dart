@@ -179,10 +179,10 @@ class DashboardPageState extends State<DashboardPage> {
     if (!mounted) return;
     setState(() => _b12TakenToday = true);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Bien reçu !'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        duration: const Duration(seconds: 2),
+      const SnackBar(
+        content: Text('Bien reçu !'),
+        backgroundColor: kSemanticSuccess,
+        duration: Duration(seconds: 2),
       ),
     );
   }

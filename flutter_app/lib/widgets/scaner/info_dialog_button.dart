@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
 import 'package:vegan_app/services/api_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/shared/photo_picker_box.dart';
 
@@ -165,14 +166,14 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
       messenger.showSnackBar(
         const SnackBar(
           content: Text("Une erreur est survenue. Veuillez réessayer."),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     } else {
       messenger.showSnackBar(
-        SnackBar(
-          content: const Text("Signalement envoyé. Merci ! Retrouvez vos signalement sur votre page de profil."),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+        const SnackBar(
+          content: Text("Signalement envoyé. Merci ! Retrouvez vos signalement sur votre page de profil."),
+          backgroundColor: kSemanticSuccess,
         ),
       );
     }
@@ -319,7 +320,7 @@ class _InfoDialogModalContentState extends State<_InfoDialogModalContent> {
                     TextSpan(
                       text: "*",
                       style: TextStyle(
-                        color: Colors.red,
+                        color: kSemanticError,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

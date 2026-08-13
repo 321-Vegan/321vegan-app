@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/validator_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 
 class BrandSelect extends StatefulWidget {
@@ -336,7 +337,7 @@ class _CreateBrandDialogState extends State<_CreateBrandDialog> {
             ),
             if (_error != null) ...[
               SizedBox(height: 10.h),
-              Text(_error!, style: TextStyle(fontSize: 34.sp, color: Colors.red[700])),
+              Text(_error!, style: TextStyle(fontSize: 34.sp, color: kSemanticError)),
             ],
           ],
         ),

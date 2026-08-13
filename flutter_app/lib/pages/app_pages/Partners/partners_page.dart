@@ -469,7 +469,7 @@ class _PartnersPageState extends State<PartnersPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Impossible d\'ouvrir le lien'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     }

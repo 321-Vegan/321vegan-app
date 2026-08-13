@@ -82,10 +82,10 @@ class _SentProductsPageState extends State<SentProductsPage> {
       ScanStatus status, String? problem) {
     switch (status) {
       case ScanStatus.vegan:
-        return (icon: Icons.check_circle, color: Colors.green[600]!, label: 'Végane');
+        return (icon: Icons.check_circle, color: kSemanticSuccess, label: 'Végane');
       case ScanStatus.notVegan:
         final reason = (problem != null && problem.isNotEmpty) ? ' : $problem' : '';
-        return (icon: Icons.cancel, color: Colors.red[400]!, label: 'Non-végane$reason');
+        return (icon: Icons.cancel, color: kSemanticError, label: 'Non-végane$reason');
       case ScanStatus.pending:
         return (
           icon: Icons.schedule,

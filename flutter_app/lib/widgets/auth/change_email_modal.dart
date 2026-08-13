@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../helpers/preference_helper.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 
 class ChangeEmailModal extends StatefulWidget {
@@ -59,7 +60,7 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
         SnackBar(
           content: Text(result.data ??
               'Un email de confirmation a été envoyé à votre nouvelle adresse.'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: kSemanticSuccess,
           duration: const Duration(seconds: 6),
         ),
       );
@@ -67,7 +68,7 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.error ?? 'Une erreur est survenue.'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     }

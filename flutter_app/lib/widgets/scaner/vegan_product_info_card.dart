@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/helper.dart';
 import 'package:vegan_app/models/boycott_data.dart';
 import 'package:vegan_app/models/scan_result.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
 
@@ -40,7 +41,7 @@ class VeganProductInfoCard extends StatelessWidget {
         ),
         shape: squircleBorder(
           radius: 30,
-          side: const BorderSide(color: Colors.green, width: 3),
+          side: const BorderSide(color: kSemanticSuccess, width: 3),
         ),
         shadows: [
           BoxShadow(
@@ -109,7 +110,7 @@ class VeganProductInfoCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 80.sp,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: kSemanticSuccess,
                           ),
                         ),
                       );

@@ -182,6 +182,12 @@ flutter:
     - lib/assets/images/papillon.webp
     - lib/assets/images/pumpkin.webp
     - lib/assets/images/pumpkin-smile.webp
+    # Seasonal themes cards
+    - lib/assets/themes/cards/leaf-autumn.png
+    - lib/assets/themes/cards/leaf-summer.png
+    - lib/assets/themes/cards/leaf-spring.png
+    - lib/assets/themes/cards/leaf-winter.png
+    - lib/assets/themes/cards/leaf-basic.png
     # Seasonal Themes - Winter
     - lib/assets/themes/ice_8.webp
     - lib/assets/themes/ice_2.webp

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' show Platform;
+import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 
 class SocialFeedbackButtons extends StatelessWidget {
@@ -132,7 +133,7 @@ class SocialFeedbackButtons extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Impossible d\'ouvrir Instagram'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }
@@ -164,7 +165,7 @@ class SocialFeedbackButtons extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Impossible d\'ouvrir le store'),
-                backgroundColor: Colors.red,
+                backgroundColor: kSemanticError,
               ),
             );
           }
@@ -175,7 +176,7 @@ class SocialFeedbackButtons extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Impossible d\'ouvrir le store'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }

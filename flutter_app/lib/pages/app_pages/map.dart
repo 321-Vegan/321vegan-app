@@ -303,11 +303,11 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     final isVegan = shop.shopType == 'vegan';
     return Container(
       decoration: BoxDecoration(
-        color: isVegan ? Colors.green : Colors.white,
+        color: isVegan ? kSemanticSuccess : Colors.white,
         shape: BoxShape.circle,
         border: Border.all(
           color: isVegan
-              ? Colors.green.shade700
+              ? kSemanticSuccess
               : Theme.of(context).colorScheme.primary,
           width: 2,
         ),

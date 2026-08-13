@@ -85,7 +85,7 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
             duration: const Duration(seconds: 3),
           ),
         );

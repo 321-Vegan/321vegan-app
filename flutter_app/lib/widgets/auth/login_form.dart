@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../models/auth.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
 import 'auth_styles.dart';
 
@@ -52,9 +53,9 @@ class _LoginFormState extends State<LoginForm> {
 
       if (result.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-         SnackBar(
-            content: const Text('Connexion réussie !'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+         const SnackBar(
+            content: Text('Connexion réussie !'),
+            backgroundColor: kSemanticSuccess,
           ),
         );
         widget.onLoginSuccess?.call();
@@ -62,7 +63,7 @@ class _LoginFormState extends State<LoginForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.error ?? 'Erreur de connexion'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }

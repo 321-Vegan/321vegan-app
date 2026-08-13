@@ -301,7 +301,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
   }
 
   Widget _buildReportCard(ErrorReport report) {
-    final statusColor = report.handled ? Colors.green[700]! : kAccentYellow;
+    final statusColor = report.handled ? kSemanticSuccess : kAccentYellow;
     final statusBackground = report.handled ? kPrimaryTag : kSecondaryTag;
     final statusLabel = report.handled ? 'Traitée' : 'En cours';
     final nickname = AuthService.currentUser?.nickname;

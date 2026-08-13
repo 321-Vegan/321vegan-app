@@ -368,9 +368,9 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
   // ── Build helpers ─────────────────────────────────────────────────────────
 
   Color _scoreColor(double score) {
-    if (score >= 0.7) return Colors.green;
+    if (score >= 0.7) return kSemanticSuccess;
     if (score >= 0.4) return kAccentYellow;
-    return Colors.red;
+    return kSemanticError;
   }
 
   Widget _buildProductsTab(ScrollController scrollController) {
@@ -641,7 +641,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                 _buildReportPill(
                   icon: Icons.search_off,
                   label: 'Pas trouvé',
-                  color: Colors.red[400]!,
+                  color: kSemanticError,
                   onTap: () => _reportNotFound(summary.ean),
                 ),
                 SizedBox(width: 24.w),
@@ -977,7 +977,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                 fontSize: 38.sp,
                 fontStyle: FontStyle.italic,
                 color: _myReview!.status == 'approved'
-                    ? Colors.green
+                    ? kSemanticSuccess
                     : Colors.orange,
               ),
             ),
@@ -1221,11 +1221,11 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                                   vertical: 4.h,
                                 ),
                                 decoration: ShapeDecoration(
-                                  color: Colors.green.shade50,
+                                  color: kSemanticSuccess.withValues(alpha: 0.1),
                                   shape: squircleBorder(
                                     radius: 12.r,
                                     side: BorderSide(
-                                      color: Colors.green.shade300,
+                                      color: kSemanticSuccess.withValues(alpha: 0.3),
                                     ),
                                   ),
                                 ),
@@ -1234,7 +1234,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                                   style: TextStyle(
                                     fontSize: 36.sp,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.green.shade700,
+                                    color: kSemanticSuccess,
                                   ),
                                 ),
                               ),

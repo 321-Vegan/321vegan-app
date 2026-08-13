@@ -48,16 +48,16 @@ class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
       if (result.isSuccess) {
         setState(() => _emailSent = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Email de réinitialisation envoyé !'),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+          const SnackBar(
+            content: Text('Email de réinitialisation envoyé !'),
+            backgroundColor: kSemanticSuccess,
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.error ?? 'Erreur lors de l\'envoi'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:vegan_app/services/api_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 
 class CreateShopSheet extends StatefulWidget {
@@ -105,16 +106,16 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
     if (success) {
       navigator.pop(true);
       messenger.showSnackBar(
-        SnackBar(
-          content: const Text('Magasin ajouté avec succès !'),
-          backgroundColor: Theme.of(context).colorScheme.primary,
+        const SnackBar(
+          content: Text('Magasin ajouté avec succès !'),
+          backgroundColor: kSemanticSuccess,
         ),
       );
     } else {
       messenger.showSnackBar(
         const SnackBar(
           content: Text('Erreur lors de l\'ajout du magasin'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     }
