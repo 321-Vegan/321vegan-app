@@ -7,6 +7,7 @@ import '../../../helpers/preference_helper.dart';
 import '../../../helpers/vegan_savings.dart';
 import '../../../models/error_report.dart';
 import '../../../models/partners/partners.dart';
+import '../../../models/seasonal_theme.dart';
 import '../../../models/user.dart';
 import '../../../services/anniversary_service.dart';
 import '../../../services/api_service.dart';
@@ -343,14 +344,7 @@ class DashboardPageState extends State<DashboardPage> {
                       VeganCounter(targetDate: _targetDate!),
                     ],
                     SizedBox(height: AppSpacing.afterTitle),
-                    for (int i = 0; i < homeStats.length; i++) ...[
-                      if (i > 0) SizedBox(height: AppSpacing.item),
-                      buildStatCard(
-                        context,
-                        homeStats[i],
-                        _savings[homeStats[i].savingsKey] ?? 0,
-                      ),
-                    ],
+                    _buildStatCards(context),
                     SizedBox(height: AppSpacing.section),
                     SolidarityShopsSection(partners: _partners),
                     SizedBox(height: AppSpacing.section),
@@ -378,6 +372,46 @@ class DashboardPageState extends State<DashboardPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStatCards(BuildContext context) {
+    final cards = Column(
+      children: [
+        for (int i = 0; i < homeStats.length; i++) ...[
+          if (i > 0) SizedBox(height: AppSpacing.item),
+          buildStatCard(
+            context,
+            homeStats[i],
+            _savings[homeStats[i].savingsKey] ?? 0,
+          ),
+        ],
+      ],
+    );
+
+    final seasonal = Theme.of(context).extension<SeasonalTheme>();
+    if (seasonal?.season != Season.autumn) return cards;
+
+    // Vine draped over the left edge of the first cards (Figma autumn
+    // redesign) — painted after `cards` so its leaf clusters sit on top of
+    // the white card corners instead of being hidden behind them.
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        cards,
+        Positioned(
+          top: 120.h,
+          left: -50.w,
+          child: IgnorePointer(
+            child: Image.asset(
+              'lib/assets/themes/plant.webp',
+              width: 230.w,
+              fit: BoxFit.fitWidth,
+              alignment: Alignment.topLeft,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -197,7 +197,7 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
         ),
         SizedBox(height: 10.h),
         if (isNextIntake)
-          _buildNextIntakeRing(context, child: status)
+          _buildNextIntakeBadge(context, child: status)
         else if (status != null)
           status,
       ],
@@ -242,24 +242,27 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
     );
   }
 
-  /// Outlined ring marking the next day the user is expected to take their
-  /// B12 (see [_nextIntakeDay]). Wraps that day's status icon when there is
-  /// one (e.g. an overdue day still shows its red cross inside the ring);
-  /// on a future day, with no status yet, it's just an empty ring.
-  Widget _buildNextIntakeRing(BuildContext context, {Widget? child}) {
-    return Container(
+  /// Bell icon marking the next day the user is expected to take their B12
+  /// (see [_nextIntakeDay]). On a future day, with no status yet, it's just
+  /// the bell; an overdue day still shows its red cross as a small badge on
+  /// the bell so that information isn't lost.
+  Widget _buildNextIntakeBadge(BuildContext context, {Widget? child}) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return SizedBox(
       width: 64.w,
       height: 64.w,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary,
-          width: 3.w,
-        ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Icon(Icons.notifications_rounded, size: 64.w, color: kAccentYellow),
+          if (child != null)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: SizedBox(width: 26.w, height: 26.w, child: child),
+            ),
+        ],
       ),
-      child: child == null
-          ? null
-          : Center(child: SizedBox(width: 44.w, height: 44.w, child: child)),
     );
   }
 

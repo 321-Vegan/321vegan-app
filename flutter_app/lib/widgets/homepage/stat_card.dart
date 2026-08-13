@@ -100,20 +100,23 @@ String seasonalStatIllustration(HomeStat stat, Season? season) {
     Season.winter => 'winter',
     _ => 'basic',
   };
-  final asset = '$prefix-$suffix.png';
-  return _themeAssetsWithDesign.contains(asset) ? asset : '$prefix-basic.png';
+  final asset = '$prefix-$suffix.webp';
+  return _themeAssetsWithDesign.contains(asset) ? asset : '$prefix-basic.webp';
 }
 
 /// Assets that actually exist on disk for each themed card — every card in
-/// [_statThemeAssetPrefix] must at least have its `-basic.png` here.
+/// [_statThemeAssetPrefix] must at least have its `-basic.webp` here.
 const Set<String> _themeAssetsWithDesign = {
-  'lib/assets/themes/cards/leaf-autumn.png',
-  'lib/assets/themes/cards/leaf-basic.png',
-  'lib/assets/themes/cards/leaf-spring.png',
-  'lib/assets/themes/cards/leaf-summer.png',
-  'lib/assets/themes/cards/leaf-winter.png',
-  'lib/assets/themes/cards/water-basic.png',
-  'lib/assets/themes/cards/water-summer.png',
+  'lib/assets/themes/cards/leaf-autumn.webp',
+  'lib/assets/themes/cards/leaf-basic.webp',
+  'lib/assets/themes/cards/leaf-spring.webp',
+  'lib/assets/themes/cards/leaf-summer.webp',
+  'lib/assets/themes/cards/leaf-winter.webp',
+  'lib/assets/themes/cards/water-basic.webp',
+  'lib/assets/themes/cards/water-summer.webp',
+  'lib/assets/themes/cards/water-winter.webp',
+  'lib/assets/themes/cards/water-autumn.webp',
+  'lib/assets/themes/cards/water-spring.webp',
 };
 
 Widget buildStatCard(
