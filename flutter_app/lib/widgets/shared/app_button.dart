@@ -20,6 +20,15 @@ class AppButton extends StatelessWidget {
   /// Figma spec. Omit for a plain filled button.
   final Color? borderColor;
 
+  /// Optional leading icon, sized to match the fixed (non-ScreenUtil) 16pt
+  /// label so icon and text stay proportional regardless of device.
+  final IconData? icon;
+
+  /// Swaps the label (and icon) for a spinner and disables taps — the
+  /// button keeps its size and colors so it doesn't jump while a request
+  /// is in flight.
+  final bool isLoading;
+
   const AppButton({
     super.key,
     required this.label,
@@ -29,12 +38,14 @@ class AppButton extends StatelessWidget {
     this.disabledBackgroundColor,
     this.disabledForegroundColor,
     this.borderColor,
+    this.icon,
+    this.isLoading = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onPressed,
+      onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor,
         foregroundColor: foregroundColor,
@@ -45,10 +56,29 @@ class AppButton extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: 39.h, horizontal: 70.5.w),
         shape: const StadiumBorder(),
       ),
-      child: Text(
-        label,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
+      child: isLoading
+          ? SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
+              ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 20, color: foregroundColor),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
     );
   }
 }

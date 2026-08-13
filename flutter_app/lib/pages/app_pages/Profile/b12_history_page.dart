@@ -8,6 +8,7 @@ import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/b12/next_reminder_banner.dart';
 import '../../../widgets/shared/app_background.dart';
+import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/app_card.dart';
 
 /// Streak, monthly/total counts and a month-grouped intake list — the B12
@@ -193,26 +194,11 @@ class _B12HistoryPageState extends State<B12HistoryPage> {
 
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
+      child: AppButton(
+        label: 'Marquer comme prise aujourd\'hui',
+        icon: Icons.check,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         onPressed: _markAsTaken,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: EdgeInsets.symmetric(vertical: 18.h),
-          shape: const StadiumBorder(),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.check, size: 40.sp, color: Colors.white),
-            SizedBox(width: 10.w),
-            Text(
-              'Marquer comme prise aujourd\'hui',
-              style: TextStyle(fontSize: 38.sp, fontWeight: FontWeight.w600),
-            ),
-          ],
-        ),
       ),
     );
   }

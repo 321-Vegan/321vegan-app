@@ -12,6 +12,7 @@ import '../../../themes/app_shapes.dart';
 import '../../../widgets/auth/forgot_password_form.dart';
 import '../../../widgets/auth/login_form.dart';
 import '../../../widgets/auth/register_form.dart';
+import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/subscription_goal_widget.dart';
 
 class SubscriptionPage extends StatefulWidget {
@@ -358,7 +359,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             Flexible(
               child: Text(
                 'Vous êtes Premium !',
-                style: AppTextStyles.baloo36,
+                style: AppTextStyles.baloo36.copyWith(color: Colors.white),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -412,7 +413,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               'lib/assets/images/icons/crown-line.webp',
               width: 72.sp,
               height: 72.sp,
-              color: Colors.white,
+              color: kAccentYellow,
               colorBlendMode: BlendMode.srcIn,
             ),
           ],
@@ -736,32 +737,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildPurchaseButton(Color primaryColor) {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _purchase,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: primaryColor,
-          padding: EdgeInsets.symmetric(vertical: 36.h),
-          shape: const StadiumBorder(),
-          elevation: 0,
-          disabledBackgroundColor: Colors.white.withValues(alpha: 0.6),
-        ),
-        child: _isLoading
-            ? SizedBox(
-                height: 48.sp,
-                width: 48.sp,
-                child: CircularProgressIndicator(
-                  color: primaryColor,
-                  strokeWidth: 2,
-                ),
-              )
-            : Text(
-                'S\'abonner',
-                style: TextStyle(
-                  fontSize: 46.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+      child: AppButton(
+        label: 'S\'abonner',
+        backgroundColor: Colors.white,
+        foregroundColor: primaryColor,
+        disabledBackgroundColor: Colors.white.withValues(alpha: 0.6),
+        isLoading: _isLoading,
+        onPressed: _purchase,
       ),
     );
   }
@@ -865,7 +847,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildManageSubscriptionButton() {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
+      child: AppButton(
+        label: 'Modifier mon abonnement',
+        backgroundColor: kAccentYellow,
         onPressed: () async {
           final Uri url;
           if (Platform.isIOS) {
@@ -876,17 +860,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           }
           await launchUrl(url, mode: LaunchMode.externalApplication);
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: kAccentYellow,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: EdgeInsets.symmetric(vertical: 36.h),
-          shape: const StadiumBorder(),
-        ),
-        child: Text(
-          'Modifier mon abonnement',
-          style: TextStyle(fontSize: 44.sp, fontWeight: FontWeight.w600),
-        ),
       ),
     );
   }

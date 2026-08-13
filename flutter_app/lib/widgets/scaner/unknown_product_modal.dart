@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:vegan_app/models/vegan_status.dart';
 import 'package:vegan_app/pages/app_pages/helpers/product.helper.dart';
+import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
@@ -15,9 +16,11 @@ import 'package:vegan_app/widgets/shared/photo_picker_box.dart';
 
 /// Bottom sheet shown automatically when a scanned barcode isn't in the
 /// database yet ([ScanStatus.unknown]) or was submitted before but still
-/// couldn't be identified ([ScanStatus.notFound]) — same form covers both,
-/// since [ProductHelper.tryAddDocument] treats a resubmission the same as a
-/// first submission.
+/// couldn't be identified ([ScanStatus.notFound]). A first-time submission
+/// creates a new product via [ProductHelper.tryAddDocument]; a resubmission
+/// instead files an error report ([ProductHelper.tryAddError]) against the
+/// existing (incomplete) product entry, same as the "Signaler une erreur"
+/// flow.
 class UnknownProductModal extends StatefulWidget {
   final String barcode;
 
@@ -43,6 +46,7 @@ class UnknownProductModal extends StatefulWidget {
 class _UnknownProductModalState extends State<UnknownProductModal> {
   final _nameController = TextEditingController();
   final _brandController = TextEditingController();
+  final _descriptionController = TextEditingController();
   VeganStatus? _status;
   File? _photo;
   bool _isTakingPhoto = false;
@@ -52,6 +56,7 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
   void dispose() {
     _nameController.dispose();
     _brandController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -84,14 +89,44 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
     if (!widget.alreadySubmitted && _status == null) return;
     setState(() => _isSending = true);
 
-    final success = await ProductHelper.tryAddDocument(
-      context,
-      widget.barcode,
-      _status,
-      productName: _nameController.text.trim(),
-      brand: _brandController.text.trim(),
-      photo: photo,
-    );
+    final bool success;
+    if (widget.alreadySubmitted) {
+      // A resubmission means a product entry already exists for this EAN
+      // but is missing info — that's an error report against it, not a new
+      // product, same endpoint as the "Signaler une erreur" flow.
+      success = await ProductHelper.tryAddError(
+        context,
+        widget.barcode,
+        _descriptionController.text.trim(),
+      );
+      if (success) {
+        final productId = await ApiService.getProductIdByEan(ean: widget.barcode);
+        if (productId != null) {
+          await ApiService.uploadProductImage(productId: productId, photo: photo);
+        }
+      }
+      // tryAddError doesn't show its own snackbar (unlike tryAddDocument
+      // below), so show one here for both outcomes.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(success
+                ? 'Informations envoyées. Merci !'
+                : 'Une erreur est survenue. Veuillez réessayer.'),
+            backgroundColor: success ? kSemanticSuccess : kSemanticError,
+          ),
+        );
+      }
+    } else {
+      success = await ProductHelper.tryAddDocument(
+        context,
+        widget.barcode,
+        _status,
+        productName: _nameController.text.trim(),
+        brand: _brandController.text.trim(),
+        photo: photo,
+      );
+    }
 
     if (!mounted) return;
     if (success) {
@@ -286,19 +321,30 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
                   ),
                 ],
                 SizedBox(height: 42.h),
-                AppTextField(
-                  controller: _nameController,
-                  hintText: 'Nom du produit',
-                  textCapitalization: TextCapitalization.sentences,
-                  maxLength: 200,
-                ),
-                SizedBox(height: 24.h),
-                AppTextField(
-                  controller: _brandController,
-                  hintText: 'Marque',
-                  textCapitalization: TextCapitalization.words,
-                  maxLength: 200,
-                ),
+                if (widget.alreadySubmitted)
+                  AppTextField(
+                    controller: _descriptionController,
+                    hintText: 'Décrivez le produit',
+                    textCapitalization: TextCapitalization.sentences,
+                    maxLength: 500,
+                    minLines: 4,
+                    maxLines: 8,
+                  )
+                else ...[
+                  AppTextField(
+                    controller: _nameController,
+                    hintText: 'Nom du produit',
+                    textCapitalization: TextCapitalization.sentences,
+                    maxLength: 200,
+                  ),
+                  SizedBox(height: 24.h),
+                  AppTextField(
+                    controller: _brandController,
+                    hintText: 'Marque',
+                    textCapitalization: TextCapitalization.words,
+                    maxLength: 200,
+                  ),
+                ],
                 SizedBox(height: 24.h),
                 PhotoPickerBox(
                   photo: _photo,

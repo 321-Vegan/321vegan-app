@@ -277,7 +277,7 @@ class ShareHomeCard extends StatelessWidget {
             width: 40,
             height: 40,
             child: Image.asset(
-              stat.illustration,
+              seasonalStatIllustration(stat, theme.season),
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => Container(
                 decoration: BoxDecoration(

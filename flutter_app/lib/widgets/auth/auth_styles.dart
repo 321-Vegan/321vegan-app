@@ -34,17 +34,3 @@ InputDecoration authFieldDecoration(
     ),
   );
 }
-
-ButtonStyle authPrimaryButtonStyle(BuildContext context) {
-  return ElevatedButton.styleFrom(
-    backgroundColor: Theme.of(context).colorScheme.primary,
-    foregroundColor: Colors.white,
-    elevation: 0,
-    padding: EdgeInsets.symmetric(vertical: 18.h),
-    shape: const StadiumBorder(),
-  );
-}
-
-TextStyle authButtonTextStyle() {
-  return TextStyle(fontSize: 38.sp, fontWeight: FontWeight.w600);
-}

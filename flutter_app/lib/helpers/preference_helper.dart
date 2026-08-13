@@ -1,9 +1,25 @@
 import 'dart:convert'; // Import for JSON encoding/decoding
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product_scores.dart';
 import '../services/auth_service.dart';
 import 'helper.dart';
+
+/// Avatar assets available for selection (Paramètres > Avatar) and for the
+/// "random avatar" roll below. Illustrations by @vilainevegane.illustration,
+/// @kodasmarket.art and @ancielouille.
+const List<String> kAvailableAvatars = [
+  'lapin.png',
+  'ver.png',
+  'poisson.png',
+  'canard.png',
+  'poule.png',
+  'mouton.png',
+  'cochon.png',
+  'vache.png',
+  'chat.png',
+];
 
 class PreferencesHelper {
   // Internal method: saves date to local storage only (no backend update)
@@ -370,6 +386,24 @@ class PreferencesHelper {
   static Future<bool> getRandomAvatarEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('random_avatar_enabled') ?? false;
+  }
+
+  /// Picks a new random avatar (different from the current one, so the
+  /// change is always visible) and saves it, syncing it to the account when
+  /// logged in. No-op when the "random avatar" preference is off. Call once
+  /// per app launch.
+  static Future<void> rollRandomAvatarIfEnabled() async {
+    if (!await getRandomAvatarEnabled()) return;
+
+    final current = await getAvatar();
+    final choices = kAvailableAvatars.where((a) => a != current).toList();
+    final pool = choices.isNotEmpty ? choices : kAvailableAvatars;
+    final next = pool[Random().nextInt(pool.length)];
+
+    await saveAvatar(next);
+    if (AuthService.isLoggedIn) {
+      await AuthService.updateUser(avatar: next);
+    }
   }
 
   // Account prompt methods

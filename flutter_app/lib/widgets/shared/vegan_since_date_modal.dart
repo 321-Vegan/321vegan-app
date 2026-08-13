@@ -2,8 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
-import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
+import 'app_button.dart';
 import 'bottom_sheet_shell.dart';
 
 enum VeganDateAction { save, delete }
@@ -91,45 +91,21 @@ class _VeganSinceDateModalState extends State<VeganSinceDateModal> {
             children: [
               if (widget.showDelete) ...[
                 Expanded(
-                  child: ElevatedButton(
+                  child: AppButton(
+                    label: 'Supprimer',
+                    backgroundColor: kAccentYellow,
                     onPressed: () => Navigator.of(context)
                         .pop(const VeganDateResult.delete()),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: kAccentYellow,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      shape: squircleBorder(radius: 14.r),
-                      elevation: 0,
-                    ),
-                    child: Text(
-                      'Supprimer',
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
                 ),
                 SizedBox(width: 16.w),
               ],
               Expanded(
-                child: ElevatedButton(
+                child: AppButton(
+                  label: 'Enregistrer',
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   onPressed: () => Navigator.of(context)
                       .pop(VeganDateResult.save(_selectedDate)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: squircleBorder(radius: 14.r),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    'Enregistrer',
-                    style: TextStyle(
-                      fontSize: 44.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ),
               ),
             ],

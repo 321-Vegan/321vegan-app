@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
+import '../shared/app_button.dart';
 
 /// Dismissible nudge shown on the Dashboard while the user has no B12
 /// reminder configured yet. Purely presentational — [DashboardPage] decides
@@ -91,19 +92,10 @@ class B12IntakeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
+      child: AppButton(
+        label: 'J\'ai pris ma B12',
+        backgroundColor: kAccentYellow,
         onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: kAccentYellow,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: EdgeInsets.symmetric(vertical: 36.h),
-          shape: const StadiumBorder(),
-        ),
-        child: Text(
-          'J\'ai pris ma B12',
-          style: TextStyle(fontSize: 46.sp, fontWeight: FontWeight.w600),
-        ),
       ),
     );
   }

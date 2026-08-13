@@ -5,6 +5,7 @@ import '../../models/auth.dart';
 import '../../helpers/preference_helper.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
 import 'auth_styles.dart';
 
 class RegisterForm extends StatefulWidget {
@@ -237,19 +238,11 @@ class _RegisterFormState extends State<RegisterForm> {
           SizedBox(height: 32.h),
 
           // Register button
-          ElevatedButton(
-            onPressed: _isLoading ? null : _handleRegister,
-            style: authPrimaryButtonStyle(context),
-            child: _isLoading
-                ? SizedBox(
-                    height: 20.h,
-                    width: 20.h,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text('S\'inscrire', style: authButtonTextStyle()),
+          AppButton(
+            label: 'S\'inscrire',
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            isLoading: _isLoading,
+            onPressed: _handleRegister,
           ),
           SizedBox(height: 24.h),
 

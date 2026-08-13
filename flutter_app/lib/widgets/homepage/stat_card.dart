@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 
 /// Definition of one impact stat, shared between the home page cards and the
@@ -79,6 +80,19 @@ const List<HomeStat> homeStats = [
         "En choisissant d'être végétalien, vous aidez à économiser de précieuses ressources en eau.\n\nLa production de produits animaux nécessite une gigantesque quantité d'eau, notamment pour l'irrigation des cultures pour les animaux d'élevage.\n\nEt cela sans parler de la pollution de l'eau due aux déjections qu'ils produisent.",
   ),
 ];
+
+/// The "Forêt préservée" card illustration swaps for a season-matched leaf
+/// (Figma redesign); every other stat keeps its fixed illustration.
+String seasonalStatIllustration(HomeStat stat, Season? season) {
+  if (stat.savingsKey != 'forestUnit') return stat.illustration;
+  return switch (season) {
+    Season.autumn => 'lib/assets/themes/cards/leaf-autumn.png',
+    Season.summer => 'lib/assets/themes/cards/leaf-summer.png',
+    Season.spring => 'lib/assets/themes/cards/leaf-spring.png',
+    Season.winter => 'lib/assets/themes/cards/leaf-winter.png',
+    _ => 'lib/assets/themes/cards/leaf-basic.png',
+  };
+}
 
 Widget buildStatCard(
   BuildContext context,
@@ -158,7 +172,7 @@ Widget buildStatCard(
             width: 270.w,
             height: 270.w,
             child: Image.asset(
-              stat.illustration,
+              seasonalStatIllustration(stat, seasonal?.season),
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => Container(
                 decoration: BoxDecoration(
@@ -224,6 +238,7 @@ class StatInfoDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final seasonal = Theme.of(context).extension<SeasonalTheme>();
     final valueLabel =
         '$value ${stat.unitName}'.trim().replaceAll(RegExp(r'\s+'), ' ');
     // Figma spec: fixed width 390, radius 12 (top corners), padding 7 (top) /
@@ -262,7 +277,10 @@ class StatInfoDialog extends StatelessWidget {
           // Illustration (same as the card)
           SizedBox(
             height: 260.w,
-            child: Image.asset(stat.illustration, fit: BoxFit.contain),
+            child: Image.asset(
+              seasonalStatIllustration(stat, seasonal?.season),
+              fit: BoxFit.contain,
+            ),
           ),
           SizedBox(height: 60.h),
           // Explanation
@@ -290,42 +308,18 @@ class StatInfoDialog extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ElevatedButton(
+                child: AppButton(
+                  label: 'Sources',
+                  backgroundColor: kAccentYellow,
                   onPressed: _openSources,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kAccentYellow,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: EdgeInsets.symmetric(vertical: 24.h),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: Text(
-                    'Sources',
-                    style: TextStyle(
-                      fontSize: 44.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ),
               ),
               SizedBox(width: 16.w),
               Expanded(
-                child: ElevatedButton(
+                child: AppButton(
+                  label: 'D\'acc !',
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: EdgeInsets.symmetric(vertical: 24.h),
-                    shape: const StadiumBorder(),
-                  ),
-                  child: Text(
-                    'D\'acc !',
-                    style: TextStyle(
-                      fontSize: 44.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
                 ),
               ),
             ],

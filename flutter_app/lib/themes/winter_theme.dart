@@ -18,6 +18,8 @@ SeasonalTheme winterTheme = SeasonalTheme(
     const Color(0xFFBAE6FD),
   ],
   particleType: ParticleType.snowflakes,
+  particleCount: 200,
+  particleOpacity: 1.0,
   // 192.05deg linear-gradient from Figma.
   backgroundGradient: const LinearGradient(
     begin: Alignment(0.2087, -0.978),

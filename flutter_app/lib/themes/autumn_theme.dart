@@ -19,6 +19,8 @@ SeasonalTheme autumnTheme = SeasonalTheme(
     const Color(0xFFFCD34D),
   ],
   particleType: ParticleType.leaves,
+  particleCount: 16,
+  particleOpacity: 0.7,
   seasonalAsset: 'lib/assets/images/pumpkin.webp',
   snowGlobeParticleIcon: FontAwesomeIcons.canadianMapleLeaf,
   // 192.05deg linear-gradient from Figma.

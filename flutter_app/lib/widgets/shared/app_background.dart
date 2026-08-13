@@ -50,8 +50,8 @@ class AppBackground extends StatelessWidget {
       backdrop = SnowGlobeOverlay(
         particleAsset: seasonal.snowGlobeParticleAsset,
         particleIcon: seasonal.snowGlobeParticleIcon,
-        particleCount:
-            seasonal.particleType == ParticleType.snowflakes ? 200 : 16,
+        particleCount: seasonal.particleCount,
+        particleOpacity: seasonal.particleOpacity,
         // Snowflakes read better as white/icy against winter's pale blue
         // gradient than the theme's saturated primary blue.
         particleColor: seasonal.particleType == ParticleType.snowflakes

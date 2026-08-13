@@ -19,6 +19,11 @@ class SnowGlobeOverlay extends StatefulWidget {
   /// background) should pass a darker, theme-appropriate color instead.
   final Color particleColor;
 
+  /// Multiplier applied on top of each particle's own random base opacity —
+  /// 1.0 keeps the default range, lower values make every particle more
+  /// subtle without changing the per-particle randomization itself.
+  final double particleOpacity;
+
   const SnowGlobeOverlay({
     super.key,
     required this.child,
@@ -27,6 +32,7 @@ class SnowGlobeOverlay extends StatefulWidget {
     this.particleAsset,
     this.borderRadius,
     this.particleColor = Colors.white,
+    this.particleOpacity = 1.0,
   });
 
   @override
@@ -54,7 +60,12 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
 
     _ticker = createTicker(_onTick)..start();
 
-    _accelSub = accelerometerEventStream().listen((event) {
+    // userAccelerometerEventStream excludes gravity — accelerometerEventStream
+    // includes it, so holding the phone normally (screen facing you) reads a
+    // constant ~1g on one axis, which the tilt drift below misread as "the
+    // user is tilting the globe downward" at all times, making particles
+    // fall continuously even when the phone was perfectly still.
+    _accelSub = userAccelerometerEventStream().listen((event) {
       _prevAccelX = _accelX;
       _prevAccelY = _accelY;
       _accelX = event.x;
@@ -87,10 +98,10 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
       radius: 1.5 + _random.nextDouble() * 2.5,
       opacity: 0.3 + _random.nextDouble() * 0.5,
       shimmerPhase: _random.nextDouble() * 2 * pi,
-      shimmerSpeed: 1.0 + _random.nextDouble() * 2.0,
+      shimmerSpeed: 0.6 + _random.nextDouble() * 1.2,
       damping: 0.96 + _random.nextDouble() * 0.03, // each flake has unique drag
       rotationPhase: _random.nextDouble() * 2 * pi,
-      rotationSpeed: 0.5 + _random.nextDouble() * 1.5,
+      rotationSpeed: 0.25 + _random.nextDouble() * 0.75,
     );
   }
 
@@ -100,14 +111,16 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
 
     if (dt <= 0 || dt > 0.1) return;
 
-    // Gentle tilt-based drift
-    final tiltX = -_accelX / 9.8;
-    final tiltY = _accelY / 9.8;
+    // Gentle tilt-based drift. Unlike accelerometerEventStream, the
+    // gravity-free user-acceleration signal sits near 0 at rest, so this
+    // divisor is tuned to that smaller range rather than gravity's ~9.8.
+    final tiltX = -_accelX / 4.0;
+    final tiltY = _accelY / 4.0;
 
     for (final f in _flakes) {
       // Tilt influence
-      f.vx += tiltX * 0.35 * dt;
-      f.vy += tiltY * 0.35 * dt;
+      f.vx += tiltX * 0.15 * dt;
+      f.vy += tiltY * 0.15 * dt;
 
       // Very gentle settling downward
       f.vy += 0.02 * dt;
@@ -117,8 +130,8 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
       f.vy *= f.damping;
 
       // Clamp velocity
-      f.vx = f.vx.clamp(-2.0, 2.0);
-      f.vy = f.vy.clamp(-2.0, 2.0);
+      f.vx = f.vx.clamp(-1.0, 1.0);
+      f.vy = f.vy.clamp(-1.0, 1.0);
 
       // Update position
       f.x += f.vx * dt;
@@ -164,8 +177,8 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
           if (widget.particleIcon != null || widget.particleAsset != null)
             ...List.generate(_flakes.length, (i) {
               final f = _flakes[i];
-              final shimmer =
-                  0.7 + 0.3 * sin(elapsed * f.shimmerSpeed + f.shimmerPhase);
+              //final shimmer =
+                  //0.7 + 0.3 * sin(elapsed * f.shimmerSpeed + f.shimmerPhase);
               final size = f.radius * 5;
               return Positioned.fill(
                 child: IgnorePointer(
@@ -174,7 +187,7 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
                     child: Transform.rotate(
                       angle: elapsed * f.rotationSpeed + f.rotationPhase,
                       child: Opacity(
-                        opacity: (f.opacity * shimmer).clamp(0.0, 1.0),
+                        opacity: (1 * widget.particleOpacity).clamp(0.0, 1.0),
                         child: widget.particleIcon != null
                             ? Icon(
                                 widget.particleIcon,
@@ -185,10 +198,6 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
                                 widget.particleAsset!,
                                 width: size,
                                 height: size,
-                                // A missing/unregistered asset would otherwise
-                                // retry resolution on every animation frame
-                                // (this repaints at 60fps) instead of failing
-                                // once — silently drop that particle instead.
                                 errorBuilder: (context, error, stackTrace) =>
                                     const SizedBox.shrink(),
                               ),
@@ -206,6 +215,7 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
                     flakes: _flakes,
                     time: elapsed,
                     color: widget.particleColor,
+                    opacity: widget.particleOpacity,
                   ),
                 ),
               ),
@@ -220,15 +230,20 @@ class _SnowGlobePainter extends CustomPainter {
   final List<_Snowflake> flakes;
   final double time;
   final Color color;
+  final double opacity;
 
-  _SnowGlobePainter(
-      {required this.flakes, required this.time, required this.color});
+  _SnowGlobePainter({
+    required this.flakes,
+    required this.time,
+    required this.color,
+    required this.opacity,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     for (final f in flakes) {
       final paint = Paint()
-        ..color = color.withValues(alpha: f.opacity)
+        ..color = color.withValues(alpha: (f.opacity * opacity).clamp(0.0, 1.0))
         ..style = PaintingStyle.fill;
 
       canvas.drawCircle(

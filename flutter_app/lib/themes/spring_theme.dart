@@ -19,6 +19,8 @@ SeasonalTheme springTheme = SeasonalTheme(
     const Color(0xFFDDD6FE),
   ],
   particleType: ParticleType.petals,
+  particleCount: 16,
+  particleOpacity: 0.7,
   seasonalAsset: 'lib/assets/images/tulipe.webp',
   snowGlobeParticleAsset: 'lib/assets/images/marguerite.webp',
   iconTopPosition: -400.h,

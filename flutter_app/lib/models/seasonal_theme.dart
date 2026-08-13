@@ -26,6 +26,19 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
   final IconData seasonalIcon;
   final List<Color> confettiColors;
   final ParticleType particleType;
+
+  /// Number of drifting snow-globe particles painted behind the whole app
+  /// (see [AppBackground]) while this theme is active. Each season tunes
+  /// its own density — e.g. winter's snowflakes are much denser than
+  /// spring's petals.
+  final int particleCount;
+
+  /// Opacity multiplier applied on top of each particle's own random base
+  /// opacity (see [AppBackground]/[SnowGlobeOverlay]) — 1.0 keeps the
+  /// default range, lower values make the whole theme's particles more
+  /// subtle without having to touch the per-particle randomization.
+  final double particleOpacity;
+
   final Color iconBackgroundColor;
   final LinearGradient? backgroundGradient;
   final double iconTopPosition;
@@ -55,6 +68,8 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
     required this.seasonalIcon,
     required this.confettiColors,
     required this.particleType,
+    this.particleCount = 16,
+    this.particleOpacity = 1.0,
     required this.iconBackgroundColor,
     this.backgroundGradient,
     this.iconTopPosition = 0,
@@ -75,6 +90,8 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
     IconData? seasonalIcon,
     List<Color>? confettiColors,
     ParticleType? particleType,
+    int? particleCount,
+    double? particleOpacity,
     Color? iconBackgroundColor,
     LinearGradient? backgroundGradient,
     double? iconTopPosition,
@@ -93,6 +110,8 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
       seasonalIcon: seasonalIcon ?? this.seasonalIcon,
       confettiColors: confettiColors ?? this.confettiColors,
       particleType: particleType ?? this.particleType,
+      particleCount: particleCount ?? this.particleCount,
+      particleOpacity: particleOpacity ?? this.particleOpacity,
       iconBackgroundColor: iconBackgroundColor ?? this.iconBackgroundColor,
       backgroundGradient: backgroundGradient ?? this.backgroundGradient,
       iconTopPosition: iconTopPosition ?? this.iconTopPosition,
@@ -118,6 +137,9 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
       seasonalIcon: t < 0.5 ? seasonalIcon : other.seasonalIcon,
       confettiColors: t < 0.5 ? confettiColors : other.confettiColors,
       particleType: t < 0.5 ? particleType : other.particleType,
+      particleCount: t < 0.5 ? particleCount : other.particleCount,
+      particleOpacity:
+          particleOpacity + (other.particleOpacity - particleOpacity) * t,
       iconBackgroundColor:
           Color.lerp(iconBackgroundColor, other.iconBackgroundColor, t)!,
       backgroundGradient:

@@ -6,6 +6,7 @@ import 'package:vegan_app/widgets/shared/update_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:vegan_app/models/b12_reminder_settings.dart';
 import 'helpers/first_time_launch.dart';
+import 'helpers/preference_helper.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,6 +32,7 @@ void main() async {
   await DatabaseHelper.instance.database;
   await DatabaseHelper.instance.cosmeticsDatabase;
   await AuthService.init();
+  await PreferencesHelper.rollRandomAvatarIfEnabled();
   await SubscriptionService.init();
   await NotificationService().initialize();
   await _migrateBiweeklyReminderIfNeeded();

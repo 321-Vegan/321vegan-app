@@ -23,6 +23,11 @@ class AppTextField extends StatefulWidget {
   final int? maxLength;
   final TextCapitalization textCapitalization;
   final TextInputType? keyboardType;
+  final int minLines;
+  final int maxLines;
+  final bool obscureText;
+  final bool enabled;
+  final List<String>? autofillHints;
 
   const AppTextField({
     super.key,
@@ -31,6 +36,11 @@ class AppTextField extends StatefulWidget {
     this.maxLength,
     this.textCapitalization = TextCapitalization.none,
     this.keyboardType,
+    this.minLines = 1,
+    this.maxLines = 1,
+    this.obscureText = false,
+    this.enabled = true,
+    this.autofillHints,
   });
 
   @override
@@ -80,7 +90,14 @@ class _AppTextFieldState extends State<AppTextField> {
         maxLength: widget.maxLength,
         textCapitalization: widget.textCapitalization,
         keyboardType: widget.keyboardType,
-        textAlignVertical: TextAlignVertical.center,
+        minLines: widget.minLines,
+        maxLines: widget.obscureText ? 1 : widget.maxLines,
+        obscureText: widget.obscureText,
+        enabled: widget.enabled,
+        autofillHints: widget.autofillHints,
+        textAlignVertical: widget.maxLines > 1
+            ? TextAlignVertical.top
+            : TextAlignVertical.center,
         style: AppTextStyles.bodyRegular15,
         decoration: InputDecoration(
           isDense: true,

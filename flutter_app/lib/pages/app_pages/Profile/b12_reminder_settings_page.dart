@@ -10,6 +10,7 @@ import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/b12/next_reminder_banner.dart';
 import '../../../widgets/shared/app_background.dart';
+import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/app_card.dart';
 
 class B12ReminderSettingsPage extends StatefulWidget {
@@ -461,22 +462,13 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
           SizedBox(height: AppSpacing.item),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton.icon(
+            child: AppButton(
+              label: 'Infos sur la B12',
+              icon: Icons.search,
+              backgroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.primary,
+              borderColor: Theme.of(context).colorScheme.primary,
               onPressed: _showB12InfoModal,
-              icon: Icon(Icons.search, size: 40.sp),
-              label: Text(
-                'Infos sur la B12',
-                style: TextStyle(fontSize: 38.sp, fontWeight: FontWeight.w600),
-              ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
-                side: BorderSide(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 1.5,
-                ),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: const StadiumBorder(),
-              ),
             ),
           ),
         ],
@@ -644,20 +636,11 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
           ),
         ),
         SizedBox(width: 16.w),
-        ElevatedButton.icon(
+        AppButton(
+          label: buttonLabel,
+          icon: buttonIcon,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           onPressed: onPressed,
-          icon: Icon(buttonIcon, size: 36.sp),
-          label: Text(
-            buttonLabel,
-            style: TextStyle(fontSize: 34.sp, fontWeight: FontWeight.w600),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 14.h),
-            shape: const StadiumBorder(),
-          ),
         ),
       ],
     );
@@ -865,28 +848,11 @@ class _B12ReminderSettingsPageState extends State<B12ReminderSettingsPage> {
   Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _isSaving ? null : _saveSettings,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: EdgeInsets.symmetric(vertical: 18.h),
-          shape: const StadiumBorder(),
-        ),
-        child: _isSaving
-            ? SizedBox(
-                height: 40.h,
-                width: 40.h,
-                child: const CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              )
-            : Text(
-                _settings.enabled ? 'Enregistrer' : 'Activer les rappels',
-                style: TextStyle(fontSize: 40.sp, fontWeight: FontWeight.w600),
-              ),
+      child: AppButton(
+        label: _settings.enabled ? 'Enregistrer' : 'Activer les rappels',
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        isLoading: _isSaving,
+        onPressed: _saveSettings,
       ),
     );
   }

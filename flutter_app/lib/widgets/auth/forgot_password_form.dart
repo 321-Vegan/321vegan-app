@@ -5,6 +5,7 @@ import '../../models/auth.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
 import 'auth_styles.dart';
 
 class ForgotPasswordForm extends StatefulWidget {
@@ -116,19 +117,11 @@ class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
             SizedBox(height: 32.h),
 
             // Send reset email button
-            ElevatedButton(
-              onPressed: _isLoading ? null : _handlePasswordReset,
-              style: authPrimaryButtonStyle(context),
-              child: _isLoading
-                  ? SizedBox(
-                      height: 20.h,
-                      width: 20.h,
-                      child: const CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                  : Text('Envoyer le lien', style: authButtonTextStyle()),
+            AppButton(
+              label: 'Envoyer le lien',
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              isLoading: _isLoading,
+              onPressed: _handlePasswordReset,
             ),
           ] else ...[
             // Success message

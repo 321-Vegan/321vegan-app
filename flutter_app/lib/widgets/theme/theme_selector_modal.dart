@@ -675,6 +675,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
       particleAsset: theme.snowGlobeParticleAsset,
       particleIcon: theme.snowGlobeParticleIcon,
       particleCount: theme.particleType == ParticleType.snowflakes ? 15 : 10,
+      particleOpacity: theme.particleOpacity,
       borderRadius: br,
       child: child,
     );

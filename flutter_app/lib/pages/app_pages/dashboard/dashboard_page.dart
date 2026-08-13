@@ -25,6 +25,7 @@ import '../../../widgets/badges/badges_grid.dart';
 import '../../../widgets/homepage/b12_reminder_banner.dart';
 import '../../../widgets/homepage/share_home_dialog.dart';
 import '../../../widgets/shared/app_background.dart';
+import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/homepage/promo_carousel.dart';
 import '../../../widgets/homepage/solidarity_shops_section.dart';
 import '../../../widgets/homepage/stat_card.dart';
@@ -581,28 +582,10 @@ class DashboardPageState extends State<DashboardPage> {
           ),
         ),
         if (daysSince == null)
-          // Figma spec: hug 114×44, radius 100 (pill), padding 13 (v) /
-          // 24 (h), bg Primary/Default — ×3 for ScreenUtil units.
-          ElevatedButton(
+          AppButton(
+            label: 'Démarrer',
+            backgroundColor: Theme.of(context).colorScheme.primary,
             onPressed: _launchCounter,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: EdgeInsets.symmetric(horizontal: 72.w, vertical: 39.h),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              shape: const StadiumBorder(),
-            ),
-            child: Text(
-              'Démarrer',
-              style: TextStyle(
-                fontSize: 44.sp,
-                fontFamily: 'Karla',
-                fontWeight: FontWeight.w600,
-                height: 1.0,
-              ),
-            ),
           )
         else
           GestureDetector(
@@ -814,26 +797,13 @@ class DashboardPageState extends State<DashboardPage> {
           SizedBox(height: AppSpacing.item),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
+            child: AppButton(
+              label: 'Valider des produits',
+              backgroundColor: Theme.of(context).colorScheme.primary,
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (context) => const ProductReviewPage()),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: EdgeInsets.symmetric(vertical: 18.h),
-                shape: const StadiumBorder(),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Valider des produits',
-                      style: TextStyle(
-                          fontSize: 38.sp, fontWeight: FontWeight.w600)),
-                ],
               ),
             ),
           ),

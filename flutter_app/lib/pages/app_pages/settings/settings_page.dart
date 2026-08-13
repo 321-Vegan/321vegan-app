@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import '../../../helpers/preference_helper.dart';
-import '../../../models/auth.dart';
 import '../../../models/error_report.dart';
 import '../../../models/seasonal_theme.dart';
 import '../../../models/user.dart';
@@ -12,7 +10,9 @@ import '../../../services/auth_service.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
 import '../../../services/error_report_badge_service.dart';
-import '../../../widgets/auth/edit_profile_modal.dart';
+import '../../../widgets/auth/change_email_modal.dart';
+import '../../../widgets/auth/change_password_modal.dart';
+import '../../../widgets/auth/change_username_modal.dart';
 import '../../../widgets/settings/settings_row_tile.dart';
 import '../../../widgets/settings/settings_section.dart';
 import '../../../themes/app_colors.dart';
@@ -20,11 +20,13 @@ import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_background.dart';
+import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/theme/theme_selector_modal.dart';
 import '../../../main.dart';
 import '../Profile/auth_gate_page.dart';
+import '../Profile/avatar_selection_page.dart';
 import '../Profile/b12_history_page.dart';
 import '../Profile/b12_reminder_settings_page.dart';
 import '../Scan/scan_history_page.dart';
@@ -191,21 +193,13 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  void _openEditProfileModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
-        ),
-        child: EditProfileModal(
-          currentNickname: _user?.nickname ?? 'Utilisateur·ice',
+  void _openAvatarSelection() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AvatarSelectionPage(
           currentAvatar: _avatar,
-          currentEmail: _user?.email ?? '',
-          onProfileUpdated: _loadUser,
+          onAvatarUpdated: _loadUser,
         ),
       ),
     );
@@ -223,19 +217,35 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _requestPasswordReset() async {
-    if (_user == null) return;
-    final result = await AuthService.requestPasswordReset(
-      PasswordResetRequest(email: _user!.email),
-    );
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result.isSuccess
-            ? 'Email de réinitialisation envoyé à ${_user!.email}'
-            : result.error ?? 'Erreur lors de l\'envoi de l\'email'),
-        backgroundColor: result.isSuccess ? kSemanticSuccess : kSemanticError,
+  void _openChangeUsernameModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ChangeUsernameModal(
+        currentNickname: _user?.nickname ?? 'Utilisateur·ice',
+        onUsernameChanged: _loadUser,
       ),
+    );
+  }
+
+  void _openChangeEmailModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ChangeEmailModal(
+        currentEmail: _user?.email ?? '',
+      ),
+    );
+  }
+
+  void _openChangePasswordModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const ChangePasswordModal(),
     );
   }
 
@@ -373,7 +383,7 @@ class _SettingsPageState extends State<SettingsPage> {
             child: Stack(
               children: [
                 GestureDetector(
-                  onTap: _openEditProfileModal,
+                  onTap: _openAvatarSelection,
                   // Raw image, no disc background: the avatar assets are
                   // irregular shapes with transparency.
                   child: SizedBox(
@@ -394,7 +404,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   right: 4,
                   bottom: 4,
                   child: GestureDetector(
-                    onTap: _openEditProfileModal,
+                    onTap: _openAvatarSelection,
                     // Figma "Button/Primary/Small": hug 34, radius 12,
                     // padding 8 — ×3 for ScreenUtil units.
                     child: Container(
@@ -424,6 +434,11 @@ class _SettingsPageState extends State<SettingsPage> {
             title: 'Compte',
             children: [
               SettingsRowTile(
+                label: 'Pseudo',
+                value: _user?.nickname ?? '',
+                onTap: _openChangeUsernameModal,
+              ),
+              SettingsRowTile(
                 label: 'Végane depuis',
                 value: _user?.veganSince != null
                     ? DateFormat.yMMMd('fr_FR').format(_user!.veganSince!)
@@ -432,10 +447,12 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SettingsRowTile(
                 label: 'Thème',
-                labelSuffix: FaIcon(
-                  FontAwesomeIcons.crown,
-                  size: 42.sp,
+                labelSuffix: Image.asset(
+                  'lib/assets/images/icons/crown-line.webp',
+                  width: 72.sp,
+                  height: 72.sp,
                   color: kAccentYellow,
+                  colorBlendMode: BlendMode.srcIn,
                 ),
                 value: themeName,
                 onTap: _showThemeSelector,
@@ -443,12 +460,12 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsRowTile(
                 label: 'Mail',
                 value: _user?.email ?? '',
-                onTap: _openEditProfileModal,
+                onTap: _openChangeEmailModal,
               ),
               SettingsRowTile(
                 label: 'Mot de passe',
                 value: '••••••',
-                onTap: _requestPasswordReset,
+                onTap: _openChangePasswordModal,
               ),
             ],
           ),
@@ -548,34 +565,16 @@ class _SettingsPageState extends State<SettingsPage> {
             ],
           ),
           SizedBox(height: AppSpacing.section),
-          ElevatedButton(
+          AppButton(
+            label: 'Se déconnecter',
+            backgroundColor: Theme.of(context).colorScheme.primary,
             onPressed: _handleLogout,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: EdgeInsets.symmetric(vertical: 18.h),
-              shape: const StadiumBorder(),
-            ),
-            child: Text(
-              'Se déconnecter',
-              style: TextStyle(fontSize: 38.sp, fontWeight: FontWeight.w600),
-            ),
           ),
           SizedBox(height: 16.h),
-          ElevatedButton(
+          AppButton(
+            label: 'Supprimer mon compte',
+            backgroundColor: kAccentYellow,
             onPressed: _handleDeleteAccount,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: kAccentYellow,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: EdgeInsets.symmetric(vertical: 18.h),
-              shape: const StadiumBorder(),
-            ),
-            child: Text(
-              'Supprimer mon compte',
-              style: TextStyle(fontSize: 38.sp, fontWeight: FontWeight.w600),
-            ),
           ),
         ],
       ),
@@ -628,19 +627,17 @@ class _SettingsPageState extends State<SettingsPage> {
                             isSubscribed
                                 ? 'Abonnement actif'
                                 : 'Passez Premium !',
-                            style: TextStyle(
-                              fontSize: 80.sp,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'Baloo2',
-                              height: 1.1,
-                              letterSpacing: -1,
-                              color: Colors.white,
-                            ),
+                            style: AppTextStyles.baloo26.copyWith(color: Colors.white),
                           ),
                         ),
                         SizedBox(width: 14.w),
-                        FaIcon(FontAwesomeIcons.crown,
-                            size: 64.sp, color: kAccentYellow),
+                        Image.asset(
+                          'lib/assets/images/icons/crown-line.webp',
+                          width: 72.sp,
+                          height: 72.sp,
+                          color: kAccentYellow,
+                          colorBlendMode: BlendMode.srcIn,
+                        ),
                       ],
                     ),
                     SizedBox(height: 4.h),

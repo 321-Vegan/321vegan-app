@@ -625,6 +625,49 @@ class AuthService {
       return AuthResult.error('Une erreur est survenue. Veuillez réessayer.');
     }
   }
+
+  // Change the current user's password while logged in — verified against
+  // the current password server-side (unlike updateUser's PUT /me/, which
+  // accepts a bare new password with no such check).
+  static Future<AuthResult<String>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+
+      final response = await dio.patch(
+        '/me/password',
+        data: {
+          'current_password': currentPassword,
+          'new_password': newPassword,
+        },
+        options: Options(
+          headers: {'Authorization': 'Bearer $_accessToken'},
+          validateStatus: (status) => status != null && status < 500,
+        ),
+      );
+
+      switch (response.statusCode) {
+        case 200:
+          return AuthResult.success('Mot de passe mis à jour avec succès.');
+        case 401:
+          return AuthResult.error('Mot de passe actuel incorrect');
+        case 400:
+          return AuthResult.error(
+              'Le nouveau mot de passe ne respecte pas les critères de sécurité.');
+        default:
+          return AuthResult.error(
+              'Une erreur est survenue. Veuillez réessayer.');
+      }
+    } on DioException catch (e) {
+      debugPrint('❌ Password change error: ${e.message}');
+      return AuthResult.error('Une erreur est survenue. Veuillez réessayer.');
+    } catch (e) {
+      debugPrint('❌ Unexpected password change error: $e');
+      return AuthResult.error('Une erreur est survenue. Veuillez réessayer.');
+    }
+  }
 }
 
 // Generic result class for auth operations

@@ -4,6 +4,7 @@ import '../../services/auth_service.dart';
 import '../../models/auth.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
 import 'auth_styles.dart';
 
 class LoginForm extends StatefulWidget {
@@ -155,19 +156,11 @@ class _LoginFormState extends State<LoginForm> {
           SizedBox(height: 24.h),
 
           // Login button
-          ElevatedButton(
-            onPressed: _isLoading ? null : _handleLogin,
-            style: authPrimaryButtonStyle(context),
-            child: _isLoading
-                ? SizedBox(
-                    height: 20.h,
-                    width: 20.h,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text('Se connecter', style: authButtonTextStyle()),
+          AppButton(
+            label: 'Se connecter',
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            isLoading: _isLoading,
+            onPressed: _handleLogin,
           ),
           SizedBox(height: 24.h),
 
