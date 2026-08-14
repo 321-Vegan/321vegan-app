@@ -16,7 +16,19 @@ class AppCard extends StatelessWidget {
   /// Corner radius in ScreenUtil units; defaults to the design's 20pt.
   final double? radius;
 
-  const AppCard({super.key, required this.child, this.padding, this.radius});
+  /// Border color/width override for status-flavored cards (e.g. scan
+  /// results: green/red/yellow border instead of the default hairline).
+  final Color? borderColor;
+  final double borderWidth;
+
+  const AppCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.radius,
+    this.borderColor,
+    this.borderWidth = 1,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +40,10 @@ class AppCard extends StatelessWidget {
         color: Colors.white,
         shape: squircleBorder(
           radius: r,
-          side: const BorderSide(color: kBorderDefault, width: 1),
+          side: BorderSide(
+            color: borderColor ?? kBorderDefault,
+            width: borderColor != null ? borderWidth : 1,
+          ),
         ),
         shadows: [
           BoxShadow(

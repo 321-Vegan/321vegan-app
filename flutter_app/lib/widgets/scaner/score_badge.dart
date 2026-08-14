@@ -7,10 +7,19 @@ class ScoreBadges extends StatelessWidget {
   final String? nutriscoreGrade;
   final String? ecoscoreGrade;
 
+  /// Size multiplier for compact placements (e.g. inline in a scan-result
+  /// card) — 1.0 matches the original full-size floating layout.
+  final double scale;
+
+  /// Row (side by side) or column (stacked) layout for the two badges.
+  final Axis direction;
+
   const ScoreBadges({
     super.key,
     this.nutriscoreGrade,
     this.ecoscoreGrade,
+    this.scale = 1.0,
+    this.direction = Axis.horizontal,
   });
 
   static const _nutriAssets = {
@@ -33,20 +42,27 @@ class ScoreBadges extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final first = _ScoreImage(
+      assetPath: nutriscoreGrade != null ? _nutriAssets[nutriscoreGrade] : null,
+      label: 'Nutriscore',
+      scale: scale,
+    );
+    final second = _ScoreImage(
+      assetPath: ecoscoreGrade != null ? _ecoAssets[ecoscoreGrade] : null,
+      label: 'Green-score',
+      scale: scale,
+    );
+    if (direction == Axis.vertical) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [first, SizedBox(height: 8.h * scale), second],
+      );
+    }
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        _ScoreImage(
-          assetPath: nutriscoreGrade != null ? _nutriAssets[nutriscoreGrade] : null,
-          label: 'Nutriscore',
-        ),
-        SizedBox(width: 12.w),
-        _ScoreImage(
-          assetPath: ecoscoreGrade != null ? _ecoAssets[ecoscoreGrade] : null,
-          label: 'Green-score',
-        ),
-      ],
+      children: [first, SizedBox(width: 12.w * scale), second],
     );
   }
 }
@@ -54,8 +70,13 @@ class ScoreBadges extends StatelessWidget {
 class _ScoreImage extends StatelessWidget {
   final String? assetPath;
   final String label;
+  final double scale;
 
-  const _ScoreImage({required this.assetPath, required this.label});
+  const _ScoreImage({
+    required this.assetPath,
+    required this.label,
+    this.scale = 1.0,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,25 +87,25 @@ class _ScoreImage extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 34.sp,
+              fontSize: 34.sp * scale,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.8),
+              color: Colors.grey[500],
             ),
           ),
-          SizedBox(height: 4.h),
+          SizedBox(height: 4.h * scale),
           Container(
-            width: 140.w,
-            height: 140.w,
+            width: 140.w * scale,
+            height: 140.w * scale,
             decoration: ShapeDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: squircleBorder(radius: 10.r),
+              color: Colors.grey[100],
+              shape: squircleBorder(radius: 10.r * scale),
             ),
             child: Center(
               child: Text(
                 '?',
                 style: TextStyle(
-                  fontSize: 36.sp,
-                  color: Colors.white.withValues(alpha: 0.5),
+                  fontSize: 36.sp * scale,
+                  color: Colors.grey[400],
                 ),
               ),
             ),
@@ -96,10 +117,10 @@ class _ScoreImage extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(height: 25.h),
+        SizedBox(height: 25.h * scale),
         Image.asset(
           assetPath!,
-          height: 160.w,
+          height: 160.w * scale,
           fit: BoxFit.contain,
         ),
       ],

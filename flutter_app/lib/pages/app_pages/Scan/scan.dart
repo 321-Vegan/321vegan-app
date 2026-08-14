@@ -29,6 +29,7 @@ import 'package:vegan_app/widgets/scaner/unknown_product_modal.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/vegan_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/shop_confirmation_modal.dart';
 import 'package:vegan_app/widgets/vegandex/vegandex_modal.dart';
@@ -36,7 +37,6 @@ import 'package:vegan_app/widgets/vegandex/product_found_modal.dart';
 import 'package:vegan_app/widgets/auth/register_form.dart';
 import 'package:vegan_app/widgets/auth/login_form.dart';
 import 'package:vegan_app/services/subscription_service.dart';
-import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/pages/app_pages/Scan/account_prompt_dialog.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
@@ -1082,10 +1082,12 @@ class ScanPageState extends State<ScanPage>
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.error_outline,
+          Image.asset(
+            'lib/assets/images/icons/alert-circle.webp',
+            width: 80.sp,
+            height: 80.sp,
             color: Colors.white,
-            size: 80.sp,
+            colorBlendMode: BlendMode.srcIn,
           ),
           SizedBox(width: 10.w),
           Expanded(
@@ -1116,9 +1118,28 @@ class ScanPageState extends State<ScanPage>
               },
             ),
           ),
-          // Idle state (nothing scanned yet): just the camera behind a
-          // viewfinder reticle — no card, no instructions.
+          // Idle state (nothing scanned yet): camera behind a viewfinder
+          // reticle, no result card yet.
           _buildScanTargetOverlay(),
+          if (productInfo == null)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 48.w),
+                    child: Text(
+                      'Scannez un produit alimentaire',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyBold15.copyWith(
+                        color: Colors.white,
+                        height: 1,
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           // Camera-area overlays (warnings + score bar) flow bottom-up in a
           // single column ending just above the result card, so they never
           // overlap each other whatever the device height or text length.
@@ -1127,7 +1148,7 @@ class ScanPageState extends State<ScanPage>
               top: 0,
               left: 16,
               right: 16,
-              height: 1090.h,
+              height: 1290.h,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 spacing: 24.h,
@@ -1141,20 +1162,13 @@ class ScanPageState extends State<ScanPage>
                     _buildScanWarningBox(
                       'Ancienne recette non vegan : il se peut qu\'il y ait encore du stock avec l\'ancienne recette. Vérifiez les ingrédients.',
                     ),
-                  if (productInfo!.status == ScanStatus.vegan)
-                    ProductScoresSection(
-                      barcode: productInfo!.code,
-                      isSubscribed: SubscriptionService.isSubscribed,
-                      enabled: _showScores,
-                      onDisable: () => _setShowScoresPref(false),
-                    ),
                 ],
               ),
             ),
           // Result card with bottom margin
           if (productInfo != null)
             Positioned(
-              top: 1100.h,
+              top: 1300.h,
               left: 16,
               right: 16,
               child: switch (productInfo!.status) {
@@ -1166,11 +1180,13 @@ class ScanPageState extends State<ScanPage>
                         _showBoycott = value;
                       });
                     },
+                    showScores: _showScores,
+                    onScoresDisable: () => _setShowScoresPref(false),
                   ),
                 ScanStatus.pending =>
                   PendingProductInfoCard(productInfo: productInfo!),
                 ScanStatus.alreadyScanned =>
-                  const AlreadyScannedProductInfoCard(),
+                  AlreadyScannedProductInfoCard(productInfo: productInfo!),
                 // Handled by _showUnknownProductModal instead of an inline
                 // card — see _checkVeganStatusOffline.
                 ScanStatus.notFound => const SizedBox.shrink(),
@@ -1183,7 +1199,7 @@ class ScanPageState extends State<ScanPage>
               productInfo!.status != ScanStatus.unknown &&
               productInfo!.status != ScanStatus.notFound)
             Positioned(
-              bottom: 240.h,
+              bottom: 100.h,
               left: 0,
               right: 0,
               child: Center(

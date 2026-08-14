@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/helper.dart';
 import 'package:vegan_app/models/scan_result.dart';
+import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
+import 'package:vegan_app/widgets/scaner/scan_result_card.dart';
 
 class NoResultCard extends StatelessWidget {
   const NoResultCard({super.key});
@@ -87,10 +90,12 @@ class NoResultCard extends StatelessWidget {
 
 class RejectedProductInfoCard extends StatelessWidget {
   final ScanResult productInfo;
+  final bool showScores;
 
   const RejectedProductInfoCard({
     super.key,
     required this.productInfo,
+    this.showScores = true,
   });
 
   @override
@@ -98,96 +103,32 @@ class RejectedProductInfoCard extends StatelessWidget {
     final reason = productInfo.problem;
     final brand = productInfo.brand;
 
-    return Container(
-      height: 740.h,
-      decoration: ShapeDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade200],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        shape: squircleBorder(
-          radius: 30,
-          side: const BorderSide(
-            color: kSemanticError,
-            width: 3,
-          ),
-        ),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            spreadRadius: 5,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return ScanResultCard(
+      name: Helper.truncate(
+        productInfo.name.isNotEmpty ? productInfo.name : 'Produit inconnu',
+        45,
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              Helper.truncate(
-                productInfo.name.isNotEmpty
-                    ? productInfo.name
-                    : 'Unnamed Product',
-                45,
-              ),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 70.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            Text(
-              (() {
-                if (brand.isNotEmpty) {
-                  // Capitalize the first letter and keep the rest
-                  String formattedBrand =
-                      '${brand[0].toUpperCase()}${brand.substring(1)}';
-                  if (formattedBrand.length > 30) {
-                    // Truncate and add ellipsis
-                    formattedBrand = '${formattedBrand.substring(0, 30)}...';
-                  }
-                  return formattedBrand;
-                }
-                // Default text
-                return 'Marque inconnue';
-              })(),
-              style: TextStyle(
-                fontSize: 18,
-                fontStyle: FontStyle.italic,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            // Add a text for the reason
-            const SizedBox(height: 16),
-            Text(
-              "Pas Vegan !",
-              style: TextStyle(
-                fontSize: 80.sp,
-                fontWeight: FontWeight.bold,
-                color: kSemanticError,
-              ),
-            ),
-            if (reason != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  reason,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: kSemanticError,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-          ],
-        ),
+      brand: (() {
+        if (brand.isEmpty) return 'Marque inconnue';
+        var formatted = '${brand[0].toUpperCase()}${brand.substring(1)}';
+        if (formatted.length > 30) formatted = '${formatted.substring(0, 30)}...';
+        return formatted;
+      })(),
+      accentColor: kSemanticError,
+      statusIcon: Image.asset(
+        'lib/assets/images/icons/solid-close.webp',
+        width: 64.w,
+        height: 64.w,
+        color: kSemanticError,
+        colorBlendMode: BlendMode.srcIn,
+      ),
+      statusLabel: reason != null ? 'Non-végan : $reason' : 'Non-végan',
+      // Nothing to gate on a "not vegan" result, so scores show unlocked.
+      scores: ProductScoresSection(
+        barcode: productInfo.code,
+        isSubscribed: SubscriptionService.isSubscribed,
+        paywalled: false,
+        enabled: showScores,
       ),
     );
   }

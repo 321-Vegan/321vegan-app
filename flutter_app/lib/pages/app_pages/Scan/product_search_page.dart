@@ -14,6 +14,7 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_card.dart';
 import 'package:vegan_app/widgets/shared/empty_state_view.dart';
+import 'package:vegan_app/widgets/shared/info_box.dart';
 
 enum _SearchCategory { aliment, cosmetique, additif }
 
@@ -463,8 +464,11 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
           ),
           SizedBox(height: 16.h),
           if (!cosmetic.vegan && cosmetic.crueltyFree) ...[
-            _buildAlertBanner(
-                "Cette marque n'est pas 100% végane. Vérifiez l'emballage !"),
+            const InfoBox(
+              text:
+                  "Cette marque n'est pas 100% végane. Vérifiez l'emballage !",
+              symbol: '!',
+            ),
             SizedBox(height: 12.h),
           ],
           if (cosmetic.crueltyFree) ...[
@@ -513,28 +517,6 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
               style: TextStyle(fontSize: 34.sp, color: Colors.grey[600]),
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAlertBanner(String text) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: ShapeDecoration(
-        color: Colors.orange[100],
-        shape: squircleBorder(radius: 16.r),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 44.sp),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: Colors.orange[800], fontSize: 34.sp),
-            ),
-          ),
         ],
       ),
     );

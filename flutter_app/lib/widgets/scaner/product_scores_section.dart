@@ -5,21 +5,26 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/product_scores.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/services/open_food_facts_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/scaner/score_badge.dart';
 import 'package:vegan_app/widgets/shared/link_row.dart';
 
-/// Shows Nutriscore + Green-score for vegan products
+/// Shows Nutriscore + Green-score inline in a scan-result card.
 ///
 /// - [enabled]: controlled by the parent (scan settings). When false, renders nothing.
 /// - [isSubscribed]: if true, fetches and shows scores with an info dialog.
-///   If false, non-subscribers get a few free reveals per week (with a
-///   remaining-count chip); once exhausted, shows a blurred paywall overlay.
+/// - [paywalled]: when true and not subscribed, non-subscribers get a few
+///   free reveals per week (with a remaining-count chip); once exhausted,
+///   shows a blurred "Débloquer" paywall overlay. When false, scores are
+///   shown unlocked to everyone (e.g. on non-vegan results, where there's
+///   nothing to gate).
 /// - [onDisable]: called when the user taps "Désactiver" in the info dialog.
 class ProductScoresSection extends StatefulWidget {
   final String barcode;
   final bool isSubscribed;
   final bool enabled;
+  final bool paywalled;
   final VoidCallback? onDisable;
 
   const ProductScoresSection({
@@ -27,14 +32,9 @@ class ProductScoresSection extends StatefulWidget {
     required this.barcode,
     required this.isSubscribed,
     this.enabled = true,
+    this.paywalled = true,
     this.onDisable,
   });
-
-  /// Height reserved above the badges for the free-reveal chip, so the badges
-  /// keep the same screen position whether or not the chip is shown. The
-  /// parent anchors this section by its bottom, so the strip grows upward
-  /// into the camera area without moving the badges.
-  static double get extraHeaderHeight => 88.h;
 
   @override
   State<ProductScoresSection> createState() => _ProductScoresSectionState();
@@ -94,7 +94,7 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
   }
 
   Future<void> _initForBarcode() async {
-    if (widget.isSubscribed) {
+    if (widget.isSubscribed || !widget.paywalled) {
       _fetchScores();
       return;
     }
@@ -157,24 +157,17 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
   @override
   Widget build(BuildContext context) {
     if (!widget.enabled) return const SizedBox.shrink();
-    return Center(
-      child: widget.isSubscribed || _unlocked || _loading
-          ? _buildScores()
-          : _buildLockedOverlay(),
-    );
+    final unlocked =
+        widget.isSubscribed || !widget.paywalled || _unlocked || _loading;
+    return unlocked ? _buildScores() : _buildLockedOverlay();
   }
 
   Widget _buildScores() {
     if (_loading) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 24.h),
-        child: const Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
+      return SizedBox(
+        width: 48.w,
+        height: 48.w,
+        child: const CircularProgressIndicator(strokeWidth: 2),
       );
     }
     final badges = GestureDetector(
@@ -182,60 +175,45 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
       child: ScoreBadges(
         nutriscoreGrade: _scores?.nutriscoreGrade,
         ecoscoreGrade: _scores?.ecoscoreGrade,
+        scale: 0.75,
+        direction: Axis.vertical,
       ),
     );
-    if (widget.isSubscribed) return badges;
-    // Chip goes in the reserved strip above the badges: the product info card
-    // painted after this section in the scan stack covers anything below them.
-    // The strip is kept even without the chip so the badges don't move.
+    if (!widget.paywalled || widget.isSubscribed || !_showChip) return badges;
     return Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        SizedBox(
-          height: ProductScoresSection.extraHeaderHeight,
-          child: _showChip
-              ? Align(
-                  alignment: Alignment.topCenter,
-                  child: _buildFreeRevealChip(),
-                )
-              : null,
-        ),
+        _buildFreeRevealChip(),
+        SizedBox(height: 6.h),
         badges,
       ],
     );
   }
 
   Widget _buildFreeRevealChip() {
-    final primary = Theme.of(context).colorScheme.primary;
     final label = _freeRevealsLeft == 0
-        ? 'Dernier affichage scores gratuit de la semaine'
-        : _freeRevealsLeft == 1
-            ? '1 affichage score gratuit restant cette semaine'
-            : '$_freeRevealsLeft affichage score gratuits restants cette semaine';
+        ? 'Dernier affichage gratuit'
+        : '$_freeRevealsLeft restant${_freeRevealsLeft > 1 ? 's' : ''}';
     return GestureDetector(
       onTap: _openSubscriptionPage,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
         decoration: ShapeDecoration(
-          color: Colors.white.withValues(alpha: 0.92),
-          shape: squircleBorder(
-            radius: 12.r,
-            side: BorderSide(color: primary.withValues(alpha: 0.4)),
-          ),
+          color: kAccentYellow.withValues(alpha: 0.15),
+          shape: squircleBorder(radius: 10.r),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.visibility_outlined, size: 34.sp, color: primary),
-            SizedBox(width: 8.w),
-            Flexible(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 32.sp,
-                  fontWeight: FontWeight.w600,
-                  color: primary,
-                ),
+            Icon(Icons.visibility_outlined, size: 24.sp, color: kAccentYellow),
+            SizedBox(width: 4.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 24.sp,
+                fontWeight: FontWeight.w600,
+                color: kAccentYellow,
               ),
             ),
           ],
@@ -244,75 +222,41 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
     );
   }
 
+  /// Blurred fake badges with a "Débloquer" pill overlaid on top — same
+  /// pattern as the scan-history page's score paywall.
   Widget _buildLockedOverlay() {
-    return Padding(
-      // Same reserved strip as the free-reveal chip, so the blurred badges
-      // stay aligned with the real ones when the parent raises its anchor.
-      padding: EdgeInsets.only(top: ProductScoresSection.extraHeaderHeight),
-      child: GestureDetector(
-        onTap: _openSubscriptionPage,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
-              child: const IgnorePointer(
-                child:
-                    ScoreBadges(nutriscoreGrade: 'a', ecoscoreGrade: 'a-plus'),
+    return GestureDetector(
+      onTap: _openSubscriptionPage,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+            child: const IgnorePointer(
+              child: ScoreBadges(
+                nutriscoreGrade: 'a',
+                ecoscoreGrade: 'a-plus',
+                scale: 0.75,
+                direction: Axis.vertical,
               ),
             ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
-              decoration: ShapeDecoration(
-                color: Colors.white.withValues(alpha: 0.92),
-                shape: squircleBorder(
-                  radius: 12.r,
-                  side: BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.4),
-                  ),
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.lock_outline,
-                        size: 40.sp,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      SizedBox(width: 8.w),
-                      Flexible(
-                        child: Text(
-                          'Affichage scores gratuits épuisés',
-                          style: TextStyle(
-                            fontSize: 36.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    'Passez en illimité pour voir tous les scores',
-                    style: TextStyle(
-                      fontSize: 32.sp,
-                      color: Colors.grey[600],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+          ),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+            decoration: ShapeDecoration(
+              color: kAccentYellow,
+              shape: squircleBorder(radius: 30.r),
+            ),
+            child: Text(
+              'Débloquer',
+              style: TextStyle(
+                fontSize: 28.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

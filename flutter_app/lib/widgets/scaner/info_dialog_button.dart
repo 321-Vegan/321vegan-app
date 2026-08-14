@@ -15,7 +15,12 @@ class InfoDialogButton extends StatelessWidget {
   final String commentTitle;
   final String commentHint;
   final Color buttonColor;
-  final IconData icon;
+
+  /// Color of the visible trigger text/underline — defaults to
+  /// [buttonColor], override when the trigger sits somewhere [buttonColor]
+  /// wouldn't be legible (e.g. white over the camera feed) while keeping
+  /// the modal's own styling (header icon, submit button) on [buttonColor].
+  final Color? triggerColor;
   final bool showPreReportNotice;
   final VoidCallback? onScannerStop;
   final VoidCallback? onScannerStart;
@@ -28,7 +33,7 @@ class InfoDialogButton extends StatelessWidget {
     required this.commentTitle,
     required this.commentHint,
     required this.buttonColor,
-    this.icon = Icons.report_problem,
+    this.triggerColor,
     this.showPreReportNotice = false,
     this.onScannerStop,
     this.onScannerStart,
@@ -36,18 +41,8 @@ class InfoDialogButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      icon: Icon(icon, color: buttonColor),
-      label: Text(
-        buttonLabel,
-        style: TextStyle(color: buttonColor),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        side: BorderSide(color: buttonColor),
-        shape: squircleBorder(radius: 12),
-      ),
-      onPressed: () {
+    return GestureDetector(
+      onTap: () {
         onScannerStop?.call();
         final rootContext = context;
         showModalBottomSheet(
@@ -67,6 +62,16 @@ class InfoDialogButton extends StatelessWidget {
           onScannerStart?.call();
         });
       },
+      child: Text(
+        buttonLabel,
+        style: TextStyle(
+          fontSize: 45.sp,
+          fontWeight: FontWeight.w600,
+          color: triggerColor ?? buttonColor,
+          decoration: TextDecoration.underline,
+          decorationColor: triggerColor ?? buttonColor,
+        ),
+      ),
     );
   }
 }
@@ -464,6 +469,7 @@ class ReportErrorButton extends StatelessWidget {
       commentTitle: "Décrivez le problème ",
       commentHint: "Ex: Ce produit n'est pas vegan, il contient...",
       buttonColor: Colors.orange,
+      triggerColor: Colors.white,
       showPreReportNotice: true,
       onScannerStop: onScannerStop,
       onScannerStart: onScannerStart,
