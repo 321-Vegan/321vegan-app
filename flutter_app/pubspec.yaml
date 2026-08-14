@@ -213,6 +213,7 @@ flutter:
     - lib/assets/images/icons/clipboard-check.webp
     # Others
     - lib/assets/affiche-321vegan-a4.png
+    - lib/assets/images/vegandex.webp
     - .env
 
   fonts:

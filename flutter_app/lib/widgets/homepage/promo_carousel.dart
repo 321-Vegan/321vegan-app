@@ -2,16 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/seasonal_theme.dart';
+import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
+import '../shared/page_dots_indicator.dart';
 
 /// One slide of the Dashboard news carousel.
 class PromoSlide {
   final String title;
   final String subtitle;
 
-  /// Opened by the "Voir plus" button; hides the button when null.
+  /// Opened by the "Voir plus" button; hides the button when null and
+  /// [page] is also null. Ignored when [page] is set.
   final String? url;
+
+  /// Builds the page pushed by the "Voir plus" button for in-app
+  /// navigation — takes precedence over [url]. Hides the button when null
+  /// and [url] is also null.
+  final Widget Function()? page;
 
   /// Asset path of the slide illustration; falls back to a generic
   /// icon-in-circle placeholder when null.
@@ -21,40 +29,45 @@ class PromoSlide {
     required this.title,
     required this.subtitle,
     this.url,
+    this.page,
     this.image,
   });
 }
 
 /// Dummy static content until the real news source is wired
-/// (edit freely — titles/subtitles/links/images only live here).
-const List<PromoSlide> _dummySlides = [
-  PromoSlide(
+/// (edit freely — titles/subtitles/links/images only live here). Not
+/// `const` because [PromoSlide.page] holds a closure.
+final List<PromoSlide> _dummySlides = [
+  const PromoSlide(
     title: 'L\'appli fait peau neuve !',
-    subtitle: 'Un tout nouveau design pour plus de clarté !',
+    subtitle: 'Un tout nouveau design pour plus de clarté.',
     image: 'lib/assets/images/buy-premium/tree.webp',
   ),
   PromoSlide(
-    title: 'Nouveau !',
-    subtitle: 'Collectionnez les produits du Vegandex',
+    title: 'Boutiques partenaire',
+    subtitle:
+        'Profitez de nouvelles réductions !',
     image: 'lib/assets/images/buy-premium/bee.webp',
+    page: () => const PartnersPage(),
   ),
-  PromoSlide(
+  const PromoSlide(
     title: 'Rappel B12',
-    subtitle: 'Activez vos rappels dans les paramètres',
+    subtitle: 'Pensez à configurer un rappel pour votre B12.',
     image: 'lib/assets/images/buy-premium/tree.webp',
   ),
-  PromoSlide(
+  const PromoSlide(
     title: 'Merci !',
-    subtitle: 'Vous êtes de plus en plus nombreux·ses',
+    subtitle: 'L\'appli grandit et vous êtes de plus en plus nombreux·ses.',
     image: 'lib/assets/images/buy-premium/bee.webp',
   ),
 ];
 
 /// Swipeable news carousel at the top of the Dashboard (static content).
 class PromoCarousel extends StatefulWidget {
-  final List<PromoSlide> slides;
+  /// Defaults to [_dummySlides] when null.
+  final List<PromoSlide>? slides;
 
-  const PromoCarousel({super.key, this.slides = _dummySlides});
+  const PromoCarousel({super.key, this.slides});
 
   @override
   State<PromoCarousel> createState() => _PromoCarouselState();
@@ -64,6 +77,8 @@ class _PromoCarouselState extends State<PromoCarousel> {
   final PageController _controller = PageController();
   int _page = 0;
 
+  List<PromoSlide> get _slides => widget.slides ?? _dummySlides;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -72,7 +87,7 @@ class _PromoCarouselState extends State<PromoCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.slides.isEmpty) return const SizedBox.shrink();
+    if (_slides.isEmpty) return const SizedBox.shrink();
 
     return Column(
       children: [
@@ -80,30 +95,16 @@ class _PromoCarouselState extends State<PromoCarousel> {
           height: 396.h,
           child: PageView.builder(
             controller: _controller,
-            itemCount: widget.slides.length,
+            itemCount: _slides.length,
             onPageChanged: (page) => setState(() => _page = page),
-            itemBuilder: (context, index) =>
-                _PromoCard(slide: widget.slides[index]),
+            itemBuilder: (context, index) => _PromoCard(slide: _slides[index]),
           ),
         ),
         SizedBox(height: 20.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            widget.slides.length,
-            (index) => AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: EdgeInsets.symmetric(horizontal: 8.w),
-              width: index == _page ? 66.w : 24.w,
-              height: 24.w,
-              decoration: BoxDecoration(
-                color: index == _page
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.grey[400],
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-          ),
+        PageDotsIndicator(
+          count: _slides.length,
+          currentIndex: _page,
+          activeColor: Theme.of(context).colorScheme.primary,
         ),
       ],
     );
@@ -115,7 +116,12 @@ class _PromoCard extends StatelessWidget {
 
   const _PromoCard({required this.slide});
 
-  Future<void> _open(BuildContext context) async {
+  Future<void> _handleButtonTap(BuildContext context) async {
+    final page = slide.page;
+    if (page != null) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => page()));
+      return;
+    }
     final url = slide.url;
     if (url == null) return;
     try {
@@ -171,10 +177,10 @@ class _PromoCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
-                if (slide.url != null) ...[
+                if (slide.url != null || slide.page != null) ...[
                   SizedBox(height: 20.h),
                   ElevatedButton(
-                    onPressed: () => _open(context),
+                    onPressed: () => _handleButtonTap(context),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kAccentYellow,
                       foregroundColor: Colors.white,

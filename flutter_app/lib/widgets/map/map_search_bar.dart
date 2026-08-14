@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 
 /// A search bar that lets the user look up a place/city/address and fly the
 /// map there. Geocoding is debounced and backed by OpenStreetMap Nominatim.
@@ -81,6 +83,34 @@ class MapSearchBarState extends State<MapSearchBar> {
       _isSearching = false;
     });
     _focusNode.unfocus();
+  }
+
+  /// Splits [text] into plain/highlighted spans around the first
+  /// case-insensitive match of [query], so the typed portion stands out in
+  /// the suggestions list (e.g. "Mar" in "Marseille").
+  List<InlineSpan> _highlightedSpans(String text, String query) {
+    final baseStyle = AppTextStyles.bodyRegular15;
+    final matchStyle = AppTextStyles.bodyBold15.copyWith(color: kAccentYellow);
+
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) {
+      return [TextSpan(text: text, style: baseStyle)];
+    }
+
+    final matchIndex =
+        text.toLowerCase().indexOf(trimmedQuery.toLowerCase());
+    if (matchIndex == -1) {
+      return [TextSpan(text: text, style: baseStyle)];
+    }
+
+    final matchEnd = matchIndex + trimmedQuery.length;
+    return [
+      if (matchIndex > 0)
+        TextSpan(text: text.substring(0, matchIndex), style: baseStyle),
+      TextSpan(text: text.substring(matchIndex, matchEnd), style: matchStyle),
+      if (matchEnd < text.length)
+        TextSpan(text: text.substring(matchEnd), style: baseStyle),
+    ];
   }
 
   @override
@@ -184,9 +214,13 @@ class MapSearchBarState extends State<MapSearchBar> {
                             size: 48.sp, color: Colors.grey[500]),
                         SizedBox(width: 10.w),
                         Expanded(
-                          child: Text(
-                            place.displayName,
-                            style: TextStyle(fontSize: 38.sp),
+                          child: Text.rich(
+                            TextSpan(
+                              children: _highlightedSpans(
+                                place.displayName,
+                                _controller.text,
+                              ),
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),

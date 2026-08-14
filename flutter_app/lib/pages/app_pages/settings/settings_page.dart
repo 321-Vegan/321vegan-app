@@ -22,6 +22,7 @@ import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
+import '../../../widgets/shared/social_feedback_buttons.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/theme/theme_selector_modal.dart';
 import '../../../main.dart';
@@ -577,6 +578,30 @@ class _SettingsPageState extends State<SettingsPage> {
                   await PreferencesHelper.setHapticFeedbackPref(value);
                   if (mounted) setState(() => _hapticFeedback = value);
                 },
+              ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.section),
+          SettingsSection(
+            title: 'Communauté',
+            children: [
+              SettingsRowTile(
+                label: 'Suivez-nous sur Instagram',
+                labelSuffix: Image.asset(
+                  'lib/assets/logo_instagram.png',
+                  width: 48.sp,
+                  height: 48.sp,
+                ),
+                trailing: Icon(Icons.arrow_forward_ios,
+                    size: 32.sp, color: Colors.grey[400]),
+                onTap: () => SocialFeedbackButtons.openInstagram(context),
+              ),
+              SettingsRowTile(
+                label: 'Notez l\'application',
+                labelSuffix: Icon(Icons.star, size: 48.sp, color: kAccentYellow),
+                trailing: Icon(Icons.arrow_forward_ios,
+                    size: 32.sp, color: Colors.grey[400]),
+                onTap: () => SocialFeedbackButtons.rateApp(context),
               ),
             ],
           ),

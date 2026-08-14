@@ -23,7 +23,7 @@ class SocialFeedbackButtons extends StatelessWidget {
 
         // Instagram button
         ElevatedButton(
-          onPressed: () => _openInstagram(context),
+          onPressed: () => openInstagram(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
@@ -62,7 +62,7 @@ class SocialFeedbackButtons extends StatelessWidget {
 
         // Rate app button
         ElevatedButton(
-          onPressed: () => _rateApp(context),
+          onPressed: () => rateApp(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
@@ -124,7 +124,7 @@ class SocialFeedbackButtons extends StatelessWidget {
     );
   }
 
-  static Future<void> _openInstagram(BuildContext context) async {
+  static Future<void> openInstagram(BuildContext context) async {
     final url = Uri.parse('https://www.instagram.com/321vegan.app/');
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -140,7 +140,7 @@ class SocialFeedbackButtons extends StatelessWidget {
     }
   }
 
-  static Future<void> _rateApp(BuildContext context) async {
+  static Future<void> rateApp(BuildContext context) async {
     try {
       final inAppReview = InAppReview.instance;
 

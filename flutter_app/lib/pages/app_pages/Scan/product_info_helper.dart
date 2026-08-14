@@ -75,10 +75,16 @@ class ProductInfoHelper {
       final isAlreadyScanned =
           await PreferencesHelper.isCodeInPreferences(barcode);
       if (isAlreadyScanned) {
+        final submitted =
+            await PreferencesHelper.getSubmittedProductInfo(barcode);
         return ScanResult(
           code: barcode,
-          name: 'Produit inconnu',
-          brand: 'Marque inconnue',
+          name: submitted?['name']?.isNotEmpty == true
+              ? submitted!['name']!
+              : 'Produit inconnu',
+          brand: submitted?['brand']?.isNotEmpty == true
+              ? submitted!['brand']!
+              : 'Marque inconnue',
           status: ScanStatus.alreadyScanned,
         );
       }

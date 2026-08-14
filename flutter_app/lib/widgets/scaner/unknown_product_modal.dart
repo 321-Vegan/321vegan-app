@@ -237,7 +237,6 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
     final canSubmit = _photo != null &&
         !_isSending &&
         (widget.alreadySubmitted || _status != null);
@@ -366,7 +365,7 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
                     Expanded(
                       child: AppButton(
                         label: _isSending ? 'Envoi...' : 'Envoyer',
-                        backgroundColor: primaryColor,
+                        backgroundColor: kSemanticSuccess,
                         onPressed: canSubmit ? _submit : null,
                       ),
                     ),

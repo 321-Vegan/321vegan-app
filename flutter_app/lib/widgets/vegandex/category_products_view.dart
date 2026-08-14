@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../models/product_category.dart';
 import '../../models/product_of_interest.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
+import '../../themes/app_spacing.dart';
+import '../../themes/app_text_styles.dart';
+import '../shared/empty_state_view.dart';
 
 class CategoryProductsView extends StatelessWidget {
   final ProductCategory category;
@@ -43,83 +47,72 @@ class CategoryProductsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final products = _getProductsForCategory();
+    final scannedCount = products.where((p) => _isProductScanned(p.ean)).length;
     final baseUrl = dotenv.env['API_BASE_URL'];
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header with back button
-        GestureDetector(
-          onTap: onBack,
-          child: Row(
-            children: [
-              IconButton(
+        // Header with back button; name + count centered as a group, with a
+        // trailing spacer matching the back button so the centering is
+        // symmetric (same idea as AppBar's centerTitle).
+        Row(
+          children: [
+            SizedBox(
+              width: 96.w,
+              child: IconButton(
                 onPressed: onBack,
-                icon: Icon(
-                  Icons.arrow_back,
-                  size: 80.sp,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                icon: Icon(Icons.arrow_back, size: 64.sp, color: Colors.grey[700]),
               ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            Expanded(
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      category.name,
-                      style: TextStyle(
-                        fontSize: 56.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+                    Flexible(
+                      child: Text(
+                        category.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.baloo26.copyWith(fontWeight: const FontWeight(600)),
                       ),
                     ),
-                    Text(
-                      '${products.length} produit${products.length > 1 ? 's' : ''}',
-                      style: TextStyle(
-                        fontSize: 40.sp,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.8),
+                    SizedBox(width: 12.w),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                      decoration: const ShapeDecoration(
+                        color: kSecondaryTag,
+                        shape: StadiumBorder(),
+                      ),
+                      child: Text(
+                        '$scannedCount/${products.length}',
+                        style: AppTextStyles.bodyBold11.copyWith(color: kAccentYellow),
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+            SizedBox(width: 96.w),
+          ],
         ),
+        SizedBox(height: AppSpacing.afterTitle),
 
         // Products grid
         Expanded(
           child: products.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.inbox_outlined,
-                        size: 120.sp,
-                        color: Colors.grey[400],
-                      ),
-                      SizedBox(height: 16.h),
-                      Text(
-                        'Aucun produit dans cette catégorie',
-                        style: TextStyle(
-                          fontSize: 48.sp,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
+              ? const EmptyStateView(
+                  title: 'Aucun produit dans cette catégorie',
+                  subtitle: 'Revenez plus tard, de nouveaux produits arrivent !',
                 )
               : GridView.builder(
-                  padding: EdgeInsets.all(24.w),
+                  padding: EdgeInsets.only(bottom: 24.h),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                    crossAxisCount: 3,
                     crossAxisSpacing: 16.w,
                     mainAxisSpacing: 16.h,
-                    childAspectRatio: 0.75,
+                    childAspectRatio: 0.6,
                   ),
                   itemCount: products.length,
                   itemBuilder: (context, index) {
@@ -136,21 +129,14 @@ class CategoryProductsView extends StatelessWidget {
   Widget _buildProductCard(
       ProductOfInterest product, bool isScanned, String? baseUrl) {
     return Container(
+      padding: EdgeInsets.all(24.w),
       decoration: ShapeDecoration(
         color: Colors.white,
-        shape: squircleBorder(
-          radius: 20.r,
-          side: BorderSide(
-            color: isScanned
-                ? const Color(0xFF1A722E).withValues(alpha: 0.3)
-                : Colors.grey[300]!,
-            width: 2,
-          ),
-        ),
+        shape: squircleBorder(radius: 24.r, side: const BorderSide(color: kBorderDefault)),
         shadows: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 15,
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
             offset: const Offset(0, 4),
           ),
         ],
@@ -158,119 +144,72 @@ class CategoryProductsView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Product image
-          Expanded(
-            flex: 3,
-            child: ClipSmoothRect(
-              radius: squircleRadius(18.r),
-              child: ColorFiltered(
-                colorFilter: isScanned
-                    ? const ColorFilter.mode(
-                        Colors.transparent,
-                        BlendMode.multiply,
-                      )
-                    : const ColorFilter.mode(
-                        Colors.grey,
-                        BlendMode.saturation,
+          AspectRatio(
+            aspectRatio: 1,
+            child: Stack(
+              children: [
+                ClipSmoothRect(
+                  radius: squircleRadius(16.r),
+                  child: ColorFiltered(
+                    colorFilter: isScanned
+                        ? const ColorFilter.mode(
+                            Colors.transparent,
+                            BlendMode.multiply,
+                          )
+                        : const ColorFilter.mode(
+                            Colors.grey,
+                            BlendMode.saturation,
+                          ),
+                    child: CachedNetworkImage(
+                      imageUrl: '$baseUrl/${product.image}',
+                      fit: BoxFit.contain,
+                      placeholder: (context, url) => Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.grey[400],
+                        ),
                       ),
-                child: CachedNetworkImage(
-                  imageUrl: '$baseUrl/${product.image}',
-                  fit: BoxFit.contain,
-                  placeholder: (context, url) => Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.grey[400],
+                      errorWidget: (context, url, error) {
+                        return Container(
+                          color: Colors.grey[100],
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 48.sp,
+                            color: Colors.grey[400],
+                          ),
+                        );
+                      },
                     ),
                   ),
-                  errorWidget: (context, url, error) {
-                    return Container(
-                      color: Colors.grey[200],
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 80.sp,
-                        color: Colors.grey[400],
-                      ),
-                    );
-                  },
                 ),
-              ),
+                if (isScanned)
+                  Positioned(
+                    top: 6.w,
+                    right: 6.w,
+                    child: Container(
+                      padding: EdgeInsets.all(6.w),
+                      decoration:
+                          const BoxDecoration(color: kSemanticSuccess, shape: BoxShape.circle),
+                      child: Icon(Icons.check, size: 64.sp, color: Colors.white),
+                    ),
+                  ),
+              ],
             ),
           ),
-
-          // Product info
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: EdgeInsets.all(12.w),
-              child: Container(
-                padding: EdgeInsets.all(16.w),
-                decoration: ShapeDecoration(
-                  color: isScanned ? Colors.grey.shade100 : Colors.grey.shade50,
-                  shape: squircleBorder(radius: 16.r),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Product name
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 40.sp,
-                        fontWeight: FontWeight.w700,
-                        color: isScanned
-                            ? Colors.grey.shade900
-                            : Colors.grey.shade600,
-                        height: 1.2,
-                      ),
-                    ),
-
-                    SizedBox(height: 6.h),
-
-                    // Brand
-                    Text(
-                      product.brandName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 40.sp,
-                        fontWeight: FontWeight.w500,
-                        color: isScanned
-                            ? Colors.grey.shade700
-                            : Colors.grey.shade400,
-                      ),
-                    ),
-
-                    SizedBox(height: 14.h),
-
-                    // Scan count
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.qr_code_scanner,
-                          size: 40.sp,
-                          color: isScanned
-                              ? Colors.grey.shade600
-                              : Colors.grey.shade400,
-                        ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          'Scanné ${scannedProducts[product.ean]?.scanCount ?? 0} fois',
-                          style: TextStyle(
-                            fontSize: 40.sp,
-                            color: isScanned
-                                ? Colors.grey.shade600
-                                : Colors.grey.shade400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          SizedBox(height: 12.h),
+          Text(
+            product.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium15,
+          ),
+          Text(
+            product.brandName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[500]),
           ),
         ],
       ),

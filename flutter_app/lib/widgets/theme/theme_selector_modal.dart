@@ -7,8 +7,28 @@ import '../../helpers/theme_helper.dart';
 import '../../main.dart';
 import '../../services/subscription_service.dart';
 import '../../pages/app_pages/Profile/subscription_page.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
+import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
+import '../shared/info_box.dart';
+import '../shared/page_dots_indicator.dart';
 import 'snow_globe_overlay.dart';
+
+/// Central card illustration, keyed by season — a matching 5-form leaf set
+/// (already used for the homepage "Forêt préservée" stat, see
+/// `seasonalStatIllustration` in stat_card.dart) instead of the old
+/// mismatched one-off illustrations (tulipe/ruche/pumpkin).
+String _leafAssetForSeason(Season season) {
+  final suffix = switch (season) {
+    Season.spring => 'spring',
+    Season.summer => 'summer',
+    Season.autumn => 'autumn',
+    Season.winter => 'winter',
+    Season.defaultTheme => 'basic',
+  };
+  return 'lib/assets/themes/cards/leaf-$suffix.webp';
+}
 
 class ThemeSelectorModal extends StatefulWidget {
   const ThemeSelectorModal({super.key});
@@ -152,38 +172,16 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         getter(allThemes[index]), getter(allThemes[nextIndex]), t)!;
   }
 
-  // Per-season icon animation values
-  _IconAnimValues _getIconAnim(Season season, double t) {
+  // Same gentle motion for every card, regardless of season — a slight
+  // breathing scale plus a barely-there tilt so the icon feels alive
+  // without drawing attention away from the card itself.
+  _IconAnimValues _getIconAnim(double t) {
     // t goes 0→1→0 (reverse repeat)
     final sinT = math.sin(t * math.pi);
-    switch (season) {
-      case Season.defaultTheme:
-        // Gentle pulse
-        return _IconAnimValues(
-          rotation: 0,
-          scale: 1.0 + sinT * 0.06,
-        );
-      case Season.spring:
-        return _IconAnimValues(
-          rotation: math.sin(t * math.pi * 2) * 0.12,
-          scale: 1.0 + sinT * 0.1,
-        );
-      case Season.summer:
-        return _IconAnimValues(
-          rotation: math.sin(t * math.pi * 1.5) * 0.25,
-          scale: 1.0 + math.sin(t * math.pi * 0.7) * 0.04,
-        );
-      case Season.autumn:
-        return _IconAnimValues(
-          rotation: math.sin(t * math.pi * 1.5) * 0.25,
-          scale: 1.0 + math.sin(t * math.pi * 0.7) * 0.04,
-        );
-      case Season.winter:
-        return _IconAnimValues(
-          rotation: t * math.pi,
-          scale: 1.0 + sinT * 0.08,
-        );
-    }
+    return _IconAnimValues(
+      rotation: math.sin(t * math.pi * 2) * 0.03,
+      scale: 1.0 + sinT * 0.05,
+    );
   }
 
   @override
@@ -238,11 +236,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                   children: [
                     Text(
                       currentTheme.name,
-                      style: TextStyle(
-                        fontSize: 64.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
+                      style: AppTextStyles.baloo26,
                     ),
                   ],
                 ),
@@ -288,28 +282,15 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
               // Info text for non-subscribers
               if (!isSubscribed)
+                SizedBox(height: 30.h),
                 Padding(
-                  padding: EdgeInsets.all(8.h),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.info_outline,
-                          size: 64.sp, color: Colors.grey[400]),
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        child: Text(
-                          'L\'abonnement soutien débloque tous les thèmes. Y souscrire permet au projet 321 Vegan de continuer d\'exister et de se développer. Merci !',
-                          style: TextStyle(
-                            fontSize: 45.sp,
-                            color: Colors.grey[500],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                  child: const InfoBox(
+                    text:
+                        'L\'abonnement soutien débloque tous les thèmes. Y souscrire permet au projet 321 Vegan de continuer d\'exister et de se développer. Merci !',
                   ),
                 ),
-
+              SizedBox(height: 60.h),
               // Bottom button
               _buildBottomButton(currentTheme, isCurrentLocked),
               SizedBox(height: 60.h),
@@ -338,11 +319,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
             children: [
               Text(
                 'Thèmes',
-                style: TextStyle(
-                  fontSize: 60.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
+                style: AppTextStyles.baloo22,
               ),
               const Spacer(),
               GestureDetector(
@@ -406,17 +383,15 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
             Icon(
               Icons.auto_awesome,
               size: 64.sp,
-              color: _isAutoTheme ? Colors.white : Colors.grey[500],
+              color: _isAutoTheme ? Colors.white : kTextPrimary,
             ),
             SizedBox(width: 10.w),
             Text(
               _isAutoTheme
                   ? 'Mode automatique · ${ThemeHelper.getThemeBySeason(currentSeason).name}'
                   : 'Activer le mode automatique',
-              style: TextStyle(
-                fontSize: 46.sp,
-                fontWeight: FontWeight.w600,
-                color: _isAutoTheme ? Colors.white : Colors.grey[600],
+              style: AppTextStyles.bodyBold15.copyWith(
+                color: _isAutoTheme ? Colors.white : kTextPrimary,
               ),
             ),
           ],
@@ -451,18 +426,31 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
           onTap: isLocked ? _openSubscriptionPage : null,
           child: Container(
             decoration: ShapeDecoration(
-              shape: squircleBorder(radius: 28.r),
-              gradient: LinearGradient(
-                colors: [theme.waveColor, theme.primaryColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+              // Same gradient as the app's own background for this theme
+              // (see AppBackground) — the card previews what the app will
+              // actually look like. (theme.iconBackgroundColor isn't a
+              // per-season identity color — spring and autumn both define
+              // the same pale yellow there — so it can't stand in for it.)
+              gradient: theme.backgroundGradient ??
+                  LinearGradient(
+                    colors: [theme.waveColor, theme.primaryColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+              shape: squircleBorder(
+                radius: 28.r,
+                side: BorderSide(
+                  color: index == _currentPage
+                      ? theme.primaryColor
+                      : kBorderDefault,
+                  width: index == _currentPage ? 2 : 1,
+                ),
               ),
               shadows: [
                 BoxShadow(
-                  color: theme.primaryColor.withValues(alpha: 0.3),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
-                  spreadRadius: 1,
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
@@ -484,24 +472,23 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                               if (_isAutoTheme && isCurrentSeason)
                                 Container(
                                   padding: EdgeInsets.symmetric(
-                                      horizontal: 10.w, vertical: 5.h),
+                                      horizontal: 12.w, vertical: 6.h),
                                   decoration: ShapeDecoration(
-                                    color: Colors.white.withValues(alpha: 0.25),
-                                    shape: squircleBorder(radius: 10.r),
+                                    color: theme.primaryColor
+                                        .withValues(alpha: 0.15),
+                                    shape: squircleBorder(radius: 16.r),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.auto_awesome,
-                                          size: 28.sp, color: Colors.white),
+                                          size: 28.sp,
+                                          color: theme.primaryColor),
                                       SizedBox(width: 4.w),
                                       Text(
                                         'Saison actuelle',
-                                        style: TextStyle(
-                                          fontSize: 28.sp,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
+                                        style: AppTextStyles.bodyBold11
+                                            .copyWith(color: theme.primaryColor),
                                       ),
                                     ],
                                   ),
@@ -510,24 +497,21 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                               if (isLocked)
                                 Container(
                                   padding: EdgeInsets.symmetric(
-                                      horizontal: 10.w, vertical: 5.h),
+                                      horizontal: 12.w, vertical: 6.h),
                                   decoration: ShapeDecoration(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    shape: squircleBorder(radius: 10.r),
+                                    color: kAccentYellow,
+                                    shape: squircleBorder(radius: 16.r),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.lock,
+                                      Icon(Icons.lock_outline,
                                           size: 28.sp, color: Colors.white),
                                       SizedBox(width: 4.w),
                                       Text(
                                         'Premium',
-                                        style: TextStyle(
-                                          fontSize: 28.sp,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
+                                        style: AppTextStyles.bodyBold11
+                                            .copyWith(color: Colors.white),
                                       ),
                                     ],
                                   ),
@@ -542,30 +526,16 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                             child: AnimatedBuilder(
                               animation: _iconAnimController,
                               builder: (context, child) {
-                                final anim = _getIconAnim(
-                                    theme.season, _iconAnimController.value);
+                                final anim =
+                                    _getIconAnim(_iconAnimController.value);
                                 return Transform.scale(
                                   scale: anim.scale,
                                   child: Transform.rotate(
                                     angle: anim.rotation,
-                                    child: Container(
-                                      padding: EdgeInsets.all(24.w),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.18),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: theme.seasonalAsset != null
-                                          ? Image.asset(
-                                              theme.seasonalAsset!,
-                                              width: 150.sp,
-                                              height: 150.sp,
-                                            )
-                                          : Icon(
-                                              theme.seasonalIcon,
-                                              size: 130.sp,
-                                              color: Colors.white,
-                                            ),
+                                    child: Image.asset(
+                                      _leafAssetForSeason(theme.season),
+                                      width: 280.sp,
+                                      height: 280.sp,
                                     ),
                                   ),
                                 );
@@ -578,29 +548,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                           // Bottom: theme name
                           Text(
                             theme.name,
-                            style: TextStyle(
-                              fontSize: 60.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          // Color dots
-                          Row(
-                            children: [
-                              _buildCardColorDot(theme.primaryColor),
-                              SizedBox(width: 8.w),
-                              _buildCardColorDot(theme.secondaryColor),
-                              SizedBox(width: 8.w),
-                              _buildCardColorDot(theme.accentColor),
-                            ],
+                            style: AppTextStyles.baloo22,
                           ),
                         ],
                       ),
@@ -634,16 +582,13 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                                   padding: EdgeInsets.symmetric(
                                       horizontal: 18.w, vertical: 8.h),
                                   decoration: ShapeDecoration(
-                                    color: Colors.amber[700],
-                                    shape: squircleBorder(radius: 14.r),
+                                    color: kAccentYellow,
+                                    shape: squircleBorder(radius: 16.r),
                                   ),
                                   child: Text(
                                     'Débloqué avec l\'abonnement soutien',
-                                    style: TextStyle(
-                                      fontSize: 34.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
+                                    style: AppTextStyles.bodyBold11
+                                        .copyWith(color: Colors.white),
                                   ),
                                 ),
                               ],
@@ -676,42 +621,24 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
       particleIcon: theme.snowGlobeParticleIcon,
       particleCount: theme.particleType == ParticleType.snowflakes ? 15 : 10,
       particleOpacity: theme.particleOpacity,
+      // Only affects icon/plain-circle particles (winter's snowflakes) —
+      // asset-image particles keep their own colors. Defaults to white,
+      // which read fine on the old saturated card but disappears against
+      // the new pale card fill, so tint it with the theme's own color.
+      particleColor: theme.primaryColor,
       borderRadius: br,
       child: child,
     );
   }
 
-  Widget _buildCardColorDot(Color color) {
-    return Container(
-      width: 22.w,
-      height: 22.w,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-    );
-  }
-
   Widget _buildPageIndicator(List<SeasonalTheme> themes) {
-    final activeColor = _lerpThemeColor((t) => t.primaryColor);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(themes.length, (index) {
-        final isActive = index == _currentPage;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          margin: EdgeInsets.symmetric(horizontal: 4.w),
-          width: isActive ? 32.w : 10.w,
-          height: 10.w,
-          decoration: BoxDecoration(
-            color: isActive ? activeColor : Colors.grey[300],
-            borderRadius: BorderRadius.circular(5.r),
-          ),
-        );
-      }),
+    // Active dot picks up the swiped-to theme's own color rather than the
+    // app's flat colorScheme.primary, since each page here is a different
+    // theme.
+    return PageDotsIndicator(
+      count: themes.length,
+      currentIndex: _currentPage,
+      activeColor: _lerpThemeColor((t) => t.primaryColor),
     );
   }
 
@@ -720,33 +647,12 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
       padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 8.h),
       child: SizedBox(
         width: double.infinity,
-        child: ElevatedButton(
+        child: AppButton(
+          label: isLocked ? 'Débloquer' : 'Appliquer',
+          icon: isLocked ? Icons.lock_open : Icons.check_circle_outline,
+          backgroundColor:
+              isLocked ? kAccentYellow : currentTheme.primaryColor,
           onPressed: isLocked ? _openSubscriptionPage : _saveThemeSettings,
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                isLocked ? Colors.amber[700] : currentTheme.primaryColor,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 20.h),
-            shape: squircleBorder(radius: 18.r),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isLocked ? Icons.lock_open : Icons.check_circle_outline,
-                size: 46.sp,
-              ),
-              SizedBox(width: 10.w),
-              Text(
-                isLocked ? 'Débloquer' : 'Appliquer',
-                style: TextStyle(
-                  fontSize: 48.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

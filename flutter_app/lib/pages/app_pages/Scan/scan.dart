@@ -24,7 +24,7 @@ import 'package:vegan_app/services/scan_count_sync_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/widgets/scaner/card_product.dart';
 import 'package:vegan_app/widgets/scaner/pending_product_info_card.dart';
-import 'package:vegan_app/widgets/scaner/info_dialog_button.dart';
+import 'package:vegan_app/widgets/scaner/report_error_button.dart';
 import 'package:vegan_app/widgets/scaner/unknown_product_modal.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
@@ -32,7 +32,7 @@ import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/vegan_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/shop_confirmation_modal.dart';
-import 'package:vegan_app/widgets/vegandex/vegandex_modal.dart';
+import 'package:vegan_app/pages/app_pages/Vegandex/vegandex_page.dart';
 import 'package:vegan_app/widgets/vegandex/product_found_modal.dart';
 import 'package:vegan_app/widgets/auth/register_form.dart';
 import 'package:vegan_app/widgets/auth/login_form.dart';
@@ -573,21 +573,16 @@ class ScanPageState extends State<ScanPage>
     );
   }
 
-  /// Stops the scanner, clears the current result, shows [modal] in a
-  /// 90%-height bottom sheet and restarts the scanner when it closes.
-  void _showModalSheet(Widget modal) {
+  /// Stops the scanner, pushes the Vegandex page, and restarts the scanner
+  /// when it's popped — it's a full page now, not a bottom sheet.
+  void _openVegandex() {
     controller.stop();
     setState(() {
       productInfo = null;
     });
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.9,
-        child: modal,
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const VegandexPage()),
     ).then((_) {
       controller.start();
     });
@@ -914,9 +909,7 @@ class ScanPageState extends State<ScanPage>
       colorBlendMode: BlendMode.srcIn,
     );
     final button = SquareIconButton.action(
-      onTap: () => _showModalSheet(VegandexModal(
-        onNavigateToProfile: widget.onNavigateToProfile,
-      )),
+      onTap: _openVegandex,
       backgroundColor: primaryColor,
       child: pokeballImage,
       // child: AnimatedCrossFade(

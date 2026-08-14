@@ -35,7 +35,7 @@ import '../../../widgets/homepage/vegan_counter.dart';
 import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
-import '../../../widgets/vegandex/vegandex_modal.dart';
+import '../Vegandex/vegandex_page.dart';
 import '../Profile/b12_reminder_settings_page.dart';
 import '../Profile/subscription_page.dart';
 import '../Profile/error_reports_page.dart';
@@ -566,13 +566,7 @@ class DashboardPageState extends State<DashboardPage> {
               SizedBox(width: 12.w),
               Text(
                 'Soutenir 321 Vegan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 44.sp,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Baloo2',
-                  letterSpacing: -1,
-                ),
+                style: AppTextStyles.baloo17.copyWith(color: Colors.white)
               ),
             ],
           ),
@@ -636,14 +630,9 @@ class DashboardPageState extends State<DashboardPage> {
     const gold = Color(0xFFFFD700);
 
     return GestureDetector(
-      onTap: () => showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => SizedBox(
-          height: MediaQuery.of(context).size.height * 0.9,
-          child: const VegandexModal(),
-        ),
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const VegandexPage()),
       ),
       child: ShineWrapper(
         borderRadius: 28,
