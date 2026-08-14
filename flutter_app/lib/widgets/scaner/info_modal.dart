@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/boycott_data.dart';
-import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
+import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 
 class InfoModal extends StatefulWidget {
   final String description;
+
+  /// Optional plain-text context shown above [description], outside the
+  /// highlighted [InfoBox] — for explanatory copy that isn't itself the
+  /// warning/verdict (e.g. biodynamie's "what it is" paragraph).
+  final String? body;
+
   final BoycottMatch? boycottMatch;
-  final bool showBoycottToggle;
-  final bool? initialBoycottValue;
-  final Function(bool)? onBoycottToggleChanged;
 
   const InfoModal({
     super.key,
     required this.description,
+    this.body,
     this.boycottMatch,
-    this.showBoycottToggle = false,
-    this.initialBoycottValue,
-    this.onBoycottToggleChanged,
   });
 
   @override
@@ -28,14 +30,6 @@ class InfoModal extends StatefulWidget {
 }
 
 class _InfoModalState extends State<InfoModal> {
-  late bool _showBoycott;
-
-  @override
-  void initState() {
-    super.initState();
-    _showBoycott = widget.initialBoycottValue ?? true;
-  }
-
   Widget _buildRichReason(String reason, List<String> sources) {
     final pattern = RegExp(r'\[(\d+)\]');
     final spans = <InlineSpan>[];
@@ -60,8 +54,9 @@ class _InfoModalState extends State<InfoModal> {
               child: Text(
                 '[${index + 1}]',
                 style: TextStyle(
+                  fontFamily: 'Karla',
                   fontSize: 38.sp,
-                  color: Colors.orange.shade700,
+                  color: kAccentYellow,
                   decoration: TextDecoration.underline,
                   fontWeight: FontWeight.w600,
                 ),
@@ -78,23 +73,11 @@ class _InfoModalState extends State<InfoModal> {
 
     return Text.rich(
       TextSpan(
-        style: TextStyle(
-          fontSize: 40.sp,
-          color: Colors.grey[800],
-          height: 1.4,
-        ),
+        style: AppTextStyles.bodyRegular15.copyWith(height: 1.4),
         children: spans,
       ),
       textAlign: TextAlign.center,
     );
-  }
-
-  Future<void> _toggleBoycott(bool value) async {
-    await PreferencesHelper.setShowBoycottPref(value);
-    setState(() {
-      _showBoycott = value;
-    });
-    widget.onBoycottToggleChanged?.call(value);
   }
 
   @override
@@ -102,40 +85,28 @@ class _InfoModalState extends State<InfoModal> {
     final match = widget.boycottMatch;
     final bool isBoycott = match != null;
 
-    return Container(
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: squircleBorderOnly(topLeft: 24, topRight: 24),
-      ),
-      padding: EdgeInsets.only(
-        left: 24.w,
-        right: 24.w,
-        top: 12.h,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24.h,
-      ),
+    return BottomSheetShell(
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 40.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2.r),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  isBoycott ? 'Marque à éviter' : 'Information',
+                  style: AppTextStyles.baloo22,
+                ),
+              ),
+            ],
           ),
-          SizedBox(height: 20.h),
+          SizedBox(height: 32.h),
           Flexible(
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    isBoycott ? 'Marque à éviter' : 'Information',
-                    style: AppTextStyles.baloo22,
-                  ),
-                  SizedBox(height: 20.h),
                   if (match != null) ...[
                     SizedBox(
                       width: double.infinity,
@@ -145,104 +116,47 @@ class _InfoModalState extends State<InfoModal> {
                           Text(
                             match.brandDisplay,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 52.sp,
-                              fontFamily: 'Baloo2',
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: -1,
-                              color: Colors.black87,
-                            ),
+                            style: AppTextStyles.baloo22,
                           ),
                           if (match.groupName != null) ...[
-                            SizedBox(height: 4.h),
+                            SizedBox(height: 6.h),
                             Text(
                               'Appartient au groupe ${match.groupName}',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 36.sp,
+                              style: AppTextStyles.bodyRegular13.copyWith(
                                 fontStyle: FontStyle.italic,
                                 color: Colors.grey[600],
                               ),
                             ),
                           ],
-                          SizedBox(height: 10.h),
+                          SizedBox(height: 14.h),
                           _buildRichReason(match.reason, match.sources),
                         ],
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    SizedBox(height: 24.h),
+                  ],
+                  if (widget.body != null) ...[
+                    Text(
+                      widget.body!,
+                      style: AppTextStyles.bodyRegular15.copyWith(
+                        color: Colors.grey[600],
+                        height: 1.4,
+                      ),
+                    ),
+                    SizedBox(height: 24.h),
                   ],
                   InfoBox(text: widget.description),
-                  if (widget.showBoycottToggle) ...[
-                    SizedBox(height: 20.h),
-                    Container(
-                      padding: EdgeInsets.all(16.w),
-                      decoration: ShapeDecoration(
-                        color: Colors.grey[50],
-                        shape: squircleBorder(
-                          radius: 12.r,
-                          side: BorderSide(color: Colors.grey[200]!),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Afficher les mentions Boycott',
-                                  style: TextStyle(
-                                    fontSize: 40.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                SizedBox(height: 4.h),
-                                Text(
-                                  'Vous pourrez réactiver cette option dans les paramètres',
-                                  style: TextStyle(
-                                    fontSize: 30.sp,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Switch(
-                            value: _showBoycott,
-                            onChanged: _toggleBoycott,
-                            activeThumbColor: Colors.white,
-                            activeTrackColor: const Color(0xFF1A722E),
-                            inactiveThumbColor: Colors.white,
-                            inactiveTrackColor: Colors.grey[300],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 32.h),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
+                    child: AppButton(
+                      label: 'OK !',
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       onPressed: () => Navigator.of(context).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1A722E),
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16.h),
-                        shape: squircleBorder(radius: 14.r),
-                        elevation: 2,
-                      ),
-                      child: Text(
-                        'OK !',
-                        style: TextStyle(
-                          fontSize: 48.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
                     ),
                   ),
-                  SizedBox(height: 100.h)
+                  SizedBox(height: 24.h),
                 ],
               ),
             ),

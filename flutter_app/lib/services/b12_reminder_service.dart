@@ -587,52 +587,6 @@ class B12ReminderService {
     return intakes.map((intake) => intake.date).toList();
   }
 
-  /// Theoretical next intake day: the last recorded intake plus the
-  /// interval implied by the configured frequency. Day-of-week based
-  /// frequencies honor the configured day(s) so the date matches the
-  /// user's actual schedule. Returns null when there is no history yet.
-  ///
-  /// When that interval math lands in the past (the user missed one or
-  /// more intakes and hasn't recorded one since), the practical next
-  /// intake is "as soon as possible" — today — rather than the stale date,
-  /// so the result is clamped forward to today in that case.
-  static Future<DateTime?> getNextExpectedIntakeDate() async {
-    final history = await getB12IntakeHistory();
-    if (history.isEmpty) return null;
-
-    final settings = await getSettings();
-    final last = history.first;
-
-    final DateTime candidate;
-    switch (settings.frequency) {
-      case ReminderFrequency.daily:
-        candidate = last.add(const Duration(days: 1));
-      case ReminderFrequency.weekly:
-        candidate =
-            _nextMatchingWeekday(last, {settings.dayOfWeek ?? last.weekday});
-      case ReminderFrequency.twiceWeekly:
-        final days = settings.daysOfWeek;
-        candidate = (days != null && days.length == 2)
-            ? _nextMatchingWeekday(last, days.toSet())
-            : last.add(const Duration(days: 3));
-      case ReminderFrequency.biweekly:
-        candidate = last.add(const Duration(days: 14));
-    }
-
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-    return candidate.isBefore(todayOnly) ? todayOnly : candidate;
-  }
-
-  /// First day strictly after [from] whose weekday is in [weekdays]
-  static DateTime _nextMatchingWeekday(DateTime from, Set<int> weekdays) {
-    var candidate = from.add(const Duration(days: 1));
-    while (!weekdays.contains(candidate.weekday)) {
-      candidate = candidate.add(const Duration(days: 1));
-    }
-    return candidate;
-  }
-
   /// Current streak: number of days covered by the unbroken chain of
   /// on-schedule intakes, from the chain's first intake through today.
   /// Counting days (rather than intakes) keeps the streak fair across

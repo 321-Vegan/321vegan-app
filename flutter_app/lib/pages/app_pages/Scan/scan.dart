@@ -1168,11 +1168,6 @@ class ScanPageState extends State<ScanPage>
                 ScanStatus.vegan => VeganProductInfoCard(
                     productInfo: productInfo!,
                     showBoycott: _showBoycott,
-                    onBoycottToggleChanged: (value) {
-                      setState(() {
-                        _showBoycott = value;
-                      });
-                    },
                     showScores: _showScores,
                     onScoresDisable: () => _setShowScoresPref(false),
                   ),

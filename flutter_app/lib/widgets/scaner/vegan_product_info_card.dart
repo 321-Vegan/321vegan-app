@@ -6,6 +6,7 @@ import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
 import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/widgets/scaner/scan_result_card.dart';
@@ -13,7 +14,6 @@ import 'package:vegan_app/widgets/scaner/scan_result_card.dart';
 class VeganProductInfoCard extends StatelessWidget {
   final ScanResult productInfo;
   final bool showBoycott;
-  final Function(bool)? onBoycottToggleChanged;
   final bool showScores;
   final VoidCallback? onScoresDisable;
 
@@ -21,7 +21,6 @@ class VeganProductInfoCard extends StatelessWidget {
     super.key,
     required this.productInfo,
     this.showBoycott = true,
-    this.onBoycottToggleChanged,
     this.showScores = true,
     this.onScoresDisable,
   });
@@ -38,8 +37,8 @@ class VeganProductInfoCard extends StatelessWidget {
     BuildContext context, {
     required String label,
     required String description,
+    String? body,
     BoycottMatch? boycottMatch,
-    bool showBoycottToggle = false,
   }) {
     return GestureDetector(
       onTap: () {
@@ -49,32 +48,26 @@ class VeganProductInfoCard extends StatelessWidget {
           backgroundColor: Colors.transparent,
           builder: (context) => InfoModal(
             description: description,
+            body: body,
             boycottMatch: boycottMatch,
-            showBoycottToggle: showBoycottToggle,
-            initialBoycottValue: showBoycott,
-            onBoycottToggleChanged: onBoycottToggleChanged,
           ),
         );
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
         decoration: ShapeDecoration(
-          color: kAccentYellow,
+          color: kSemanticError.withValues(alpha: 0.12),
           shape: squircleBorder(radius: 30.r),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(Icons.thumb_down, color: kSemanticError, size: 36.sp),
+            SizedBox(width: 8.w),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 34.sp,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTextStyles.bodyMedium13.copyWith(color: kSemanticError),
             ),
-            SizedBox(width: 6.w),
-            Icon(Icons.info_outline, color: Colors.white, size: 34.sp),
           ],
         ),
       ),
@@ -106,7 +99,7 @@ class VeganProductInfoCard extends StatelessWidget {
         color: kSemanticSuccess,
         colorBlendMode: BlendMode.srcIn,
       ),
-      statusLabel: 'Végan',
+      statusLabel: 'Végane',
       scores: ProductScoresSection(
         barcode: productInfo.code,
         isSubscribed: SubscriptionService.isSubscribed,
@@ -121,14 +114,15 @@ class VeganProductInfoCard extends StatelessWidget {
             description:
                 "Les produits notés 'À éviter' sont des produits de marques qui ont des actions néfastes pour l'environnement, la santé, les droits des animaux ou les droits humains. Nous vous encourageons à boycotter ces marques pour soutenir des pratiques éthiques et responsables.",
             boycottMatch: boycottMatch,
-            showBoycottToggle: true,
           )
         else if (productInfo.biodynamic)
           _buildWarningChip(
             context,
-            label: '🚫 Biodynamie',
+            label: 'Biodynamie',
+            body:
+                "La biodynamie est une méthode agricole qui utilise des préparations d'origine animale, telles que des cornes de vache ou des organes d'animaux, dans ses pratiques de culture. Cette approche est issue de l'anthroposophie, un courant ésotérique aux dérives parfois considérées comme sectaires.",
             description:
-                "La biodynamie est une méthode agricole qui utilise des préparations d'origine animale, telles que des cornes de vache ou des organes d'animaux, dans ses pratiques de culture. Cette approche est issue de l'anthroposophie, un courant ésotérique aux dérives parfois considérées comme sectaires. En raison de l'utilisation d'éléments animaux et de son ancrage idéologique, nous ne considérons pas les produits issus de la biodynamie comme compatibles avec les principes du véganisme.",
+                "En raison de l'utilisation d'éléments animaux et de son ancrage idéologique, nous ne considérons pas les produits issus de la biodynamie comme compatibles avec les principes du véganisme.",
           ),
       ],
     );

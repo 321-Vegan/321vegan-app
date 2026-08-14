@@ -36,7 +36,7 @@ import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../Vegandex/vegandex_page.dart';
-import '../Profile/b12_reminder_settings_page.dart';
+import '../../../widgets/b12/b12_reminder_settings_modal.dart';
 import '../Profile/subscription_page.dart';
 import '../Profile/error_reports_page.dart';
 import '../Profile/product_review_page.dart';
@@ -318,11 +318,11 @@ class DashboardPageState extends State<DashboardPage> {
                     if (!_b12Enabled && !_b12BannerDismissed) ...[
                       B12ReminderBanner(
                         onActivate: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                    const B12ReminderSettingsPage()),
+                          await showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const B12ReminderSettingsModal(),
                           );
                           _loadB12State();
                         },

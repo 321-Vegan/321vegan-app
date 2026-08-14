@@ -30,7 +30,7 @@ import '../Profile/auth_gate_page.dart';
 import '../Profile/avatar_selection_page.dart';
 import '../Profile/b12_history_sheet.dart';
 import '../Profile/b12_info_page.dart';
-import '../Profile/b12_reminder_settings_page.dart';
+import '../../../widgets/b12/b12_reminder_settings_modal.dart';
 import '../Scan/scan_history_page.dart';
 import '../Scan/sent_products_page.dart';
 import 'package:vegan_app/services/subscription_service.dart';
@@ -252,9 +252,11 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _openB12Settings() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const B12ReminderSettingsPage()),
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const B12ReminderSettingsModal(),
     );
     // Frequency/enabled may have changed there — resync the "Rappels" switch.
     if (mounted) _loadPreferences();

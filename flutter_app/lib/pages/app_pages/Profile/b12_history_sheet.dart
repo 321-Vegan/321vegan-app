@@ -43,7 +43,7 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
     setState(() => _isLoading = true);
     final history = await B12ReminderService.getB12IntakeHistory();
     final streak = await B12ReminderService.getB12Streak();
-    final next = await B12ReminderService.getNextExpectedIntakeDate();
+    final next = await B12ReminderService.getNextNotificationTime();
     final settings = await B12ReminderService.getSettings();
     if (!mounted) return;
     final now = DateTime.now();
@@ -207,8 +207,9 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
   /// Green check (taken); red cross (due under the current reminder rhythm
   /// but not taken — only for days strictly before today, since today
   /// isn't "missed" until the day is over); a neutral yellow dash (not
-  /// taken, and the rhythm never required this day); or nothing (today,
-  /// due, not yet taken — the ring alone flags it, see [_nextIntakeDay]).
+  /// taken, and the rhythm never required this day) — except today, which
+  /// only ever shows taken or nothing, never a "not needed" mark, since the
+  /// day isn't over yet.
   Widget? _buildDayStatus(DateTime date, bool taken,
       {bool isToday = false, double size = 56}) {
     if (taken) {
@@ -220,8 +221,8 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
         colorBlendMode: BlendMode.srcIn,
       );
     }
+    if (isToday) return null;
     final due = B12ReminderService.isDueDay(date, _settings);
-    if (due && isToday) return null;
     if (due) {
       return Image.asset(
         'lib/assets/images/icons/solid-close.webp',
@@ -247,7 +248,6 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
   /// the bell; an overdue day still shows its red cross as a small badge on
   /// the bell so that information isn't lost.
   Widget _buildNextIntakeBadge(BuildContext context, {Widget? child}) {
-    final primary = Theme.of(context).colorScheme.primary;
     return SizedBox(
       width: 64.w,
       height: 64.w,
