@@ -92,17 +92,14 @@ class BadgeService {
     final newBadges = await detectNewlyUnlockedBadges(user);
 
     if (newBadges.isNotEmpty && context.mounted) {
-      // Show modals for each new badge (one at a time)
-      for (final badge in newBadges) {
-        if (context.mounted) {
-          await showDialog(
-            context: context,
-            barrierDismissible: false,
-            barrierColor: Colors.transparent,
-            builder: (context) => BadgeUnlockModal(badge: badge),
-          );
-        }
-      }
+      // Show a single bottom sheet listing all newly unlocked badges as a
+      // slider
+      await showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => BadgeUnlockModal(badges: newBadges),
+      );
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -8,6 +9,7 @@ import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 
 /// Full-screen page to filter map shops by the products they carry.
@@ -138,6 +140,73 @@ class _MapFilterPageState extends State<MapFilterPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(ProductOfInterest product) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(12.w, 12.h, 20.w, 12.h),
+      decoration: ShapeDecoration(
+        color: kSecondaryTag,
+        shape: squircleBorder(
+          radius: 42.r,
+          side: const BorderSide(color: kAccentYellow),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ClipSmoothRect(
+            radius: squircleRadius(24.r),
+            child: Container(
+              width: 76.sp,
+              height: 76.sp,
+              color: Colors.white,
+              child: product.image.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl:
+                          '${dotenv.env['API_BASE_URL']}/${product.image}',
+                      fit: BoxFit.cover,
+                      errorWidget: (_, __, ___) => Icon(
+                        Icons.shopping_bag_outlined,
+                        size: 36.sp,
+                        color: Colors.grey[300],
+                      ),
+                    )
+                  : Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 36.sp,
+                      color: Colors.grey[300],
+                    ),
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                product.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodyBold11.copyWith(height: 1.1),
+              ),
+              Text(
+                product.brandName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodyRegular10
+                    .copyWith(color: Colors.grey[600], height: 1.1),
+              ),
+            ],
+          ),
+          SizedBox(width: 12.w),
+          GestureDetector(
+            onTap: () => setState(() => _selected.remove(product.ean)),
+            child: Icon(Icons.close, size: 36.sp, color: kTextPrimary),
+          ),
+        ],
       ),
     );
   }
@@ -358,13 +427,9 @@ class _MapFilterPageState extends State<MapFilterPage> {
                     children: [
                       Expanded(
                         child: Text(
-                          '${_selected.length} produit${_selected.length > 1 ? 's' : ''} sélectionné${_selected.length > 1 ? 's' : ''}',
+                          'Filtres (${_selected.length})',
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 38.sp,
-                            fontWeight: FontWeight.w600,
-                            color: kTextPrimary,
-                          ),
+                          style: AppTextStyles.baloo17,
                         ),
                       ),
                       SizedBox(width: 24.w),
@@ -372,35 +437,40 @@ class _MapFilterPageState extends State<MapFilterPage> {
                         onTap: () => setState(() => _selected.clear()),
                         child: Container(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 28.w, vertical: 12.h),
+                              horizontal: 32.w, vertical: 16.h),
                           decoration: ShapeDecoration(
-                            color: Colors.white,
-                            shape: squircleBorder(
-                              radius: 42.r,
-                              side: const BorderSide(color: kBorderDefault),
-                            ),
+                            color: kAccentYellow,
+                            shape: squircleBorder(radius: 42.r),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.close,
-                                  size: 40.sp, color: Colors.grey[600]),
-                              SizedBox(width: 8.w),
-                              Text(
-                                'Tout effacer',
-                                style: TextStyle(
-                                  fontSize: 36.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            'Tout supprimer',
+                            style: AppTextStyles.bodyBold11
+                                .copyWith(color: Colors.white),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
+                SizedBox(height: 20.h),
+                Builder(builder: (_) {
+                  final chips = _selected
+                      .map((ean) => _products
+                          .cast<ProductOfInterest?>()
+                          .firstWhere((p) => p!.ean == ean, orElse: () => null))
+                      .whereType<ProductOfInterest>()
+                      .toList();
+                  return SizedBox(
+                    height: 132.h,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.symmetric(horizontal: 48.w),
+                      itemCount: chips.length,
+                      separatorBuilder: (_, __) => SizedBox(width: 16.w),
+                      itemBuilder: (_, i) => _buildFilterChip(chips[i]),
+                    ),
+                  );
+                }),
               ],
               SizedBox(height: 24.h),
               // Product grid

@@ -172,6 +172,7 @@ class B12ReminderService {
     DateTime? startDate,
   }) async {
     final now = tz.TZDateTime.now(tz.local);
+    final skipToday = await _isTakenOnDay(now);
 
     // Calculate days until the next target day of week
     int daysUntilTarget = (dayOfWeek - now.weekday) % 7;
@@ -184,7 +185,7 @@ class B12ReminderService {
         hour,
         minute,
       );
-      if (todayScheduledTime.isBefore(now)) {
+      if (todayScheduledTime.isBefore(now) || skipToday) {
         daysUntilTarget = 7;
       }
     }
@@ -282,7 +283,10 @@ class B12ReminderService {
     await _notificationService.cancelNotification(_biweeklyNotificationId);
   }
 
-  /// Get next scheduled notification time
+  /// Get next scheduled notification time. If today's dose was already
+  /// taken, today's slot (even if its time-of-day hasn't passed yet) is
+  /// skipped in favor of the next one — otherwise a same-day reminder would
+  /// keep reading as "due today" right after the user just took it.
   static Future<DateTime?> getNextNotificationTime() async {
     final settings = await getSettings();
 
@@ -291,6 +295,7 @@ class B12ReminderService {
     }
 
     final now = DateTime.now();
+    final skipToday = await _isTakenOnDay(now);
 
     switch (settings.frequency) {
       case ReminderFrequency.daily:
@@ -302,7 +307,7 @@ class B12ReminderService {
           settings.minute,
         );
 
-        if (nextTime.isBefore(now)) {
+        if (nextTime.isBefore(now) || skipToday) {
           nextTime = nextTime.add(const Duration(days: 1));
         }
 
@@ -320,7 +325,7 @@ class B12ReminderService {
             settings.hour,
             settings.minute,
           );
-          if (todayScheduledTime.isBefore(now)) {
+          if (todayScheduledTime.isBefore(now) || skipToday) {
             daysUntilTarget = 7;
           }
         }
@@ -349,7 +354,7 @@ class B12ReminderService {
               settings.hour,
               settings.minute,
             );
-            if (todayTime.isBefore(now)) {
+            if (todayTime.isBefore(now) || skipToday) {
               daysUntil = 7;
             }
           }
@@ -377,7 +382,9 @@ class B12ReminderService {
         if (nextDateMillis != null) {
           try {
             final saved = DateTime.fromMillisecondsSinceEpoch(nextDateMillis);
-            if (saved.isAfter(now)) return saved;
+            if (saved.isAfter(now) && !(skipToday && _isSameDay(saved, now))) {
+              return saved;
+            }
             // ignore: empty_catches
           } catch (e) {}
         }
@@ -394,7 +401,7 @@ class B12ReminderService {
             settings.hour,
             settings.minute,
           );
-          if (todayScheduledTime.isBefore(now)) {
+          if (todayScheduledTime.isBefore(now) || skipToday) {
             daysUntilTarget = 7;
           }
         }
@@ -425,6 +432,17 @@ class B12ReminderService {
 
         return candidate;
     }
+  }
+
+  static bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  /// Whether an intake was recorded for [day]'s calendar date.
+  static Future<bool> _isTakenOnDay(DateTime day) async {
+    final prefs = await SharedPreferences.getInstance();
+    final intakes = await _loadIntakes(prefs);
+    final key = _dayFormat.format(DateTime(day.year, day.month, day.day));
+    return intakes.any((intake) => _dayFormat.format(intake.date) == key);
   }
 
   /// Intakes are stored as JSON entries `{"date": "yyyy-MM-dd",
@@ -523,6 +541,16 @@ class B12ReminderService {
     ));
     await _saveIntakes(prefs, intakes);
     _notifyHistoryChanged();
+
+    // Biweekly's OS notification is a one-off tied to a tracked "next date"
+    // (unlike daily/weekly/twice-weekly, which are OS-repeating triggers
+    // that only match on time-of-day/weekday and can't skip a single
+    // occurrence) — so if today was that scheduled date, push it out to the
+    // next occurrence now instead of leaving today's already-fired-or-not
+    // notification as the "next" one.
+    if (settings.enabled && settings.frequency == ReminderFrequency.biweekly) {
+      await scheduleReminder(settings);
+    }
 
     // Mirror the intake to the API (offline-safe, queued)
     unawaited(B12SyncService.onIntakeRecorded(todayDate, settings.frequency));

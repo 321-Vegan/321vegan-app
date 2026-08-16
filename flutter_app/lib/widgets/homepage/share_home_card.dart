@@ -91,6 +91,21 @@ class ShareHomeCard extends StatelessWidget {
     );
   }
 
+  /// Same background the real home page shows for [theme]: its own seasonal
+  /// gradient, or the app's default cream gradient outside a season — see
+  /// AppBackground, which this mirrors.
+  LinearGradient get _phoneBackgroundGradient {
+    const defaultGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [kBackgroundGradientTop, kBackgroundGradientBottom],
+    );
+    final isSeasonal = theme.season != Season.defaultTheme;
+    return isSeasonal
+        ? (theme.backgroundGradient ?? defaultGradient)
+        : defaultGradient;
+  }
+
   Widget _buildPhoneMockup() {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -112,19 +127,10 @@ class ShareHomeCard extends StatelessWidget {
           height: 415,
           child: Stack(
             children: [
-              // Redesign page background ("Background/Shade" gradient).
-              const Positioned.fill(
+              // Real home page background for this card's season.
+              Positioned.fill(
                 child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        kBackgroundGradientTop,
-                        kBackgroundGradientBottom,
-                      ],
-                    ),
-                  ),
+                  decoration: BoxDecoration(gradient: _phoneBackgroundGradient),
                 ),
               ),
               Column(

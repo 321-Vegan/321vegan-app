@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:vegan_app/helpers/theme_helper.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/homepage/share_home_card.dart';
 
@@ -115,126 +116,146 @@ class _ShareHomeDialogState extends State<ShareHomeDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Matches AppBackground's gradient so the dialog reads as part of the
+    // app rather than a plain Material surface.
+    final seasonal = Theme.of(context).extension<SeasonalTheme>();
+    final isSeasonal =
+        seasonal != null && seasonal.season != Season.defaultTheme;
+    const defaultGradient = LinearGradient(
+      begin: Alignment.topRight,
+      end: Alignment.bottomLeft,
+      stops: [0.0, 0.3],
+      colors: [kBackgroundGradientTop, kBackgroundGradientBottom],
+    );
+    final gradient = isSeasonal
+        ? (seasonal.backgroundGradient ?? defaultGradient)
+        : defaultGradient;
+
     return Dialog(
-      shape: squircleBorder(radius: 28.r),
-      child: Padding(
-        padding: EdgeInsets.all(32.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: AspectRatio(
-                aspectRatio: 360 / 680,
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: _pageCount,
-                  onPageChanged: (index) =>
-                      setState(() => _currentPage = index),
-                  itemBuilder: (context, index) => Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6.w),
-                    child: index == _themes.length
-                        ? ClipSmoothRect(
-                            radius: squircleRadius(16),
-                            child: Image.asset(
-                              _posterAsset,
-                              fit: BoxFit.contain,
-                            ),
-                          )
-                        : ClipSmoothRect(
-                            radius: squircleRadius(16),
-                            child: FittedBox(
-                              fit: BoxFit.contain,
-                              child: MediaQuery.withNoTextScaling(
-                                child: RepaintBoundary(
-                                  key: _cardKeys[index],
-                                  child: ShareHomeCard(
-                                    targetDate: widget.targetDate,
-                                    savings: widget.savings,
-                                    theme: _themes[index],
+        backgroundColor: Colors.transparent,
+        shape: squircleBorder(radius: 28.r),
+        child: ClipSmoothRect(
+          radius: squircleRadius(28.r),
+          child: Container(
+            decoration: BoxDecoration(gradient: gradient),
+            padding: EdgeInsets.all(32.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: AspectRatio(
+                    aspectRatio: 360 / 680,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: _pageCount,
+                      onPageChanged: (index) =>
+                          setState(() => _currentPage = index),
+                      itemBuilder: (context, index) => Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w),
+                        child: index == _themes.length
+                            ? ClipSmoothRect(
+                                radius: squircleRadius(16),
+                                child: Image.asset(
+                                  _posterAsset,
+                                  fit: BoxFit.contain,
+                                ),
+                              )
+                            : ClipSmoothRect(
+                                radius: squircleRadius(16),
+                                child: FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: MediaQuery.withNoTextScaling(
+                                    child: RepaintBoundary(
+                                      key: _cardKeys[index],
+                                      child: ShareHomeCard(
+                                        targetDate: widget.targetDate,
+                                        savings: widget.savings,
+                                        theme: _themes[index],
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(_pageCount, (index) {
+                    final isActive = index == _currentPage;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: EdgeInsets.symmetric(horizontal: 6.w),
+                      width: isActive ? 36.w : 18.w,
+                      height: 18.w,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey[300],
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                    );
+                  }),
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed:
+                            _sharing ? null : () => Navigator.of(context).pop(),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.grey[600],
+                          side: BorderSide(color: Colors.grey[300]!, width: 2),
+                          padding: EdgeInsets.symmetric(vertical: 20.h),
+                          shape: squircleBorder(radius: 12.r),
+                        ),
+                        child: Text(
+                          'Fermer',
+                          style: TextStyle(
+                            fontSize: 44.sp,
+                            fontWeight: FontWeight.w500,
                           ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_pageCount, (index) {
-                final isActive = index == _currentPage;
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: EdgeInsets.symmetric(horizontal: 6.w),
-                  width: isActive ? 36.w : 18.w,
-                  height: 18.w,
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? Theme.of(context).colorScheme.primary
-                        : Colors.grey[300],
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                );
-              }),
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed:
-                        _sharing ? null : () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[600],
-                      side: BorderSide(color: Colors.grey[300]!, width: 2),
-                      padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: squircleBorder(radius: 12.r),
-                    ),
-                    child: Text(
-                      'Fermer',
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _sharing ? null : _share,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: squircleBorder(radius: 12.r),
-                    ),
-                    icon: _sharing
-                        ? SizedBox(
-                            width: 40.sp,
-                            height: 40.sp,
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Icon(Icons.ios_share, size: 44.sp),
-                    label: Text(
-                      'Partager',
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.bold,
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: _sharing ? null : _share,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 20.h),
+                          shape: squircleBorder(radius: 12.r),
+                        ),
+                        icon: _sharing
+                            ? SizedBox(
+                                width: 40.sp,
+                                height: 40.sp,
+                                child: const CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(Icons.ios_share, size: 44.sp),
+                        label: Text(
+                          'Partager',
+                          style: TextStyle(
+                            fontSize: 44.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }

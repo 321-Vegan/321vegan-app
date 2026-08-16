@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:in_app_review/in_app_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' show Platform;
 import '../../themes/app_colors.dart';
@@ -140,36 +139,25 @@ class SocialFeedbackButtons extends StatelessWidget {
     }
   }
 
+  /// Opens the store listing directly rather than the native in-app review
+  /// dialog: Play Core / SKStoreReviewController silently no-op once a user
+  /// has already reviewed or the OS quota is used up, which would leave this
+  /// explicit button tap producing no visible result.
   static Future<void> rateApp(BuildContext context) async {
+    Uri? url;
+
+    if (Platform.isIOS) {
+      url = Uri.parse('https://apps.apple.com/fr/app/321-vegan/id6736880006');
+    } else if (Platform.isAndroid) {
+      url = Uri.parse(
+          'https://play.google.com/store/apps/details?id=com.app321vegan.veganapp');
+    }
+
     try {
-      final inAppReview = InAppReview.instance;
-
-      if (await inAppReview.isAvailable()) {
-        await inAppReview.requestReview();
+      if (url != null && await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        // Fallback: open the store page directly
-        Uri? url;
-
-        if (Platform.isIOS) {
-          url =
-              Uri.parse('https://apps.apple.com/fr/app/321-vegan/id6736880006');
-        } else if (Platform.isAndroid) {
-          url = Uri.parse(
-              'https://play.google.com/store/apps/details?id=com.app321vegan.veganapp');
-        }
-
-        if (url != null && await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Impossible d\'ouvrir le store'),
-                backgroundColor: kSemanticError,
-              ),
-            );
-          }
-        }
+        throw Exception('store url unavailable');
       }
     } catch (e) {
       if (context.mounted) {

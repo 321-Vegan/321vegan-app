@@ -57,6 +57,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _showBoycott = true;
   bool _showScores = true;
   bool _hapticFeedback = true;
+  bool _openOnScanPage = false;
 
   int _unreadErrorResponses = 0;
   ErrorReportPaginated? _errorReportsFirstPage;
@@ -114,6 +115,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final showBoycott = await PreferencesHelper.getShowBoycottPref();
     final showScores = await PreferencesHelper.getShowScoresPref();
     final hapticFeedback = await PreferencesHelper.getHapticFeedbackPref();
+    final openOnScanPage = await PreferencesHelper.getOpenOnScanPagePref();
     if (!mounted) return;
     setState(() {
       _b12RemindersEnabled = b12Settings.enabled;
@@ -121,6 +123,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _showBoycott = showBoycott;
       _showScores = showScores;
       _hapticFeedback = hapticFeedback;
+      _openOnScanPage = openOnScanPage;
     });
   }
 
@@ -162,7 +165,6 @@ class _SettingsPageState extends State<SettingsPage> {
     if (sheetResult == null) return;
 
     if (sheetResult.action == VeganDateAction.delete) {
-      if (_user?.veganSince == null) return;
       setState(() => _isLoading = true);
       await PreferencesHelper.removeSelectedDateFromPrefs();
       final result = await AuthService.getCurrentUser();
@@ -579,6 +581,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 onChanged: (value) async {
                   await PreferencesHelper.setHapticFeedbackPref(value);
                   if (mounted) setState(() => _hapticFeedback = value);
+                },
+              ),
+              SettingsToggleTile(
+                title: 'Ouvrir sur la page de scan',
+                value: _openOnScanPage,
+                onChanged: (value) async {
+                  await PreferencesHelper.setOpenOnScanPagePref(value);
+                  if (mounted) setState(() => _openOnScanPage = value);
                 },
               ),
             ],

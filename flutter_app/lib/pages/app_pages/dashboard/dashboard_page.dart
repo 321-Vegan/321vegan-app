@@ -64,6 +64,7 @@ class DashboardPageState extends State<DashboardPage> {
   bool _b12BannerDismissed = true; // hidden until the real value loads
   bool _b12Enabled = false;
   bool _b12TakenToday = false;
+  bool _b12DueToday = false;
   Set<String> _vegandexEans = {};
   ErrorReportPaginated? _errorReportsFirstPage;
 
@@ -173,6 +174,7 @@ class DashboardPageState extends State<DashboardPage> {
       _b12Enabled = settings.enabled;
       _b12BannerDismissed = dismissed;
       _b12TakenToday = takenToday;
+      _b12DueToday = B12ReminderService.isDueDay(today, settings);
     });
   }
 
@@ -334,7 +336,7 @@ class DashboardPageState extends State<DashboardPage> {
                         },
                       ),
                       SizedBox(height: AppSpacing.section),
-                    ] else if (_b12Enabled && !_b12TakenToday) ...[
+                    ] else if (_b12Enabled && _b12DueToday && !_b12TakenToday) ...[
                       B12IntakeButton(onPressed: _markB12Taken),
                       SizedBox(height: AppSpacing.section),
                     ],

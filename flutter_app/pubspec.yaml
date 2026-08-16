@@ -69,7 +69,6 @@ dependencies:
   path: ^1.8.0
   archive: ^3.6.1
   url_launcher: ^6.3.0
-  in_app_review: ^2.0.9
   upgrader: ^11.3.0
   sensors_plus: ^7.0.0
   flutter_map: ^8.2.2

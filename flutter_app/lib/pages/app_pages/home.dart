@@ -19,6 +19,7 @@ import 'package:vegan_app/services/profile_notification_service.dart';
 import 'package:vegan_app/widgets/homepage/anniversary_dialog.dart';
 
 const int _dashboardTabIndex = 0;
+const int _scanTabIndex = 1;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -47,6 +48,7 @@ class MyHomePageState extends State<MyHomePage>
     // Swiping the TabBarView changes the index without going through the
     // bar's onTap; rebuild so index-dependent widgets stay in sync.
     _tabController.addListener(_onTabIndexChanged);
+    _applyOpenOnScanPagePref();
 
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 6));
@@ -133,6 +135,16 @@ class MyHomePageState extends State<MyHomePage>
   void _onTabIndexChanged() {
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  Future<void> _applyOpenOnScanPagePref() async {
+    final shouldOpenOnScanPage =
+        await PreferencesHelper.getOpenOnScanPagePref();
+    if (shouldOpenOnScanPage && mounted) {
+      setState(() {
+        _tabController.index = _scanTabIndex;
+      });
     }
   }
 

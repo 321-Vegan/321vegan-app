@@ -32,6 +32,7 @@ class ScanHistoryPage extends StatefulWidget {
 class _ScanHistoryPageState extends State<ScanHistoryPage> {
   late List<Map<String, dynamic>> _history;
   bool _showBoycott = true;
+  bool _showScores = true;
 
   static const _nutriAssets = {
     'a': 'lib/assets/images/nutri-eco-scores/nutriA.webp',
@@ -56,11 +57,17 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
     super.initState();
     _history = List<Map<String, dynamic>>.from(widget.scanHistory);
     _loadBoycottPref();
+    _loadScoresPref();
   }
 
   Future<void> _loadBoycottPref() async {
     final value = await PreferencesHelper.getShowBoycottPref();
     if (mounted) setState(() => _showBoycott = value);
+  }
+
+  Future<void> _loadScoresPref() async {
+    final value = await PreferencesHelper.getShowScoresPref();
+    if (mounted) setState(() => _showScores = value);
   }
 
   Future<void> _confirmClearHistory() async {
@@ -513,9 +520,10 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                   ],
                 ),
               ),
-              if (!SubscriptionService.isSubscribed ||
-                  scores.hasNutriscore ||
-                  scores.hasEcoscore) ...[
+              if (_showScores &&
+                  (!SubscriptionService.isSubscribed ||
+                      scores.hasNutriscore ||
+                      scores.hasEcoscore)) ...[
                 SizedBox(width: 20.w),
                 _buildScoreColumn(scores),
               ],

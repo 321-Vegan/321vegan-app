@@ -151,23 +151,53 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
     );
   }
 
+  static const _weekdayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+  Widget _buildWeekdayHeader() {
+    return Row(
+      children: _weekdayLabels
+          .map(
+            (label) => Expanded(
+              child: Center(
+                child: Text(
+                  label,
+                  style:
+                      AppTextStyles.bodyMedium13.copyWith(color: kTextPrimary, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
   Widget _buildCalendarGrid() {
     final daysInMonth =
         DateUtils.getDaysInMonth(_visibleMonth.year, _visibleMonth.month);
+    // DateTime.weekday is 1 (Monday) .. 7 (Sunday), which already matches
+    // the Monday-first column order of [_weekdayLabels].
+    final leadingBlanks = _visibleMonth.weekday - 1;
     final today = _dayOnly(DateTime.now());
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: daysInMonth,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        mainAxisExtent: 140.h,
-      ),
-      itemBuilder: (context, index) {
-        final day = index + 1;
-        final date = DateTime(_visibleMonth.year, _visibleMonth.month, day);
-        return _buildDayCell(day, date, today);
-      },
+    return Column(
+      children: [
+        _buildWeekdayHeader(),
+        SizedBox(height: 8.h),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: leadingBlanks + daysInMonth,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            mainAxisExtent: 140.h,
+          ),
+          itemBuilder: (context, index) {
+            if (index < leadingBlanks) return const SizedBox.shrink();
+            final day = index - leadingBlanks + 1;
+            final date = DateTime(_visibleMonth.year, _visibleMonth.month, day);
+            return _buildDayCell(day, date, today);
+          },
+        ),
+      ],
     );
   }
 

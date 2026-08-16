@@ -61,12 +61,12 @@ class VegandexStatsIllustration extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
                   child: Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: Alignment.center,
                     child: Text(
                       'Complété à $percent %',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.baloo17.copyWith(color: Colors.white),
+                      style: AppTextStyles.bodyBold11.copyWith(color: Colors.white),
                     ),
                   ),
                 ),

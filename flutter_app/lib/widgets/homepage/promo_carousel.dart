@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vegan_app/widgets/b12/b12_reminder_settings_modal.dart';
 import '../../models/seasonal_theme.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../themes/app_colors.dart';
@@ -21,6 +24,15 @@ class PromoSlide {
   /// and [url] is also null.
   final Widget Function()? page;
 
+  /// When true, [page] is presented with `showModalBottomSheet` instead of
+  /// being pushed as a full route — set this for widgets designed as
+  /// bottom sheets (e.g. [B12ReminderSettingsModal]).
+  final bool pageIsBottomSheet;
+
+  /// Label of the "Voir plus" button; ignored when the button is hidden
+  /// (both [url] and [page] are null).
+  final String buttonLabel;
+
   /// Asset path of the slide illustration; falls back to a generic
   /// icon-in-circle placeholder when null.
   final String? image;
@@ -30,6 +42,8 @@ class PromoSlide {
     required this.subtitle,
     this.url,
     this.page,
+    this.pageIsBottomSheet = false,
+    this.buttonLabel = 'Voir plus',
     this.image,
   });
 }
@@ -41,7 +55,7 @@ final List<PromoSlide> _dummySlides = [
   const PromoSlide(
     title: 'L\'appli fait peau neuve !',
     subtitle: 'Un tout nouveau design pour plus de clarté.',
-    image: 'lib/assets/images/buy-premium/tree.webp',
+    image: 'lib/assets/images/characters/lemon-vgn.webp',
   ),
   PromoSlide(
     title: 'Boutiques partenaire',
@@ -49,11 +63,15 @@ final List<PromoSlide> _dummySlides = [
         'Profitez de nouvelles réductions !',
     image: 'lib/assets/images/buy-premium/bee.webp',
     page: () => const PartnersPage(),
+    buttonLabel: "Je veux voir !"
   ),
-  const PromoSlide(
+  PromoSlide(
     title: 'Rappel B12',
-    subtitle: 'Pensez à configurer un rappel pour votre B12.',
-    image: 'lib/assets/images/buy-premium/tree.webp',
+    subtitle: 'Configurez un rappel pour votre B12.',
+    page: () => const B12ReminderSettingsModal(),
+    pageIsBottomSheet: true,
+    image: 'lib/assets/images/characters/lemon-mby.webp',
+    buttonLabel: "Configurer maintenant"
   ),
   const PromoSlide(
     title: 'Merci !',
@@ -74,13 +92,37 @@ class PromoCarousel extends StatefulWidget {
 }
 
 class _PromoCarouselState extends State<PromoCarousel> {
+  static const _autoScrollInterval = Duration(seconds: 5);
+
   final PageController _controller = PageController();
+  Timer? _autoScrollTimer;
   int _page = 0;
+  bool _isWrappingToStart = false;
 
   List<PromoSlide> get _slides => widget.slides ?? _dummySlides;
 
   @override
+  void initState() {
+    super.initState();
+    _startAutoScroll();
+  }
+
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    if (_slides.length <= 1) return;
+    _autoScrollTimer = Timer.periodic(_autoScrollInterval, (_) {
+      final nextPage = (_page + 1) % _slides.length;
+      _controller.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
   void dispose() {
+    _autoScrollTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -93,11 +135,45 @@ class _PromoCarouselState extends State<PromoCarousel> {
       children: [
         SizedBox(
           height: 396.h,
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: _slides.length,
-            onPageChanged: (page) => setState(() => _page = page),
-            itemBuilder: (context, index) => _PromoCard(slide: _slides[index]),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              final isLastPage = _page == _slides.length - 1;
+              if (!isLastPage || _isWrappingToStart) return false;
+
+              // OverscrollNotification.overscroll only fires under
+              // ClampingScrollPhysics (Android): the drag is blocked at the
+              // boundary and reports how far it was blocked. Under iOS's
+              // BouncingScrollPhysics, applyBoundaryConditions always
+              // returns 0, so no OverscrollNotification is ever dispatched;
+              // instead pixels legitimately exceeds maxScrollExtent while
+              // rubber-banding, which we detect via the metrics diff.
+              final metrics = notification.metrics;
+              final overscroll = notification is OverscrollNotification
+                  ? notification.overscroll
+                  : metrics.pixels - metrics.maxScrollExtent;
+
+              if (overscroll > 8) {
+                _isWrappingToStart = true;
+                _controller
+                    .animateToPage(
+                      0,
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOut,
+                    )
+                    .then((_) => _isWrappingToStart = false);
+              }
+              return false;
+            },
+            child: PageView.builder(
+              controller: _controller,
+              itemCount: _slides.length,
+              onPageChanged: (page) {
+                setState(() => _page = page);
+                _startAutoScroll();
+              },
+              itemBuilder: (context, index) =>
+                  _PromoCard(slide: _slides[index]),
+            ),
           ),
         ),
         SizedBox(height: 20.h),
@@ -119,7 +195,16 @@ class _PromoCard extends StatelessWidget {
   Future<void> _handleButtonTap(BuildContext context) async {
     final page = slide.page;
     if (page != null) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => page()));
+      if (slide.pageIsBottomSheet) {
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => page(),
+        );
+      } else {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => page()));
+      }
       return;
     }
     final url = slide.url;
@@ -192,7 +277,7 @@ class _PromoCard extends StatelessWidget {
                       shape: squircleBorder(radius: 30.r),
                     ),
                     child: Text(
-                      'Voir plus',
+                      slide.buttonLabel,
                       style: TextStyle(
                           fontSize: 40.sp, fontWeight: FontWeight.w600),
                     ),
