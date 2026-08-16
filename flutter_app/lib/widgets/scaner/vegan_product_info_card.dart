@@ -78,6 +78,8 @@ class VeganProductInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final BoycottMatch? boycottMatch = getBoycottMatch();
     final bool isBoycotted = boycottMatch != null;
+    final Color accentColor =
+        productInfo.biodynamic ? kAccentYellow : kSemanticSuccess;
 
     return ScanResultCard(
       name: Helper.truncate(
@@ -91,15 +93,15 @@ class VeganProductInfoCard extends StatelessWidget {
         if (formatted.length > 30) formatted = '${formatted.substring(0, 30)}...';
         return formatted;
       })(),
-      accentColor: kSemanticSuccess,
+      accentColor: accentColor,
       statusIcon: Image.asset(
         'lib/assets/images/icons/solid-check.webp',
         width: 64.w,
         height: 64.w,
-        color: kSemanticSuccess,
+        color: accentColor,
         colorBlendMode: BlendMode.srcIn,
       ),
-      statusLabel: 'Végane',
+      statusLabel: productInfo.biodynamic ? 'Végétalien' : 'Végane',
       scores: ProductScoresSection(
         barcode: productInfo.code,
         isSubscribed: SubscriptionService.isSubscribed,
