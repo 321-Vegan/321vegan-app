@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import '../../models/b12_reminder_settings.dart';
 import '../../services/b12_reminder_service.dart';
 import '../../services/notification_service.dart';
@@ -10,7 +11,7 @@ import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
 import '../shared/bottom_sheet_shell.dart';
-import 'next_reminder_banner.dart';
+import '../shared/info_box.dart';
 
 const List<String> _dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -172,9 +173,11 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
                     _buildTimeWheel(),
                     if (_settings.enabled && _nextNotification != null) ...[
                       SizedBox(height: AppSpacing.item),
-                      B12NextReminderBanner(
-                        date: _nextNotification!,
-                        showTime: true,
+                      InfoBox(
+                        iconAsset: 'lib/assets/images/icons/info-circle.webp',
+                        text: 'Prochain rappel : '
+                            '${_capitalizeFr(B12ReminderService.relativeDayLabel(_nextNotification!))} '
+                            'à ${DateFormat('HH:mm').format(_nextNotification!)}.',
                       ),
                     ],
                     SizedBox(height: AppSpacing.section),
@@ -210,6 +213,9 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
             ),
     );
   }
+
+  String _capitalizeFr(String text) =>
+      text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
 
   Widget _sectionLabel(String label) {
     return Text(label, style: AppTextStyles.baloo17);

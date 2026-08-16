@@ -15,10 +15,9 @@ import 'package:vegan_app/widgets/shared/link_row.dart';
 /// - [enabled]: controlled by the parent (scan settings). When false, renders nothing.
 /// - [isSubscribed]: if true, fetches and shows scores with an info dialog.
 /// - [paywalled]: when true and not subscribed, non-subscribers get a few
-///   free reveals per week (with a remaining-count chip); once exhausted,
-///   shows a blurred "Débloquer" paywall overlay. When false, scores are
-///   shown unlocked to everyone (e.g. on non-vegan results, where there's
-///   nothing to gate).
+///   free reveals per week; once exhausted, shows a blurred "Débloquer"
+///   paywall overlay. When false, scores are shown unlocked to everyone
+///   (e.g. on non-vegan results, where there's nothing to gate).
 /// - [onDisable]: called when the user taps "Désactiver" in the info dialog.
 class ProductScoresSection extends StatefulWidget {
   final String barcode;
@@ -46,9 +45,6 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
   // Scores visible to a non-subscriber (free reveal granted, or no scores
   // found — nothing to paywall in that case)
   bool _unlocked = false;
-  // Whether a free reveal was consumed for this product (drives the chip)
-  bool _showChip = false;
-  int _freeRevealsLeft = 0;
 
   @override
   void initState() {
@@ -69,7 +65,6 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
       setState(() {
         _scores = null;
         _unlocked = false;
-        _showChip = false;
         _loading = true;
       });
       _initForBarcode();
@@ -108,7 +103,6 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
       setState(() {
         _scores = scores;
         _unlocked = true;
-        _showChip = false;
         _loading = false;
       });
       return;
@@ -119,8 +113,6 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
     setState(() {
       _scores = scores;
       _unlocked = remaining != null;
-      _showChip = remaining != null;
-      _freeRevealsLeft = remaining ?? 0;
       _loading = false;
     });
   }
@@ -170,54 +162,13 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
         child: const CircularProgressIndicator(strokeWidth: 2),
       );
     }
-    final badges = GestureDetector(
+    return GestureDetector(
       onTap: _showInfoDialog,
       child: ScoreBadges(
         nutriscoreGrade: _scores?.nutriscoreGrade,
         ecoscoreGrade: _scores?.ecoscoreGrade,
         scale: 0.75,
         direction: Axis.vertical,
-      ),
-    );
-    if (!widget.paywalled || widget.isSubscribed || !_showChip) return badges;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        _buildFreeRevealChip(),
-        SizedBox(height: 6.h),
-        badges,
-      ],
-    );
-  }
-
-  Widget _buildFreeRevealChip() {
-    final label = _freeRevealsLeft == 0
-        ? 'Dernier affichage gratuit'
-        : '$_freeRevealsLeft restant${_freeRevealsLeft > 1 ? 's' : ''}';
-    return GestureDetector(
-      onTap: _openSubscriptionPage,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-        decoration: ShapeDecoration(
-          color: kAccentYellow.withValues(alpha: 0.15),
-          shape: squircleBorder(radius: 10.r),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.visibility_outlined, size: 24.sp, color: kAccentYellow),
-            SizedBox(width: 4.w),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 24.sp,
-                fontWeight: FontWeight.w600,
-                color: kAccentYellow,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

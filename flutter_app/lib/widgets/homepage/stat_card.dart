@@ -88,6 +88,7 @@ const List<HomeStat> homeStats = [
 const Map<String, String> _statThemeAssetPrefix = {
   'forestUnit': 'lib/assets/themes/cards/leaf',
   'waterUnit': 'lib/assets/themes/cards/water',
+  'co2Unit': 'lib/assets/themes/cards/planet',
 };
 
 String seasonalStatIllustration(HomeStat stat, Season? season) {
@@ -117,6 +118,11 @@ const Set<String> _themeAssetsWithDesign = {
   'lib/assets/themes/cards/water-winter.webp',
   'lib/assets/themes/cards/water-autumn.webp',
   'lib/assets/themes/cards/water-spring.webp',
+  'lib/assets/themes/cards/planet-basic.webp',
+  'lib/assets/themes/cards/planet-summer.webp',
+  'lib/assets/themes/cards/planet-winter.webp',
+  'lib/assets/themes/cards/planet-autumn.webp',
+  'lib/assets/themes/cards/planet-spring.webp',
 };
 
 Widget buildStatCard(

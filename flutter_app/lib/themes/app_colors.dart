@@ -36,3 +36,9 @@ const Color kSemanticError = Color(0xFFD6484B);
 /// "Color/Semantic/Success" in Figma — success states, "vegan" confirmation.
 /// Use instead of ad-hoc `Colors.green*`.
 const Color kSemanticSuccess = Color(0xFF15866E);
+
+/// Dark green gradient for the first-launch welcome screen
+/// ("Rejoignez une communauté"), distinct from the app's default cream
+/// [kBackgroundGradientTop]/[kBackgroundGradientBottom].
+const Color kOnboardingGradientTop = Color(0xFF15866E);
+const Color kOnboardingGradientBottom = Color(0xFF15866E);

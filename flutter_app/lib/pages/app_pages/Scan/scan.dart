@@ -833,9 +833,6 @@ class ScanPageState extends State<ScanPage>
 
     if (AuthService.isLoggedIn) return;
 
-    final dismissed = await PreferencesHelper.hasAccountPromptBeenDismissed();
-    if (dismissed) return;
-
     if (!mounted) return;
 
     // Small delay so the scan result shows first
@@ -848,8 +845,10 @@ class ScanPageState extends State<ScanPage>
   void _showAccountPromptDialog() {
     controller.stop();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) =>
           AccountPromptDialog(onCreateAccount: _showAuthBottomSheet),
     ).then((_) {

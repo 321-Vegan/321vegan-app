@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import '../../services/auth_service.dart';
 import '../../models/auth.dart';
 import '../../helpers/preference_helper.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
+import '../shared/vegan_since_date_modal.dart';
 import 'auth_styles.dart';
 
 class RegisterForm extends StatefulWidget {
@@ -30,9 +32,17 @@ class _RegisterFormState extends State<RegisterForm> {
   final _nicknameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _veganSinceController = TextEditingController();
+  DateTime? _veganSince;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVeganSince();
+  }
 
   @override
   void dispose() {
@@ -40,7 +50,40 @@ class _RegisterFormState extends State<RegisterForm> {
     _nicknameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _veganSinceController.dispose();
     super.dispose();
+  }
+
+  // Carries over a vegan-since date already picked as a guest (e.g. from
+  // the Dashboard counter) so it isn't lost when creating an account.
+  Future<void> _loadVeganSince() async {
+    final date = await PreferencesHelper.getSelectedDateFromPrefs();
+    if (!mounted || date == null) return;
+    setState(() {
+      _veganSince = date;
+      _veganSinceController.text = DateFormat.yMMMd('fr_FR').format(date);
+    });
+  }
+
+  Future<void> _pickVeganSince() async {
+    final result = await showModalBottomSheet<VeganDateResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => VeganSinceDateModal(initialDate: _veganSince),
+    );
+    if (result == null) return;
+
+    setState(() {
+      if (result.action == VeganDateAction.delete) {
+        _veganSince = null;
+        _veganSinceController.clear();
+      } else {
+        _veganSince = result.date;
+        _veganSinceController.text =
+            DateFormat.yMMMd('fr_FR').format(result.date!);
+      }
+    });
   }
 
   Future<void> _handleRegister() async {
@@ -48,8 +91,8 @@ class _RegisterFormState extends State<RegisterForm> {
 
     setState(() => _isLoading = true);
 
-    // Retrieve vegan date and products sent from local storage
-    final veganSince = await PreferencesHelper.getSelectedDateFromPrefs();
+    // Retrieve products sent from local storage; vegan-since comes from
+    // the form field above (pre-filled from local storage if already set).
     final nbProductsSent =
         await PreferencesHelper.getTotalSuccessfulSubmissions();
 
@@ -60,7 +103,7 @@ class _RegisterFormState extends State<RegisterForm> {
       email: email,
       nickname: _nicknameController.text.trim(),
       password: password,
-      veganSince: veganSince,
+      veganSince: _veganSince,
       nbProductsSent: nbProductsSent,
       // Default values for role and isActive are set in the model
     );
@@ -148,7 +191,7 @@ class _RegisterFormState extends State<RegisterForm> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // Nickname field
           TextFormField(
@@ -170,7 +213,32 @@ class _RegisterFormState extends State<RegisterForm> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
+
+          // Vegan since field (optional)
+          TextFormField(
+            controller: _veganSinceController,
+            readOnly: true,
+            onTap: _pickVeganSince,
+            decoration: authFieldDecoration(
+              context,
+              label: 'Végane depuis (facultatif)',
+              hint: 'Je ne suis pas encore végane',
+              icon: Icons.eco_outlined,
+              suffixIcon: _veganSince != null
+                  ? IconButton(
+                      icon: Icon(Icons.close,
+                          size: 40.sp, color: Colors.grey[500]),
+                      onPressed: () => setState(() {
+                        _veganSince = null;
+                        _veganSinceController.clear();
+                      }),
+                    )
+                  : Icon(Icons.chevron_right,
+                      size: 44.sp, color: Colors.grey[400]),
+            ),
+          ),
+          SizedBox(height: 24.h),
 
           // Password field
           TextFormField(
@@ -201,7 +269,7 @@ class _RegisterFormState extends State<RegisterForm> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // Confirm password field
           TextFormField(

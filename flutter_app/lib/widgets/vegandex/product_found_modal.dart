@@ -6,8 +6,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import '../../models/product_of_interest.dart';
-import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
+import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
 import '../shared/app_card.dart';
 
 class ProductFoundModal extends StatefulWidget {
@@ -177,114 +178,80 @@ class _ProductFoundModalState extends State<ProductFoundModal>
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    widget.isNewDiscovery
-                        ? 'Nouveau produit trouvé'
-                        : 'Produit Vegandex',
-                    style: TextStyle(
-                      fontFamily: 'Baloo2',
-                      fontSize: 48.sp,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -1,
-                      color: kTextPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 28.h),
-                  ClipSmoothRect(
-                    radius: squircleRadius(24.r),
-                    child: Container(
-                      width: double.infinity,
-                      height: 340.w,
-                      color: Colors.grey.shade100,
-                      child: CachedNetworkImage(
-                        imageUrl: '$baseUrl/${widget.product.image}',
-                        fit: BoxFit.contain,
-                        placeholder: (context, url) => Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: primary,
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Center(
-                          child: Text(
-                            widget.product.name.isNotEmpty
-                                ? widget.product.name[0].toUpperCase()
-                                : '?',
-                            style: TextStyle(
-                              fontFamily: 'Baloo2',
-                              fontSize: 100.sp,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -1,
-                              color: primary.withValues(alpha: 0.4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      ClipSmoothRect(
+                        radius: squircleRadius(24.r),
+                        child: SizedBox(
+                          width: 400.w,
+                          height: 400.w,
+                          child: CachedNetworkImage(
+                            imageUrl: '$baseUrl/${widget.product.image}',
+                            fit: BoxFit.contain,
+                            placeholder: (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: primary,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Center(
+                              child: Text(
+                                widget.product.name.isNotEmpty
+                                    ? widget.product.name[0].toUpperCase()
+                                    : '?',
+                                style: TextStyle(
+                                  fontFamily: 'Baloo2',
+                                  fontSize: 64.sp,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -1,
+                                  color: primary.withValues(alpha: 0.4),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  SizedBox(height: 28.h),
-                  Text(
-                    widget.product.name,
-                    style: TextStyle(
-                      fontSize: 46.sp,
-                      fontWeight: FontWeight.bold,
-                      color: kTextPrimary,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    widget.product.brandName,
-                    style: TextStyle(
-                      fontSize: 36.sp,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: 24.h),
-                  Container(
-                    width: double.infinity,
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 20.w, vertical: 14.h),
-                    decoration: ShapeDecoration(
-                      color: kPrimaryTag,
-                      shape: squircleBorder(radius: 16.r),
-                    ),
-                    child: Text(
-                      widget.isNewDiscovery
-                          ? 'Ce produit rejoint votre Vegandex'
-                          : 'Ce produit fait partie de votre Vegandex',
-                      style: TextStyle(
-                        fontSize: 36.sp,
-                        color: primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  SizedBox(height: 32.h),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _handleClose,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 20.h),
-                        shape: squircleBorder(radius: 16.r),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        'Génial !',
-                        style: TextStyle(
-                          fontSize: 44.sp,
-                          fontWeight: FontWeight.bold,
+                      SizedBox(width: 24.w),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Produit vegandex',
+                              style: AppTextStyles.baloo22.copyWith(
+                                color: primary,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              widget.product.name,
+                              style: AppTextStyles.baloo22,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 8.h),
+                            Text(
+                              widget.product.brandName,
+                              style: AppTextStyles.bodyRegular15.copyWith(
+                                color: Colors.grey[600],
+                                fontStyle: FontStyle.italic
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
                       ),
+                    ],
+                  ),
+                  SizedBox(height: 24.h),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Génial !',
+                      backgroundColor: primary,
+                      onPressed: _handleClose,
                     ),
                   ),
                 ],

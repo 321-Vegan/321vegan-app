@@ -4,89 +4,8 @@ import 'package:vegan_app/helpers/helper.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
-import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/widgets/scaner/scan_result_card.dart';
-
-class NoResultCard extends StatelessWidget {
-  const NoResultCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w),
-      height: 1000.h,
-      padding: const EdgeInsets.all(16.0),
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: squircleBorder(radius: 20),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            spreadRadius: 5,
-            blurRadius: 7,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: TextStyle(
-                fontSize: 60.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-              children: [
-                const TextSpan(text: 'Scannez un produit '),
-                TextSpan(
-                  text: 'alimentaire',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 60.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(text: ' pour savoir s\'il est vegan !'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Image.asset(
-            'lib/assets/app_icon.png',
-            height: 300.h,
-            fit: BoxFit.cover,
-          ),
-          const SizedBox(height: 16),
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              style: TextStyle(fontSize: 40.sp, color: Colors.black),
-              children: [
-                const TextSpan(text: 'Le scan est prévu pour les produits '),
-                TextSpan(
-                  text: 'alimentaires',
-                  style: TextStyle(color: Colors.green.shade700),
-                ),
-                const TextSpan(
-                    text:
-                        ' uniquement. \nPour l\'instant nous ne pouvont pas traiter les produits '),
-                TextSpan(
-                  text: 'cosmétiques',
-                  style: TextStyle(color: Colors.red.shade700),
-                ),
-                const TextSpan(text: ', merci de ne pas en envoyer !'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class RejectedProductInfoCard extends StatelessWidget {
   final ScanResult productInfo;

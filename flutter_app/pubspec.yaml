@@ -32,7 +32,6 @@ dependencies:
     sdk: flutter
   video_player: ^2.9.2
   share_plus: ^10.1.4
-  introduction_screen: ^3.1.0
   shared_preferences: ^2.3.2
   intl: ^0.20.2
   flutter_localization: ^0.2.1
@@ -116,10 +115,9 @@ flutter:
     - lib/assets/app_icon.png
     - lib/assets/logo_instagram.png
     - lib/assets/vegan_products.db.gz
-    - lib/assets/intro/home-1.webp
-    - lib/assets/intro/scan-1.webp
-    - lib/assets/intro/map.webp
-    - lib/assets/intro/partners.webp
+    # Intro
+    - lib/assets/intro/blob1.webp
+    - lib/assets/intro/blob2.webp
     # Badges
     - lib/assets/badges/1an.webp
     - lib/assets/badges/2ans.webp
@@ -195,6 +193,11 @@ flutter:
     - lib/assets/themes/cards/water-spring.webp
     - lib/assets/themes/cards/water-winter.webp
     - lib/assets/themes/cards/water-autumn.webp
+    - lib/assets/themes/cards/planet-basic.webp
+    - lib/assets/themes/cards/planet-summer.webp
+    - lib/assets/themes/cards/planet-spring.webp
+    - lib/assets/themes/cards/planet-winter.webp
+    - lib/assets/themes/cards/planet-autumn.webp
     # Seasonal Themes - Winter
     - lib/assets/themes/ice_8.webp
     - lib/assets/themes/ice_2.webp
