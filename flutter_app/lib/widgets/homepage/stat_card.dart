@@ -5,6 +5,7 @@ import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
+import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 
 /// Definition of one impact stat, shared between the home page cards and the
@@ -272,28 +273,14 @@ class StatInfoDialog extends StatelessWidget {
     final seasonal = Theme.of(context).extension<SeasonalTheme>();
     final valueLabel =
         '$value ${stat.unitName}'.trim().replaceAll(RegExp(r'\s+'), ' ');
-    // Figma spec: fixed width 390, radius 12 (top corners), padding 7 (top) /
-    // 17 (h), gap 20 between children — ×3 for ScreenUtil units.
-    return Container(
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: squircleBorderOnly(topLeft: 36.r, topRight: 36.r),
-      ),
+    // Figma spec: fixed width 390, padding 17 (h) — ×3 for ScreenUtil units.
+    // Top/bottom padding and the drag handle come from BottomSheetShell.
+    return BottomSheetShell(
       padding: EdgeInsets.fromLTRB(
-          51.w, 21.h, 51.w, MediaQuery.of(context).viewInsets.bottom + 60.h),
+          51.w, 12.h, 51.w, MediaQuery.of(context).viewInsets.bottom + 60.h),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Drag handle
-          Container(
-            width: 40.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2.r),
-            ),
-          ),
-          SizedBox(height: 60.h),
           // Value + title merged into one heading
           Text(
             '$valueLabel ${stat.title}',
@@ -355,6 +342,7 @@ class StatInfoDialog extends StatelessWidget {
               ),
             ],
           ),
+          SizedBox(height: 60.h),
         ],
       ),
     );
