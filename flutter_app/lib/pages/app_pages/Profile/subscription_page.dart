@@ -205,102 +205,114 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         child: Stack(
           children: [
             SafeArea(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 16.h),
-                child: Column(
-                  children: [
-                    // Close button, top-left like the mockup.
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon:
-                            Icon(Icons.close, color: Colors.white, size: 64.sp),
-                        onPressed: () => Navigator.pop(context),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 40.w, vertical: 16.h),
+                      child: Column(
+                        children: [
+                          // Close button, top-left like the mockup.
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.close,
+                                  color: Colors.white, size: 64.sp),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ),
+                          SizedBox(height: 16.h),
+                          // Already subscribed: current plan card, thank-you
+                          // header, benefits recap, community goal. The
+                          // manage-subscription button lives outside this
+                          // scroll view, pinned to the bottom of the screen.
+                          if (isSubscribed) ...[
+                            if (subscription != null) ...[
+                              _buildCurrentPlanCard(subscription),
+                              SizedBox(height: 56.h),
+                            ],
+                            _buildSubscribedHeader(),
+                            SizedBox(height: 56.h),
+                            _buildBenefits(primaryColor),
+                            SizedBox(height: 32.h),
+                            const SubscriptionGoalWidget(),
+                            SizedBox(height: 32.h),
+                          ],
+
+                          // Header illustration
+                          if (!isSubscribed) ...[
+                            _buildHeader(primaryColor),
+                            SizedBox(height: 32.h),
+                            const SubscriptionGoalWidget(),
+                            SizedBox(height: 32.h),
+
+                            // Benefits list
+                            _buildBenefits(primaryColor),
+                            SizedBox(height: 32.h),
+
+                            // Plan cards
+                            if (SubscriptionService.products.isNotEmpty) ...[
+                              _buildPlanCards(primaryColor),
+                              SizedBox(height: 8.h),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                                child: Text(
+                                  'Tous les paliers débloquent les mêmes avantages. Choisissez simplement selon vos moyens !',
+                                  style: TextStyle(
+                                    fontSize: 32.sp,
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              SizedBox(height: 24.h),
+
+                              // Error message
+                              if (_errorMessage != null) ...[
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 16.h),
+                                  child: Text(
+                                    _errorMessage!,
+                                    style: TextStyle(
+                                      fontSize: 38.sp,
+                                      color: const Color(0xFFFFC9C9),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+
+                              // Purchase button
+                              _buildPurchaseButton(primaryColor),
+                              SizedBox(height: 20.h),
+
+                              // Restore button
+                              _buildRestoreButton(),
+                              SizedBox(height: 24.h),
+
+                              // Legal links
+                              _buildLegalLinks(),
+                            ] else ...[
+                              _buildProductsUnavailable(),
+                            ],
+
+                            SizedBox(height: 32.h),
+                          ],
+                        ],
                       ),
                     ),
-                    SizedBox(height: 16.h),
-                    // Already subscribed: current plan card, thank-you
-                    // header, benefits recap, community goal, manage button.
-                    if (isSubscribed) ...[
-                      if (subscription != null) ...[
-                        _buildCurrentPlanCard(subscription),
-                        SizedBox(height: 56.h),
-                      ],
-                      _buildSubscribedHeader(),
-                      SizedBox(height: 56.h),
-                      _buildBenefits(primaryColor),
-                      SizedBox(height: 32.h),
-                      const SubscriptionGoalWidget(),
-                      SizedBox(height: 100.h),
-                      // Bypass users have no store subscription to manage.
-                      if (!isBypass) _buildManageSubscriptionButton(),
-                      SizedBox(height: 32.h),
-                    ],
-
-                    // Header illustration
-                    if (!isSubscribed) ...[
-                      _buildHeader(primaryColor),
-                      SizedBox(height: 32.h),
-                      const SubscriptionGoalWidget(),
-                      SizedBox(height: 32.h),
-
-                      // Benefits list
-                      _buildBenefits(primaryColor),
-                      SizedBox(height: 32.h),
-
-                      // Plan cards
-                      if (SubscriptionService.products.isNotEmpty) ...[
-                        _buildPlanCards(primaryColor),
-                        SizedBox(height: 8.h),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8.w),
-                          child: Text(
-                            'Tous les paliers débloquent les mêmes avantages. Choisissez simplement selon vos moyens !',
-                            style: TextStyle(
-                              fontSize: 32.sp,
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        SizedBox(height: 24.h),
-
-                        // Error message
-                        if (_errorMessage != null) ...[
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 16.h),
-                            child: Text(
-                              _errorMessage!,
-                              style: TextStyle(
-                                fontSize: 38.sp,
-                                color: const Color(0xFFFFC9C9),
-                                fontWeight: FontWeight.w600,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-
-                        // Purchase button
-                        _buildPurchaseButton(primaryColor),
-                        SizedBox(height: 20.h),
-
-                        // Restore button
-                        _buildRestoreButton(),
-                        SizedBox(height: 24.h),
-
-                        // Legal links
-                        _buildLegalLinks(),
-                      ] else ...[
-                        _buildProductsUnavailable(),
-                      ],
-
-                      SizedBox(height: 32.h),
-                    ],
-                  ],
-                ),
+                  ),
+                  // Bypass users have no store subscription to manage.
+                  if (isSubscribed && !isBypass)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(40.w, 16.h, 40.w, 24.h),
+                      child: _buildManageSubscriptionButton(),
+                    ),
+                ],
               ),
             ),
             // Auth overlay when not logged in
