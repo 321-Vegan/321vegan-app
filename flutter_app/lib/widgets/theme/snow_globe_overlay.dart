@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:figma_squircle/figma_squircle.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -10,7 +11,11 @@ class SnowGlobeOverlay extends StatefulWidget {
   final Widget child;
   final int particleCount;
   final IconData? particleIcon;
-  final String? particleAsset;
+
+  /// Asset paths particles are randomly drawn from — each particle picks one
+  /// at creation and keeps it for its lifetime. Ignored when [particleIcon]
+  /// is set.
+  final List<String>? particleAssets;
   final SmoothBorderRadius? borderRadius;
 
   /// Tint for icon particles and the plain-circle fallback. Defaults to
@@ -24,15 +29,24 @@ class SnowGlobeOverlay extends StatefulWidget {
   /// subtle without changing the per-particle randomization itself.
   final double particleOpacity;
 
+  /// Random per-particle radius range — each particle picks a radius in
+  /// [particleMinRadius, particleMaxRadius] at creation and keeps it for its
+  /// lifetime. Drives rendered size directly for the plain-circle fallback,
+  /// and via `radius * 5` for icon/image particles.
+  final double particleMinRadius;
+  final double particleMaxRadius;
+
   const SnowGlobeOverlay({
     super.key,
     required this.child,
     this.particleCount = 18,
     this.particleIcon,
-    this.particleAsset,
+    this.particleAssets,
     this.borderRadius,
     this.particleColor = Colors.white,
     this.particleOpacity = 1.0,
+    this.particleMinRadius = 1.5,
+    this.particleMaxRadius = 4.0,
   });
 
   @override
@@ -89,16 +103,50 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
     });
   }
 
+  @override
+  void didUpdateWidget(covariant SnowGlobeOverlay oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.particleCount != widget.particleCount ||
+        oldWidget.particleMinRadius != widget.particleMinRadius ||
+        oldWidget.particleMaxRadius != widget.particleMaxRadius) {
+      // Count/radius range changed (e.g. switching season) — the old
+      // flakes no longer match, so start over.
+      _flakes = List.generate(widget.particleCount, (_) => _createFlake(true));
+      return;
+    }
+
+    if (!listEquals(oldWidget.particleAssets, widget.particleAssets)) {
+      // Same flakes, but a shorter/different asset list (e.g. summer's 3
+      // fruits -> spring's 2 flowers) — re-pick each flake's asset so a
+      // stale index doesn't run off the end of the new list.
+      final assets = widget.particleAssets;
+      for (final f in _flakes) {
+        f.assetIndex = assets != null && assets.isNotEmpty
+            ? _random.nextInt(assets.length)
+            : 0;
+      }
+    }
+  }
+
   _Snowflake _createFlake(bool randomizeY) {
+    final assets = widget.particleAssets;
     return _Snowflake(
       x: _random.nextDouble(),
       y: randomizeY ? _random.nextDouble() : -_random.nextDouble() * 0.1,
       vx: 0,
       vy: 0,
-      radius: 1.5 + _random.nextDouble() * 2.5,
+      radius: widget.particleMinRadius +
+          _random.nextDouble() *
+              (widget.particleMaxRadius - widget.particleMinRadius),
       opacity: 0.3 + _random.nextDouble() * 0.5,
       shimmerPhase: _random.nextDouble() * 2 * pi,
       shimmerSpeed: 0.6 + _random.nextDouble() * 1.2,
+      // Picked once per particle so it keeps the same image for its
+      // lifetime instead of flickering between assets every frame.
+      assetIndex: assets != null && assets.isNotEmpty
+          ? _random.nextInt(assets.length)
+          : 0,
       damping: 0.96 + _random.nextDouble() * 0.03, // each flake has unique drag
       rotationPhase: _random.nextDouble() * 2 * pi,
       rotationSpeed: 0.25 + _random.nextDouble() * 0.75,
@@ -174,11 +222,13 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
       child: Stack(
         children: [
           widget.child,
-          if (widget.particleIcon != null || widget.particleAsset != null)
+          if (widget.particleIcon != null ||
+              (widget.particleAssets != null &&
+                  widget.particleAssets!.isNotEmpty))
             ...List.generate(_flakes.length, (i) {
               final f = _flakes[i];
               //final shimmer =
-                  //0.7 + 0.3 * sin(elapsed * f.shimmerSpeed + f.shimmerPhase);
+              //0.7 + 0.3 * sin(elapsed * f.shimmerSpeed + f.shimmerPhase);
               final size = f.radius * 5;
               return Positioned.fill(
                 child: IgnorePointer(
@@ -195,7 +245,7 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
                                 color: widget.particleColor,
                               )
                             : Image.asset(
-                                widget.particleAsset!,
+                                widget.particleAssets![f.assetIndex],
                                 width: size,
                                 height: size,
                                 errorBuilder: (context, error, stackTrace) =>
@@ -270,6 +320,7 @@ class _Snowflake {
   final double damping;
   final double rotationPhase;
   final double rotationSpeed;
+  int assetIndex;
 
   _Snowflake({
     required this.x,
@@ -280,6 +331,7 @@ class _Snowflake {
     required this.opacity,
     required this.shimmerPhase,
     required this.shimmerSpeed,
+    required this.assetIndex,
     required this.damping,
     required this.rotationPhase,
     required this.rotationSpeed,

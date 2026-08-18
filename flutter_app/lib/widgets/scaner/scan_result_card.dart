@@ -6,14 +6,19 @@ import 'package:vegan_app/widgets/shared/app_card.dart';
 /// Shared shell for scan-result cards (vegan / non-vegan / pending
 /// validation): an [AppCard] with a colored border matching [accentColor],
 /// product name + brand on the left, optional [scores] (Nutri-Score /
-/// Green-score) top-right, a status row (icon + colored label) below, and
-/// optional [extraRows] for boycott/biodynamic warnings or extra context.
+/// Green-score) top-right, a status row (icon + colored label, with an
+/// optional smaller [statusDetail] appended) below, and optional
+/// [extraRows] for boycott/biodynamic warnings or extra context.
 class ScanResultCard extends StatelessWidget {
   final String name;
   final String brand;
   final Color accentColor;
   final Widget statusIcon;
   final String statusLabel;
+
+  /// Extra detail appended after [statusLabel] (e.g. the reason a product
+  /// was rejected) in a smaller size than the label itself.
+  final String? statusDetail;
   final Widget? scores;
   final List<Widget> extraRows;
 
@@ -24,6 +29,7 @@ class ScanResultCard extends StatelessWidget {
     required this.accentColor,
     required this.statusIcon,
     required this.statusLabel,
+    this.statusDetail,
     this.scores,
     this.extraRows = const [],
   });
@@ -48,57 +54,70 @@ class ScanResultCard extends StatelessWidget {
       borderColor: accentColor,
       borderWidth: 3,
       padding: EdgeInsets.all(45.w),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.baloo22,
+                ),
+                SizedBox(height: 6.h),
+                Text(
+                  brand,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodyRegular15
+                      .copyWith(color: Colors.grey[500]),
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.baloo22,
-                    ),
-                    SizedBox(height: 6.h),
-                    Text(
-                      brand,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.bodyRegular15
-                          .copyWith(color: Colors.grey[500]),
+                    statusIcon,
+                    SizedBox(width: 16.w),
+                    Expanded(
+                      child: statusDetail == null
+                          ? Text(
+                              statusLabel,
+                              style: AppTextStyles.bodyBold22
+                                  .copyWith(color: accentColor),
+                            )
+                          : Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: statusLabel,
+                                    style: AppTextStyles.bodyBold22
+                                        .copyWith(color: accentColor),
+                                  ),
+                                  TextSpan(
+                                    text: ' : $statusDetail',
+                                    style: AppTextStyles.bodyRegular15
+                                        .copyWith(color: accentColor),
+                                  ),
+                                ],
+                              ),
+                            ),
                     ),
                   ],
                 ),
-              ),
-              if (scores != null) ...[
-                SizedBox(width: 16.w),
-                scores!,
+                for (final row in extraRows) ...[
+                  SizedBox(height: 16.h),
+                  row,
+                ],
               ],
-            ],
+            ),
           ),
-          SizedBox(height: 30.h),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              statusIcon,
-              SizedBox(width: 16.w),
-              Expanded(
-                child: Text(
-                  statusLabel,
-                  style: AppTextStyles.bodyBold15.copyWith(color: accentColor),
-                ),
-              ),
-            ],
-          ),
-          for (final row in extraRows) ...[
-            SizedBox(height: 16.h),
-            row,
+          if (scores != null) ...[
+            SizedBox(width: 16.w),
+            scores!,
           ],
         ],
       ),

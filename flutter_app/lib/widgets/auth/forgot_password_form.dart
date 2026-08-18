@@ -6,7 +6,7 @@ import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
-import 'auth_styles.dart';
+import '../shared/app_text_field.dart';
 
 class ForgotPasswordForm extends StatefulWidget {
   final VoidCallback? onBackToLogin;
@@ -73,11 +73,7 @@ class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Mot de passe oublié',
-            style: AppTextStyles.baloo22,
-            textAlign: TextAlign.center,
-          ),
+          Text('Mot de passe oublié', style: AppTextStyles.baloo26),
           SizedBox(height: 16.h),
 
           if (!_emailSent) ...[
@@ -88,21 +84,15 @@ class _ForgotPasswordFormState extends State<ForgotPasswordForm> {
                 color: Colors.grey[600],
                 height: 1.4,
               ),
-              textAlign: TextAlign.center,
             ),
             SizedBox(height: 32.h),
 
             // Email field
-            TextFormField(
+            AppTextField(
               controller: _emailController,
+              hintText: 'Email',
               keyboardType: TextInputType.emailAddress,
               autofillHints: const [AutofillHints.email],
-              decoration: authFieldDecoration(
-                context,
-                label: 'Email',
-                hint: 'votre@email.com',
-                icon: Icons.email_outlined,
-              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Veuillez entrer votre email';

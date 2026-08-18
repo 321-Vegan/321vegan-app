@@ -9,6 +9,7 @@ import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_spacing.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 
@@ -104,7 +105,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 20.h),
+        padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
         decoration: ShapeDecoration(
           color: isSelected
               ? primaryColor.withValues(alpha: 0.08)
@@ -133,7 +134,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
             Text(
               label,
               style: TextStyle(
-                fontSize: 40.sp,
+                fontSize: 39.sp,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 color: isSelected ? primaryColor : kTextPrimary,
               ),
@@ -146,11 +147,11 @@ class _MapFilterPageState extends State<MapFilterPage> {
 
   Widget _buildFilterChip(ProductOfInterest product) {
     return Container(
-      padding: EdgeInsets.fromLTRB(12.w, 12.h, 20.w, 12.h),
+      padding: EdgeInsets.all(30.w),
       decoration: ShapeDecoration(
         color: kSecondaryTag,
         shape: squircleBorder(
-          radius: 42.r,
+          radius: 36.r,
           side: const BorderSide(color: kAccentYellow),
         ),
       ),
@@ -160,8 +161,8 @@ class _MapFilterPageState extends State<MapFilterPage> {
           ClipSmoothRect(
             radius: squircleRadius(24.r),
             child: Container(
-              width: 76.sp,
-              height: 76.sp,
+              width: 81.sp,
+              height: 81.sp,
               color: Colors.white,
               child: product.image.isNotEmpty
                   ? CachedNetworkImage(
@@ -190,7 +191,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
                 product.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodyBold11.copyWith(height: 1.1),
+                style: AppTextStyles.bodyBold13.copyWith(height: 1.1),
               ),
               Text(
                 product.brandName,
@@ -204,7 +205,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
           SizedBox(width: 12.w),
           GestureDetector(
             onTap: () => setState(() => _selected.remove(product.ean)),
-            child: Icon(Icons.close, size: 36.sp, color: kTextPrimary),
+            child: Icon(Icons.close, size: 64.sp, color: kAccentYellow),
           ),
         ],
       ),
@@ -214,112 +215,114 @@ class _MapFilterPageState extends State<MapFilterPage> {
   Widget _buildProductCard(ProductOfInterest product,
       {bool sponsored = false}) {
     final isSelected = _selected.contains(product.ean);
-    final primaryColor = Theme.of(context).colorScheme.primary;
 
     return GestureDetector(
       onTap: () => _toggle(product),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 150),
-              clipBehavior: Clip.antiAlias,
-              decoration: ShapeDecoration(
-                color: Colors.white,
-                shape: squircleBorder(
-                  radius: 48.r,
-                  side: BorderSide(
-                    color: isSelected ? primaryColor : kBorderDefault,
-                    width: isSelected ? 2 : 1,
-                  ),
-                ),
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  product.image.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl:
-                              '${dotenv.env['API_BASE_URL']}/${product.image}',
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.grey[400],
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: EdgeInsets.all(30.w),
+        decoration: ShapeDecoration(
+          color: isSelected ? kSecondaryTag : Colors.white,
+          shape: squircleBorder(
+            radius: 36.r,
+            side: BorderSide(
+              color: isSelected ? kAccentYellow : kBorderDefault,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipSmoothRect(
+              radius: squircleRadius(24.r),
+              child: SizedBox(
+                width: 270.w,
+                height: 270.w,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    product.image.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl:
+                                '${dotenv.env['API_BASE_URL']}/${product.image}',
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.grey[400],
+                              ),
                             ),
-                          ),
-                          errorWidget: (_, __, ___) => Icon(
+                            errorWidget: (_, __, ___) => Icon(
+                              Icons.shopping_bag_outlined,
+                              size: 64.w,
+                              color: Colors.grey[300],
+                            ),
+                          )
+                        : Icon(
                             Icons.shopping_bag_outlined,
                             size: 64.w,
                             color: Colors.grey[300],
                           ),
-                        )
-                      : Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 64.w,
-                          color: Colors.grey[300],
-                        ),
-                  if (sponsored)
-                    Positioned(
-                      top: 8.h,
-                      right: 8.w,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 8.w, vertical: 4.h),
-                        decoration: ShapeDecoration(
-                          color: Colors.amber[600],
-                          shape: squircleBorder(radius: 12.r),
-                        ),
-                        child: Text(
-                          '★',
-                          style: TextStyle(
-                            fontSize: 40.sp,
-                            color: Colors.white,
-                            height: 1,
+                    if (sponsored)
+                      Positioned(
+                        top: 8.h,
+                        right: 8.w,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 8.w, vertical: 4.h),
+                          decoration: ShapeDecoration(
+                            color: Colors.amber[600],
+                            shape: squircleBorder(radius: 12.r),
+                          ),
+                          child: Text(
+                            '★',
+                            style: TextStyle(
+                              fontSize: 40.sp,
+                              color: Colors.white,
+                              height: 1,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            product.name,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 40.sp,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? primaryColor : kTextPrimary,
-              height: 1.2,
+            SizedBox(height: 12.h),
+            Text(
+              product.name,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodyMedium15.copyWith(height: 1.2),
             ),
-          ),
-          Text(
-            product.brandName,
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 36.sp,
-              color: Colors.grey[500],
-              height: 1.2,
+            Text(
+              product.brandName,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.bodyRegular13
+                  .copyWith(color: Colors.grey[500], height: 1.2),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  // Card content is a fixed 270.w image box + 30.w padding on every side +
+  // two lines of text (no longer an Expanded image stretched to fill the
+  // cell), so the aspect ratio only needs to be tall enough to fit that
+  // fixed height under a ~1/3-of-width column — unlike a stretched image,
+  // it doesn't need to track the column width exactly.
   SliverGridDelegate get _gridDelegate =>
       SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 30.w,
-        mainAxisSpacing: 36.h,
-        childAspectRatio: 0.68,
+        mainAxisSpacing: 30.h,
+        childAspectRatio: 0.7,
       );
 
   @override
@@ -333,12 +336,9 @@ class _MapFilterPageState extends State<MapFilterPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Filtrer par produit',
-            style: TextStyle(
-            fontFamily: 'Baloo2',
-            fontWeight: FontWeight.bold
-            ),
+            style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,
@@ -353,35 +353,36 @@ class _MapFilterPageState extends State<MapFilterPage> {
               // Search field
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 48.w),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (v) => setState(() => _search = v),
-                  style: TextStyle(fontSize: 42.sp),
-                  decoration: InputDecoration(
-                    hintText: 'Nom du produit ou marque…',
-                    hintStyle:
-                        TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      size: 60.sp,
-                      color: Colors.grey[600],
-                    ),
-                    suffixIcon: _search.isNotEmpty
-                        ? IconButton(
-                            icon: Icon(Icons.clear, size: 36.sp),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _search = '');
-                            },
-                          )
-                        : null,
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 16.w, vertical: 30.h),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(42.r),
-                      borderSide: BorderSide.none,
+                child: Container(
+                  decoration: ShapeDecoration(
+                    color: Colors.white,
+                    shape: squircleBorder(radius: 42.r),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    onChanged: (v) => setState(() => _search = v),
+                    style: AppTextStyles.bodyRegular15,
+                    decoration: InputDecoration(
+                      hintText: 'Nom du produit ou marque…',
+                      hintStyle: AppTextStyles.bodyRegular15
+                          .copyWith(color: Colors.grey[500]),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        size: 60.sp,
+                        color: Colors.grey[600],
+                      ),
+                      suffixIcon: _search.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(Icons.clear, size: 36.sp),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _search = '');
+                              },
+                            )
+                          : null,
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 39.w, vertical: 33.h),
+                      border: InputBorder.none,
                     ),
                   ),
                 ),
@@ -420,7 +421,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
               // Selection status + clear-all, only shown when a selection
               // exists — clearer than a lone "Effacer" in the app bar.
               if (_selected.isNotEmpty) ...[
-                SizedBox(height: 24.h),
+                SizedBox(height: AppSpacing.section),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 48.w),
                   child: Row(
@@ -429,7 +430,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
                         child: Text(
                           'Filtres (${_selected.length})',
                           overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.baloo17,
+                          style: AppTextStyles.baloo22,
                         ),
                       ),
                       SizedBox(width: 24.w),
@@ -461,18 +462,18 @@ class _MapFilterPageState extends State<MapFilterPage> {
                       .whereType<ProductOfInterest>()
                       .toList();
                   return SizedBox(
-                    height: 132.h,
+                    height: 150.h,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       padding: EdgeInsets.symmetric(horizontal: 48.w),
                       itemCount: chips.length,
-                      separatorBuilder: (_, __) => SizedBox(width: 16.w),
+                      separatorBuilder: (_, __) => SizedBox(width: 24.w),
                       itemBuilder: (_, i) => _buildFilterChip(chips[i]),
                     ),
                   );
                 }),
               ],
-              SizedBox(height: 24.h),
+              SizedBox(height: AppSpacing.section),
               // Product grid
               Expanded(
                 child: ListView(

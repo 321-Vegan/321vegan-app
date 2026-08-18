@@ -304,7 +304,8 @@ class DashboardPageState extends State<DashboardPage> {
             children: [
               SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
+                padding: EdgeInsets.fromLTRB(
+                    AppSpacing.pageHorizontal, 16.h, AppSpacing.pageHorizontal, 32.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -314,7 +315,7 @@ class DashboardPageState extends State<DashboardPage> {
                       SizedBox(height: AppSpacing.section),
                       _buildSupportButton(context),
                     ],
-                    SizedBox(height: 24.h),
+                    SizedBox(height: AppSpacing.section),
                     const PromoCarousel(),
                     SizedBox(height: AppSpacing.section),
                     if (!_b12Enabled && !_b12BannerDismissed) ...[
@@ -390,11 +391,9 @@ class DashboardPageState extends State<DashboardPage> {
     );
 
     final seasonal = Theme.of(context).extension<SeasonalTheme>();
-    if (seasonal?.season != Season.autumn) return cards;
+    if (seasonal?.season != Season.spring) return cards;
 
-    // Vine draped over the left edge of the first cards (Figma autumn
-    // redesign) — painted after `cards` so its leaf clusters sit on top of
-    // the white card corners instead of being hidden behind them.
+    // Vine draped over the left edge of the first cards
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -640,8 +639,8 @@ class DashboardPageState extends State<DashboardPage> {
                   children: [
                     Text('Contributions', style: AppTextStyles.baloo22),
                     Text('Merci pour votre aide précieuse !',
-                        style: TextStyle(
-                            fontSize: 36.sp, color: Colors.grey[600])),
+                        style: AppTextStyles.bodyRegular15
+                            .copyWith(color: Colors.grey[600])),
                   ],
                 ),
               ),
@@ -695,14 +694,10 @@ class DashboardPageState extends State<DashboardPage> {
       ),
       child: Column(
         children: [
-          Text('$value',
-              style: TextStyle(
-                  fontSize: 56.sp,
-                  fontWeight: FontWeight.bold,
-                  color: kTextPrimary)),
+          Text('$value', style: AppTextStyles.baloo26),
           SizedBox(height: 4.h),
           Text(label,
-              style: TextStyle(fontSize: 36.sp, color: Colors.grey[600]),
+              style: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center),
         ],
       ),

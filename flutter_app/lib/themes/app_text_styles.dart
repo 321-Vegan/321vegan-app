@@ -115,6 +115,13 @@ class AppTextStyles {
         color: kTextPrimary,
       );
 
+  static TextStyle get bodyBold13 => TextStyle(
+        fontFamily: 'Karla',
+        fontWeight: FontWeight.bold,
+        fontSize: 39.sp,
+        color: kTextPrimary,
+      );
+
   static TextStyle get bodyLight15 => TextStyle(
         fontFamily: 'Karla',
         fontWeight: FontWeight.w300,
@@ -142,4 +149,10 @@ class AppTextStyles {
         fontSize: 45.sp,
         color: kTextPrimary,
       );
+  static TextStyle get bodyBold22 => TextStyle(
+      fontFamily: 'Karla',
+      fontWeight: FontWeight.bold,
+      fontSize: 66.sp,
+      color: kTextPrimary,
+    );
 }

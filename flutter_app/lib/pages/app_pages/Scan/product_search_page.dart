@@ -209,6 +209,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                 padding: EdgeInsets.symmetric(horizontal: 48.w),
                 child: TextField(
                   controller: _searchController,
+                  autofocus: true,
                   onChanged: _onSearchChanged,
                   onSubmitted: isAliment ? _submitBarcode : null,
                   keyboardType:

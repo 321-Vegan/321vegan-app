@@ -5,7 +5,7 @@ import '../../models/auth.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
-import 'auth_styles.dart';
+import '../shared/app_text_field.dart';
 
 class LoginForm extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -79,24 +79,15 @@ class _LoginFormState extends State<LoginForm> {
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Connexion',
-            style: AppTextStyles.baloo22,
-            textAlign: TextAlign.center,
-          ),
+          Text('Connexion', style: AppTextStyles.baloo26),
           SizedBox(height: 32.h),
 
           // Email field
-          TextFormField(
+          AppTextField(
             controller: _emailController,
+            hintText: 'Email',
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
-            decoration: authFieldDecoration(
-              context,
-              label: 'Email',
-              hint: 'votre@email.com',
-              icon: Icons.email_outlined,
-            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer votre email';
@@ -111,23 +102,19 @@ class _LoginFormState extends State<LoginForm> {
           SizedBox(height: 16.h),
 
           // Password field
-          TextFormField(
+          AppTextField(
             controller: _passwordController,
+            hintText: 'Mot de passe',
             obscureText: _obscurePassword,
             autofillHints: const [AutofillHints.password],
-            decoration: authFieldDecoration(
-              context,
-              label: 'Mot de passe',
-              icon: Icons.lock_outlined,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.grey[500],
-                ),
-                onPressed: () {
-                  setState(() => _obscurePassword = !_obscurePassword);
-                },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey[500],
               ),
+              onPressed: () {
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -165,28 +152,20 @@ class _LoginFormState extends State<LoginForm> {
           SizedBox(height: 24.h),
 
           // Switch to register
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Pas encore de compte ? ',
+          Center(
+            child: TextButton(
+              onPressed: widget.onSwitchToRegister,
+              child: Text(
+                'Je n\'ai pas de compte',
                 style: TextStyle(
                   fontSize: 40.sp,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              TextButton(
-                onPressed: widget.onSwitchToRegister,
-                child: Text(
-                  'S\'inscrire',
-                  style: TextStyle(
-                    fontSize: 40.sp,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           ],
         ),

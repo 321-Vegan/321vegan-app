@@ -27,7 +27,8 @@ class B12InfoPage extends StatelessWidget {
         body: SafeArea(
           top: false,
           child: ListView(
-            padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 32.h),
+            padding: EdgeInsets.fromLTRB(
+                AppSpacing.pageHorizontal, 8.h, AppSpacing.pageHorizontal, 32.h),
             children: [
               const InfoBox(
                 iconAsset: 'lib/assets/images/icons/solid-check.webp',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
+import '../../themes/app_text_styles.dart';
 
 /// A tappable row showing a label and an optional trailing value/icon, used
 /// for the "Compte", "B12" and "Produits" sections in the Paramètres screen.
@@ -50,11 +51,7 @@ class SettingsRowTile extends StatelessWidget {
                       child: Text(
                         label,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 42.sp,
-                          fontWeight: FontWeight.w600,
-                          color: kTextPrimary,
-                        ),
+                        style: AppTextStyles.bodyBold15,
                       ),
                     ),
                     if (labelSuffix != null) ...[
@@ -71,7 +68,8 @@ class SettingsRowTile extends StatelessWidget {
                     value!,
                     textAlign: TextAlign.right,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
+                    style: AppTextStyles.bodyRegular15
+                        .copyWith(color: Colors.grey[500]),
                   ),
                 ),
               if (trailing != null) trailing!,

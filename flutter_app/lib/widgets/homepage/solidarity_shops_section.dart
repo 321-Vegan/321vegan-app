@@ -116,7 +116,7 @@ class _SolidarityShopsSectionState extends State<SolidarityShopsSection> {
             child: Row(
               children: [
                 for (int i = 0; i < partners.length; i++) ...[
-                  if (i > 0) SizedBox(width: 30.w),
+                  if (i > 0) SizedBox(width: AppSpacing.item),
                   _ShopCard(
                     partner: partners[i],
                     showIceDecoration: isWinter && _icedIndices.contains(i),
@@ -171,13 +171,13 @@ class _ShopCard extends StatelessWidget {
               partner.discountText,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.baloo22
+              style: AppTextStyles.baloo26
             ),
             Text(
               partner.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 40.sp, color: Colors.grey[600]),
+              style: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
             ),
             SizedBox(height: 8.h),
             Container(
@@ -191,7 +191,7 @@ class _ShopCard extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 40.sp,
+                  fontSize: 39.sp,
                   color: kAccentYellow,
                   fontWeight: FontWeight.w600,
                 ),

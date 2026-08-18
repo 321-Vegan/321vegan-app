@@ -7,8 +7,8 @@ import '../../helpers/preference_helper.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
+import '../shared/app_text_field.dart';
 import '../shared/vegan_since_date_modal.dart';
-import 'auth_styles.dart';
 
 class RegisterForm extends StatefulWidget {
   final VoidCallback? onRegisterSuccess;
@@ -161,25 +161,16 @@ class _RegisterFormState extends State<RegisterForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (widget.showTitle) ...[
-            Text(
-              'Créer un compte',
-              style: AppTextStyles.baloo22,
-              textAlign: TextAlign.center,
-            ),
+            Text('S\'inscrire', style: AppTextStyles.baloo26),
             SizedBox(height: 32.h),
           ],
 
           // Email field
-          TextFormField(
+          AppTextField(
             controller: _emailController,
+            hintText: 'Email',
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
-            decoration: authFieldDecoration(
-              context,
-              label: 'Email',
-              hint: 'votre@email.com',
-              icon: Icons.email_outlined,
-            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer votre email';
@@ -194,15 +185,10 @@ class _RegisterFormState extends State<RegisterForm> {
           SizedBox(height: 24.h),
 
           // Nickname field
-          TextFormField(
+          AppTextField(
             controller: _nicknameController,
+            hintText: 'Nom d\'utilisateur',
             autofillHints: const [AutofillHints.username],
-            decoration: authFieldDecoration(
-              context,
-              label: 'Nom d\'utilisateur',
-              hint: 'Votre pseudo',
-              icon: Icons.person_outlined,
-            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer un nom d\'utilisateur';
@@ -216,48 +202,39 @@ class _RegisterFormState extends State<RegisterForm> {
           SizedBox(height: 24.h),
 
           // Vegan since field (optional)
-          TextFormField(
+          AppTextField(
             controller: _veganSinceController,
+            hintText: 'Végane depuis (facultatif)',
             readOnly: true,
             onTap: _pickVeganSince,
-            decoration: authFieldDecoration(
-              context,
-              label: 'Végane depuis (facultatif)',
-              hint: 'Je ne suis pas encore végane',
-              icon: Icons.eco_outlined,
-              suffixIcon: _veganSince != null
-                  ? IconButton(
-                      icon: Icon(Icons.close,
-                          size: 40.sp, color: Colors.grey[500]),
-                      onPressed: () => setState(() {
-                        _veganSince = null;
-                        _veganSinceController.clear();
-                      }),
-                    )
-                  : Icon(Icons.chevron_right,
-                      size: 44.sp, color: Colors.grey[400]),
-            ),
+            suffixIcon: _veganSince != null
+                ? IconButton(
+                    icon: Icon(Icons.close,
+                        size: 40.sp, color: Colors.grey[500]),
+                    onPressed: () => setState(() {
+                      _veganSince = null;
+                      _veganSinceController.clear();
+                    }),
+                  )
+                : Icon(Icons.chevron_right,
+                    size: 44.sp, color: Colors.grey[400]),
           ),
           SizedBox(height: 24.h),
 
           // Password field
-          TextFormField(
+          AppTextField(
             controller: _passwordController,
+            hintText: 'Mot de passe',
             obscureText: _obscurePassword,
             autofillHints: const [AutofillHints.newPassword],
-            decoration: authFieldDecoration(
-              context,
-              label: 'Mot de passe',
-              icon: Icons.lock_outlined,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.grey[500],
-                ),
-                onPressed: () {
-                  setState(() => _obscurePassword = !_obscurePassword);
-                },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey[500],
               ),
+              onPressed: () {
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -272,26 +249,22 @@ class _RegisterFormState extends State<RegisterForm> {
           SizedBox(height: 24.h),
 
           // Confirm password field
-          TextFormField(
+          AppTextField(
             controller: _confirmPasswordController,
+            hintText: 'Confirmer le mot de passe',
             obscureText: _obscureConfirmPassword,
             autofillHints: const [AutofillHints.newPassword],
-            decoration: authFieldDecoration(
-              context,
-              label: 'Confirmer le mot de passe',
-              icon: Icons.lock_outlined,
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureConfirmPassword
-                      ? Icons.visibility
-                      : Icons.visibility_off,
-                  color: Colors.grey[500],
-                ),
-                onPressed: () {
-                  setState(
-                      () => _obscureConfirmPassword = !_obscureConfirmPassword);
-                },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility
+                    : Icons.visibility_off,
+                color: Colors.grey[500],
               ),
+              onPressed: () {
+                setState(
+                    () => _obscureConfirmPassword = !_obscureConfirmPassword);
+              },
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -307,7 +280,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
           // Register button
           AppButton(
-            label: 'S\'inscrire',
+            label: 'C\'est parti !',
             backgroundColor: Theme.of(context).colorScheme.primary,
             isLoading: _isLoading,
             onPressed: _handleRegister,
@@ -315,28 +288,20 @@ class _RegisterFormState extends State<RegisterForm> {
           SizedBox(height: 24.h),
 
           // Switch to login
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Déjà un compte ? ',
+          Center(
+            child: TextButton(
+              onPressed: widget.onSwitchToLogin,
+              child: Text(
+                'J\'ai déjà un compte',
                 style: TextStyle(
                   fontSize: 40.sp,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              TextButton(
-                onPressed: widget.onSwitchToLogin,
-                child: Text(
-                  'Se connecter',
-                  style: TextStyle(
-                    fontSize: 40.sp,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           ],
         ),

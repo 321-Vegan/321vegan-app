@@ -1,21 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../services/auth_service.dart';
-import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
+import '../../../widgets/auth/auth_hero_carousel.dart';
 import '../../../widgets/auth/login_form.dart';
 import '../../../widgets/auth/register_form.dart';
 import '../../../widgets/auth/forgot_password_form.dart';
-import '../../../widgets/shared/app_card.dart';
-
-/// Reasons to sign up, shown on the coloured header card — mirrors the
-/// checklist on [SubscriptionPage]'s "Passez Premium !" pitch, kept to
-/// benefits an account unlocks by itself (not the paid tiers).
-const _accountBenefits = [
-  'Configurer un rappel B12',
-  'Collectionner des produits en les scannant',
-  'Choisir un avatar',
-];
 
 enum AuthView { login, register, forgotPassword }
 
@@ -49,118 +39,26 @@ class _AuthGatePageState extends State<AuthGatePage> {
     // successful login; nothing to render for the in-between frame.
     if (AuthService.isLoggedIn) return const SizedBox.shrink();
 
-    final primary = Theme.of(context).colorScheme.primary;
-
     return SafeArea(
       child: SingleChildScrollView(
-        padding:
-            EdgeInsets.only(top: 16.h, left: 24.w, right: 24.w, bottom: 20.h),
+        padding: EdgeInsets.only(
+            top: 16.h,
+            left: AppSpacing.pageHorizontal,
+            right: AppSpacing.pageHorizontal,
+            bottom: 20.h),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildHeader(primary),
+            SizedBox(height: 24.h),
+            Center(
+              child: Image.asset('lib/assets/app_icon.png', height: 160.h),
+            ),
+            SizedBox(height: 24.h),
+            const AuthHeroCarousel(),
             SizedBox(height: AppSpacing.section),
-            AppCard(child: _buildCurrentView()),
+            _buildCurrentView(),
           ],
         ),
-      ),
-    );
-  }
-
-  /// Coloured pitch card echoing [SubscriptionPage]'s "Passez Premium !"
-  /// header — bold white title over a benefits checklist — scaled down for
-  /// an inline settings section rather than a full-screen takeover.
-  Widget _buildHeader(Color primary) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(28.w),
-      decoration: ShapeDecoration(
-        gradient: LinearGradient(
-          colors: [primary, primary.withAlpha(190)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        shape: squircleBorder(radius: 40.r),
-        shadows: [
-          BoxShadow(
-            color: primary.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset(
-                'lib/assets/images/buy-premium/tree.webp',
-                fit: BoxFit.contain,
-                height: 220.h,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.eco, size: 160.sp, color: Colors.white);
-                },
-              ),
-              SizedBox(width: 20.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Rejoignez la communauté !',
-                      style: TextStyle(
-                        fontSize: 64.sp,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: 'Baloo2',
-                        height: 1.1,
-                        letterSpacing: -1,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'Connectez-vous ou créez un compte pour profiter de toutes les fonctionnalités :',
-                      style: TextStyle(
-                        fontSize: 38.sp,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 24.h),
-          for (final benefit in _accountBenefits)
-            Padding(
-              padding: EdgeInsets.only(bottom: 16.h),
-              child: Row(
-                children: [
-                  Container(
-                    width: 56.w,
-                    height: 56.w,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.check, size: 36.sp, color: primary),
-                  ),
-                  SizedBox(width: 20.w),
-                  Expanded(
-                    child: Text(
-                      benefit,
-                      style: TextStyle(
-                        fontSize: 38.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
       ),
     );
   }

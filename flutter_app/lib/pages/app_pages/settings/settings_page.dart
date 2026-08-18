@@ -390,7 +390,8 @@ class _SettingsPageState extends State<SettingsPage> {
         Theme.of(context).extension<SeasonalTheme>()?.name ?? 'Aucun';
 
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 32.h),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.pageHorizontal, 8.h, AppSpacing.pageHorizontal, 32.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

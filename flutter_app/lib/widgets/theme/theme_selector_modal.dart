@@ -131,15 +131,15 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     Navigator.of(context).pop(true);
 
     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Thème mis à jour avec succès !',
-            style: TextStyle(fontSize: 50.sp, fontFamily: 'Baloo'),
-          ),
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          duration: const Duration(seconds: 2),
+      SnackBar(
+        content: Text(
+          'Thème mis à jour avec succès !',
+          style: TextStyle(fontSize: 50.sp, fontFamily: 'Baloo'),
         ),
-      );
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _applyThemeSilently() async {
@@ -281,15 +281,14 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
               _buildPageIndicator(allThemes),
 
               // Info text for non-subscribers
-              if (!isSubscribed)
-                SizedBox(height: 30.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-                  child: const InfoBox(
-                    text:
-                        'L\'abonnement soutien débloque tous les thèmes. Y souscrire permet au projet 321 Vegan de continuer d\'exister et de se développer. Merci !',
-                  ),
+              if (!isSubscribed) SizedBox(height: 30.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
+                child: const InfoBox(
+                  text:
+                      'L\'abonnement soutien débloque tous les thèmes. Y souscrire permet au projet 321 Vegan de continuer d\'exister et de se développer. Merci !',
                 ),
+              ),
               SizedBox(height: 60.h),
               // Bottom button
               _buildBottomButton(currentTheme, isCurrentLocked),
@@ -488,7 +487,8 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                                       Text(
                                         'Saison actuelle',
                                         style: AppTextStyles.bodyBold11
-                                            .copyWith(color: theme.primaryColor),
+                                            .copyWith(
+                                                color: theme.primaryColor),
                                       ),
                                     ],
                                   ),
@@ -610,17 +610,19 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     required SeasonalTheme theme,
     required Widget child,
   }) {
-    if (theme.snowGlobeParticleAsset == null &&
+    if ((theme.snowGlobeParticleAssets?.isEmpty ?? true) &&
         theme.snowGlobeParticleIcon == null &&
         theme.particleType != ParticleType.snowflakes) {
       return child;
     }
     final br = squircleRadius(28.r);
     return SnowGlobeOverlay(
-      particleAsset: theme.snowGlobeParticleAsset,
+      particleAssets: theme.snowGlobeParticleAssets,
       particleIcon: theme.snowGlobeParticleIcon,
       particleCount: theme.particleType == ParticleType.snowflakes ? 15 : 10,
       particleOpacity: theme.particleOpacity,
+      particleMinRadius: theme.particleMinRadius,
+      particleMaxRadius: theme.particleMaxRadius,
       // Only affects icon/plain-circle particles (winter's snowflakes) —
       // asset-image particles keep their own colors. Defaults to white,
       // which read fine on the old saturated card but disappears against
@@ -650,8 +652,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         child: AppButton(
           label: isLocked ? 'Débloquer' : 'Appliquer',
           icon: isLocked ? Icons.lock_open : Icons.check_circle_outline,
-          backgroundColor:
-              isLocked ? kAccentYellow : currentTheme.primaryColor,
+          backgroundColor: isLocked ? kAccentYellow : currentTheme.primaryColor,
           onPressed: isLocked ? _openSubscriptionPage : _saveThemeSettings,
         ),
       ),

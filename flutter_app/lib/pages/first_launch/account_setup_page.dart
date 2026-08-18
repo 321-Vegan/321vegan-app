@@ -87,7 +87,7 @@ class _AccountSetupPageState extends State<AccountSetupPage> {
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [

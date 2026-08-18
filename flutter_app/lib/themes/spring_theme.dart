@@ -19,10 +19,15 @@ SeasonalTheme springTheme = SeasonalTheme(
     const Color(0xFFDDD6FE),
   ],
   particleType: ParticleType.petals,
-  particleCount: 16,
+  particleCount: 50,
   particleOpacity: 0.7,
   seasonalAsset: 'lib/assets/images/tulipe.webp',
-  snowGlobeParticleAsset: 'lib/assets/images/marguerite.webp',
+  snowGlobeParticleAssets: [
+    'lib/assets/themes/particles/spring-flower1.webp',
+    'lib/assets/themes/particles/spring-flower2.webp',
+  ],
+  particleMinRadius: 2,
+  particleMaxRadius: 4,
   iconTopPosition: -400.h,
   iconLeftPosition: -200.w,
   // 192.05deg linear-gradient from Figma.
@@ -31,8 +36,8 @@ SeasonalTheme springTheme = SeasonalTheme(
     end: Alignment(-0.2087, 0.978),
     stops: [0.0, 0.3],
     colors: [
-      Color(0xFFC3E6A0),
-      Color(0xFFF0F8E4),
+      Color(0xFFF5CFC0),
+      Color(0xFFFCF3EE),
     ],
   ),
 );

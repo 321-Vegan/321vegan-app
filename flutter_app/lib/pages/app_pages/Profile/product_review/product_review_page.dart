@@ -5,6 +5,7 @@ import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/validator_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_spacing.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'constants.dart';
 import 'shared_widgets.dart';
@@ -204,7 +205,8 @@ class _SetupPhaseState extends State<_SetupPhase> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.pageHorizontal, vertical: 24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

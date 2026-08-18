@@ -174,12 +174,9 @@ flutter:
     # Seasonal themes
     - lib/assets/images/tulipe.webp
     - lib/assets/images/tulipe-smile.webp
-    - lib/assets/images/marguerite.webp
     - lib/assets/images/ruche.webp
-    - lib/assets/images/papillon.webp
     - lib/assets/images/pumpkin.webp
     - lib/assets/images/pumpkin-smile.webp
-    - lib/assets/themes/substract.webp
     - lib/assets/themes/plant.webp
     # Seasonal themes cards
     - lib/assets/themes/cards/leaf-autumn.webp
@@ -197,12 +194,27 @@ flutter:
     - lib/assets/themes/cards/planet-spring.webp
     - lib/assets/themes/cards/planet-winter.webp
     - lib/assets/themes/cards/planet-autumn.webp
+    - lib/assets/themes/cards/poule-basic.webp
+    - lib/assets/themes/cards/poule-summer.webp
+    - lib/assets/themes/cards/poule-spring.webp
+    - lib/assets/themes/cards/poule-winter.webp
+    - lib/assets/themes/cards/poule-autumn.webp
     # Seasonal Themes - Winter
     - lib/assets/themes/ice_8.webp
     - lib/assets/themes/ice_2.webp
     - lib/assets/themes/ice_10.webp
     # Seasonal Themes - Autumn
     - lib/assets/themes/plant.webp
+    - lib/assets/themes/particles/autumn-leaf.webp
+    # Seasonal Themes - Summer
+    - lib/assets/themes/burst.webp
+    - lib/assets/themes/particles/summer-fraise.webp
+    - lib/assets/themes/particles/summer-orange.webp
+    - lib/assets/themes/particles/summer-tomate.webp
+    # Seasonal Themes - Spring
+    - lib/assets/themes/particles/spring-flower1.webp
+    - lib/assets/themes/particles/spring-flower2.webp
+
     # Icons
     - lib/assets/images/icons/crown-line.webp
     - lib/assets/images/icons/solid-close.webp

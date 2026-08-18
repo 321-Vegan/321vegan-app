@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/seasonal_theme.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
@@ -43,15 +44,17 @@ class AppBackground extends StatelessWidget {
     );
 
     final hasParticles = isSeasonal &&
-        (seasonal.snowGlobeParticleAsset != null ||
+        ((seasonal.snowGlobeParticleAssets?.isNotEmpty ?? false) ||
             seasonal.snowGlobeParticleIcon != null ||
             seasonal.particleType == ParticleType.snowflakes);
     if (hasParticles) {
       backdrop = SnowGlobeOverlay(
-        particleAsset: seasonal.snowGlobeParticleAsset,
+        particleAssets: seasonal.snowGlobeParticleAssets,
         particleIcon: seasonal.snowGlobeParticleIcon,
         particleCount: seasonal.particleCount,
         particleOpacity: seasonal.particleOpacity,
+        particleMinRadius: seasonal.particleMinRadius,
+        particleMaxRadius: seasonal.particleMaxRadius,
         // Snowflakes read better as white/icy against winter's pale blue
         // gradient than the theme's saturated primary blue.
         particleColor: seasonal.particleType == ParticleType.snowflakes
@@ -62,12 +65,30 @@ class AppBackground extends StatelessWidget {
       );
     }
 
-    // Backdrop (gradient + particles) painted first, page content stacked on
-    // top — otherwise the particles would float above cards/buttons instead
-    // of drifting behind them.
+    // Soft white sunburst glow, top-right corner, summer only — bleeds off
+    // both edges since the asset is a soft radial fade, not a hard shape.
+    final summerBurst = isSeasonal && seasonal.season == Season.summer
+        ? Positioned(
+            top: -80.h,
+            right: -80.w,
+            child: IgnorePointer(
+              child: Image.asset(
+                'lib/assets/themes/burst.webp',
+                width: 900.w,
+                fit: BoxFit.fitWidth,
+                alignment: Alignment.topRight,
+              ),
+            ),
+          )
+        : null;
+
+    // Backdrop (gradient + particles) painted first, corner glow next, page
+    // content stacked on top — otherwise the particles/glow would float
+    // above cards/buttons instead of sitting behind them.
     return Stack(
       children: [
         Positioned.fill(child: backdrop),
+        if (summerBurst != null) summerBurst,
         child,
       ],
     );

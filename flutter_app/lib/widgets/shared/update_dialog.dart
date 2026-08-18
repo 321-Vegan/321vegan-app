@@ -1,7 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:upgrader/upgrader.dart';
+import '../../helpers/theme_helper.dart';
+import '../../models/seasonal_theme.dart';
 import '../../themes/app_shapes.dart';
+import '../../themes/app_text_styles.dart';
+import 'app_button.dart';
+import 'info_box.dart';
+
+/// Seasonal "poule" illustration (same asset family as the dashboard's
+/// "Animaux épargnés" stat card, see `stat_card.dart`), keyed by the actual
+/// calendar season ([ThemeHelper.getCurrentSeason]) rather than the user's
+/// selected/purchased theme — most users are on the default (non-seasonal)
+/// theme, so reading `Theme.of(context).extension<SeasonalTheme>()` here
+/// would show "basic" year-round regardless of the date.
+String _seasonalPouleAsset(Season season) {
+  final suffix = switch (season) {
+    Season.autumn => 'autumn',
+    Season.summer => 'summer',
+    Season.spring => 'spring',
+    Season.winter => 'winter',
+    Season.defaultTheme => 'basic',
+  };
+  return 'lib/assets/themes/cards/poule-$suffix.webp';
+}
 
 class CustomUpgradeAlert extends UpgradeAlert {
   CustomUpgradeAlert({
@@ -76,8 +98,11 @@ class _UpdateDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final version = _extractVersion();
     final hasNotes = releaseNotes != null && releaseNotes!.isNotEmpty;
+    final primary = Theme.of(context).colorScheme.primary;
+    final season = ThemeHelper.getCurrentSeason();
 
     return Dialog(
+      backgroundColor: Colors.white,
       shape: squircleBorder(radius: 28.r),
       child: Container(
         padding: EdgeInsets.all(32.w),
@@ -89,24 +114,19 @@ class _UpdateDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Avatar
-            Container(
-              width: 240.w,
-              height: 240.w,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+            SizedBox(
+              width: 400.w,
+              height: 400.w,
+              child: Image.asset(
+                _seasonalPouleAsset(season),
+                fit: BoxFit.contain,
               ),
-              child: Image.asset('lib/assets/avatars/lapin.png', fit: BoxFit.contain),
             ),
             SizedBox(height: 24.h),
             // Title
             Text(
               'Mise à jour disponible !',
-              style: TextStyle(
-                fontSize: 56.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
+              style: AppTextStyles.baloo22,
               textAlign: TextAlign.center,
             ),
             if (version != null) ...[
@@ -114,15 +134,13 @@ class _UpdateDialog extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
                 decoration: ShapeDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  color: primary.withValues(alpha: 0.1),
                   shape: squircleBorder(radius: 20.r),
                 ),
                 child: Text(
                   'v$version',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 36.sp,
-                    fontWeight: FontWeight.w600,
+                  style: AppTextStyles.bodyBold13.copyWith(
+                    color: primary,
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -133,8 +151,7 @@ class _UpdateDialog extends StatelessWidget {
             if (hasNotes) ...[
               Text(
                 releaseNotes!,
-                style: TextStyle(
-                  fontSize: 42.sp,
+                style: AppTextStyles.bodyRegular15.copyWith(
                   color: Colors.grey[600],
                   height: 1.4,
                 ),
@@ -142,73 +159,34 @@ class _UpdateDialog extends StatelessWidget {
               ),
               SizedBox(height: 12.h),
             ],
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16.w),
-              decoration: ShapeDecoration(
-                color: Colors.blue.shade50,
-                shape: squircleBorder(
-                  radius: 12.r,
-                  side: BorderSide(color: Colors.blue.shade100),
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline_rounded, color: Colors.blue.shade400, size: 42.sp),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: Text(
-                      'Mettre à jour l\'application permet d\'avoir des données à jour, les correctifs de bugs et les nouvelles fonctionnalités !',
-                      style: TextStyle(
-                        fontSize: 36.sp,
-                        color: Colors.blue.shade700,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            const InfoBox(
+              text:
+                  'Mettre à jour l\'application permet d\'avoir des données à jour, les correctifs de bugs et les nouvelles fonctionnalités !',
             ),
             SizedBox(height: 32.h),
-            // Buttons
-            Row(
-              children: [
-                if (showLater) ...[
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: onLater,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey[600],
-                        side: BorderSide(color: Colors.grey[300]!, width: 2),
-                        padding: EdgeInsets.symmetric(vertical: 20.h),
-                        shape: squircleBorder(radius: 12.r),
-                      ),
-                      child: Text(
-                        'Plus tard',
-                        style: TextStyle(fontSize: 44.sp, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                ],
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: onUpdate,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: squircleBorder(radius: 12.r),
-                    ),
-                    child: Text(
-                      'Mettre à jour',
-                      style: TextStyle(fontSize: 44.sp, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
+            // Buttons — a single full-width primary CTA plus a lighter text
+            // link for the secondary action, rather than two pill buttons
+            // squeezed side by side (AppButton's padding is sized for one
+            // full-width button, and doesn't leave room for "Mettre à jour"
+            // next to another pill in this dialog's narrower width).
+            SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                label: 'Mettre à jour',
+                backgroundColor: primary,
+                onPressed: onUpdate,
+              ),
             ),
+            if (showLater) ...[
+              SizedBox(height: 8.h),
+              TextButton(
+                onPressed: onLater,
+                child: Text(
+                  'Plus tard',
+                  style: AppTextStyles.bodyMedium15.copyWith(color: Colors.grey[600]),
+                ),
+              ),
+            ],
           ],
         ),
       ),

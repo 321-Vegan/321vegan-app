@@ -109,7 +109,8 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : ListView(
-                  padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 32.h),
+                  padding: EdgeInsets.fromLTRB(
+                      AppSpacing.pageHorizontal, 8.h, AppSpacing.pageHorizontal, 32.h),
                   children: [
                     Container(
                       width: double.infinity,

@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
@@ -87,6 +88,7 @@ const List<HomeStat> homeStats = [
 /// design yet fall back to that card's `basic` asset, so a card can ship
 /// with only "basic" + one seasonal variant and grow the rest over time.
 const Map<String, String> _statThemeAssetPrefix = {
+  'animalUnit': 'lib/assets/themes/cards/poule',
   'forestUnit': 'lib/assets/themes/cards/leaf',
   'waterUnit': 'lib/assets/themes/cards/water',
   'co2Unit': 'lib/assets/themes/cards/planet',
@@ -109,6 +111,11 @@ String seasonalStatIllustration(HomeStat stat, Season? season) {
 /// Assets that actually exist on disk for each themed card — every card in
 /// [_statThemeAssetPrefix] must at least have its `-basic.webp` here.
 const Set<String> _themeAssetsWithDesign = {
+  'lib/assets/themes/cards/poule-autumn.webp',
+  'lib/assets/themes/cards/poule-basic.webp',
+  'lib/assets/themes/cards/poule-spring.webp',
+  'lib/assets/themes/cards/poule-summer.webp',
+  'lib/assets/themes/cards/poule-winter.webp',
   'lib/assets/themes/cards/leaf-autumn.webp',
   'lib/assets/themes/cards/leaf-basic.webp',
   'lib/assets/themes/cards/leaf-spring.webp',
@@ -181,20 +188,13 @@ Widget buildStatCard(
                   child: Text(
                     unitName.isEmpty ? '$unit' : '$unit $unitName',
                     key: ValueKey<int>(unit),
-                    style: TextStyle(
-                      fontSize: 64.sp,
-                      color: Colors.grey[850],
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTextStyles.baloo26.copyWith(color: Colors.grey[850]),
                   ),
                 ),
                 SizedBox(height: 8.h),
                 Text(
                   title,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 42.sp,
-                  ),
+                  style: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ),

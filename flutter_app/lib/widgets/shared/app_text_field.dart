@@ -27,7 +27,17 @@ class AppTextField extends StatefulWidget {
   final int maxLines;
   final bool obscureText;
   final bool enabled;
+  final bool readOnly;
+  final VoidCallback? onTap;
   final List<String>? autofillHints;
+
+  /// Trailing widget inside the field (e.g. a password visibility toggle
+  /// or a chevron/clear button on a read-only picker field).
+  final Widget? suffixIcon;
+
+  /// Wires the field into an ancestor [Form]; omit for fields validated
+  /// manually outside a `Form` (the existing call sites in this codebase).
+  final String? Function(String?)? validator;
 
   const AppTextField({
     super.key,
@@ -40,7 +50,11 @@ class AppTextField extends StatefulWidget {
     this.maxLines = 1,
     this.obscureText = false,
     this.enabled = true,
+    this.readOnly = false,
+    this.onTap,
     this.autofillHints,
+    this.suffixIcon,
+    this.validator,
   });
 
   @override
@@ -84,7 +98,7 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
         ),
       ),
-      child: TextField(
+      child: TextFormField(
         controller: widget.controller,
         focusNode: _focusNode,
         maxLength: widget.maxLength,
@@ -94,7 +108,13 @@ class _AppTextFieldState extends State<AppTextField> {
         maxLines: widget.obscureText ? 1 : widget.maxLines,
         obscureText: widget.obscureText,
         enabled: widget.enabled,
+        readOnly: widget.readOnly,
+        onTap: widget.onTap,
         autofillHints: widget.autofillHints,
+        validator: widget.validator,
+        autovalidateMode: widget.validator != null
+            ? AutovalidateMode.onUserInteraction
+            : null,
         textAlignVertical: widget.maxLines > 1
             ? TextAlignVertical.top
             : TextAlignVertical.center,
@@ -104,7 +124,9 @@ class _AppTextFieldState extends State<AppTextField> {
           counterText: '',
           hintText: widget.hintText,
           hintStyle: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]),
+          suffixIcon: widget.suffixIcon,
           border: InputBorder.none,
+          errorStyle: TextStyle(color: kSemanticError, fontSize: 33.sp),
           contentPadding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 36.h),
         ),
       ),

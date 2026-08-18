@@ -5,12 +5,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class AppSpacing {
   AppSpacing._();
 
-  /// Between two sections (24pt in Figma).
-  static double get section => 72.h;
+  /// Between two sections (20pt in Figma).
+  static double get section => 60.h;
 
   /// Between a section title and its content (14pt).
   static double get afterTitle => 42.h;
 
   /// Between repeated cards inside a list/section (12pt).
   static double get item => 36.h;
+
+  /// Left/right screen-edge margin of a page's body content (17pt).
+  static double get pageHorizontal => 51.w;
 }

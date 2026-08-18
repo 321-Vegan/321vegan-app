@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
+import '../../themes/app_text_styles.dart';
 
 /// A titled row with a trailing switch, used for every on/off preference.
 /// Same card spec as [SettingsRowTile] (radius 12, Border/Default, white).
@@ -50,11 +51,7 @@ class SettingsToggleTile extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      fontSize: 42.sp,
-                      fontWeight: FontWeight.w600,
-                      color: kTextPrimary,
-                    ),
+                    style: AppTextStyles.bodyBold15,
                   ),
                   if (subtitle != null) ...[
                     SizedBox(height: 4.h),

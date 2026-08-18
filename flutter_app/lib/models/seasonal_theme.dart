@@ -39,6 +39,13 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
   /// subtle without having to touch the per-particle randomization.
   final double particleOpacity;
 
+  /// Random particle radius range (see [SnowGlobeOverlay]) — each particle
+  /// picks a radius in [particleMinRadius, particleMaxRadius] at creation
+  /// and keeps it for its lifetime. Drives rendered size directly for
+  /// winter's plain circles, and via `radius * 5` for icon/image particles.
+  final double particleMinRadius;
+  final double particleMaxRadius;
+
   final Color iconBackgroundColor;
   final LinearGradient? backgroundGradient;
   final double iconTopPosition;
@@ -48,12 +55,14 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
   /// Null means the season uses [seasonalIcon] instead.
   final String? seasonalAsset;
 
-  /// Asset path for the snow-globe particle image (e.g. marguerite, papillon).
-  /// Null means particles use [snowGlobeParticleIcon] or default snowflakes.
-  final String? snowGlobeParticleAsset;
+  /// Asset paths the snow-globe particles are randomly drawn from (e.g. one
+  /// per particle for summer's strawberry/orange/tomato mix). Each particle
+  /// picks one asset at creation and keeps it for its lifetime. Null/empty
+  /// means particles use [snowGlobeParticleIcon] or default snowflakes.
+  final List<String>? snowGlobeParticleAssets;
 
   /// Icon for snow-globe particles (e.g. maple leaf for autumn).
-  /// Only used when [snowGlobeParticleAsset] is null.
+  /// Only used when [snowGlobeParticleAssets] is null/empty.
   final IconData? snowGlobeParticleIcon;
 
   bool get isPremium => season != Season.defaultTheme;
@@ -70,12 +79,14 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
     required this.particleType,
     this.particleCount = 16,
     this.particleOpacity = 1.0,
+    this.particleMinRadius = 1.5,
+    this.particleMaxRadius = 4.0,
     required this.iconBackgroundColor,
     this.backgroundGradient,
     this.iconTopPosition = 0,
     this.iconLeftPosition = 0,
     this.seasonalAsset,
-    this.snowGlobeParticleAsset,
+    this.snowGlobeParticleAssets,
     this.snowGlobeParticleIcon,
   });
 
@@ -92,12 +103,14 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
     ParticleType? particleType,
     int? particleCount,
     double? particleOpacity,
+    double? particleMinRadius,
+    double? particleMaxRadius,
     Color? iconBackgroundColor,
     LinearGradient? backgroundGradient,
     double? iconTopPosition,
     double? iconLeftPosition,
     String? seasonalAsset,
-    String? snowGlobeParticleAsset,
+    List<String>? snowGlobeParticleAssets,
     IconData? snowGlobeParticleIcon,
   }) {
     return SeasonalTheme(
@@ -112,13 +125,15 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
       particleType: particleType ?? this.particleType,
       particleCount: particleCount ?? this.particleCount,
       particleOpacity: particleOpacity ?? this.particleOpacity,
+      particleMinRadius: particleMinRadius ?? this.particleMinRadius,
+      particleMaxRadius: particleMaxRadius ?? this.particleMaxRadius,
       iconBackgroundColor: iconBackgroundColor ?? this.iconBackgroundColor,
       backgroundGradient: backgroundGradient ?? this.backgroundGradient,
       iconTopPosition: iconTopPosition ?? this.iconTopPosition,
       iconLeftPosition: iconLeftPosition ?? this.iconLeftPosition,
       seasonalAsset: seasonalAsset ?? this.seasonalAsset,
-      snowGlobeParticleAsset:
-          snowGlobeParticleAsset ?? this.snowGlobeParticleAsset,
+      snowGlobeParticleAssets:
+          snowGlobeParticleAssets ?? this.snowGlobeParticleAssets,
       snowGlobeParticleIcon:
           snowGlobeParticleIcon ?? this.snowGlobeParticleIcon,
     );
@@ -140,6 +155,10 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
       particleCount: t < 0.5 ? particleCount : other.particleCount,
       particleOpacity:
           particleOpacity + (other.particleOpacity - particleOpacity) * t,
+      particleMinRadius:
+          particleMinRadius + (other.particleMinRadius - particleMinRadius) * t,
+      particleMaxRadius:
+          particleMaxRadius + (other.particleMaxRadius - particleMaxRadius) * t,
       iconBackgroundColor:
           Color.lerp(iconBackgroundColor, other.iconBackgroundColor, t)!,
       backgroundGradient:
@@ -149,8 +168,8 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
       iconLeftPosition:
           iconLeftPosition + (other.iconLeftPosition - iconLeftPosition) * t,
       seasonalAsset: t < 0.5 ? seasonalAsset : other.seasonalAsset,
-      snowGlobeParticleAsset:
-          t < 0.5 ? snowGlobeParticleAsset : other.snowGlobeParticleAsset,
+      snowGlobeParticleAssets:
+          t < 0.5 ? snowGlobeParticleAssets : other.snowGlobeParticleAssets,
       snowGlobeParticleIcon:
           t < 0.5 ? snowGlobeParticleIcon : other.snowGlobeParticleIcon,
     );

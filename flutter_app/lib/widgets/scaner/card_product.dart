@@ -41,7 +41,8 @@ class RejectedProductInfoCard extends StatelessWidget {
         color: kSemanticError,
         colorBlendMode: BlendMode.srcIn,
       ),
-      statusLabel: reason != null ? 'Non-végane : $reason' : 'Non-végane',
+      statusLabel: 'Non-végane',
+      statusDetail: reason,
       // Nothing to gate on a "not vegan" result, so scores show unlocked.
       scores: ProductScoresSection(
         barcode: productInfo.code,

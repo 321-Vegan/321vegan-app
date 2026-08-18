@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../helpers/time_counter/time_counter.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
+import '../../themes/app_text_styles.dart';
 
 /// Live "ans / mois / jours / heures / min" breakdown since a target date —
 /// the pre-redesign home page counter, restyled as a row of bordered
@@ -95,7 +96,7 @@ class _VeganCounterState extends State<VeganCounter> {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 42.sp, color: Colors.grey[600]),
+          style: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
         ),
       ],
     );
@@ -109,14 +110,7 @@ class _VeganCounterState extends State<VeganCounter> {
         child: Text(
           digit,
           key: ValueKey(digit),
-          style: TextStyle(
-            fontFamily: 'Baloo2',
-            fontWeight: FontWeight.w600,
-            fontSize: 64.sp,
-            height: 1.0,
-            letterSpacing: -1,
-            color: kTextPrimary,
-          ),
+          style: AppTextStyles.baloo26,
         ),
       ),
     );

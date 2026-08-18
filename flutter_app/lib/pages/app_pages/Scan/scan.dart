@@ -1157,10 +1157,13 @@ class ScanPageState extends State<ScanPage>
                 ],
               ),
             ),
-          // Result card with bottom margin
+          // Result card anchored to the bottom (clearing the "Signaler une
+          // erreur" link below it) so it sits low on screen when short and
+          // grows upward instead of overflowing when a status has a lot of
+          // content (e.g. the rejected/non-vegan card's warning rows).
           if (productInfo != null)
             Positioned(
-              top: 1300.h,
+              bottom: 200.h,
               left: 16,
               right: 16,
               child: switch (productInfo!.status) {

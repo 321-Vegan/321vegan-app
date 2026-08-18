@@ -18,10 +18,16 @@ SeasonalTheme summerTheme = SeasonalTheme(
     const Color(0xFFFCA311),
   ],
   particleType: ParticleType.sunRays,
-  particleCount: 16,
+  particleCount: 40,
   particleOpacity: 0.7,
   seasonalAsset: 'lib/assets/images/ruche.webp',
-  snowGlobeParticleAsset: 'lib/assets/images/papillon.webp',
+  snowGlobeParticleAssets: [
+    'lib/assets/themes/particles/summer-fraise.webp',
+    'lib/assets/themes/particles/summer-orange.webp',
+    'lib/assets/themes/particles/summer-tomate.webp',
+  ],
+  particleMinRadius: 2,
+  particleMaxRadius: 6,
   // 192.05deg linear-gradient from Figma.
   backgroundGradient: const LinearGradient(
     begin: Alignment(0.2087, -0.978),
