@@ -178,14 +178,7 @@ class MyHomePageState extends State<MyHomePage>
             controller: _tabController,
             children: [
               const DashboardPage(),
-              ScanPage(
-                onNavigateToProfile: () {
-                  setState(() {
-                    _tabController.index = _dashboardTabIndex;
-                  });
-                },
-                onLoginSuccess: _onLoginSuccess,
-              ),
+              ScanPage(onLoginSuccess: _onLoginSuccess),
               MapPage(onLoginSuccess: _onLoginSuccess),
             ],
           ),

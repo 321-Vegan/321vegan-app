@@ -338,7 +338,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
         appBar: AppBar(
           title: Text(
             'Filtrer par produit',
-            style: AppTextStyles.baloo22,
+            style: AppTextStyles.baloo22.copyWith(fontWeight: const FontWeight(500)),
           ),
           centerTitle: true,
           backgroundColor: Colors.transparent,

@@ -1,11 +1,15 @@
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:vegan_app/helpers/time_counter/time_counter.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
+
+/// The two shareable looks for [ShareHomeCard]: [dark] is the original
+/// seasonal-primary-colored card, [light] is the cream/brand-green variant.
+enum ShareCardStyle { dark, light }
 
 /// The image that gets shared: the home page (counter + stats) inside a phone
 /// mockup, branded 321 Vegan, decorated with a seasonal theme. Uses fixed
@@ -15,13 +19,17 @@ class ShareHomeCard extends StatelessWidget {
   final DateTime targetDate;
   final Map<String, int> savings;
   final SeasonalTheme theme;
+  final ShareCardStyle style;
 
   const ShareHomeCard({
     required this.targetDate,
     required this.savings,
     required this.theme,
+    this.style = ShareCardStyle.dark,
     super.key,
   });
+
+  bool get _isLight => style == ShareCardStyle.light;
 
   @override
   Widget build(BuildContext context) {
@@ -29,65 +37,65 @@ class ShareHomeCard extends StatelessWidget {
       width: 360,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.lerp(theme.primaryColor, Colors.black, 0.35)!,
-            theme.primaryColor,
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+        gradient: _isLight
+            ? const LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                stops: [0.0, 0.3],
+                colors: [kBackgroundGradientTop, kBackgroundGradientBottom],
+              )
+            : LinearGradient(
+                colors: [
+                  Color.lerp(theme.primaryColor, Colors.black, 0.35)!,
+                  theme.primaryColor,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('lib/assets/white_icon.png', width: 42, height: 42),
-              const SizedBox(width: 10),
-              const Text(
-                '321 Vegan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Baloo2',
-                  letterSpacing: -1,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           _buildPhoneMockup(),
           const SizedBox(height: 14),
-          const Text(
-            'Vous connaissez 321 Vegan ?',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Baloo2',
-              letterSpacing: -1,
-            ),
-          ),
+          _buildHeading(),
           const SizedBox(height: 10),
-          const Wrap(
+          Wrap(
             alignment: WrapAlignment.center,
             spacing: 6,
             runSpacing: 6,
             children: [
-              _FeatureChip('🌱 Voir son impact'),
-              _FeatureChip('📷 Scanner les produits'),
-              _FeatureChip('💸 Des réductions'),
-              _FeatureChip('🤝 Communautaire'),
-              _FeatureChip('❤️ Gratuit'),
-              _FeatureChip('💻 Open source'),
+              _FeatureChip('🌱 Voir son impact', light: _isLight),
+              _FeatureChip('📷 Scanner les produits', light: _isLight),
+              _FeatureChip('💸 Des réductions', light: _isLight),
+              _FeatureChip('🤝 Communautaire', light: _isLight),
+              _FeatureChip('❤️ Gratuit', light: _isLight),
+              _FeatureChip('💻 Open source', light: _isLight),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildHeading() {
+    final headingStyle = AppTextStyles.baloo22
+        .copyWith(color: _isLight ? kTextPrimary : Colors.white);
+    final brandStyle = AppTextStyles.baloo22
+        .copyWith(color: _isLight ? theme.primaryColor : Colors.white);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('Vous connaissez ', style: headingStyle),
+        Image.asset(
+          _isLight ? 'lib/assets/app_icon.png' : 'lib/assets/white_icon.png',
+          width: 20,
+          height: 20,
+        ),
+        const SizedBox(width: 4),
+        Text('321 Vegan', style: brandStyle),
+        Text(' ?', style: brandStyle),
+      ],
     );
   }
 
@@ -107,131 +115,70 @@ class ShareHomeCard extends StatelessWidget {
   }
 
   Widget _buildPhoneMockup() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: ShapeDecoration(
-        color: const Color(0xFF1F2937),
-        shape: squircleBorder(radius: 38),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipSmoothRect(
-        radius: squircleRadius(30),
-        child: SizedBox(
-          width: 234,
-          height: 415,
-          child: Stack(
-            children: [
-              // Real home page background for this card's season.
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(gradient: _phoneBackgroundGradient),
-                ),
-              ),
-              Column(
-                children: [
-                  // Clears the notch.
-                  const SizedBox(height: 40),
-                  const Text(
-                    'Je suis végane depuis',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -1,
-                      color: kTextPrimary,
-                      fontFamily: 'Baloo2',
-                    ),
-                  ),
-                  _buildCounter(),
-                  const SizedBox(height: 6),
-                  ...homeStats.map(
-                    (stat) =>
-                        _miniStatCard(stat, savings[stat.savingsKey] ?? 0),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                    decoration: ShapeDecoration(
-                      color: Colors.white,
-                      shape: squircleBorder(
-                        radius: 20,
-                        side: const BorderSide(color: kBorderDefault),
-                      ),
-                    ),
-                    child: Text(
-                      'Depuis le ${DateFormat('dd/MM/yyyy').format(targetDate)}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontFamily: 'Baloo2',
-                        letterSpacing: -1,
-                        color: kTextPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
-              ),
-              // Notch
-              Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  margin: const EdgeInsets.only(top: 6),
-                  width: 64,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1F2937),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: ShapeDecoration(
+            color: const Color(0xFF1F2937),
+            shape: squircleBorder(radius: 38),
+            shadows: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCounter() {
-    final breakdown = TimeBreakdown.between(targetDate, DateTime.now());
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _counterColumn('${breakdown.years}', 'ans'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.months}', 'mois'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.days}', 'jours'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.hours}', 'heures'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.minutes}', 'min'),
-      ],
-    );
-  }
-
-  Widget _counterColumn(String value, String label) {
-    return Column(
-      children: [
-        Text(
-          value.padLeft(2, '0'),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: kTextPrimary,
+          child: ClipSmoothRect(
+            radius: squircleRadius(30),
+            child: SizedBox(
+              width: 234,
+              height: 473,
+              child: Stack(
+                children: [
+                  // Real home page background for this card's season.
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration:
+                          BoxDecoration(gradient: _phoneBackgroundGradient),
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      // Clears the notch and the counter card overlapping
+                      // from above.
+                      const SizedBox(height: 150),
+                      ...homeStats.map(
+                        (stat) =>
+                            _miniStatCard(stat, savings[stat.savingsKey] ?? 0),
+                      ),
+                    ],
+                  ),
+                  // Notch
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 6),
+                      width: 64,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1F2937),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        Transform.translate(
-          offset: const Offset(0, -4),
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 8, color: kTextPrimary),
-          ),
-        ),
+        // "Vous êtes vegan depuis" counter card — deliberately wider than
+        // the phone frame so it overflows past its edges, giving the
+        // shared image a "zoomed in" pop-out look (Figma spec).
+        Positioned(top: 34, child: _CounterCard(targetDate: targetDate)),
       ],
     );
   }
@@ -240,8 +187,8 @@ class ShareHomeCard extends StatelessWidget {
   /// hairline border, value + title on the left, illustration on the right.
   Widget _miniStatCard(HomeStat stat, int value) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: ShapeDecoration(
         color: Colors.white,
         shape: squircleBorder(
@@ -265,7 +212,7 @@ class ShareHomeCard extends StatelessWidget {
                 Text(
                   stat.unitName.isEmpty ? '$value' : '$value ${stat.unitName}',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 20,
                     color: Colors.grey[850],
                     fontWeight: FontWeight.bold,
                   ),
@@ -273,15 +220,15 @@ class ShareHomeCard extends StatelessWidget {
                 const SizedBox(height: 1),
                 Text(
                   stat.title,
-                  style: TextStyle(fontSize: 9, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
           SizedBox(
-            width: 40,
-            height: 40,
+            width: 48,
+            height: 48,
             child: Image.asset(
               seasonalStatIllustration(stat, theme.season),
               fit: BoxFit.contain,
@@ -291,7 +238,7 @@ class ShareHomeCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Icon(stat.icon, color: stat.iconColor, size: 18),
+                  child: Icon(stat.icon, color: stat.iconColor, size: 22),
                 ),
               ),
             ),
@@ -302,27 +249,129 @@ class ShareHomeCard extends StatelessWidget {
   }
 }
 
+/// "Vous êtes vegan depuis" title + bordered digit-tile counter, mirroring
+/// [VeganCounter]'s tile design (bordered squircle box per unit, two digits
+/// split by a divider) at share-image scale.
+class _CounterCard extends StatelessWidget {
+  final DateTime targetDate;
+
+  const _CounterCard({required this.targetDate});
+
+  static const _units = ['ans', 'mois', 'jours', 'heures', 'min'];
+
+  @override
+  Widget build(BuildContext context) {
+    final breakdown = TimeBreakdown.between(targetDate, DateTime.now());
+    final values = [
+      breakdown.years,
+      breakdown.months,
+      breakdown.days,
+      breakdown.hours,
+      breakdown.minutes,
+    ];
+
+    return Container(
+      width: 320,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(radius: 12),
+        shadows: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Vous êtes végane depuis',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.baloo22,
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (int i = 0; i < values.length; i++)
+                _tile(values[i], _units[i]),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tile(int value, String label) {
+    final text = value.toString().padLeft(2, '0');
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: squircleBorder(
+              radius: 6,
+              side: const BorderSide(color: kBorderDefault),
+            ),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _digit(text[0]),
+                Container(width: 1, color: kBorderDefault),
+                _digit(text[1]),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+      ],
+    );
+  }
+
+  Widget _digit(String digit) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
+      child: Text(
+        digit,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: kTextPrimary,
+          fontFamily: 'Baloo2',
+        ),
+      ),
+    );
+  }
+}
+
 class _FeatureChip extends StatelessWidget {
   final String label;
+  final bool light;
 
-  const _FeatureChip(this.label);
+  const _FeatureChip(this.label, {this.light = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
+        color: light ? kSecondaryTag : Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(14),
+        border: light ? Border.all(color: kAccentYellow) : null,
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Baloo2',
-          letterSpacing: -1,
-        ),
+        style: AppTextStyles.bodyMedium11.copyWith(color: light ? kAccentYellow : Colors.white,)
       ),
     );
   }

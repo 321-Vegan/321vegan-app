@@ -30,13 +30,15 @@ class UnknownProductModal extends StatefulWidget {
   /// form and submission both stay the same either way.
   final bool alreadySubmitted;
 
-  final VoidCallback? onNavigateToProfile;
+  /// Opens the login/register sheet when a logged-out user taps in — see
+  /// [_buildLoginPrompt].
+  final VoidCallback? onLoginRequested;
 
   const UnknownProductModal({
     super.key,
     required this.barcode,
     this.alreadySubmitted = false,
-    this.onNavigateToProfile,
+    this.onLoginRequested,
   });
 
   @override
@@ -136,9 +138,9 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
     }
   }
 
-  void _navigateToProfile() {
+  void _requestLogin() {
     Navigator.of(context).pop();
-    widget.onNavigateToProfile?.call();
+    widget.onLoginRequested?.call();
   }
 
   Widget _buildStatusCard({
@@ -198,38 +200,26 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
           style: AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[600]),
         ),
         SizedBox(height: 28.h),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _navigateToProfile,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: squircleBorder(radius: 12.r),
-            ),
-            child: const Text(
-              'Se connecter / S\'inscrire',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: 'Plus tard',
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.grey[700]!,
+                borderColor: kBorderDefault,
+                onPressed: () => Navigator.of(context).pop(),
               ),
             ),
-          ),
-        ),
-        SizedBox(height: 12.h),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.grey[700],
-              side: BorderSide(color: Colors.grey.shade300, width: 1.5),
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: squircleBorder(radius: 12.r),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: AppButton(
+                label: 'Se connecter',
+                backgroundColor: kAccentYellow,
+                onPressed: _requestLogin,
+              ),
             ),
-            child: const Text('Plus tard', style: TextStyle(fontSize: 16)),
-          ),
+          ],
         ),
       ],
     );

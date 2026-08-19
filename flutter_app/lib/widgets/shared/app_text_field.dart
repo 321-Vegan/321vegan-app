@@ -17,6 +17,12 @@ import '../../themes/app_text_styles.dart';
 /// `InputDecoration.border` can only be an [InputBorder] (plain rounded
 /// rect), so the squircle shape lives on a wrapping [Container] instead and
 /// the [TextField] itself goes borderless.
+///
+/// Validation is driven by a [FormField] wrapping a plain [TextField]
+/// (rather than [TextFormField]) so the error message can be laid out as a
+/// sibling below the bordered [Container] instead of through
+/// [InputDecoration.errorText] — which would render inside the same box the
+/// border wraps.
 class AppTextField extends StatefulWidget {
   final TextEditingController controller;
   final String? hintText;
@@ -39,6 +45,8 @@ class AppTextField extends StatefulWidget {
   /// manually outside a `Form` (the existing call sites in this codebase).
   final String? Function(String?)? validator;
 
+  final String? labelText;
+
   const AppTextField({
     super.key,
     required this.controller,
@@ -55,6 +63,7 @@ class AppTextField extends StatefulWidget {
     this.autofillHints,
     this.suffixIcon,
     this.validator,
+    this.labelText,
   });
 
   @override
@@ -86,50 +95,85 @@ class _AppTextFieldState extends State<AppTextField> {
 
   @override
   Widget build(BuildContext context) {
-
-    return Container(
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: squircleBorder(
-          radius: 30.r,
-          side: BorderSide(
-            color: _isFocused ? kAccentYellow : kBorderDefault,
-            width: _isFocused ? 1.5 : 1,
-          ),
-        ),
-      ),
-      child: TextFormField(
-        controller: widget.controller,
-        focusNode: _focusNode,
-        maxLength: widget.maxLength,
-        textCapitalization: widget.textCapitalization,
-        keyboardType: widget.keyboardType,
-        minLines: widget.minLines,
-        maxLines: widget.obscureText ? 1 : widget.maxLines,
-        obscureText: widget.obscureText,
-        enabled: widget.enabled,
-        readOnly: widget.readOnly,
-        onTap: widget.onTap,
-        autofillHints: widget.autofillHints,
-        validator: widget.validator,
-        autovalidateMode: widget.validator != null
-            ? AutovalidateMode.onUserInteraction
-            : null,
-        textAlignVertical: widget.maxLines > 1
-            ? TextAlignVertical.top
-            : TextAlignVertical.center,
-        style: AppTextStyles.bodyRegular15,
-        decoration: InputDecoration(
-          isDense: true,
-          counterText: '',
-          hintText: widget.hintText,
-          hintStyle: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]),
-          suffixIcon: widget.suffixIcon,
-          border: InputBorder.none,
-          errorStyle: TextStyle(color: kSemanticError, fontSize: 33.sp),
-          contentPadding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 36.h),
-        ),
-      ),
+    return FormField<String>(
+      // The validator ignores FormField's own cached value and always reads
+      // the controller directly, so it stays correct even when the text is
+      // set programmatically (e.g. reverse-geocoding filling the address)
+      // rather than typed — TextFormField gets this for free via an
+      // internal controller listener; a plain TextField doesn't.
+      validator: widget.validator == null
+          ? null
+          : (_) => widget.validator!(widget.controller.text),
+      autovalidateMode: widget.validator != null
+          ? AutovalidateMode.onUserInteraction
+          : AutovalidateMode.disabled,
+      builder: (field) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: squircleBorder(
+                  radius: 30.r,
+                  side: BorderSide(
+                    color: _isFocused ? kAccentYellow : kBorderDefault,
+                    width: _isFocused ? 1.5 : 1,
+                  ),
+                ),
+              ),
+              child: TextField(
+                controller: widget.controller,
+                focusNode: _focusNode,
+                maxLength: widget.maxLength,
+                textCapitalization: widget.textCapitalization,
+                keyboardType: widget.keyboardType,
+                minLines: widget.minLines,
+                maxLines: widget.obscureText ? 1 : widget.maxLines,
+                obscureText: widget.obscureText,
+                enabled: widget.enabled,
+                readOnly: widget.readOnly,
+                onTap: widget.onTap,
+                autofillHints: widget.autofillHints,
+                onChanged: field.didChange,
+                textAlignVertical: widget.maxLines > 1
+                    ? TextAlignVertical.top
+                    : TextAlignVertical.center,
+                style: AppTextStyles.bodyRegular15,
+                decoration: InputDecoration(
+                  isDense: true,
+                  counterText: '',
+                  labelText: widget.labelText,
+                  floatingLabelBehavior: widget.labelText != null
+                      ? FloatingLabelBehavior.always
+                      : FloatingLabelBehavior.auto,
+                  labelStyle:
+                      AppTextStyles.bodyMedium11.copyWith(color: Colors.grey[500]),
+                  floatingLabelStyle:
+                      AppTextStyles.bodyMedium11.copyWith(color: Colors.grey[500]),
+                  hintText: widget.hintText,
+                  hintStyle:
+                      AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]),
+                  suffixIcon: widget.suffixIcon,
+                  border: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 36.w, vertical: 36.h),
+                ),
+              ),
+            ),
+            if (field.hasError) ...[
+              SizedBox(height: 8.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
+                child: Text(
+                  field.errorText!,
+                  style: TextStyle(color: kSemanticError, fontSize: 33.sp),
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 }

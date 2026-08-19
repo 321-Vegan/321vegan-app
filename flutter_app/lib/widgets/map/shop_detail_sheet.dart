@@ -14,6 +14,7 @@ import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
 class ShopDetailSheet extends StatefulWidget {
@@ -49,6 +50,11 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
   ShopReviewSummary? _reviewSummary;
 
   late TabController _tabController;
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
+
+  static const double _minSheetSize = 0.3;
+  static const double _maxSheetSize = 0.85;
 
   String get _baseUrl =>
       dotenv.env['API_BASE_URL'] ?? 'https://api.321vegan.fr';
@@ -71,7 +77,14 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
   @override
   void dispose() {
     _tabController.dispose();
+    _sheetController.dispose();
     super.dispose();
+  }
+
+  void _onHandleDragUpdate(DragUpdateDetails details) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final newSize = _sheetController.size - details.delta.dy / screenHeight;
+    _sheetController.jumpTo(newSize.clamp(_minSheetSize, _maxSheetSize));
   }
 
   // ── Products ──────────────────────────────────────────────────────────────
@@ -387,7 +400,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     return ListView(
       controller: scrollController,
       padding: EdgeInsets.fromLTRB(
-          48.w, 8.h, 48.w, 64.h + MediaQuery.of(context).padding.bottom),
+          48.w, 60.h, 48.w, 64.h + MediaQuery.of(context).padding.bottom),
       children: [
         if (grouped.isEmpty)
           Padding(
@@ -405,7 +418,6 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           // Explains that tapping a probability ring expands the details
           if (!_probaBannerDismissed)
             Container(
-              margin: EdgeInsets.only(top: 12.h, bottom: 12.h),
               padding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 30.h),
               decoration: ShapeDecoration(
                 color: kSecondaryTag,
@@ -444,29 +456,20 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
             ),
           for (final entry in grouped.entries) ...[
             Padding(
-              padding: EdgeInsets.only(top: 30.h, bottom: 12.h),
+              padding: EdgeInsets.only(top: 60.h, bottom: 12.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: Text(
                       entry.key,
-                      style: TextStyle(
-                        fontFamily: 'Baloo2',
-                        fontSize: 56.sp,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -1,
-                        color: kTextPrimary,
-                      ),
+                      style: AppTextStyles.baloo22,
                     ),
                   ),
                   Text(
                     'Probabilité',
-                    style: TextStyle(
-                      fontSize: 38.sp,
-                      fontWeight: FontWeight.w600,
-                      color: kAccentYellow,
-                    ),
+                    style: AppTextStyles.bodyMedium13
+                        .copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -569,14 +572,14 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     final percent = (score * 100).round();
 
     return SizedBox(
-      width: 150.w,
-      height: 150.w,
+      width: 130.w,
+      height: 130.w,
       child: Stack(
         fit: StackFit.expand,
         children: [
           CircularProgressIndicator(
             value: score,
-            strokeWidth: 14.w,
+            strokeWidth: 18.w,
             strokeCap: StrokeCap.round,
             backgroundColor: color.withValues(alpha: 0.2),
             color: color,
@@ -584,11 +587,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           Center(
             child: Text(
               '$percent%',
-              style: TextStyle(
-                fontSize: 36.sp,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
+              style: AppTextStyles.bodyMedium13.copyWith(color: color),
             ),
           ),
         ],
@@ -747,8 +746,8 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
             Row(
               children: [
                 Container(
-                  width: 180.w,
-                  height: 180.w,
+                  width: 165.w,
+                  height: 165.w,
                   clipBehavior: Clip.antiAlias,
                   decoration: ShapeDecoration(
                     color: Colors.grey[100],
@@ -1119,9 +1118,10 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     final shop = widget.shop;
 
     return DraggableScrollableSheet(
+      controller: _sheetController,
       initialChildSize: 0.75,
-      minChildSize: 0.3,
-      maxChildSize: 0.85,
+      minChildSize: _minSheetSize,
+      maxChildSize: _maxSheetSize,
       expand: false,
       builder: (context, scrollController) {
         return Container(
@@ -1132,13 +1132,17 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
-              // Chevron handle (Figma)
-              Padding(
-                padding: EdgeInsets.only(top: 12.h),
-                child: Icon(
-                  Icons.keyboard_arrow_up,
-                  size: 60.sp,
-                  color: Colors.grey[500],
+              // Chevron handle (Figma) — draggable to resize the sheet.
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onVerticalDragUpdate: _onHandleDragUpdate,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  child: Icon(
+                    Icons.keyboard_arrow_up,
+                    size: 60.sp,
+                    color: Colors.grey[500],
+                  ),
                 ),
               ),
               // Shop header: name + rating, address, itinerary button
@@ -1159,13 +1163,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                                   shop.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontFamily: 'Baloo2',
-                                    fontSize: 72.sp,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: -1,
-                                    color: kTextPrimary,
-                                  ),
+                                  style: AppTextStyles.baloo26,
                                 ),
                               ),
                               if (_reviewSummary != null &&
@@ -1193,7 +1191,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                               ],
                             ],
                           ),
-                          SizedBox(height: 8.h),
+                          SizedBox(height: 3.h),
                           Text(
                             () {
                               final address = [shop.address, shop.city]
@@ -1203,10 +1201,8 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                                   ? 'Adresse inconnue'
                                   : address;
                             }(),
-                            style: TextStyle(
-                              fontSize: 42.sp,
-                              color: Colors.grey[600],
-                            ),
+                            style: AppTextStyles.bodyMedium15
+                                .copyWith(color: Colors.grey[600]),
                           ),
                           if (shop.shopType == 'vegan')
                             Padding(
@@ -1241,14 +1237,23 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                       ),
                     ),
                     SizedBox(width: 24.w),
-                    // Square itinerary button (Figma)
-                    SquareIconButton.action(
+                    // Square itinerary button (Figma) — mini variant (34x34)
+                    SquareIconButton(
                       onTap: _openItinerary,
+                      size: 102.w,
+                      radius: 30.r,
                       backgroundColor: Theme.of(context).colorScheme.primary,
+                      shadows: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 10,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                       child: Icon(
                         Icons.map,
                         color: Colors.white,
-                        size: 64.sp,
+                        size: 54.sp,
                       ),
                     ),
                   ],

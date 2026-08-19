@@ -53,7 +53,7 @@ class PromoSlide {
 /// `const` because [PromoSlide.page] holds a closure.
 final List<PromoSlide> _dummySlides = [
   const PromoSlide(
-    title: 'L\'appli fait peau neuve !',
+    title: 'Nouvelle interface !',
     subtitle: 'Un tout nouveau design pour plus de clarté.',
     image: 'lib/assets/images/characters/lemon-vgn.webp',
   ),

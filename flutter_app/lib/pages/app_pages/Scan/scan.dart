@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -25,6 +24,7 @@ import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/widgets/scaner/card_product.dart';
 import 'package:vegan_app/widgets/scaner/pending_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/report_error_button.dart';
+import 'package:vegan_app/widgets/scaner/unknown_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/unknown_product_modal.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
@@ -34,18 +34,16 @@ import 'package:vegan_app/widgets/scaner/vegan_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/shop_confirmation_modal.dart';
 import 'package:vegan_app/pages/app_pages/Vegandex/vegandex_page.dart';
 import 'package:vegan_app/widgets/vegandex/product_found_modal.dart';
-import 'package:vegan_app/widgets/auth/register_form.dart';
-import 'package:vegan_app/widgets/auth/login_form.dart';
+import 'package:vegan_app/widgets/auth/auth_bottom_sheet.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/pages/app_pages/Scan/account_prompt_dialog.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 
 class ScanPage extends StatefulWidget {
-  final VoidCallback? onNavigateToProfile;
   final VoidCallback? onLoginSuccess;
 
-  const ScanPage({super.key, this.onNavigateToProfile, this.onLoginSuccess});
+  const ScanPage({super.key, this.onLoginSuccess});
 
   @override
   ScanPageState createState() => ScanPageState();
@@ -74,14 +72,6 @@ class ScanPageState extends State<ScanPage>
   bool _scannerPausedByModal = false;
   bool _isRetrying = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
-
-  /// Grace period before an unknown/not-found result actually opens
-  /// [UnknownProductModal]. The scanner sometimes misreads a barcode for a
-  /// frame or two before landing on the right one — this lets a follow-up
-  /// scan of a different barcode cancel the pending sheet instead of the
-  /// user getting locked into a modal for a misread. See
-  /// _scheduleUnknownProductModal.
-  Timer? _pendingUnknownModalTimer;
 
   // The Vegandex button used to show its label for a few seconds on page
   // entry, then collapse to an icon-only square to match the history
@@ -630,7 +620,6 @@ class ScanPageState extends State<ScanPage>
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
-    _pendingUnknownModalTimer?.cancel();
     // _vegandexCollapseTimer?.cancel();
     controller.dispose();
     _confettiController.dispose();
@@ -656,8 +645,8 @@ class ScanPageState extends State<ScanPage>
 
     // Scan-confirmation haptic: double pulse warns that the product is not
     // vegan, single pulse for everything else. Skipped for unknown/notFound
-    // — a misread barcode landing on these statuses shouldn't buzz the user
-    // before the debounce even confirms it's worth acting on.
+    // — those don't lock in a result, just show an inline card, so there's
+    // nothing worth buzzing the user about yet.
     if (_hapticFeedback &&
         product.status != ScanStatus.unknown &&
         product.status != ScanStatus.notFound) {
@@ -690,33 +679,18 @@ class ScanPageState extends State<ScanPage>
       }
     }
 
-    // Product missing from the database — either never submitted, or
-    // submitted before but still unidentified: open the submission sheet,
-    // after a short grace period so a misread barcode doesn't lock the
-    // scanner out from self-correcting on the next frame.
-    if (product.status == ScanStatus.unknown ||
-        product.status == ScanStatus.notFound) {
-      _scheduleUnknownProductModal(barcode, product.status);
-    }
   }
 
-  /// Delays opening [UnknownProductModal] briefly, so a follow-up scan of a
-  /// different barcode (the scanner correcting a misread) can cancel it via
-  /// [_pendingUnknownModalTimer] before the sheet — and the controller.stop()
-  /// that comes with it — ever appears.
-  void _scheduleUnknownProductModal(String barcode, ScanStatus status) {
-    _pendingUnknownModalTimer?.cancel();
-    _pendingUnknownModalTimer = Timer(const Duration(milliseconds: 700), () {
-      _pendingUnknownModalTimer = null;
-      _showUnknownProductModal(barcode, status);
-    });
-  }
-
-  /// Shows [UnknownProductModal] over the camera and, once it's dismissed
-  /// (submitted or cancelled), clears [productInfo] and resumes scanning.
-  Future<void> _showUnknownProductModal(
-      String barcode, ScanStatus status) async {
-    if (!mounted) return;
+  /// Opens [UnknownProductModal] for the currently displayed unknown/
+  /// not-found result, pausing the scanner while it's up and, once it's
+  /// dismissed (submitted or cancelled), clearing [productInfo] and
+  /// resuming scanning. Triggered by the "Envoyer..." button on
+  /// [UnknownProductInfoCard] rather than automatically — a misread barcode
+  /// no longer risks locking the user into the sheet before they can
+  /// rescan.
+  Future<void> _openUnknownProductModal() async {
+    final info = productInfo;
+    if (info == null || !mounted) return;
     _scannerPausedByModal = true;
     controller.stop();
 
@@ -725,9 +699,9 @@ class ScanPageState extends State<ScanPage>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => UnknownProductModal(
-        barcode: barcode,
-        alreadySubmitted: status == ScanStatus.notFound,
-        onNavigateToProfile: widget.onNavigateToProfile,
+        barcode: info.code,
+        alreadySubmitted: info.status == ScanStatus.notFound,
+        onLoginRequested: _showAuthBottomSheet,
       ),
     );
 
@@ -800,12 +774,6 @@ class ScanPageState extends State<ScanPage>
     if (barcodeValue != null && _lastScannedBarcode != barcodeValue) {
       _lastScannedBarcode = barcodeValue;
 
-      // A fresh read supersedes whatever the previous one was about to do —
-      // in particular, cancel a not-yet-opened UnknownProductModal from a
-      // misread barcode so this new (possibly correct) read gets a chance
-      // to resolve instead of getting locked out by the sheet.
-      _pendingUnknownModalTimer?.cancel();
-
       // The haptic fires in _checkVeganStatusOffline once the product
       // status is known, so non-vegan products can get a distinct pattern.
 
@@ -859,31 +827,9 @@ class ScanPageState extends State<ScanPage>
   void _showAuthBottomSheet() {
     controller.stop();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => ClipSmoothRect(
-          radius: squircleRadius(28.r),
-          child: Scaffold(
-            backgroundColor: Colors.white,
-            body: SingleChildScrollView(
-              controller: scrollController,
-              padding: EdgeInsets.all(28.w),
-              child: _AuthSheetContent(
-                onSuccess: () {
-                  Navigator.of(context).pop();
-                  widget.onLoginSuccess?.call();
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
+    showAuthBottomSheet(
+      context,
+      onSuccess: () => widget.onLoginSuccess?.call(),
     ).then((_) {
       controller.start();
     });
@@ -1177,10 +1123,14 @@ class ScanPageState extends State<ScanPage>
                   PendingProductInfoCard(productInfo: productInfo!),
                 ScanStatus.alreadyScanned =>
                   AlreadyScannedProductInfoCard(productInfo: productInfo!),
-                // Handled by _showUnknownProductModal instead of an inline
-                // card — see _checkVeganStatusOffline.
-                ScanStatus.notFound => const SizedBox.shrink(),
-                ScanStatus.unknown => const SizedBox.shrink(),
+                ScanStatus.notFound => UnknownProductInfoCard(
+                    productInfo: productInfo!,
+                    onSendInfo: _openUnknownProductModal,
+                  ),
+                ScanStatus.unknown => UnknownProductInfoCard(
+                    productInfo: productInfo!,
+                    onSendInfo: _openUnknownProductModal,
+                  ),
                 ScanStatus.notVegan =>
                   RejectedProductInfoCard(productInfo: productInfo!),
               },
@@ -1253,34 +1203,6 @@ class ScanPageState extends State<ScanPage>
         ],
       ),
     );
-  }
-}
-
-class _AuthSheetContent extends StatefulWidget {
-  final VoidCallback onSuccess;
-
-  const _AuthSheetContent({required this.onSuccess});
-
-  @override
-  State<_AuthSheetContent> createState() => _AuthSheetContentState();
-}
-
-class _AuthSheetContentState extends State<_AuthSheetContent> {
-  bool _showRegister = true;
-
-  @override
-  Widget build(BuildContext context) {
-    if (_showRegister) {
-      return RegisterForm(
-        onRegisterSuccess: widget.onSuccess,
-        onSwitchToLogin: () => setState(() => _showRegister = false),
-      );
-    } else {
-      return LoginForm(
-        onLoginSuccess: widget.onSuccess,
-        onSwitchToRegister: () => setState(() => _showRegister = true),
-      );
-    }
   }
 }
 

@@ -352,7 +352,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: squircleBorderOnly(topLeft: 20, topRight: 20),
+      backgroundColor: Colors.transparent,
       builder: (_) => CreateShopSheet(coordinates: coords),
     ).then((created) {
       if (created == true) _loadShops();
