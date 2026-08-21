@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/product_category.dart';
 import '../../models/product_of_interest.dart';
@@ -66,18 +68,26 @@ class CategoryListView extends StatelessWidget {
     return GestureDetector(
       onTap: () => onCategoryTap(category),
       child: AppCard(
-        padding: EdgeInsets.all(20.w),
+        padding: EdgeInsets.all(45.w),
         child: Row(
           children: [
             Container(
-              width: 124.w,
-              height: 124.w,
+              width: 150.w,
+              height: 150.w,
               padding: EdgeInsets.all(20.w),
               decoration: ShapeDecoration(
                 color: Theme.of(context).colorScheme.primary,
                 shape: squircleBorder(radius: 24.r),
               ),
-              child: Image.asset('lib/assets/white_icon.png'),
+              child: category.image.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: '${dotenv.env['API_BASE_URL']}/${category.image}',
+                      fit: BoxFit.contain,
+                      placeholder: (_, __) => const SizedBox.shrink(),
+                      errorWidget: (_, __, ___) =>
+                          Image.asset('lib/assets/white_icon.png'),
+                    )
+                  : Image.asset('lib/assets/white_icon.png'),
             ),
             SizedBox(width: 24.w),
             Expanded(

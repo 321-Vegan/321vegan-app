@@ -6,6 +6,7 @@ import '../../../services/b12_reminder_service.dart';
 import '../../../themes/app_colors.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
+import '../../../widgets/homepage/b12_reminder_banner.dart';
 import '../../../widgets/shared/bottom_sheet_shell.dart';
 import '../../../widgets/shared/info_box.dart';
 
@@ -39,8 +40,11 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
 
   static DateTime _dayOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
-  Future<void> _load() async {
-    setState(() => _isLoading = true);
+  /// [showSpinner] is false for a post-action refresh (e.g. after marking
+  /// today taken) so the whole sheet doesn't flash back to the loading
+  /// state — only the initial mount needs the full-screen spinner.
+  Future<void> _load({bool showSpinner = true}) async {
+    if (showSpinner) setState(() => _isLoading = true);
     final history = await B12ReminderService.getB12IntakeHistory();
     final streak = await B12ReminderService.getB12Streak();
     final next = await B12ReminderService.getNextNotificationTime();
@@ -76,6 +80,17 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
         DateTime(_visibleMonth.year, _visibleMonth.month + 1, 1));
   }
 
+  /// Swipe left/right over the calendar grid as an alternative to tapping
+  /// the arrows — same month-change logic, just a different trigger.
+  void _handleMonthSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity < 0) {
+      _goToNextMonth();
+    } else if (velocity > 0) {
+      _goToPreviousMonth();
+    }
+  }
+
   String _capitalizeFr(String text) =>
       text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
 
@@ -83,6 +98,21 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
   /// — see [_buildDayCell]'s ring marker and the "Prochaine prise" banner.
   DateTime? get _nextIntakeDay =>
       _settings.enabled && _nextIntake != null ? _dayOnly(_nextIntake!) : null;
+
+  bool get _takenToday => _historyDays.contains(_dayOnly(DateTime.now()));
+
+  Future<void> _markTaken() async {
+    await B12ReminderService.recordB12Intake();
+    await _load(showSpinner: false);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Bien reçu !'),
+        backgroundColor: kSemanticSuccess,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +133,10 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
                     style: TextStyle(fontSize: 40.sp, color: Colors.grey[600]),
                   ),
                   SizedBox(height: AppSpacing.section),
+                  if (!_takenToday) ...[
+                    B12IntakeButton(onPressed: _markTaken),
+                    SizedBox(height: AppSpacing.section),
+                  ],
                   if (_settings.enabled && _nextIntake != null) ...[
                     InfoBox(
                       iconAsset: 'lib/assets/images/icons/info-circle.webp',
@@ -113,7 +147,11 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
                   ],
                   _buildMonthNav(),
                   SizedBox(height: AppSpacing.item),
-                  _buildCalendarGrid(),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onHorizontalDragEnd: _handleMonthSwipe,
+                    child: _buildCalendarGrid(),
+                  ),
                   SizedBox(height: AppSpacing.section),
                   _buildStatsRow(),
                 ],
@@ -191,10 +229,24 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
             mainAxisExtent: 140.h,
           ),
           itemBuilder: (context, index) {
-            if (index < leadingBlanks) return const SizedBox.shrink();
+            // Thin grid lines around every cell (including the leading
+            // blanks) so the grid reads as a table — makes it easier to
+            // line up a day number with its intake mark underneath.
+            if (index < leadingBlanks) {
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: kBorderDefault),
+                ),
+              );
+            }
             final day = index - leadingBlanks + 1;
             final date = DateTime(_visibleMonth.year, _visibleMonth.month, day);
-            return _buildDayCell(day, date, today);
+            return Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: kBorderDefault),
+              ),
+              child: _buildDayCell(day, date, today),
+            );
           },
         ),
       ],

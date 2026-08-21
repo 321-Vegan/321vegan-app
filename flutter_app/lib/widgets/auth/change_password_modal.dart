@@ -28,7 +28,25 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    _currentPasswordController.addListener(_handleInputChanged);
+    _newPasswordController.addListener(_handleInputChanged);
+    _confirmPasswordController.addListener(_handleInputChanged);
+  }
+
+  void _handleInputChanged() => setState(() {});
+
+  bool get _canSubmit =>
+      _currentPasswordController.text.isNotEmpty &&
+      _newPasswordController.text.isNotEmpty &&
+      _confirmPasswordController.text.isNotEmpty;
+
+  @override
   void dispose() {
+    _currentPasswordController.removeListener(_handleInputChanged);
+    _newPasswordController.removeListener(_handleInputChanged);
+    _confirmPasswordController.removeListener(_handleInputChanged);
     _currentPasswordController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
@@ -103,16 +121,8 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
                 children: [
                   Text('Modifier votre mot de passe',
                       style: AppTextStyles.baloo22),
-                  IconButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    iconSize: 64.sp,
-                  ),
                 ],
               ),
-              SizedBox(height: 8.h),
               Text(
                 'Renseignez votre mot de passe actuel puis choisissez-en un nouveau.',
                 style: TextStyle(
@@ -154,7 +164,7 @@ class _ChangePasswordModalState extends State<ChangePasswordModal> {
                 label: 'Modifier le mot de passe',
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 isLoading: _isLoading,
-                onPressed: _submit,
+                onPressed: _canSubmit ? _submit : null,
               ),
             ],
           ),

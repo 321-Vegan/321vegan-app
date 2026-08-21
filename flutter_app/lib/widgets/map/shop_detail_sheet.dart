@@ -304,6 +304,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                             ? null
                             : () => Navigator.pop(ctx, true),
                         style: ElevatedButton.styleFrom(
+                          elevation: 0,
                           padding: EdgeInsets.symmetric(vertical: 12.h),
                           shape: squircleBorder(radius: 12.r),
                         ),
@@ -1027,13 +1028,6 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           radius: 12.r,
           side: BorderSide(color: Colors.grey[200]!),
         ),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

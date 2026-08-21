@@ -130,8 +130,10 @@ class _BrandSelectorSheet extends StatefulWidget {
 
 class _BrandSelectorSheetState extends State<_BrandSelectorSheet> {
   final TextEditingController _ctrl = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
   List<ValidatorBrand> _results = [];
   bool _searching = false;
+  bool _isFocused = false;
 
   @override
   void initState() {
@@ -140,11 +142,20 @@ class _BrandSelectorSheetState extends State<_BrandSelectorSheet> {
       _ctrl.text = widget.initialQuery!;
       _search(widget.initialQuery!);
     }
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_isFocused != _focusNode.hasFocus) {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    }
   }
 
   @override
   void dispose() {
     _ctrl.dispose();
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -191,28 +202,41 @@ class _BrandSelectorSheetState extends State<_BrandSelectorSheet> {
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[800])),
               SizedBox(height: 16.h),
-              TextField(
-                controller: _ctrl,
-                autofocus: true,
-                onChanged: _search,
-                decoration: InputDecoration(
-                  hintText: 'Rechercher…',
-                  hintStyle: TextStyle(fontSize: 36.sp, color: Colors.grey[400]),
-                  prefixIcon: Icon(Icons.search, size: 44.sp),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                  suffixIcon: _searching
-                      ? Padding(
-                          padding: EdgeInsets.all(12.w),
-                          child: SizedBox(
-                            width: 20.w,
-                            height: 20.w,
-                            child: const CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : null,
+              Container(
+                decoration: ShapeDecoration(
+                  color: Colors.white,
+                  shape: squircleBorder(
+                    radius: 12.r,
+                    side: BorderSide(
+                      color: _isFocused ? kAccentYellow : kBorderDefault,
+                      width: _isFocused ? 1.5 : 1,
+                    ),
+                  ),
                 ),
-                style: TextStyle(fontSize: 38.sp),
+                child: TextField(
+                  controller: _ctrl,
+                  focusNode: _focusNode,
+                  autofocus: true,
+                  onChanged: _search,
+                  decoration: InputDecoration(
+                    hintText: 'Rechercher…',
+                    hintStyle: TextStyle(fontSize: 36.sp, color: Colors.grey[400]),
+                    prefixIcon: Icon(Icons.search, size: 44.sp),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
+                    suffixIcon: _searching
+                        ? Padding(
+                            padding: EdgeInsets.all(12.w),
+                            child: SizedBox(
+                              width: 20.w,
+                              height: 20.w,
+                              child: const CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : null,
+                  ),
+                  style: TextStyle(fontSize: 38.sp),
+                ),
               ),
               SizedBox(height: 12.h),
               Expanded(
@@ -352,6 +376,7 @@ class _CreateBrandDialogState extends State<_CreateBrandDialog> {
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
+            elevation: 0,
           ),
           child: _submitting
               ? SizedBox(

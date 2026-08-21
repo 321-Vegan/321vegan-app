@@ -445,13 +445,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                   width: index == _currentPage ? 2 : 1,
                 ),
               ),
-              shadows: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
             child: ClipSmoothRect(
               radius: squircleRadius(28.r),

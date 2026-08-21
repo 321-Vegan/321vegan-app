@@ -31,10 +31,16 @@ class _ChangeUsernameModalState extends State<ChangeUsernameModal> {
   void initState() {
     super.initState();
     _nicknameController = TextEditingController(text: widget.currentNickname);
+    _nicknameController.addListener(_handleInputChanged);
   }
+
+  void _handleInputChanged() => setState(() {});
+
+  bool get _canSubmit => _nicknameController.text.trim().isNotEmpty;
 
   @override
   void dispose() {
+    _nicknameController.removeListener(_handleInputChanged);
     _nicknameController.dispose();
     super.dispose();
   }
@@ -97,16 +103,8 @@ class _ChangeUsernameModalState extends State<ChangeUsernameModal> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Modifier votre pseudo', style: AppTextStyles.baloo22),
-                  IconButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    iconSize: 64.sp,
-                  ),
                 ],
               ),
-              SizedBox(height: 8.h),
               Text(
                 'Pseudo actuel : ${widget.currentNickname}',
                 style: TextStyle(fontSize: 42.sp, color: Colors.grey[600]),
@@ -127,7 +125,7 @@ class _ChangeUsernameModalState extends State<ChangeUsernameModal> {
                 label: 'Enregistrer',
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 isLoading: _isLoading,
-                onPressed: _submit,
+                onPressed: _canSubmit ? _submit : null,
               ),
             ],
           ),

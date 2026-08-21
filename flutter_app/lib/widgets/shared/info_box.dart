@@ -21,10 +21,16 @@ class InfoBox extends StatelessWidget {
   /// wrapping circle.
   final String? iconAsset;
 
+  /// A plain Material icon shown instead of [symbol]/[iconAsset] (e.g. the
+  /// credits box's heart) — like [iconAsset], rendered bare with no
+  /// wrapping circle.
+  final IconData? icon;
+
   const InfoBox({
     required this.text,
     this.symbol = 'i',
     this.iconAsset,
+    this.icon,
     super.key,
   });
 
@@ -54,7 +60,9 @@ class InfoBox extends StatelessWidget {
             ),
           ),
           SizedBox(width: 30.w),
-          if (iconAsset != null)
+          if (icon != null)
+            Icon(icon, color: kAccentYellow, size: 56.sp)
+          else if (iconAsset != null)
             Image.asset(
               iconAsset!,
               width: 56.w,

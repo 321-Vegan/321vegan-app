@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 
 /// Carousel page-dots: the active dot stretches into a pill, inactive dots
 /// stay small squares. Used below any `PageView` (Dashboard's PromoCarousel,
@@ -16,7 +17,7 @@ class PageDotsIndicator extends StatelessWidget {
     required this.count,
     required this.currentIndex,
     required this.activeColor,
-    this.inactiveColor = const Color(0xFFBDBDBD), // Colors.grey[400]
+    this.inactiveColor = kBorderDefault, // Colors.grey[400]
   });
 
   @override

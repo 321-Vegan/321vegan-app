@@ -8,6 +8,7 @@ import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_background.dart';
+import '../../../widgets/shared/info_box.dart';
 
 /// Full-page avatar picker, reached from the Paramètres avatar/pencil tap.
 /// Tapping an avatar saves it immediately and pops back — there's no
@@ -112,36 +113,11 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                   padding: EdgeInsets.fromLTRB(
                       AppSpacing.pageHorizontal, 8.h, AppSpacing.pageHorizontal, 32.h),
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(39.w),
-                      decoration: ShapeDecoration(
-                        color: kSecondaryTag,
-                        shape: squircleBorder(
-                          radius: 36.r,
-                          side: const BorderSide(color: kAccentYellow),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Illustrations par '
-                              '@vilainevegane.illustration, '
-                              '@kodasmarket.art et @ancielouille.',
-                              style: TextStyle(
-                                fontSize: 39.sp,
-                                fontWeight: FontWeight.w500,
-                                color: kAccentYellow,
-                                height: 1.3,
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 24.w),
-                          Icon(Icons.favorite,
-                              color: kAccentYellow, size: 56.sp),
-                        ],
-                      ),
+                    const InfoBox(
+                      text: 'Illustrations par '
+                          '@vilainevegane.illustration, '
+                          '@kodasmarket.art et @ancielouille.',
+                      icon: Icons.favorite,
                     ),
                     SizedBox(height: AppSpacing.item),
                     SettingsToggleTile(
@@ -155,8 +131,8 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 3,
-                        crossAxisSpacing: 24.w,
-                        mainAxisSpacing: 24.w,
+                        crossAxisSpacing: 36.w,
+                        mainAxisSpacing: 36.h,
                         childAspectRatio: 1,
                       ),
                       itemCount: kAvailableAvatars.length,
@@ -171,7 +147,7 @@ class _AvatarSelectionPageState extends State<AvatarSelectionPage> {
                             decoration: ShapeDecoration(
                               color: isSelected ? kSecondaryTag : Colors.white,
                               shape: squircleBorder(
-                                radius: 36.r,
+                                radius: 90.r,
                                 side: BorderSide(
                                   color: isSelected
                                       ? kAccentYellow

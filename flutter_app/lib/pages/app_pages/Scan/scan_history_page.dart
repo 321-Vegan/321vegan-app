@@ -187,10 +187,14 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
             if (_history.isNotEmpty)
               Padding(
                 padding: EdgeInsets.only(right: 24.w),
-                child: SquareIconButton.action(
-                  icon: Icons.delete_outline,
-                  iconColor: Colors.grey[700]!,
+                child: SquareIconButton(
+                  size: 144.w,
+                  radius: 42.r,
+                  backgroundColor: Colors.white,
+                  shadows: const [],
                   onTap: _confirmClearHistory,
+                  child: Icon(Icons.delete_outline,
+                      color: Colors.grey[700], size: 72.sp),
                 ),
               ),
           ],
@@ -276,9 +280,9 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (isFirstOfDay) ...[
-              if (index != 0) SizedBox(height: 24.h),
+              if (index != 0) SizedBox(height: 60.h),
               Padding(
-                padding: EdgeInsets.only(bottom: 20.h),
+                padding: EdgeInsets.only(bottom: 36.h),
                 child: Text(
                   DateFormat('d MMMM yyyy', 'fr_FR').format(date),
                   style: AppTextStyles.baloo22,
@@ -286,7 +290,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
               ),
             ],
             Padding(
-              padding: EdgeInsets.only(bottom: 20.h),
+              padding: EdgeInsets.only(bottom: 36.h),
               // Name/brand/status come from the local product DB (fast,
               // offline); scores come straight from the cached entry —
               // neither hits the network from this page.
@@ -462,7 +466,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
     final status = _statusInfo(product.status, product.problem);
 
     return Container(
-      padding: EdgeInsets.all(30.w),
+      padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 45.h),
       decoration: ShapeDecoration(
         color: Colors.white,
         shape: squircleBorder(
@@ -484,11 +488,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                       name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.w600,
-                        color: kTextPrimary,
-                      ),
+                      style: AppTextStyles.baloo17,
                     ),
                     if (brand.isNotEmpty) ...[
                       SizedBox(height: 4.h),
@@ -496,8 +496,8 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                         brand,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style:
-                            TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
+                        style: AppTextStyles.bodyMedium15
+                            .copyWith(color: Colors.grey[500]),
                       ),
                     ],
                     SizedBox(height: 14.h),
@@ -508,11 +508,8 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                         Flexible(
                           child: Text(
                             status.label,
-                            style: TextStyle(
-                              fontSize: 46.sp,
-                              fontWeight: FontWeight.w600,
-                              color: status.color,
-                            ),
+                            style: AppTextStyles.bodyMedium15
+                                .copyWith(color: status.color),
                           ),
                         ),
                       ],

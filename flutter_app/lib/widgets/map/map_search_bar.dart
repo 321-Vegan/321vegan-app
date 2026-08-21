@@ -24,11 +24,25 @@ class MapSearchBarState extends State<MapSearchBar> {
   List<PlaceResult> _results = [];
   bool _isSearching = false;
   int _requestId = 0;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_isFocused != _focusNode.hasFocus) {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    }
+  }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _controller.dispose();
+    _focusNode.removeListener(_handleFocusChange);
     _focusNode.dispose();
     super.dispose();
   }
@@ -126,7 +140,13 @@ class MapSearchBarState extends State<MapSearchBar> {
           height: 144.w,
           decoration: ShapeDecoration(
             color: Colors.white,
-            shape: squircleBorder(radius: 42.r),
+            shape: squircleBorder(
+              radius: 42.r,
+              side: BorderSide(
+                color: _isFocused ? kAccentYellow : kBorderDefault,
+                width: _isFocused ? 1.5 : 1,
+              ),
+            ),
             shadows: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
@@ -137,7 +157,7 @@ class MapSearchBarState extends State<MapSearchBar> {
           ),
           child: Row(
             children: [
-              SizedBox(width: 24.w),
+              SizedBox(width: 39.w),
               Icon(Icons.search, color: Colors.grey[600], size: 60.sp),
               SizedBox(width: 12.w),
               Expanded(
@@ -176,7 +196,7 @@ class MapSearchBarState extends State<MapSearchBar> {
                   ),
                 )
               else
-                SizedBox(width: 14.w),
+                SizedBox(width: 39.w),
             ],
           ),
         ),

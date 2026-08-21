@@ -167,7 +167,11 @@ class _ProductReviewPageState extends State<ProductReviewPage> {
           Text('Erreur de chargement',
               style: TextStyle(fontSize: 48.sp, fontWeight: FontWeight.bold)),
           SizedBox(height: 24.h),
-          ElevatedButton(onPressed: _loadProducts, child: const Text('Réessayer')),
+          ElevatedButton(
+            onPressed: _loadProducts,
+            style: ElevatedButton.styleFrom(elevation: 0),
+            child: const Text('Réessayer'),
+          ),
         ],
       ),
     );
@@ -453,6 +457,7 @@ class _CompletedPhase extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
+                elevation: 0,
                 padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 16.h),
                 shape: squircleBorder(radius: 14.r),
               ),

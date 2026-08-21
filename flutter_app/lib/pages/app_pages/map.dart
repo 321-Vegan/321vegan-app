@@ -23,6 +23,7 @@ import 'package:vegan_app/widgets/map/map_filter_page.dart';
 import 'package:vegan_app/widgets/map/map_search_bar.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
 class MapPage extends StatefulWidget {
@@ -302,17 +303,34 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
   Widget _buildMarkerIcon(Shop shop) {
     final isVegan = shop.shopType == 'vegan';
-    return Container(
-      decoration: BoxDecoration(
-        color: isVegan ? kSemanticSuccess : Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isVegan
-              ? kSemanticSuccess
-              : Theme.of(context).colorScheme.primary,
-          width: 2,
+    if (isVegan) {
+      return Container(
+        decoration: BoxDecoration(
+          color: kSemanticSuccess,
+          shape: BoxShape.circle,
+          border: Border.all(color: kSemanticSuccess, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        boxShadow: [
+        child: const Center(
+          child: Icon(Icons.eco, color: Colors.white, size: 22),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(
+          radius: 12,
+          side: const BorderSide(color: kAccentYellow, width: 1),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 4,
@@ -320,12 +338,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           ),
         ],
       ),
-      child: Center(
-        child: Icon(
-          isVegan ? Icons.eco : Icons.storefront,
-          color: isVegan ? Colors.white : Theme.of(context).colorScheme.primary,
-          size: 22,
-        ),
+      child: Image.asset(
+        'lib/assets/images/icons/pin-shop.webp',
+        color: kAccentYellow,
+        colorBlendMode: BlendMode.srcIn,
       ),
     );
   }
@@ -450,8 +466,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   }).toList(),
                   builder: (context, markers) {
                     return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
+                      decoration: const BoxDecoration(
+                        color: kAccentYellow,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -497,10 +513,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                             TextStyle(fontSize: 32.sp, color: Colors.black87),
                       ),
                     ),
-                    Icon(
-                      Icons.location_pin,
+                    Image.asset(
+                      'lib/assets/images/icons/map-marker-plus.webp',
                       color: Theme.of(context).colorScheme.primary,
-                      size: 48,
+                      colorBlendMode: BlendMode.srcIn,
+                      width: 48,
+                      height: 48,
                     ),
                   ],
                 ),
@@ -526,41 +544,28 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 ),
               ),
             ),
-            // "Créer ici" + "Annuler" buttons
+            // "Créer ici" + "Annuler" buttons — same pairing as everywhere
+            // else in the app: two AppButtons, the cancel one white/outlined.
             Positioned(
               bottom: 100,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              left: 48.w,
+              right: 48.w,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  OutlinedButton(
-                    onPressed: () => setState(() => _isPicking = false),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: BorderSide(color: Colors.grey.shade400),
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20.w, vertical: 12.h),
-                      shape: squircleBorder(radius: 24.r),
-                    ),
-                    child: Text('Annuler',
-                        style: TextStyle(
-                            fontSize: 36.sp, color: Colors.grey.shade700)),
-                  ),
-                  SizedBox(width: 12.w),
-                  ElevatedButton.icon(
+                  AppButton(
+                    label: 'Créer le magasin ici',
+                    iconAsset: 'lib/assets/images/icons/map-marker-plus.webp',
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     onPressed: _onCreateHere,
-                    icon: const Icon(Icons.add_location_alt, size: 20),
-                    label: Text('Créer ici',
-                        style: TextStyle(
-                            fontSize: 36.sp, fontWeight: FontWeight.w600)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20.w, vertical: 12.h),
-                      shape: squircleBorder(radius: 24.r),
-                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  AppButton(
+                    label: 'Annuler',
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.grey[700]!,
+                    borderColor: kBorderDefault,
+                    onPressed: () => setState(() => _isPicking = false),
                   ),
                 ],
               ),
@@ -638,10 +643,15 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   ),
                   SizedBox(width: 30.w),
                   SquareIconButton.action(
-                    icon: Icons.add,
                     backgroundColor: Theme.of(context).colorScheme.primary,
-                    iconColor: Colors.white,
                     onTap: _enterPickMode,
+                    child: Image.asset(
+                      'lib/assets/images/icons/shop-add.webp',
+                      width: 72.sp,
+                      height: 72.sp,
+                      color: Colors.white,
+                      colorBlendMode: BlendMode.srcIn,
+                    ),
                   ),
                 ],
               ),

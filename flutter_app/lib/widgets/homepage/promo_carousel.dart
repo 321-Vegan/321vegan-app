@@ -4,11 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/widgets/b12/b12_reminder_settings_modal.dart';
+import '../../helpers/preference_helper.dart';
 import '../../models/seasonal_theme.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../shared/page_dots_indicator.dart';
+
+/// Bump this whenever the promo content changes enough that users who
+/// already dismissed the carousel should see it again (e.g. new slides
+/// added). Dismissal is stored per-version, so an older dismissal won't
+/// match a new version and the carousel reappears automatically.
+const String kPromoCarouselVersion = 'v1';
 
 /// One slide of the Dashboard news carousel.
 class PromoSlide {
@@ -48,10 +55,8 @@ class PromoSlide {
   });
 }
 
-/// Dummy static content until the real news source is wired
-/// (edit freely — titles/subtitles/links/images only live here). Not
-/// `const` because [PromoSlide.page] holds a closure.
-final List<PromoSlide> _dummySlides = [
+/// Static content until the real news source is wired
+final List<PromoSlide> _promoSlides = [
   const PromoSlide(
     title: 'Nouvelle interface !',
     subtitle: 'Un tout nouveau design pour plus de clarté.',
@@ -82,7 +87,7 @@ final List<PromoSlide> _dummySlides = [
 
 /// Swipeable news carousel at the top of the Dashboard (static content).
 class PromoCarousel extends StatefulWidget {
-  /// Defaults to [_dummySlides] when null.
+  /// Defaults to [_promoSlides] when null.
   final List<PromoSlide>? slides;
 
   const PromoCarousel({super.key, this.slides});
@@ -98,13 +103,26 @@ class _PromoCarouselState extends State<PromoCarousel> {
   Timer? _autoScrollTimer;
   int _page = 0;
   bool _isWrappingToStart = false;
+  bool _dismissed = true; // hidden until the real value loads
 
-  List<PromoSlide> get _slides => widget.slides ?? _dummySlides;
+  List<PromoSlide> get _slides => widget.slides ?? _promoSlides;
 
   @override
   void initState() {
     super.initState();
     _startAutoScroll();
+    _loadDismissedState();
+  }
+
+  Future<void> _loadDismissedState() async {
+    final dismissed =
+        await PreferencesHelper.isPromoCarouselDismissed(kPromoCarouselVersion);
+    if (mounted) setState(() => _dismissed = dismissed);
+  }
+
+  Future<void> _handleClose() async {
+    await PreferencesHelper.markPromoCarouselDismissed(kPromoCarouselVersion);
+    if (mounted) setState(() => _dismissed = true);
   }
 
   void _startAutoScroll() {
@@ -129,51 +147,27 @@ class _PromoCarouselState extends State<PromoCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    if (_slides.isEmpty) return const SizedBox.shrink();
+    if (_slides.isEmpty || _dismissed) return const SizedBox.shrink();
 
     return Column(
       children: [
         SizedBox(
           height: 396.h,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              final isLastPage = _page == _slides.length - 1;
-              if (!isLastPage || _isWrappingToStart) return false;
-
-              // OverscrollNotification.overscroll only fires under
-              // ClampingScrollPhysics (Android): the drag is blocked at the
-              // boundary and reports how far it was blocked. Under iOS's
-              // BouncingScrollPhysics, applyBoundaryConditions always
-              // returns 0, so no OverscrollNotification is ever dispatched;
-              // instead pixels legitimately exceeds maxScrollExtent while
-              // rubber-banding, which we detect via the metrics diff.
-              final metrics = notification.metrics;
-              final overscroll = notification is OverscrollNotification
-                  ? notification.overscroll
-                  : metrics.pixels - metrics.maxScrollExtent;
-
-              if (overscroll > 8) {
-                _isWrappingToStart = true;
-                _controller
-                    .animateToPage(
-                      0,
-                      duration: const Duration(milliseconds: 400),
-                      curve: Curves.easeInOut,
-                    )
-                    .then((_) => _isWrappingToStart = false);
-              }
-              return false;
-            },
-            child: PageView.builder(
-              controller: _controller,
-              itemCount: _slides.length,
-              onPageChanged: (page) {
-                setState(() => _page = page);
-                _startAutoScroll();
-              },
-              itemBuilder: (context, index) =>
-                  _PromoCard(slide: _slides[index]),
-            ),
+          child: Stack(
+            children: [
+              _buildPageView(),
+              Positioned(
+                top: 0.h,
+                right: 40.w,
+                child: GestureDetector(
+                  onTap: _handleClose,
+                  child: Padding(
+                    padding: EdgeInsets.all(16.r),
+                    child: Icon(Icons.close, color: Colors.white, size: 64.sp),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: 20.h),
@@ -183,6 +177,48 @@ class _PromoCarouselState extends State<PromoCarousel> {
           activeColor: Theme.of(context).colorScheme.primary,
         ),
       ],
+    );
+  }
+
+  Widget _buildPageView() {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        final isLastPage = _page == _slides.length - 1;
+        if (!isLastPage || _isWrappingToStart) return false;
+
+        // OverscrollNotification.overscroll only fires under
+        // ClampingScrollPhysics (Android): the drag is blocked at the
+        // boundary and reports how far it was blocked. Under iOS's
+        // BouncingScrollPhysics, applyBoundaryConditions always
+        // returns 0, so no OverscrollNotification is ever dispatched;
+        // instead pixels legitimately exceeds maxScrollExtent while
+        // rubber-banding, which we detect via the metrics diff.
+        final metrics = notification.metrics;
+        final overscroll = notification is OverscrollNotification
+            ? notification.overscroll
+            : metrics.pixels - metrics.maxScrollExtent;
+
+        if (overscroll > 8) {
+          _isWrappingToStart = true;
+          _controller
+              .animateToPage(
+                0,
+                duration: const Duration(milliseconds: 400),
+                curve: Curves.easeInOut,
+              )
+              .then((_) => _isWrappingToStart = false);
+        }
+        return false;
+      },
+      child: PageView.builder(
+        controller: _controller,
+        itemCount: _slides.length,
+        onPageChanged: (page) {
+          setState(() => _page = page);
+          _startAutoScroll();
+        },
+        itemBuilder: (context, index) => _PromoCard(slide: _slides[index]),
+      ),
     );
   }
 }

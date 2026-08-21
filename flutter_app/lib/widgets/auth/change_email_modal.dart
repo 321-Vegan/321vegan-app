@@ -34,7 +34,15 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
   void initState() {
     super.initState();
     _loadPendingEmail();
+    _emailController.addListener(_handleInputChanged);
+    _passwordController.addListener(_handleInputChanged);
   }
+
+  void _handleInputChanged() => setState(() {});
+
+  bool get _canSubmit =>
+      _emailController.text.trim().isNotEmpty &&
+      _passwordController.text.isNotEmpty;
 
   Future<void> _loadPendingEmail() async {
     final pending = await PreferencesHelper.getPendingEmailChange();
@@ -53,6 +61,8 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
 
   @override
   void dispose() {
+    _emailController.removeListener(_handleInputChanged);
+    _passwordController.removeListener(_handleInputChanged);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -129,16 +139,8 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Modifier votre email', style: AppTextStyles.baloo22),
-                  IconButton(
-                    onPressed: _isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                    iconSize: 64.sp,
-                  ),
                 ],
               ),
-              SizedBox(height: 8.h),
               Text(
                 'Email actuel : ${widget.currentEmail}',
                 style: TextStyle(fontSize: 42.sp, color: Colors.grey[600]),
@@ -179,7 +181,7 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
                 label: 'Envoyer le lien de confirmation',
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 isLoading: _isLoading,
-                onPressed: _submit,
+                onPressed: _canSubmit ? _submit : null,
               ),
             ],
           ),

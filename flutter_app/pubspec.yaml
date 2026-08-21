@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 5.0.3+1
+version: 5.0.4+1
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -115,8 +115,9 @@ flutter:
     - lib/assets/logo_instagram.png
     - lib/assets/vegan_products.db.gz
     # Intro
-    - lib/assets/intro/blob1.webp
-    - lib/assets/intro/blob2.webp
+    - lib/assets/intro/p1-phone.webp
+    - lib/assets/intro/p2-phone.webp
+    - lib/assets/intro/p3-phone.webp
     # Badges
     - lib/assets/badges/1an.webp
     - lib/assets/badges/2ans.webp
@@ -139,6 +140,7 @@ flutter:
     - lib/assets/avatars/cochon.png
     - lib/assets/avatars/vache.png
     - lib/assets/avatars/chat.png
+    - lib/assets/avatars/chien.png
     # Characters
     - lib/assets/images/characters/lemon-vgn.webp
     - lib/assets/images/characters/lemon-not.webp
@@ -225,6 +227,14 @@ flutter:
     - lib/assets/images/icons/calendar.webp
     - lib/assets/images/icons/award-line.webp
     - lib/assets/images/icons/clipboard-check.webp
+    - lib/assets/images/icons/pin-shop.webp
+    - lib/assets/images/icons/shop-add.webp
+    - lib/assets/images/icons/map-marker-plus.webp
+    - lib/assets/images/icons/map-on.webp
+    - lib/assets/images/icons/map-off.webp
+    - lib/assets/images/icons/home-on.webp
+    - lib/assets/images/icons/home-off.webp
+
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - lib/assets/images/vegandex.webp

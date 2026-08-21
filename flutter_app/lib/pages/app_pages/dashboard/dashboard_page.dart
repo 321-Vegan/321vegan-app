@@ -35,7 +35,6 @@ import '../../../widgets/homepage/vegan_counter.dart';
 import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
-import '../Vegandex/vegandex_page.dart';
 import '../../../widgets/b12/b12_reminder_settings_modal.dart';
 import '../Profile/subscription_page.dart';
 import '../Profile/error_reports_page.dart';
@@ -550,13 +549,6 @@ class DashboardPageState extends State<DashboardPage> {
               end: Alignment.bottomRight,
             ),
             shape: squircleBorder(radius: 40.r),
-            shadows: [
-              BoxShadow(
-                color: const Color(0xFF7C3AED).withValues(alpha: 0.35),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

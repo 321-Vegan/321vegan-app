@@ -113,13 +113,6 @@ class BrandBanner extends StatelessWidget {
               colors: [color, endColor],
             ),
             shape: squircleBorder(radius: 16.r),
-            shadows: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
           ),
           child: Stack(
             children: [

@@ -465,8 +465,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 label: 'Thème',
                 labelSuffix: Image.asset(
                   'lib/assets/images/icons/crown-line.webp',
-                  width: 72.sp,
-                  height: 72.sp,
+                  width: 54.sp,
+                  height: 54.sp,
                   color: kAccentYellow,
                   colorBlendMode: BlendMode.srcIn,
                 ),
@@ -624,7 +624,7 @@ class _SettingsPageState extends State<SettingsPage> {
             backgroundColor: Theme.of(context).colorScheme.primary,
             onPressed: _handleLogout,
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: AppSpacing.section),
           AppButton(
             label: 'Supprimer mon compte',
             backgroundColor: kAccentYellow,
@@ -657,16 +657,9 @@ class _SettingsPageState extends State<SettingsPage> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            shape: squircleBorder(radius: 20),
-            shadows: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            shape: squircleBorder(radius: 60.r),
           ),
-          padding: EdgeInsets.all(24.w),
+          padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 60.h),
           child: Row(
             children: [
               Expanded(
@@ -688,8 +681,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         SizedBox(width: 14.w),
                         Image.asset(
                           'lib/assets/images/icons/crown-line.webp',
-                          width: 72.sp,
-                          height: 72.sp,
+                          width: 54.sp,
+                          height: 54.sp,
                           color: kAccentYellow,
                           colorBlendMode: BlendMode.srcIn,
                         ),
@@ -729,8 +722,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SizedBox(width: 20.w),
               SizedBox(
-                width: 210.w,
-                height: 260.w,
+                width: 270.w,
+                height: 270.w,
                 child: Image.asset(
                   'lib/assets/images/buy-premium/pineapple.webp',
                   fit: BoxFit.contain,

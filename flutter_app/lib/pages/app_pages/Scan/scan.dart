@@ -950,7 +950,7 @@ class ScanPageState extends State<ScanPage>
           ),
           child: Row(
             children: [
-              SizedBox(width: 24.w),
+              SizedBox(width: 39.w),
               Icon(Icons.search, color: Colors.grey[600], size: 60.sp),
               SizedBox(width: 12.w),
               Expanded(
@@ -967,7 +967,7 @@ class ScanPageState extends State<ScanPage>
                   ),
                 ),
               ),
-              SizedBox(width: 24.w),
+              SizedBox(width: 39.w),
             ],
           ),
         ),

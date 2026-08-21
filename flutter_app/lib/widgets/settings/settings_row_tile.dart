@@ -35,6 +35,9 @@ class SettingsRowTile extends StatelessWidget {
         onTap: onTap,
         customBorder: squircleBorder(radius: 36.r),
         child: Container(
+          // Same floor as SettingsToggleTile, so both card types land at
+          // the identical height instead of each hugging its own content.
+          constraints: BoxConstraints(minHeight: 210.h),
           padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 45.h),
           decoration: ShapeDecoration(
             shape: squircleBorder(
@@ -44,22 +47,26 @@ class SettingsRowTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        label,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyBold15,
-                      ),
+              // Sized to its own content (not Expanded) — labels are short,
+              // fixed strings, so the value column below gets to claim
+              // whatever width the label isn't using instead of a rigid
+              // 50/50 split, letting long values like an email sit further
+              // left before they need to ellipsize.
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.bodyBold15,
                     ),
-                    if (labelSuffix != null) ...[
-                      SizedBox(width: 12.w),
-                      labelSuffix!,
-                    ],
+                  ),
+                  if (labelSuffix != null) ...[
+                    SizedBox(width: 12.w),
+                    labelSuffix!,
                   ],
-                ),
+                ],
               ),
               SizedBox(width: 45.w),
               if (value != null)

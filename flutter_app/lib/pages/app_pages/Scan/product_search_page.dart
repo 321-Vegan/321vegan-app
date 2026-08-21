@@ -33,7 +33,9 @@ class ProductSearchPage extends StatefulWidget {
 class _ProductSearchPageState extends State<ProductSearchPage> {
   _SearchCategory _category = _SearchCategory.cosmetique;
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   String _query = '';
+  bool _isSearchFocused = false;
 
   List<ENumberItem> _eNumbers = [];
   List<CosmeticItem> _cosmeticResults = [];
@@ -44,11 +46,20 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   void initState() {
     super.initState();
     _loadENumbers();
+    _searchFocusNode.addListener(_handleSearchFocusChange);
+  }
+
+  void _handleSearchFocusChange() {
+    if (_isSearchFocused != _searchFocusNode.hasFocus) {
+      setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
+    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.removeListener(_handleSearchFocusChange);
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -192,7 +203,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: Text(
-            'Rechercher un produit',
+            'Recherches',
             style: AppTextStyles.baloo22,
           ),
           centerTitle: true,
@@ -207,44 +218,62 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
               SizedBox(height: 12.h),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 48.w),
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  onChanged: _onSearchChanged,
-                  onSubmitted: isAliment ? _submitBarcode : null,
-                  keyboardType:
-                      isAliment ? TextInputType.number : TextInputType.text,
-                  inputFormatters: isAliment
-                      ? [FilteringTextInputFormatter.digitsOnly]
-                      : null,
-                  style: TextStyle(fontSize: 42.sp),
-                  decoration: InputDecoration(
-                    hintText: _searchHint,
-                    hintStyle:
-                        TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-                    errorText: isAliment ? _barcodeError : null,
-                    prefixIcon: Icon(
-                      Icons.search,
-                      size: 60.sp,
-                      color: Colors.grey[600],
+                child: Container(
+                  decoration: ShapeDecoration(
+                    color: Colors.white,
+                    shape: squircleBorder(
+                      radius: 42.r,
+                      side: BorderSide(
+                        color: _isSearchFocused ? kAccentYellow : kBorderDefault,
+                        width: _isSearchFocused ? 1.5 : 1,
+                      ),
                     ),
-                    suffixIcon: hasQuery
-                        ? IconButton(
-                            icon: Icon(Icons.clear, size: 36.sp),
-                            onPressed: _clear,
-                          )
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    autofocus: true,
+                    onChanged: _onSearchChanged,
+                    onSubmitted: isAliment ? _submitBarcode : null,
+                    keyboardType:
+                        isAliment ? TextInputType.number : TextInputType.text,
+                    inputFormatters: isAliment
+                        ? [FilteringTextInputFormatter.digitsOnly]
                         : null,
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16.w, vertical: 30.h),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(42.r),
-                      borderSide: BorderSide.none,
+                    style: TextStyle(fontSize: 42.sp),
+                    decoration: InputDecoration(
+                      hintText: _searchHint,
+                      hintStyle:
+                          TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        size: 60.sp,
+                        color: Colors.grey[600],
+                      ),
+                      suffixIcon: hasQuery
+                          ? IconButton(
+                              icon: Icon(Icons.clear, size: 36.sp),
+                              onPressed: _clear,
+                            )
+                          : null,
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: 39.w, vertical: 33.h),
+                      border: InputBorder.none,
                     ),
                   ),
                 ),
               ),
+              if (isAliment && _barcodeError != null)
+                Padding(
+                  padding: EdgeInsets.only(top: 8.h, left: 60.w, right: 48.w),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _barcodeError!,
+                      style: TextStyle(color: kSemanticError, fontSize: 33.sp),
+                    ),
+                  ),
+                ),
               SizedBox(height: 30.h),
               SizedBox(
                 height: 144.w,
@@ -278,7 +307,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                   ],
                 ),
               ),
-              SizedBox(height: 30.h),
+              SizedBox(height: 60.h),
               Expanded(
                 child: !hasQuery
                     ? EmptyStateView(
@@ -406,7 +435,8 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
     return GestureDetector(
       onTap: () => _selectBarcodeResult(code),
       child: AppCard(
-        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 28.h),
+        radius: 36.r,
+        padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 45.h),
         child: Row(
           children: [
             Container(
@@ -424,11 +454,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                     brand.isNotEmpty ? '$name - $brand' : name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 42.sp,
-                      fontWeight: FontWeight.bold,
-                      color: kTextPrimary,
-                    ),
+                    style: AppTextStyles.baloo17,
                   ),
                   SizedBox(height: 6.h),
                   Text(
@@ -451,17 +477,14 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
 
   Widget _buildCosmeticCard(CosmeticItem cosmetic) {
     return AppCard(
-      padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 28.h),
+      radius: 36.r,
+      padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 45.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             cosmetic.name,
-            style: TextStyle(
-              fontSize: 42.sp,
-              fontWeight: FontWeight.bold,
-              color: kTextPrimary,
-            ),
+            style: AppTextStyles.baloo17,
           ),
           SizedBox(height: 16.h),
           if (!cosmetic.vegan && cosmetic.crueltyFree) ...[
@@ -493,17 +516,14 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   Widget _buildAdditiveCard(ENumberItem item) {
     final color = _stateColor(item.state);
     return AppCard(
-      padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 28.h),
+      radius: 36.r,
+      padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 45.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '${item.name} (${item.eNumber})',
-            style: TextStyle(
-              fontSize: 42.sp,
-              fontWeight: FontWeight.bold,
-              color: kTextPrimary,
-            ),
+            style: AppTextStyles.baloo17,
           ),
           SizedBox(height: 16.h),
           _buildStatusRow(
@@ -534,8 +554,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
         SizedBox(width: 12.w),
         Text(
           text,
-          style: TextStyle(
-              fontWeight: FontWeight.bold, color: color, fontSize: 36.sp),
+          style: AppTextStyles.bodyMedium15.copyWith(color: color),
         ),
       ],
     );
@@ -550,7 +569,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
 
   IconData _stateIcon(String state) => switch (state) {
         'vegan' => Icons.check_circle,
-        'carniste' => Icons.close,
+        'carniste' => Icons.close_outlined,
         'Ça dépend' => Icons.help_outline,
         _ => Icons.info_outline,
       };

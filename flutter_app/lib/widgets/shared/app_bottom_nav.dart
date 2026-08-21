@@ -2,17 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppBottomNavItem {
-  final IconData icon;
+  final IconData? icon;
 
   /// Icon shown while selected; falls back to [icon].
   final IconData? activeIcon;
+
+  /// Inactive-state icon image (e.g. Figma export), used instead of [icon]
+  /// when set — plain black glyph, tinted like [icon] at render time.
+  final String? iconAsset;
+
+  /// Active-state counterpart to [iconAsset]; falls back to [iconAsset].
+  final String? activeIconAsset;
   final String label;
 
   const AppBottomNavItem({
-    required this.icon,
+    this.icon,
     this.activeIcon,
+    this.iconAsset,
+    this.activeIconAsset,
     required this.label,
-  });
+  }) : assert(icon != null || iconAsset != null,
+            'AppBottomNavItem needs either icon or iconAsset');
 }
 
 /// Flat bottom navigation bar from the redesign (replaced the convex
@@ -91,6 +101,25 @@ class _NavItem extends StatelessWidget {
     required this.onTap,
   });
 
+  Widget _buildIcon(Color color) {
+    final assetPath =
+        isActive ? (item.activeIconAsset ?? item.iconAsset) : item.iconAsset;
+    if (assetPath != null) {
+      return Image.asset(
+        assetPath,
+        width: 76.sp,
+        height: 76.sp,
+        color: color,
+        colorBlendMode: BlendMode.srcIn,
+      );
+    }
+    return Icon(
+      isActive ? (item.activeIcon ?? item.icon) : item.icon,
+      size: 76.sp,
+      color: color,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = isActive ? activeColor : inactiveColor;
@@ -104,11 +133,7 @@ class _NavItem extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Icon(
-                isActive ? (item.activeIcon ?? item.icon) : item.icon,
-                size: 76.sp,
-                color: color,
-              ),
+              _buildIcon(color),
               if (badgeCount > 0)
                 Positioned(
                   right: -10,

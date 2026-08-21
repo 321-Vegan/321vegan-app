@@ -218,7 +218,7 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
       text.isEmpty ? text : text[0].toUpperCase() + text.substring(1);
 
   Widget _sectionLabel(String label) {
-    return Text(label, style: AppTextStyles.baloo17);
+    return Text(label, style: AppTextStyles.baloo22);
   }
 
   Widget _buildFrequencyOption(String label, ReminderFrequency frequency) {
@@ -244,14 +244,14 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
             }
           });
         },
-        customBorder: squircleBorder(radius: 24.r),
+        customBorder: squircleBorder(radius: 36.r),
         child: Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 24.h),
+          padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 60.h),
           decoration: ShapeDecoration(
             color: isSelected ? kSecondaryTag : Colors.white,
             shape: squircleBorder(
-              radius: 24.r,
+              radius: 36.r,
               side: BorderSide(
                 color: isSelected ? kAccentYellow : kBorderDefault,
                 width: isSelected ? 2 : 1,
@@ -270,8 +270,8 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
                 ),
               ),
               SizedBox(
-                width: 108.w,
-                height: 108.w,
+                width: 76.w,
+                height: 76.w,
                 child: isSelected
                     ? Center(
                         child: Image.asset(

@@ -272,7 +272,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                               foregroundColor: Colors.white,
                               padding: EdgeInsets.symmetric(vertical: 18.h),
                               shape: squircleBorder(radius: 16.r),
-                              elevation: 4,
+                              elevation: 0,
                             ),
                             child: Text('Supprimer',
                                 style: TextStyle(fontSize: 42.sp, fontWeight: FontWeight.bold)),

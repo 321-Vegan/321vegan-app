@@ -106,19 +106,29 @@ class CategoryProductsView extends StatelessWidget {
                   title: 'Aucun produit dans cette catégorie',
                   subtitle: 'Revenez plus tard, de nouveaux produits arrivent !',
                 )
-              : GridView.builder(
-                  padding: EdgeInsets.only(bottom: 24.h),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 16.w,
-                    mainAxisSpacing: 16.h,
-                    childAspectRatio: 0.6,
-                  ),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    final isScanned = _isProductScanned(product.ean);
-                    return _buildProductCard(product, isScanned, baseUrl);
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    const crossAxisCount = 3;
+                    final spacing = 16.w;
+                    final cellWidth = (constraints.maxWidth -
+                            spacing * (crossAxisCount - 1)) /
+                        crossAxisCount;
+                    final cardHeight = cellWidth + 180.h;
+                    return GridView.builder(
+                      padding: EdgeInsets.only(bottom: AppSpacing.section),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: spacing,
+                        mainAxisSpacing: 16.h,
+                        mainAxisExtent: cardHeight,
+                      ),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        final isScanned = _isProductScanned(product.ean);
+                        return _buildProductCard(product, isScanned, baseUrl);
+                      },
+                    );
                   },
                 ),
         ),
@@ -133,13 +143,6 @@ class CategoryProductsView extends StatelessWidget {
       decoration: ShapeDecoration(
         color: Colors.white,
         shape: squircleBorder(radius: 24.r, side: const BorderSide(color: kBorderDefault)),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -202,7 +205,7 @@ class CategoryProductsView extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium15,
+            style: AppTextStyles.bodyMedium15.copyWith(height: 1.1),
           ),
           Text(
             product.brandName,

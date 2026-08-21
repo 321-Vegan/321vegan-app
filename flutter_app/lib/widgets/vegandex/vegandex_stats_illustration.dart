@@ -49,7 +49,7 @@ class VegandexStatsIllustration extends StatelessWidget {
                 child: Center(
                   child: Text(
                     '$scannedCount/$totalCount',
-                    style: AppTextStyles.baloo26,
+                    style: AppTextStyles.baloo33,
                   ),
                 ),
               ),

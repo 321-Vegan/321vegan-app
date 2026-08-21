@@ -33,16 +33,25 @@ class _MapFilterPageState extends State<MapFilterPage> {
   late Set<String> _selected;
   String _search = '';
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   List<ProductOfInterest> _products = [];
   List<ProductCategory> _categories = [];
   ProductCategory? _selectedCategory;
   bool _isLoading = true;
+  bool _isSearchFocused = false;
 
   @override
   void initState() {
     super.initState();
     _selected = Set.from(widget.selectedEans);
     _loadProducts();
+    _searchFocusNode.addListener(_handleSearchFocusChange);
+  }
+
+  void _handleSearchFocusChange() {
+    if (_isSearchFocused != _searchFocusNode.hasFocus) {
+      setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
+    }
   }
 
   Future<void> _loadProducts() async {
@@ -62,6 +71,8 @@ class _MapFilterPageState extends State<MapFilterPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.removeListener(_handleSearchFocusChange);
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -356,10 +367,17 @@ class _MapFilterPageState extends State<MapFilterPage> {
                 child: Container(
                   decoration: ShapeDecoration(
                     color: Colors.white,
-                    shape: squircleBorder(radius: 42.r),
+                    shape: squircleBorder(
+                      radius: 42.r,
+                      side: BorderSide(
+                        color: _isSearchFocused ? kAccentYellow : kBorderDefault,
+                        width: _isSearchFocused ? 1.5 : 1,
+                      ),
+                    ),
                   ),
                   child: TextField(
                     controller: _searchController,
+                    focusNode: _searchFocusNode,
                     onChanged: (v) => setState(() => _search = v),
                     style: AppTextStyles.bodyRegular15,
                     decoration: InputDecoration(

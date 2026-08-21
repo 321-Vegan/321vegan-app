@@ -200,15 +200,19 @@ class MyHomePageState extends State<MyHomePage>
         currentIndex: _tabController.index,
         items: const [
           AppBottomNavItem(
-            icon: CupertinoIcons.house,
-            activeIcon: CupertinoIcons.house_fill,
+            iconAsset: 'lib/assets/images/icons/home-off.webp',
+            activeIconAsset: 'lib/assets/images/icons/home-on.webp',
             label: 'Accueil',
           ),
           AppBottomNavItem(
             icon: CupertinoIcons.barcode_viewfinder,
             label: 'Scan',
           ),
-          AppBottomNavItem(icon: Icons.travel_explore, label: 'Carte'),
+          AppBottomNavItem(
+            iconAsset: 'lib/assets/images/icons/map-off.webp',
+            activeIconAsset: 'lib/assets/images/icons/map-on.webp',
+            label: 'Carte',
+          ),
         ],
         onTap: (int value) {
           setState(() {

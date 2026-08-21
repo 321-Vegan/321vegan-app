@@ -38,7 +38,9 @@ class _PartnersPageState extends State<PartnersPage> {
   int? _selectedCategoryId;
   final PageController _pageController = PageController();
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
+  bool _isSearchFocused = false;
   // Guards against triggering the back-navigation more than once per drag
   // while the user keeps overscrolling past the first category.
   bool _hasPoppedForOverscroll = false;
@@ -52,12 +54,21 @@ class _PartnersPageState extends State<PartnersPage> {
   void initState() {
     super.initState();
     _loadPartnersInfo();
+    _searchFocusNode.addListener(_handleSearchFocusChange);
+  }
+
+  void _handleSearchFocusChange() {
+    if (_isSearchFocused != _searchFocusNode.hasFocus) {
+      setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
+    }
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     _searchController.dispose();
+    _searchFocusNode.removeListener(_handleSearchFocusChange);
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -193,7 +204,7 @@ class _PartnersPageState extends State<PartnersPage> {
       children: [
         SizedBox(height: 12.h),
         SizedBox(
-          height: 144.w,
+          height: 120.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 48.w),
@@ -277,29 +288,37 @@ class _PartnersPageState extends State<PartnersPage> {
   /// Same styling as [ProductSearchPage]'s search field: filled white pill,
   /// leading search icon, clear button once there's a query.
   Widget _buildSearchField() {
-    return TextField(
-      controller: _searchController,
-      onChanged: (value) => setState(() => _searchQuery = value),
-      style: TextStyle(fontSize: 42.sp),
-      decoration: InputDecoration(
-        hintText: 'Rechercher une boutique...',
-        hintStyle: TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-        prefixIcon: Icon(Icons.search, size: 60.sp, color: Colors.grey[600]),
-        suffixIcon: _searchQuery.isNotEmpty
-            ? IconButton(
-                icon: Icon(Icons.clear, size: 36.sp),
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() => _searchQuery = '');
-                },
-              )
-            : null,
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 30.h),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(42.r),
-          borderSide: BorderSide.none,
+    return Container(
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(
+          radius: 42.r,
+          side: BorderSide(
+            color: _isSearchFocused ? kAccentYellow : kBorderDefault,
+            width: _isSearchFocused ? 1.5 : 1,
+          ),
+        ),
+      ),
+      child: TextField(
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        onChanged: (value) => setState(() => _searchQuery = value),
+        style: TextStyle(fontSize: 42.sp),
+        decoration: InputDecoration(
+          hintText: 'Rechercher une boutique...',
+          hintStyle: TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
+          prefixIcon: Icon(Icons.search, size: 60.sp, color: Colors.grey[600]),
+          suffixIcon: _searchQuery.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.clear, size: 36.sp),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() => _searchQuery = '');
+                  },
+                )
+              : null,
+          contentPadding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
+          border: InputBorder.none,
         ),
       ),
     );
@@ -312,13 +331,12 @@ class _PartnersPageState extends State<PartnersPage> {
       key: _chipKeyFor(category.id),
       onTap: () => _goToCategory(index),
       child: Container(
-        height: 144.w,
         alignment: Alignment.center,
-        padding: EdgeInsets.symmetric(horizontal: 39.w),
+        padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
         decoration: ShapeDecoration(
           color: isSelected ? kPrimaryTag : Colors.white,
           shape: squircleBorder(
-            radius: 20,
+            radius: 36.r,
             side: BorderSide(
               color: isSelected ? primaryColor : kBorderDefault,
               width: isSelected ? 1.5 : 1,
@@ -328,8 +346,8 @@ class _PartnersPageState extends State<PartnersPage> {
         child: Text(
           category.name,
           style: TextStyle(
-            fontSize: 38.sp,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            fontSize: 39.sp,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected ? primaryColor : kTextPrimary,
           ),
         ),
@@ -339,11 +357,11 @@ class _PartnersPageState extends State<PartnersPage> {
 
   Widget _buildLegendBanner() {
     return Container(
-      padding: EdgeInsets.all(36.w),
+      padding: EdgeInsets.all(45.w),
       decoration: ShapeDecoration(
         color: kSecondaryTag,
         shape: squircleBorder(
-          radius: 36.r,
+          radius: 48.r,
           side: const BorderSide(color: kAccentYellow),
         ),
       ),
@@ -355,12 +373,8 @@ class _PartnersPageState extends State<PartnersPage> {
               'Les codes promos avec une étoile sont des codes affiliés qui '
               'me donnent une commission. Les utiliser permet de soutenir '
               '321Vegan !',
-              style: TextStyle(
-                fontSize: 38.sp,
-                fontWeight: FontWeight.w500,
-                color: kAccentYellow,
-                height: 1.3,
-              ),
+              style: AppTextStyles.bodyMedium15
+                  .copyWith(color: kAccentYellow, height: 1.3),
             ),
           ),
           SizedBox(width: 16.w),
@@ -375,15 +389,15 @@ class _PartnersPageState extends State<PartnersPage> {
     return GestureDetector(
       onTap: () => _launchWebsite(context, partner.url),
       child: AppCard(
-        radius: 40.r,
-        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 24.h),
+        radius: 60.r,
+        padding: EdgeInsets.all(45.w),
         child: Row(
           children: [
             ClipSmoothRect(
-              radius: squircleRadius(24.r),
+              radius: squircleRadius(33.r),
               child: Container(
-                width: 200.w,
-                height: 200.w,
+                width: 240.w,
+                height: 240.w,
                 color: Colors.grey[100],
                 padding: EdgeInsets.all(12.w),
                 child: CachedNetworkImage(
@@ -406,7 +420,7 @@ class _PartnersPageState extends State<PartnersPage> {
                 ),
               ),
             ),
-            SizedBox(width: 24.w),
+            SizedBox(width: 60.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -416,17 +430,14 @@ class _PartnersPageState extends State<PartnersPage> {
                     partner.discountText,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 54.sp,
-                      fontWeight: FontWeight.bold,
-                      color: kTextPrimary,
-                    ),
+                    style: AppTextStyles.baloo26,
                   ),
                   Text(
                     partner.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 42.sp, color: Colors.grey[600]),
+                    style: AppTextStyles.bodyMedium13
+                        .copyWith(color: Colors.grey[600]),
                   ),
                   SizedBox(height: 10.h),
                   Container(
@@ -434,17 +445,14 @@ class _PartnersPageState extends State<PartnersPage> {
                         EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
                     decoration: ShapeDecoration(
                       color: kAccentYellow.withValues(alpha: 0.15),
-                      shape: squircleBorder(radius: 20.r),
+                      shape: const StadiumBorder(),
                     ),
                     child: Text(
                       'Code : ${partner.discountCode}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 42.sp,
-                        color: kAccentYellow,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: AppTextStyles.bodyMedium13
+                          .copyWith(color: kAccentYellow),
                     ),
                   ),
                 ],

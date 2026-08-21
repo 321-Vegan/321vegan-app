@@ -24,6 +24,10 @@ class AppButton extends StatelessWidget {
   /// label so icon and text stay proportional regardless of device.
   final IconData? icon;
 
+  /// Leading icon image (e.g. a Figma export) shown instead of [icon] when
+  /// set — plain black glyph, tinted like [icon] at render time.
+  final String? iconAsset;
+
   /// Swaps the label (and icon) for a spinner and disables taps — the
   /// button keeps its size and colors so it doesn't jump while a request
   /// is in flight.
@@ -39,6 +43,7 @@ class AppButton extends StatelessWidget {
     this.disabledForegroundColor,
     this.borderColor,
     this.icon,
+    this.iconAsset,
     this.isLoading = false,
   });
 
@@ -69,7 +74,16 @@ class AppButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null) ...[
+                if (iconAsset != null) ...[
+                  Image.asset(
+                    iconAsset!,
+                    width: 20,
+                    height: 20,
+                    color: foregroundColor,
+                    colorBlendMode: BlendMode.srcIn,
+                  ),
+                  const SizedBox(width: 8),
+                ] else if (icon != null) ...[
                   Icon(icon, size: 20, color: foregroundColor),
                   const SizedBox(width: 8),
                 ],

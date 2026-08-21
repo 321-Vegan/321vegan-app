@@ -32,7 +32,13 @@ class SettingsToggleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 12.h),
+      // A floor rather than a fixed height: single-line rows (this one and
+      // SettingsRowTile, which shares the same floor) both land exactly
+      // here since neither's natural content is taller; "Rappels" (with a
+      // subtitle) is still allowed to grow past it for its extra line
+      // instead of clipping.
+      constraints: BoxConstraints(minHeight: 210.h),
+      padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 45.h),
       decoration: ShapeDecoration(
         color: Colors.white,
         shape: squircleBorder(
@@ -68,10 +74,16 @@ class SettingsToggleTile extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             activeThumbColor: Colors.white,
             activeTrackColor: Theme.of(context).colorScheme.primary,
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: Colors.grey[300],
+            trackOutlineColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+                  ? null
+                  : Colors.transparent,
+            ),
           ),
         ],
       ),

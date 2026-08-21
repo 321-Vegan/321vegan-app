@@ -12,13 +12,6 @@ Widget buildReviewCard({required Widget child, Color? backgroundColor}) {
         radius: 20.r,
         side: BorderSide(color: Colors.grey[200]!, width: 1),
       ),
-      shadows: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.05),
-          blurRadius: 16,
-          offset: const Offset(0, 4),
-        ),
-      ],
     ),
     child: child,
   );

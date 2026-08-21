@@ -45,6 +45,17 @@ class AppTextStyles {
         color: kTextPrimary,
       );
 
+  /// Baloo 2 ExtraBold 33/Auto — big standalone counters (Vegandex "N/Total"
+  /// collection progress).
+  static TextStyle get baloo33 => TextStyle(
+        fontFamily: 'Baloo2',
+        fontWeight: FontWeight.w800,
+        fontSize: 99.sp,
+        height: 1.0,
+        letterSpacing: -1,
+        color: kTextPrimary,
+      );
+
   /// Baloo 2 SemiBold 26/Auto — page-level title (header username /
   /// "Bienvenue").
   static TextStyle get baloo26 => TextStyle(

@@ -26,6 +26,7 @@ class SocialFeedbackButtons extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
+            elevation: 0,
             padding: EdgeInsets.symmetric(
               horizontal: 24.w,
               vertical: 16.h,
@@ -65,6 +66,7 @@ class SocialFeedbackButtons extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
+            elevation: 0,
             padding: EdgeInsets.symmetric(
               horizontal: 24.w,
               vertical: 16.h,
@@ -110,14 +112,6 @@ class SocialFeedbackButtons extends StatelessWidget {
             width: 1,
           ),
         ),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 30,
-            offset: const Offset(0, 12),
-            spreadRadius: 0,
-          ),
-        ],
       ),
       child: child,
     );

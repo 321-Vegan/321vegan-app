@@ -221,7 +221,7 @@ class _SentProductsPageState extends State<SentProductsPage> {
     );
 
     return Container(
-      padding: EdgeInsets.all(30.w),
+      padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 45.h),
       decoration: ShapeDecoration(
         color: Colors.white,
         shape: squircleBorder(
@@ -236,18 +236,14 @@ class _SentProductsPageState extends State<SentProductsPage> {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 44.sp,
-              fontWeight: FontWeight.w600,
-              color: kTextPrimary,
-            ),
+            style: AppTextStyles.baloo17,
           ),
           SizedBox(height: 4.h),
           Text(
             brand,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
+            style: AppTextStyles.bodyMedium15.copyWith(color: Colors.grey[500]),
           ),
           SizedBox(height: 4.h),
           Text(
@@ -262,11 +258,7 @@ class _SentProductsPageState extends State<SentProductsPage> {
               Flexible(
                 child: Text(
                   status.label,
-                  style: TextStyle(
-                    fontSize: 40.sp,
-                    fontWeight: FontWeight.w600,
-                    color: status.color,
-                  ),
+                  style: AppTextStyles.bodyMedium15.copyWith(color: status.color),
                 ),
               ),
             ],

@@ -167,13 +167,6 @@ Widget buildStatCard(
           radius: 36.r,
           side: const BorderSide(color: kBorderDefault, width: 1),
         ),
-        shadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            offset: const Offset(0, 4),
-            blurRadius: 16,
-          ),
-        ],
       ),
       padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 21.h),
       child: Row(
