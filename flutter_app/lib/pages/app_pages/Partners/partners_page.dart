@@ -307,7 +307,13 @@ class _PartnersPageState extends State<PartnersPage> {
         decoration: InputDecoration(
           hintText: 'Rechercher une boutique...',
           hintStyle: TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-          prefixIcon: Icon(Icons.search, size: 60.sp, color: Colors.grey[600]),
+          prefixIcon: Image.asset(
+            'lib/assets/images/icons/search-line.webp',
+            width: 60.sp,
+            height: 60.sp,
+            color: Colors.grey[600],
+            colorBlendMode: BlendMode.srcIn,
+          ),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
                   icon: Icon(Icons.clear, size: 36.sp),

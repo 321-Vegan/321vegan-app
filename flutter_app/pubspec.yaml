@@ -234,6 +234,7 @@ flutter:
     - lib/assets/images/icons/map-off.webp
     - lib/assets/images/icons/home-on.webp
     - lib/assets/images/icons/home-off.webp
+    - lib/assets/images/icons/search-line.webp
 
     # Others
     - lib/assets/affiche-321vegan-a4.png

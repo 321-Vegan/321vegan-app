@@ -519,7 +519,13 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
               Uri.parse('https://www.google.com/search?q=${product.ean}'),
               mode: LaunchMode.externalApplication,
             ),
-            icon: Icon(Icons.search, size: 40.sp),
+            icon: Image.asset(
+              'lib/assets/images/icons/search-line.webp',
+              width: 40.sp,
+              height: 40.sp,
+              color: Colors.white,
+              colorBlendMode: BlendMode.srcIn,
+            ),
             label: Text('Rechercher sur Google', style: TextStyle(fontSize: 38.sp)),
             style: OutlinedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,

@@ -384,10 +384,12 @@ class _MapFilterPageState extends State<MapFilterPage> {
                       hintText: 'Nom du produit ou marque…',
                       hintStyle: AppTextStyles.bodyRegular15
                           .copyWith(color: Colors.grey[500]),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        size: 60.sp,
+                      prefixIcon: Image.asset(
+                        'lib/assets/images/icons/search-line.webp',
+                        width: 60.sp,
+                        height: 60.sp,
                         color: Colors.grey[600],
+                        colorBlendMode: BlendMode.srcIn,
                       ),
                       suffixIcon: _search.isNotEmpty
                           ? IconButton(

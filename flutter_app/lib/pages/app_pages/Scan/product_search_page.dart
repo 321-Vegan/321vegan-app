@@ -245,10 +245,12 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                       hintText: _searchHint,
                       hintStyle:
                           TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        size: 60.sp,
+                      prefixIcon: Image.asset(
+                        'lib/assets/images/icons/search-line.webp',
+                        width: 60.sp,
+                        height: 60.sp,
                         color: Colors.grey[600],
+                        colorBlendMode: BlendMode.srcIn,
                       ),
                       suffixIcon: hasQuery
                           ? IconButton(

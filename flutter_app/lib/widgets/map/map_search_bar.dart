@@ -158,7 +158,13 @@ class MapSearchBarState extends State<MapSearchBar> {
           child: Row(
             children: [
               SizedBox(width: 39.w),
-              Icon(Icons.search, color: Colors.grey[600], size: 60.sp),
+              Image.asset(
+                'lib/assets/images/icons/search-line.webp',
+                width: 60.sp,
+                height: 60.sp,
+                color: Colors.grey[600],
+                colorBlendMode: BlendMode.srcIn,
+              ),
               SizedBox(width: 12.w),
               Expanded(
                 child: TextField(

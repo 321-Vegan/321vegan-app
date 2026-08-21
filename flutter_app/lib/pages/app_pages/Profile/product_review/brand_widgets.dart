@@ -221,7 +221,13 @@ class _BrandSelectorSheetState extends State<_BrandSelectorSheet> {
                   decoration: InputDecoration(
                     hintText: 'Rechercher…',
                     hintStyle: TextStyle(fontSize: 36.sp, color: Colors.grey[400]),
-                    prefixIcon: Icon(Icons.search, size: 44.sp),
+                    prefixIcon: Image.asset(
+                      'lib/assets/images/icons/search-line.webp',
+                      width: 44.sp,
+                      height: 44.sp,
+                      color: Colors.grey[600],
+                      colorBlendMode: BlendMode.srcIn,
+                    ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
                     suffixIcon: _searching
