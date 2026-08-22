@@ -587,19 +587,22 @@ class DashboardPageState extends State<DashboardPage> {
             onPressed: _launchCounter,
           )
         else
-          GestureDetector(
-            onTap: () => showShareHomeDialog(
+          ElevatedButton(
+            onPressed: () => showShareHomeDialog(
               context,
               targetDate: _targetDate!,
               savings: _savings,
             ),
-            child: Padding(
-              padding: EdgeInsets.all(8.w),
-              child: Icon(
-                Icons.share,
-                size: 64.sp,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
+              shape: const StadiumBorder(),
+            ),
+            child: Text(
+              'Partager',
+              style: AppTextStyles.bodyMedium13.copyWith(color: Colors.white),
             ),
           ),
       ],

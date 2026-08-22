@@ -447,23 +447,6 @@ class PreferencesHelper {
     return prefs.getBool(_b12BannerDismissedKey) ?? false;
   }
 
-  // Dashboard promo carousel: dismissal is keyed by a content version
-  // (see kPromoCarouselVersion) rather than a plain bool, so bumping that
-  // version in a future update makes the carousel reappear even for users
-  // who closed a previous version of it.
-  static const String _promoCarouselDismissedVersionKey =
-      'promo_carousel_dismissed_version';
-
-  static Future<void> markPromoCarouselDismissed(String version) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_promoCarouselDismissedVersionKey, version);
-  }
-
-  static Future<bool> isPromoCarouselDismissed(String version) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_promoCarouselDismissedVersionKey) == version;
-  }
-
   // Membership prompt methods
   static const String _membershipHitScanCountKey = 'membership_hit_scan_count';
   static const String _membershipPromptNextThresholdKey =

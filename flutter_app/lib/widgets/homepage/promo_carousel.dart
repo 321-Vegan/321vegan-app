@@ -4,18 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/widgets/b12/b12_reminder_settings_modal.dart';
-import '../../helpers/preference_helper.dart';
 import '../../models/seasonal_theme.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../shared/page_dots_indicator.dart';
-
-/// Bump this whenever the promo content changes enough that users who
-/// already dismissed the carousel should see it again (e.g. new slides
-/// added). Dismissal is stored per-version, so an older dismissal won't
-/// match a new version and the carousel reappears automatically.
-const String kPromoCarouselVersion = 'v1';
 
 /// One slide of the Dashboard news carousel.
 class PromoSlide {
@@ -103,7 +96,6 @@ class _PromoCarouselState extends State<PromoCarousel> {
   Timer? _autoScrollTimer;
   int _page = 0;
   bool _isWrappingToStart = false;
-  bool _dismissed = true; // hidden until the real value loads
 
   List<PromoSlide> get _slides => widget.slides ?? _promoSlides;
 
@@ -111,24 +103,15 @@ class _PromoCarouselState extends State<PromoCarousel> {
   void initState() {
     super.initState();
     _startAutoScroll();
-    _loadDismissedState();
-  }
-
-  Future<void> _loadDismissedState() async {
-    final dismissed =
-        await PreferencesHelper.isPromoCarouselDismissed(kPromoCarouselVersion);
-    if (mounted) setState(() => _dismissed = dismissed);
-  }
-
-  Future<void> _handleClose() async {
-    await PreferencesHelper.markPromoCarouselDismissed(kPromoCarouselVersion);
-    if (mounted) setState(() => _dismissed = true);
   }
 
   void _startAutoScroll() {
     _autoScrollTimer?.cancel();
     if (_slides.length <= 1) return;
     _autoScrollTimer = Timer.periodic(_autoScrollInterval, (_) {
+      // This widget can be disposed between ticks — animateToPage would
+      // otherwise hit the controller with no attached PageView and throw.
+      if (!mounted || !_controller.hasClients) return;
       final nextPage = (_page + 1) % _slides.length;
       _controller.animateToPage(
         nextPage,
@@ -147,28 +130,13 @@ class _PromoCarouselState extends State<PromoCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    if (_slides.isEmpty || _dismissed) return const SizedBox.shrink();
+    if (_slides.isEmpty) return const SizedBox.shrink();
 
     return Column(
       children: [
         SizedBox(
           height: 396.h,
-          child: Stack(
-            children: [
-              _buildPageView(),
-              Positioned(
-                top: 0.h,
-                right: 40.w,
-                child: GestureDetector(
-                  onTap: _handleClose,
-                  child: Padding(
-                    padding: EdgeInsets.all(16.r),
-                    child: Icon(Icons.close, color: Colors.white, size: 64.sp),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          child: _buildPageView(),
         ),
         SizedBox(height: 20.h),
         PageDotsIndicator(
@@ -261,8 +229,9 @@ class _PromoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
-    final isWinter =
-        Theme.of(context).extension<SeasonalTheme>()?.season == Season.winter;
+    final season = Theme.of(context).extension<SeasonalTheme>()?.season;
+    final isWinter = season == Season.winter;
+    final isAutumn = season == Season.autumn;
     final card = Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 60.h),
@@ -344,30 +313,32 @@ class _PromoCard extends StatelessWidget {
       ),
     );
 
-    if (!isWinter) return card;
-
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        card,
-        Positioned(
-          top: -20.h,
-          right: 18.w,
-          child: IgnorePointer(
-            child: ClipPath(
-              clipper: ShapeBorderClipper(
-                shape: squircleBorderOnly(topRight: 80.r),
-              ),
-              child: Image.asset(
-                'lib/assets/themes/ice_2.webp',
-                width: 900.w,
-                fit: BoxFit.fitWidth,
-                alignment: Alignment.topRight,
+    if (isWinter) {
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          card,
+          Positioned(
+            top: -20.h,
+            right: 18.w,
+            child: IgnorePointer(
+              child: ClipPath(
+                clipper: ShapeBorderClipper(
+                  shape: squircleBorderOnly(topRight: 80.r),
+                ),
+                child: Image.asset(
+                  'lib/assets/themes/ice_2.webp',
+                  width: 900.w,
+                  fit: BoxFit.fitWidth,
+                  alignment: Alignment.topRight,
+                ),
               ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    }
+
+    return card;
   }
 }

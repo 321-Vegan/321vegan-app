@@ -115,18 +115,22 @@ class BadgesGrid extends StatelessWidget {
           color: Colors.white,
           shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
         ),
-        padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 32.h),
+        padding: EdgeInsets.fromLTRB(24.w, 12.h, 24.w, 24.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Badges',
-              style: TextStyle(
-                fontSize: 52.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+            Center(
+              child: Container(
+                width: 70.w,
+                height: 8.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(3.r),
+                ),
               ),
             ),
+            SizedBox(height: 24.h),
+            Text('Badges', style: AppTextStyles.baloo22),
             SizedBox(height: 24.h),
             Expanded(
               child: LayoutBuilder(
@@ -185,6 +189,34 @@ class BadgesGrid extends StatelessWidget {
 
   void _showBadgeDetails(
       BuildContext context, app_badge.Badge badge, bool isUnlocked) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: squircleBorder(
+              radius: 24.r,
+              side: const BorderSide(color: kBorderDefault),
+            ),
+            shadows: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          padding: EdgeInsets.all(36.w),
+          child: _buildBadgeDetailsContent(badge, isUnlocked),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadgeDetailsContent(app_badge.Badge badge, bool isUnlocked) {
     final progress = badge.getProgress(
       productsSent: user?.nbProductsSent ?? 0,
       veganSince: user?.veganSince,
@@ -198,29 +230,22 @@ class BadgesGrid extends StatelessWidget {
       errorSolved: user?.nbErrorReports ?? 0,
     );
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: squircleBorder(radius: 20.r),
-        content: Column(
+    return Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _BadgeIcon(badge: badge, isUnlocked: isUnlocked, size: 200.w),
             SizedBox(height: 24.h),
             Text(
               badge.name,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 56.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
+              style: AppTextStyles.baloo22,
             ),
             SizedBox(height: 12.h),
             Text(
               badge.description,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 44.sp, color: Colors.grey[600]),
+              style: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
             ),
             SizedBox(height: 16.h),
             Container(
@@ -304,9 +329,7 @@ class BadgesGrid extends StatelessWidget {
               ),
             ],
           ],
-        ),
-      ),
-    );
+        );
   }
 }
 

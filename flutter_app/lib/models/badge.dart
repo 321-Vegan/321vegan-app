@@ -214,7 +214,7 @@ class Badges {
     Badge(
       id: 'error_report_1',
       name: 'Sherlock',
-      description: 'Au moins une erreur signalée !',
+      description: 'Une erreur ou info envoyée !',
       iconPath: 'lib/assets/badges/sherlock.webp',
       type: BadgeType.errorReport,
       requirement: 1,

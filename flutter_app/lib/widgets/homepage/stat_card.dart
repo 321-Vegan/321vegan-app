@@ -215,34 +215,36 @@ Widget buildStatCard(
     ),
   );
 
-  if (!showIceDecoration) return card;
-
-  return Stack(
-    clipBehavior: Clip.none,
-    children: [
-      card,
-      // A small icicle drip in the top-left corner, clipped to the card's
-      // own corner radius so square image corners don't peek out past the
-      // squircle.
-      Positioned(
-        top: -50.h,
-        left: 0,
-        child: IgnorePointer(
-          child: ClipPath(
-            clipper: ShapeBorderClipper(
-              shape: squircleBorderOnly(topLeft: 36.r),
-            ),
-            child: Image.asset(
-              'lib/assets/themes/ice_8.webp',
-              width: 580.w,
-              fit: BoxFit.fitWidth,
-              alignment: Alignment.topLeft,
+  if (showIceDecoration) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        card,
+        // A small icicle drip in the top-left corner, clipped to the card's
+        // own corner radius so square image corners don't peek out past
+        // the squircle.
+        Positioned(
+          top: -50.h,
+          left: 0,
+          child: IgnorePointer(
+            child: ClipPath(
+              clipper: ShapeBorderClipper(
+                shape: squircleBorderOnly(topLeft: 36.r),
+              ),
+              child: Image.asset(
+                'lib/assets/themes/ice_8.webp',
+                width: 580.w,
+                fit: BoxFit.fitWidth,
+                alignment: Alignment.topLeft,
+              ),
             ),
           ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
+
+  return card;
 }
 
 /// Info dialog for one impact stat
