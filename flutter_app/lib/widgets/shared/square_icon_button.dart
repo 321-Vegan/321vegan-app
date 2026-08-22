@@ -30,6 +30,7 @@ class SquareIconButton extends StatelessWidget {
   });
 
   /// "Square action button" spec: 48×48, radius 14, alpha-0.15 shadow.
+  /// Pass [shadows] (e.g. `const []`) to override the default shadow.
   factory SquareIconButton.action({
     Key? key,
     VoidCallback? onTap,
@@ -37,6 +38,7 @@ class SquareIconButton extends StatelessWidget {
     Color iconColor = kTextPrimary,
     double iconSize = 72,
     Color backgroundColor = Colors.white,
+    List<BoxShadow>? shadows,
     Widget? child,
   }) {
     assert(icon != null || child != null,
@@ -47,13 +49,14 @@ class SquareIconButton extends StatelessWidget {
       size: 144.w,
       radius: 42.r,
       backgroundColor: backgroundColor,
-      shadows: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.15),
-          blurRadius: 10,
-          offset: const Offset(0, 3),
-        ),
-      ],
+      shadows: shadows ??
+          [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
       child: child ?? Icon(icon, color: iconColor, size: iconSize.sp),
     );
   }

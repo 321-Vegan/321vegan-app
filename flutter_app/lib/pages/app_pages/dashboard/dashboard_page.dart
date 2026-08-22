@@ -491,7 +491,10 @@ class DashboardPageState extends State<DashboardPage> {
       clipBehavior: Clip.none,
       children: [
         SquareIconButton.action(
-            icon: icon, onTap: onTap, iconColor: Colors.grey[700]!),
+            icon: icon,
+            onTap: onTap,
+            iconColor: Colors.grey[700]!,
+            shadows: const []),
         if (badgeCount > 0)
           Positioned(
             right: -8.w,

@@ -1,4 +1,4 @@
-import 'dart:async';
+// import 'dart:async'; // auto-scroll disabled
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -83,38 +83,39 @@ class PromoCarousel extends StatefulWidget {
 }
 
 class _PromoCarouselState extends State<PromoCarousel> {
-  static const _autoScrollInterval = Duration(seconds: 5);
+  // Auto-scroll disabled — kept here in case we want it back.
+  // static const _autoScrollInterval = Duration(seconds: 5);
+  // Timer? _autoScrollTimer;
 
   final PageController _controller = PageController();
-  Timer? _autoScrollTimer;
   int _page = 0;
   bool _isWrappingToStart = false;
 
   List<PromoSlide> get _slides => widget.slides ?? _promoSlides;
 
-  @override
-  void initState() {
-    super.initState();
-    _startAutoScroll();
-  }
-
-  void _startAutoScroll() {
-    _autoScrollTimer?.cancel();
-    if (_slides.length <= 1) return;
-    _autoScrollTimer = Timer.periodic(_autoScrollInterval, (_) {
-      if (!mounted || !_controller.hasClients) return;
-      final nextPage = (_page + 1) % _slides.length;
-      _controller.animateToPage(
-        nextPage,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _startAutoScroll();
+  // }
+  //
+  // void _startAutoScroll() {
+  //   _autoScrollTimer?.cancel();
+  //   if (_slides.length <= 1) return;
+  //   _autoScrollTimer = Timer.periodic(_autoScrollInterval, (_) {
+  //     if (!mounted || !_controller.hasClients) return;
+  //     final nextPage = (_page + 1) % _slides.length;
+  //     _controller.animateToPage(
+  //       nextPage,
+  //       duration: const Duration(milliseconds: 400),
+  //       curve: Curves.easeInOut,
+  //     );
+  //   });
+  // }
 
   @override
   void dispose() {
-    _autoScrollTimer?.cancel();
+    // _autoScrollTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -170,7 +171,7 @@ class _PromoCarouselState extends State<PromoCarousel> {
         itemCount: _slides.length,
         onPageChanged: (page) {
           setState(() => _page = page);
-          _startAutoScroll();
+          // _startAutoScroll();
         },
         itemBuilder: (context, index) => _PromoCard(slide: _slides[index]),
       ),

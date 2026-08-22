@@ -234,7 +234,7 @@ class BadgesGrid extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _BadgeIcon(badge: badge, isUnlocked: isUnlocked, size: 200.w),
+            _BadgeIcon(badge: badge, isUnlocked: isUnlocked, size: 450.w),
             SizedBox(height: 24.h),
             Text(
               badge.name,
@@ -384,26 +384,23 @@ class _BadgeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final image = Opacity(
+      opacity: isUnlocked ? 1.0 : 0.6,
+      child: Image.asset(
+        badge.iconPath,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => Icon(
+          Icons.emoji_events,
+          size: size,
+          color: isUnlocked ? Colors.amber[700] : Colors.grey[500],
+        ),
+      ),
+    );
+
     return SizedBox(
       width: size,
       height: size,
-      child: ColorFiltered(
-        colorFilter: isUnlocked
-            ? const ColorFilter.mode(Colors.transparent, BlendMode.multiply)
-            : _greyscale,
-        child: Opacity(
-          opacity: isUnlocked ? 1.0 : 0.6,
-          child: Image.asset(
-            badge.iconPath,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => Icon(
-              Icons.emoji_events,
-              size: size * 0.6,
-              color: isUnlocked ? Colors.amber[700] : Colors.grey[500],
-            ),
-          ),
-        ),
-      ),
+      child: isUnlocked ? image : ColorFiltered(colorFilter: _greyscale, child: image),
     );
   }
 }
