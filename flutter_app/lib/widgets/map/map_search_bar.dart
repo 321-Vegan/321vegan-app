@@ -136,7 +136,7 @@ class MapSearchBarState extends State<MapSearchBar> {
       children: [
         Container(
           // Same height as the square action buttons next to it (map.dart),
-          // so the whole top row reads as one line — Figma: 48pt, radius 14.
+          // so the whole top row reads as one line.
           height: 144.w,
           decoration: ShapeDecoration(
             color: Colors.white,

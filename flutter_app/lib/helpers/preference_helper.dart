@@ -23,8 +23,8 @@ const List<String> kAvailableAvatars = [
 ];
 
 class PreferencesHelper {
-  // Internal method: saves date to local storage only (no backend update)
-  // Used by AuthService to avoid circular backend calls during login sync
+  // Local-only save, used by AuthService to avoid circular backend calls
+  // during login sync.
   static Future<void> saveSelectedDateToPrefsOnly(
       DateTime? selectedDate) async {
     final prefs = await SharedPreferences.getInstance();
@@ -37,17 +37,14 @@ class PreferencesHelper {
     await prefs.setString('selected_date', dateString);
   }
 
-  // Method to add a selected date to shared preferences and update backend if logged in
   static Future<void> addSelectedDateToPrefs(DateTime? selectedDate) async {
     await saveSelectedDateToPrefsOnly(selectedDate);
 
-    // If user is logged in, also update on the backend
     if (selectedDate != null && AuthService.isLoggedIn) {
       await AuthService.updateUser(veganSince: selectedDate);
     }
   }
 
-  // Clears the vegan-since date locally and, if logged in, on the backend.
   static Future<void> removeSelectedDateFromPrefs() async {
     await saveSelectedDateToPrefsOnly(null);
     if (AuthService.isLoggedIn) {
@@ -55,14 +52,11 @@ class PreferencesHelper {
     }
   }
 
-  // Method to get a selected date from shared preferences
   static Future<DateTime?> getSelectedDateFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     String? dateString = prefs.getString('selected_date');
     if (dateString != null && dateString != "none") {
-      // Older/synced entries may carry an incorrect UTC "Z" suffix from the
-      // backend (see Helper's asLocalWallClock doc) — reinterpret rather
-      // than .toLocal(), which would shift an already-local value again.
+      // May carry an incorrect UTC "Z" suffix (see asLocalWallClock).
       return DateTime.parse(dateString).asLocalWallClock();
     }
     return null;
@@ -80,74 +74,61 @@ class PreferencesHelper {
     return false;
   }
 
-  // Save 'show boycott' preference
   static Future<void> setShowBoycottPref(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('show_boycott', value);
   }
 
-  // Load 'show boycott' preference
   static Future<bool> getShowBoycottPref() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('show_boycott') ??
-        true; // Default to true to show boycott
+    return prefs.getBool('show_boycott') ?? true;
   }
 
-  // Save 'show scores' preference
   static Future<void> setShowScoresPref(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('product_scores_enabled', value);
   }
 
-  // Load 'show scores' preference
   static Future<bool> getShowScoresPref() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('product_scores_enabled') ?? true;
   }
 
-  // Save 'haptic feedback' preference
   static Future<void> setHapticFeedbackPref(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('haptic_feedback_enabled', value);
   }
 
-  // Load 'haptic feedback' preference
   static Future<bool> getHapticFeedbackPref() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('haptic_feedback_enabled') ?? true;
   }
 
-  // Save 'open on scan page' preference
   static Future<void> setOpenOnScanPagePref(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('open_on_scan_page', value);
   }
 
-  // Load 'open on scan page' preference
   static Future<bool> getOpenOnScanPagePref() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool('open_on_scan_page') ?? false;
   }
 
-  // Method to add or remove a code based on success status
   static Future<void> addCodeToPreferences(String? code, bool success) async {
     if (code == null) return;
 
     final prefs = await SharedPreferences.getInstance();
     String? codesJson = prefs.getString('codes_with_status');
 
-    // Decode the JSON string to a Map
     Map<String, bool> codesWithStatus =
         codesJson != null ? Map<String, bool>.from(json.decode(codesJson)) : {};
 
     if (!success && codesWithStatus[code] != true) {
       codesWithStatus[code] = false;
     } else if (success) {
-      // If success is true, set the status to true
       codesWithStatus[code] = true;
     }
 
-    // Track total successful submissions
     int totalSuccessful = 0;
     if (prefs.getInt('total_successful_submissions') == null) {
       totalSuccessful = await migrateTotalSuccessfulSubmissions();
@@ -159,10 +140,8 @@ class PreferencesHelper {
       await prefs.setInt('total_successful_submissions', totalSuccessful);
     }
 
-    // Ensure the codes list contains a maximum of 300 items
     if (codesWithStatus.length > 300) {
       List<MapEntry<String, bool>> entries = codesWithStatus.entries.toList();
-      // Remove the oldest entries (first in the list)
       entries.removeRange(0, entries.length - 300);
       codesWithStatus = Map.fromEntries(entries);
     }
@@ -170,13 +149,11 @@ class PreferencesHelper {
     await prefs.setString('codes_with_status', json.encode(codesWithStatus));
   }
 
-  // Method to get all codes with their status from shared preferences
   static Future<Map<String, bool>> getCodesWithStatusFromPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     String? codesJson = prefs.getString('codes_with_status');
 
     if (codesJson != null) {
-      // Decode the JSON string back to a Map
       return Map<String, bool>.from(json.decode(codesJson));
     }
     return {};
@@ -226,7 +203,6 @@ class PreferencesHelper {
     return Map<String, String>.from(entry as Map);
   }
 
-  // Method to get only successfully sent codes
   static Future<List<String>> getSuccessfulCodesFromPreferences() async {
     Map<String, bool> codesWithStatus =
         await getCodesWithStatusFromPreferences();
@@ -236,7 +212,7 @@ class PreferencesHelper {
         .toList();
   }
 
-  // Method to get total number of successful submissions (including removed ones)
+  /// Includes codes since removed from the list.
   static Future<int> getTotalSuccessfulSubmissions() async {
     final prefs = await SharedPreferences.getInstance();
     int total = 0;
@@ -269,10 +245,9 @@ class PreferencesHelper {
         ? List<Map<String, dynamic>>.from(json.decode(historyJson))
         : [];
 
-    // Get the current timestamp
     final now = DateTime.now();
 
-    // Check if the barcode already exists in the same minute
+    // Dedup within the same minute rather than exact timestamp.
     final alreadyExists = history.any((item) {
       final itemTimestamp = DateTime.parse(item['timestamp']);
       return item['barcode'] == barcode &&
@@ -283,19 +258,16 @@ class PreferencesHelper {
           itemTimestamp.minute == now.minute;
     });
 
-    // If it doesn't exist, add it to the history
     if (!alreadyExists) {
       history.add({
         'barcode': barcode,
         'timestamp': now.toIso8601String(),
       });
 
-      // Ensure the history contains a maximum of 50 items
       if (history.length > 50) {
-        history.removeAt(0); // Remove the oldest entry
+        history.removeAt(0);
       }
 
-      // Save the updated history back to shared preferences
       await prefs.setString('scan_history', json.encode(history));
     }
   }
@@ -599,13 +571,11 @@ class PreferencesHelper {
   static const String _notificationPermissionAskedKey =
       'notification_permission_asked';
 
-  // Mark that we've proactively requested the (app-wide) notification permission
   static Future<void> markNotificationPermissionAsked() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_notificationPermissionAskedKey, true);
   }
 
-  // Check if we've already proactively requested notification permission
   static Future<bool> hasNotificationPermissionBeenAsked() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_notificationPermissionAskedKey) ?? false;

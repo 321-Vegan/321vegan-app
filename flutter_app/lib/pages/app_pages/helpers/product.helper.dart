@@ -52,7 +52,6 @@ class ProductHelper {
       );
 
       if (productId != null) {
-        // Upload photo if provided and we got a real product ID
         if (photo != null && productId > 0) {
           await ApiService.uploadProductImage(
             productId: productId,
@@ -72,10 +71,8 @@ class ProductHelper {
           context,
           'Le produit a bien été envoyé. Nous allons vérifier et l\'ajouter à la base de données.',
           kSemanticSuccess,
-        ); 
+        );
 
-
-        // Check for newly unlocked badges after sending a product
         if (AuthService.isLoggedIn && context.mounted) {
           final userResult = await AuthService.getCurrentUser();
           if (userResult.isSuccess &&
@@ -121,7 +118,6 @@ class ProductHelper {
         contact: contact,
       );
 
-      // Check for newly unlocked badges after reporting an error
       if (success && AuthService.isLoggedIn && context.mounted) {
         final userResult = await AuthService.getCurrentUser();
         if (userResult.isSuccess &&

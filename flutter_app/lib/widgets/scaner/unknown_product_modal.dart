@@ -14,20 +14,16 @@ import 'package:vegan_app/widgets/shared/app_text_field.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 import 'package:vegan_app/widgets/shared/photo_picker_box.dart';
 
-/// Bottom sheet shown automatically when a scanned barcode isn't in the
-/// database yet ([ScanStatus.unknown]) or was submitted before but still
-/// couldn't be identified ([ScanStatus.notFound]). A first-time submission
-/// creates a new product via [ProductHelper.tryAddDocument]; a resubmission
-/// instead files an error report ([ProductHelper.tryAddError]) against the
-/// existing (incomplete) product entry, same as the "Signaler une erreur"
-/// flow.
+/// Bottom sheet for a barcode missing from the database
+/// ([ScanStatus.unknown]) or submitted but unidentified
+/// ([ScanStatus.notFound]). First-time submissions create a product via
+/// [ProductHelper.tryAddDocument]; resubmissions file an error report via
+/// [ProductHelper.tryAddError] instead, same as "Signaler une erreur".
 class UnknownProductModal extends StatefulWidget {
   final String barcode;
 
-  /// True for [ScanStatus.notFound] — someone already sent this product in,
-  /// but it couldn't be processed — vs. false for [ScanStatus.unknown],
-  /// where nobody has submitted it yet. Only changes the intro copy; the
-  /// form and submission both stay the same either way.
+  /// True for [ScanStatus.notFound] (already sent in, unprocessed) vs false
+  /// for [ScanStatus.unknown] (never submitted). Only changes the intro copy.
   final bool alreadySubmitted;
 
   /// Opens the login/register sheet when a logged-out user taps in — see
@@ -84,18 +80,15 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
 
   Future<void> _submit() async {
     final photo = _photo;
-    // Status is only collected (and required) for a first-time submission —
-    // an already-submitted product already has one on file, we're just
-    // filling in what's missing.
+    // Status is only required for a first-time submission — an already-
+    // submitted product already has one on file.
     if (photo == null || _isSending) return;
     if (!widget.alreadySubmitted && _status == null) return;
     setState(() => _isSending = true);
 
     final bool success;
     if (widget.alreadySubmitted) {
-      // A resubmission means a product entry already exists for this EAN
-      // but is missing info — that's an error report against it, not a new
-      // product, same endpoint as the "Signaler une erreur" flow.
+      // Existing (incomplete) entry — file an error report, not a new product.
       success = await ProductHelper.tryAddError(
         context,
         widget.barcode,

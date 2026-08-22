@@ -134,7 +134,6 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
       contact: _contactController.text.trim(),
     );
 
-    // Upload photo to the product if provided
     if (_photo != null) {
       final productId = await ApiService.getProductIdByEan(ean: widget.barcode);
       if (productId != null) {
@@ -186,7 +185,6 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Handle bar
               Center(
                 child: Container(
                   width: 40.w,
@@ -199,7 +197,6 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
                 ),
               ),
 
-              // Header
               Row(
                 children: [
                   Container(
@@ -238,7 +235,6 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
               ),
               SizedBox(height: 20.h),
 
-              // Pre-report notice
               const InfoBox(
                 text: "Avant de signaler une erreur : les mentions "
                     "« traces de... » ou « peut contenir... » ne rendent "
@@ -249,7 +245,6 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
               ),
               SizedBox(height: 16.h),
 
-              // Comment field (required)
               RichText(
                 text: TextSpan(
                   text: "Décrivez le problème ",
@@ -276,7 +271,6 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
               ),
               SizedBox(height: 12.h),
 
-              // Contact field (optional)
               Text(
                 "Comment vous contacter ?",
                 style: AppTextStyles.bodyBold15,
@@ -289,7 +283,6 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
               ),
               SizedBox(height: 16.h),
 
-              // Photo section
               Text(
                 'Photo des ingrédients (si possible)',
                 style: AppTextStyles.bodyBold15,
@@ -303,7 +296,6 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
               ),
               SizedBox(height: 24.h),
 
-              // Buttons
               Row(
                 children: [
                   Expanded(

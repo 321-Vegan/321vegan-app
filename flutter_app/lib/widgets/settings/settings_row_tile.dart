@@ -47,11 +47,8 @@ class SettingsRowTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Sized to its own content (not Expanded) — labels are short,
-              // fixed strings, so the value column below gets to claim
-              // whatever width the label isn't using instead of a rigid
-              // 50/50 split, letting long values like an email sit further
-              // left before they need to ellipsize.
+              // Sized to its own content (not Expanded) so the value column
+              // claims whatever width the label doesn't use.
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

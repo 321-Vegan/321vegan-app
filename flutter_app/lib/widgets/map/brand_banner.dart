@@ -120,7 +120,6 @@ class BrandBanner extends StatelessWidget {
                 padding: EdgeInsets.all(16.w),
                 child: Row(
                   children: [
-                    // Logo
                     if (logo != null)
                       Container(
                         padding: EdgeInsets.all(8.w),
@@ -141,7 +140,6 @@ class BrandBanner extends StatelessWidget {
                             color: Colors.white, size: 32.r),
                       ),
                     SizedBox(width: 14.w),
-                    // Text + CTA
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +165,6 @@ class BrandBanner extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Arrow
                     Container(
                       padding: EdgeInsets.all(8.w),
                       decoration: BoxDecoration(

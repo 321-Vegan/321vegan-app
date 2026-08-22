@@ -849,7 +849,6 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
       child: Column(
         children: [
-          // Speech bubble with a little tail
           Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.center,
@@ -1126,7 +1125,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
-              // Chevron handle (Figma) — draggable to resize the sheet.
+              // Draggable handle that resizes the sheet.
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onVerticalDragUpdate: _onHandleDragUpdate,
@@ -1139,7 +1138,6 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   ),
                 ),
               ),
-              // Shop header: name + rating, address, itinerary button
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 12.h),
                 child: Row(
@@ -1231,7 +1229,6 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                       ),
                     ),
                     SizedBox(width: 24.w),
-                    // Square itinerary button (Figma) — mini variant (34x34)
                     SquareIconButton(
                       onTap: _openItinerary,
                       size: 102.w,
@@ -1253,7 +1250,6 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   ],
                 ),
               ),
-              // Tab bar
               TabBar(
                 controller: _tabController,
                 tabs: [
@@ -1266,7 +1262,6 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   ),
                 ],
               ),
-              // Tab content
               Expanded(
                 child: TabBarView(
                   controller: _tabController,

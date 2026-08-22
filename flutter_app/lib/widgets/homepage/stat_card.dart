@@ -146,8 +146,6 @@ Widget buildStatCard(
   final seasonal = Theme.of(context).extension<SeasonalTheme>();
   final showIceDecoration =
       seasonal?.season == Season.winter && stat.savingsKey == 'co2Unit';
-  // Figma spec: width 355, height hug (~104), radius 12, stroke 1,
-  // padding 7 (v) / 13 (h), gap 10 — all ×3 for ScreenUtil units.
   final card = InkWell(
     customBorder: squircleBorder(radius: 12),
     onTap: () {
@@ -220,9 +218,8 @@ Widget buildStatCard(
       clipBehavior: Clip.none,
       children: [
         card,
-        // A small icicle drip in the top-left corner, clipped to the card's
-        // own corner radius so square image corners don't peek out past
-        // the squircle.
+        // Clipped to the card's own corner radius so square image corners
+        // don't peek out past the squircle.
         Positioned(
           top: -50.h,
           left: 0,
@@ -268,7 +265,6 @@ class StatInfoDialog extends StatelessWidget {
     final seasonal = Theme.of(context).extension<SeasonalTheme>();
     final valueLabel =
         '$value ${stat.unitName}'.trim().replaceAll(RegExp(r'\s+'), ' ');
-    // Figma spec: fixed width 390, padding 17 (h) — ×3 for ScreenUtil units.
     // Top/bottom padding and the drag handle come from BottomSheetShell.
     return BottomSheetShell(
       padding: EdgeInsets.fromLTRB(
@@ -276,7 +272,6 @@ class StatInfoDialog extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Value + title merged into one heading
           Text(
             '$valueLabel ${stat.title}',
             style: TextStyle(
@@ -287,7 +282,6 @@ class StatInfoDialog extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 60.h),
-          // Illustration (same as the card)
           SizedBox(
             height: 260.w,
             child: Image.asset(
@@ -296,7 +290,6 @@ class StatInfoDialog extends StatelessWidget {
             ),
           ),
           SizedBox(height: 60.h),
-          // Explanation
           Flexible(
             child: SingleChildScrollView(
               child: Text(
@@ -311,13 +304,11 @@ class StatInfoDialog extends StatelessWidget {
             ),
           ),
           SizedBox(height: 60.h),
-          // Sources info box
           const InfoBox(
             text:
                 'Les calculs sont des estimations basées sur des moyennes issues d\'études scientifiques.',
           ),
           SizedBox(height: 60.h),
-          // Buttons
           Row(
             children: [
               Expanded(

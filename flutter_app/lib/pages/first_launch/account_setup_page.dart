@@ -14,19 +14,14 @@ import '../app_pages/home.dart';
 
 enum _AuthView { login, register, forgotPassword }
 
-/// 4th and last page of the [OnboardingPage] carousel: login/register/
-/// forgot-password on the same cream background and headline style as the
-/// 3 intro slides, plus a "Continuer sans compte" skip. Embedded directly
-/// as a [PageView] item (not pushed as its own route) so it reads as one
-/// continuous flow rather than a separate screen — swiping back to the
-/// previous slide works the same native gesture as between slides, so
-/// there's no separate back button here either.
+/// 4th page of the [OnboardingPage] carousel: login/register/forgot-password
+/// plus a "Continuer sans compte" skip. Embedded directly as a [PageView]
+/// item (not pushed as its own route) so swiping back works the same as
+/// between slides, with no separate back button needed.
 ///
-/// Reuses the [LoginForm]/[RegisterForm]/[ForgotPasswordForm] widgets that
-/// back Settings' auth gate, but not `AuthGatePage` itself — its colored
-/// "Rejoignez la communauté" pitch banner duplicates the pitch made here,
-/// and it's laid out for the Settings page's own Scaffold rather than a
-/// carousel page.
+/// Reuses [LoginForm]/[RegisterForm]/[ForgotPasswordForm] but not
+/// `AuthGatePage` itself — its pitch banner and Settings-page layout
+/// wouldn't fit a carousel page.
 class AccountSetupPage extends StatefulWidget {
   const AccountSetupPage({super.key});
 
@@ -40,9 +35,8 @@ class _AccountSetupPageState extends State<AccountSetupPage> {
   @override
   void initState() {
     super.initState();
-    // Guard against a cached session from a previous install/test on the
-    // same device — onboarding can't assume it's only ever shown logged-out
-    // the way the Settings auth gate can.
+    // Guard against a cached session from a previous install/test — unlike
+    // the Settings auth gate, onboarding can't assume it's always logged-out.
     if (AuthService.isLoggedIn) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _finishOnboarding(context);

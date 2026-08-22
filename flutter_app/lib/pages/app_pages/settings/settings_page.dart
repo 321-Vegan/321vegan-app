@@ -136,9 +136,8 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
-  // Turning the switch on needs a frequency/time first, so it opens the B12
-  // settings page instead of scheduling a reminder with whatever frequency
-  // was last configured (or none). Turning it off needs no such setup.
+  // Turning it on needs a frequency/time first, so it opens the B12 settings
+  // page rather than scheduling with a possibly stale/missing frequency.
   Future<void> _toggleB12Reminders(bool value) async {
     if (value) {
       await _openB12Settings();
@@ -299,9 +298,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final result = await AuthService.logout();
     await BadgeService.clearBadgeTracking();
     if (result.isSuccess) {
-      // Subscription status belongs to the account that just logged out —
-      // clear it and re-evaluate the theme so a premium seasonal theme
-      // doesn't keep showing for a signed-out (or now different) user.
+      // Clear subscription state so a premium seasonal theme doesn't keep
+      // showing for the now signed-out (or different) user.
       await SubscriptionService.reset();
     }
     if (!mounted) return;

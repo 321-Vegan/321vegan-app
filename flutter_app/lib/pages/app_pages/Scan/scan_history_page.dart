@@ -158,9 +158,8 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
   }
 
   /// Scores are cached on the history entry at scan time (see
-  /// [PreferencesHelper.cacheScanScores]) — the history page never hits
-  /// OpenFoodFacts itself; entries scanned before that existed simply show
-  /// no score badge.
+  /// [PreferencesHelper.cacheScanScores]); entries scanned before that
+  /// existed simply show no score badge.
   ProductScores _cachedScores(Map<String, dynamic> item) => ProductScores(
         nutriscoreGrade: item['nutriscore'] as String?,
         ecoscoreGrade: item['ecoscore'] as String?,
@@ -215,7 +214,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              'lib/assets/images/sun-off.webp',
+              'lib/assets/images/characters/lemon-mby.webp',
               width: 220.w,
               height: 220.w,
             ),
@@ -291,9 +290,6 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
             ],
             Padding(
               padding: EdgeInsets.only(bottom: 36.h),
-              // Name/brand/status come from the local product DB (fast,
-              // offline); scores come straight from the cached entry —
-              // neither hits the network from this page.
               child: FutureBuilder<ScanResult>(
                 future: ProductInfoHelper.getProductInfo(barcode),
                 builder: (context, snapshot) {

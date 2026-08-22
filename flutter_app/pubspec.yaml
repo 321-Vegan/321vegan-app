@@ -145,6 +145,10 @@ flutter:
     - lib/assets/images/characters/lemon-vgn.webp
     - lib/assets/images/characters/lemon-not.webp
     - lib/assets/images/characters/lemon-mby.webp
+    - lib/assets/images/characters/watermelon.webp
+    - lib/assets/images/characters/radish.webp
+    - lib/assets/images/characters/avocado.webp
+    - lib/assets/images/characters/tomatoes.webp
     # Helpers
     - lib/assets/images/sun-off.webp
     # Test with la vie featured

@@ -15,26 +15,20 @@ class PromoSlide {
   final String title;
   final String subtitle;
 
-  /// Opened by the "Voir plus" button; hides the button when null and
-  /// [page] is also null. Ignored when [page] is set.
+  /// Opened by the "Voir plus" button. Ignored when [page] is set; hides
+  /// the button when both are null.
   final String? url;
 
-  /// Builds the page pushed by the "Voir plus" button for in-app
-  /// navigation — takes precedence over [url]. Hides the button when null
-  /// and [url] is also null.
+  /// Page pushed by the "Voir plus" button; takes precedence over [url].
   final Widget Function()? page;
 
-  /// When true, [page] is presented with `showModalBottomSheet` instead of
-  /// being pushed as a full route — set this for widgets designed as
-  /// bottom sheets (e.g. [B12ReminderSettingsModal]).
+  /// Presents [page] with `showModalBottomSheet` instead of pushing it as a
+  /// full route (e.g. [B12ReminderSettingsModal]).
   final bool pageIsBottomSheet;
 
-  /// Label of the "Voir plus" button; ignored when the button is hidden
-  /// (both [url] and [page] are null).
   final String buttonLabel;
 
-  /// Asset path of the slide illustration; falls back to a generic
-  /// icon-in-circle placeholder when null.
+  /// Falls back to a generic icon-in-circle placeholder when null.
   final String? image;
 
   const PromoSlide({
@@ -53,13 +47,13 @@ final List<PromoSlide> _promoSlides = [
   const PromoSlide(
     title: 'Nouvelle interface !',
     subtitle: 'Un tout nouveau design pour plus de clarté.',
-    image: 'lib/assets/images/characters/lemon-vgn.webp',
+    image: 'lib/assets/images/characters/watermelon.webp',
   ),
   PromoSlide(
     title: 'Boutiques partenaire',
     subtitle:
         'Profitez de nouvelles réductions !',
-    image: 'lib/assets/images/buy-premium/bee.webp',
+    image: 'lib/assets/images/characters/tomatoes.webp',
     page: () => const PartnersPage(),
     buttonLabel: "Je veux voir !"
   ),
@@ -68,19 +62,18 @@ final List<PromoSlide> _promoSlides = [
     subtitle: 'Configurez un rappel pour votre B12.',
     page: () => const B12ReminderSettingsModal(),
     pageIsBottomSheet: true,
-    image: 'lib/assets/images/characters/lemon-mby.webp',
+    image: 'lib/assets/images/characters/avocado.webp',
     buttonLabel: "Configurer maintenant"
   ),
   const PromoSlide(
     title: 'Merci !',
     subtitle: 'L\'appli grandit et vous êtes de plus en plus nombreux·ses.',
-    image: 'lib/assets/images/buy-premium/bee.webp',
+    image: 'lib/assets/images/characters/radish.webp',
   ),
 ];
 
 /// Swipeable news carousel at the top of the Dashboard (static content).
 class PromoCarousel extends StatefulWidget {
-  /// Defaults to [_promoSlides] when null.
   final List<PromoSlide>? slides;
 
   const PromoCarousel({super.key, this.slides});
@@ -109,8 +102,6 @@ class _PromoCarouselState extends State<PromoCarousel> {
     _autoScrollTimer?.cancel();
     if (_slides.length <= 1) return;
     _autoScrollTimer = Timer.periodic(_autoScrollInterval, (_) {
-      // This widget can be disposed between ticks — animateToPage would
-      // otherwise hit the controller with no attached PageView and throw.
       if (!mounted || !_controller.hasClients) return;
       final nextPage = (_page + 1) % _slides.length;
       _controller.animateToPage(
@@ -154,13 +145,9 @@ class _PromoCarouselState extends State<PromoCarousel> {
         final isLastPage = _page == _slides.length - 1;
         if (!isLastPage || _isWrappingToStart) return false;
 
-        // OverscrollNotification.overscroll only fires under
-        // ClampingScrollPhysics (Android): the drag is blocked at the
-        // boundary and reports how far it was blocked. Under iOS's
-        // BouncingScrollPhysics, applyBoundaryConditions always
-        // returns 0, so no OverscrollNotification is ever dispatched;
-        // instead pixels legitimately exceeds maxScrollExtent while
-        // rubber-banding, which we detect via the metrics diff.
+        // OverscrollNotification only fires under Android's clamping
+        // physics; iOS rubber-bands instead, so detect that via the
+        // metrics diff (pixels exceeding maxScrollExtent).
         final metrics = notification.metrics;
         final overscroll = notification is OverscrollNotification
             ? notification.overscroll
@@ -231,7 +218,6 @@ class _PromoCard extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
     final season = Theme.of(context).extension<SeasonalTheme>()?.season;
     final isWinter = season == Season.winter;
-    final isAutumn = season == Season.autumn;
     final card = Container(
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 60.h),

@@ -5,14 +5,10 @@ import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../theme/snow_globe_overlay.dart';
 
-/// Paints the app's background gradient behind [child] — the app's default
-/// cream gradient normally, or the active season's own gradient once a
-/// seasonal theme (spring/summer/autumn/winter) is active — and, for
-/// seasonal themes, drifting snow-globe particles — the same tilt-reactive
-/// effect already used on the homepage stat cards, now covering the whole
-/// screen instead of just a card.
-/// Wrap a page's whole subtree (including its Scaffold, made transparent)
-/// so the gradient also shows through the status-bar and app-bar areas.
+/// Paints the app's background gradient behind [child] — the default cream
+/// gradient, or the active season's gradient plus drifting snow-globe
+/// particles. Wrap a page's whole subtree (Scaffold included, made
+/// transparent) so it shows through the status-bar and app-bar areas.
 class AppBackground extends StatelessWidget {
   final Widget child;
 
@@ -35,10 +31,8 @@ class AppBackground extends StatelessWidget {
         ? (seasonal.backgroundGradient ?? defaultGradient)
         : defaultGradient;
 
-    // SizedBox.expand forces this to fill the available space — a childless
-    // DecoratedBox collapses to zero size under the loosened constraints a
-    // non-positioned Stack child gets (SnowGlobeOverlay wraps this in its
-    // own Stack below), which painted nothing at all.
+    // SizedBox.expand is needed: a childless DecoratedBox collapses to zero
+    // size under the loose constraints a Stack child gets, painting nothing.
     Widget backdrop = SizedBox.expand(
       child: DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
     );
@@ -82,9 +76,8 @@ class AppBackground extends StatelessWidget {
           )
         : null;
 
-    // Backdrop (gradient + particles) painted first, corner glow next, page
-    // content stacked on top — otherwise the particles/glow would float
-    // above cards/buttons instead of sitting behind them.
+    // Backdrop, then corner glow, then page content — stack order matters,
+    // otherwise particles/glow would float above cards/buttons.
     return Stack(
       children: [
         Positioned.fill(child: backdrop),

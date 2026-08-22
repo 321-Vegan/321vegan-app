@@ -5,11 +5,8 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 
-/// Nudge shown every 5th scan for a logged-out user, prompting them to
-/// create an account — not permanently dismissible, so it keeps resurfacing
-/// every 5th scan even after "Plus tard". [BottomSheetShell] styling to
-/// match the rest of the app's modals (e.g. [VegandexWelcomeModal]) instead
-/// of a centered dialog.
+/// Nudge shown every 5th scan for a logged-out user to create an account —
+/// not permanently dismissible, so it keeps resurfacing after "Plus tard".
 class AccountPromptDialog extends StatelessWidget {
   final VoidCallback onCreateAccount;
 

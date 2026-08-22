@@ -15,10 +15,9 @@ import '../shared/info_box.dart';
 import '../shared/page_dots_indicator.dart';
 import 'snow_globe_overlay.dart';
 
-/// Central card illustration, keyed by season — a matching 5-form leaf set
-/// (already used for the homepage "Forêt préservée" stat, see
-/// `seasonalStatIllustration` in stat_card.dart) instead of the old
-/// mismatched one-off illustrations (tulipe/ruche/pumpkin).
+/// Central card illustration, keyed by season — reuses the leaf set from
+/// the homepage "Forêt préservée" stat instead of the old mismatched
+/// one-off illustrations (tulipe/ruche/pumpkin).
 String _leafAssetForSeason(Season season) {
   final suffix = switch (season) {
     Season.spring => 'spring',
@@ -172,9 +171,8 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         getter(allThemes[index]), getter(allThemes[nextIndex]), t)!;
   }
 
-  // Same gentle motion for every card, regardless of season — a slight
-  // breathing scale plus a barely-there tilt so the icon feels alive
-  // without drawing attention away from the card itself.
+  // Same gentle motion for every card: a slight breathing scale plus a
+  // barely-there tilt so the icon feels alive without drawing attention.
   _IconAnimValues _getIconAnim(double t) {
     // t goes 0→1→0 (reverse repeat)
     final sinT = math.sin(t * math.pi);
@@ -209,7 +207,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // Background gradient
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -228,7 +225,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                   child: _buildAutoThemeToggle(currentSeason),
                 ),
 
-              // Theme name + description above carousel
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
                 child: Column(
@@ -244,7 +240,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
               SizedBox(height: 16.h),
 
-              // Carousel
               SizedBox(
                 height: 680.h,
                 child: PageView.builder(
@@ -277,10 +272,8 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
               SizedBox(height: 16.h),
 
-              // Page indicator
               _buildPageIndicator(allThemes),
 
-              // Info text for non-subscribers
               if (!isSubscribed) SizedBox(height: 30.h),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
@@ -290,7 +283,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                 ),
               ),
               SizedBox(height: 60.h),
-              // Bottom button
               _buildBottomButton(currentTheme, isCurrentLocked),
               SizedBox(height: 60.h),
             ],
@@ -349,7 +341,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     return GestureDetector(
       onTap: () async {
         if (!_isAutoTheme) {
-          // Turning auto ON: animate first, then lock
+          // Animate to the current-season page first, then lock auto mode on.
           final allThemes = ThemeHelper.getAllThemes();
           final seasonIndex = allThemes
               .indexWhere((t) => t.season == ThemeHelper.getCurrentSeason())
@@ -364,7 +356,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
             _applyThemeSilently();
           }
         } else {
-          // Turning auto OFF
           setState(() => _isAutoTheme = false);
         }
       },
@@ -407,7 +398,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
   }) {
     final distance = _pageOffset - index;
     final absDistance = distance.abs().clamp(0.0, 1.0);
-    // Scale down non-centered cards
     final scale = 1.0 - (absDistance * 0.08);
 
     return TweenAnimationBuilder<double>(
@@ -425,11 +415,9 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
           onTap: isLocked ? _openSubscriptionPage : null,
           child: Container(
             decoration: ShapeDecoration(
-              // Same gradient as the app's own background for this theme
-              // (see AppBackground) — the card previews what the app will
-              // actually look like. (theme.iconBackgroundColor isn't a
-              // per-season identity color — spring and autumn both define
-              // the same pale yellow there — so it can't stand in for it.)
+              // Same gradient as the app's own background (see
+              // AppBackground) so the card previews the real look;
+              // theme.iconBackgroundColor isn't distinct enough per season.
               gradient: theme.backgroundGradient ??
                   LinearGradient(
                     colors: [theme.waveColor, theme.primaryColor],
@@ -452,13 +440,11 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                 theme: theme,
                 child: Stack(
                   children: [
-                    // Content overlay
                     Padding(
                       padding: EdgeInsets.all(24.w),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Top badges
                           Row(
                             children: [
                               if (_isAutoTheme && isCurrentSeason)
@@ -514,7 +500,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
                           const Spacer(),
 
-                          // Central animated icon
                           Center(
                             child: AnimatedBuilder(
                               animation: _iconAnimController,
@@ -538,7 +523,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
                           const Spacer(),
 
-                          // Bottom: theme name
                           Text(
                             theme.name,
                             style: AppTextStyles.baloo22,
@@ -547,7 +531,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                       ),
                     ),
 
-                    // Lock overlay
                     if (isLocked)
                       Positioned.fill(
                         child: Container(
@@ -616,10 +599,8 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
       particleOpacity: theme.particleOpacity,
       particleMinRadius: theme.particleMinRadius,
       particleMaxRadius: theme.particleMaxRadius,
-      // Only affects icon/plain-circle particles (winter's snowflakes) —
-      // asset-image particles keep their own colors. Defaults to white,
-      // which read fine on the old saturated card but disappears against
-      // the new pale card fill, so tint it with the theme's own color.
+      // Only affects icon/plain-circle particles — white read fine on the
+      // old saturated card but disappears on the new pale fill.
       particleColor: theme.primaryColor,
       borderRadius: br,
       child: child,
@@ -628,8 +609,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
   Widget _buildPageIndicator(List<SeasonalTheme> themes) {
     // Active dot picks up the swiped-to theme's own color rather than the
-    // app's flat colorScheme.primary, since each page here is a different
-    // theme.
+    // app's flat colorScheme.primary — each page here is a different theme.
     return PageDotsIndicator(
       count: themes.length,
       currentIndex: _currentPage,

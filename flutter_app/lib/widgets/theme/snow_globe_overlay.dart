@@ -12,27 +12,23 @@ class SnowGlobeOverlay extends StatefulWidget {
   final int particleCount;
   final IconData? particleIcon;
 
-  /// Asset paths particles are randomly drawn from — each particle picks one
-  /// at creation and keeps it for its lifetime. Ignored when [particleIcon]
-  /// is set.
+  /// Asset paths particles are randomly drawn from; each keeps its pick for
+  /// its lifetime. Ignored when [particleIcon] is set.
   final List<String>? particleAssets;
   final SmoothBorderRadius? borderRadius;
 
   /// Tint for icon particles and the plain-circle fallback. Defaults to
-  /// white, which reads well on the vivid gradient card previews this was
-  /// built for — callers placing it over a pale background (e.g. the app
-  /// background) should pass a darker, theme-appropriate color instead.
+  /// white (works on vivid gradients); pass a darker color over pale
+  /// backgrounds like the app background.
   final Color particleColor;
 
-  /// Multiplier applied on top of each particle's own random base opacity —
-  /// 1.0 keeps the default range, lower values make every particle more
-  /// subtle without changing the per-particle randomization itself.
+  /// Multiplier applied on top of each particle's own random base opacity;
+  /// 1.0 keeps the default range, lower values make particles more subtle.
   final double particleOpacity;
 
-  /// Random per-particle radius range — each particle picks a radius in
-  /// [particleMinRadius, particleMaxRadius] at creation and keeps it for its
-  /// lifetime. Drives rendered size directly for the plain-circle fallback,
-  /// and via `radius * 5` for icon/image particles.
+  /// Random per-particle radius range, picked once at creation. Drives
+  /// rendered size directly for the plain-circle fallback, `radius * 5`
+  /// for icon/image particles.
   final double particleMinRadius;
   final double particleMaxRadius;
 
@@ -74,24 +70,20 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
 
     _ticker = createTicker(_onTick)..start();
 
-    // userAccelerometerEventStream excludes gravity — accelerometerEventStream
-    // includes it, so holding the phone normally (screen facing you) reads a
-    // constant ~1g on one axis, which the tilt drift below misread as "the
-    // user is tilting the globe downward" at all times, making particles
-    // fall continuously even when the phone was perfectly still.
+    // userAccelerometerEventStream excludes gravity (unlike
+    // accelerometerEventStream) — otherwise the constant ~1g at rest would
+    // read as constant downward tilt, making particles fall continuously.
     _accelSub = userAccelerometerEventStream().listen((event) {
       _prevAccelX = _accelX;
       _prevAccelY = _accelY;
       _accelX = event.x;
       _accelY = event.y;
 
-      // Detect shake: sudden acceleration change
       final deltaX = _accelX - _prevAccelX;
       final deltaY = _accelY - _prevAccelY;
       final magnitude = sqrt(deltaX * deltaX + deltaY * deltaY);
 
       if (magnitude > 1.5) {
-        // Give each particle a unique random burst
         final strength = (magnitude / 7.0).clamp(0.3, 1.0);
         for (final f in _flakes) {
           final angle = _random.nextDouble() * 2 * pi;
@@ -117,9 +109,8 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
     }
 
     if (!listEquals(oldWidget.particleAssets, widget.particleAssets)) {
-      // Same flakes, but a shorter/different asset list (e.g. summer's 3
-      // fruits -> spring's 2 flowers) — re-pick each flake's asset so a
-      // stale index doesn't run off the end of the new list.
+      // Asset list changed length (e.g. summer's 3 fruits -> spring's 2) —
+      // re-pick each flake's asset so a stale index doesn't run off the end.
       final assets = widget.particleAssets;
       for (final f in _flakes) {
         f.assetIndex = assets != null && assets.isNotEmpty
@@ -147,7 +138,7 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
       assetIndex: assets != null && assets.isNotEmpty
           ? _random.nextInt(assets.length)
           : 0,
-      damping: 0.96 + _random.nextDouble() * 0.03, // each flake has unique drag
+      damping: 0.96 + _random.nextDouble() * 0.03,
       rotationPhase: _random.nextDouble() * 2 * pi,
       rotationSpeed: 0.25 + _random.nextDouble() * 0.75,
     );
@@ -159,33 +150,26 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
 
     if (dt <= 0 || dt > 0.1) return;
 
-    // Gentle tilt-based drift. Unlike accelerometerEventStream, the
-    // gravity-free user-acceleration signal sits near 0 at rest, so this
-    // divisor is tuned to that smaller range rather than gravity's ~9.8.
+    // Gravity-free user-acceleration sits near 0 at rest, so this divisor
+    // is tuned to that smaller range rather than gravity's ~9.8.
     final tiltX = -_accelX / 4.0;
     final tiltY = _accelY / 4.0;
 
     for (final f in _flakes) {
-      // Tilt influence
       f.vx += tiltX * 0.15 * dt;
       f.vy += tiltY * 0.15 * dt;
 
-      // Very gentle settling downward
       f.vy += 0.02 * dt;
 
-      // Per-particle damping
       f.vx *= f.damping;
       f.vy *= f.damping;
 
-      // Clamp velocity
       f.vx = f.vx.clamp(-1.0, 1.0);
       f.vy = f.vy.clamp(-1.0, 1.0);
 
-      // Update position
       f.x += f.vx * dt;
       f.y += f.vy * dt;
 
-      // Bounce off edges
       if (f.x < 0) {
         f.x = 0;
         f.vx = f.vx.abs() * 0.4;
@@ -227,8 +211,6 @@ class _SnowGlobeOverlayState extends State<SnowGlobeOverlay>
                   widget.particleAssets!.isNotEmpty))
             ...List.generate(_flakes.length, (i) {
               final f = _flakes[i];
-              //final shimmer =
-              //0.7 + 0.3 * sin(elapsed * f.shimmerSpeed + f.shimmerPhase);
               final size = f.radius * 5;
               return Positioned.fill(
                 child: IgnorePointer(

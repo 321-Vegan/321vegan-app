@@ -74,10 +74,9 @@ class _SentProductsPageState extends State<SentProductsPage> {
     }
   }
 
-  /// Distinct from the scan-history status wording: here "not yet in the
-  /// database" (alreadyScanned/unknown) means the submission is still being
-  /// processed server-side, separate from "in the database, awaiting
-  /// moderation" (pending) — both meaningful states for a submitted product.
+  /// "Not yet in the database" (alreadyScanned/unknown) means the submission
+  /// is still being processed server-side, distinct from "in the database,
+  /// awaiting moderation" (pending).
   ({IconData icon, Color color, String label}) _statusInfo(
       ScanStatus status, String? problem) {
     switch (status) {
@@ -139,7 +138,7 @@ class _SentProductsPageState extends State<SentProductsPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              'lib/assets/images/sun-off.webp',
+              'lib/assets/images/characters/lemon-mby.webp',
               width: 220.w,
               height: 220.w,
             ),

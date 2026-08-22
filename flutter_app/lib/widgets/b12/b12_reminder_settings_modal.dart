@@ -16,9 +16,7 @@ import '../shared/info_box.dart';
 const List<String> _dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 /// Bottom sheet for editing B12 reminder settings — frequency, day(s) of
-/// week, and time. Opened from Settings ("Rappels") and the Dashboard's
-/// B12 activation banner with:
-/// `showModalBottomSheet(context: ..., isScrollControlled: true, backgroundColor: Colors.transparent, builder: (_) => const B12ReminderSettingsModal())`
+/// week, and time. Opened from Settings and the Dashboard's B12 banner.
 class B12ReminderSettingsModal extends StatefulWidget {
   const B12ReminderSettingsModal({super.key});
 

@@ -19,8 +19,6 @@ class B12ReminderBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Figma spec: fill width, hug height, radius 16, stroke 1
-    // Secondary/Default, bg Secondary/Tag, padding 15, gap 10 (×3 units).
     return Container(
       padding: EdgeInsets.all(45.w),
       decoration: ShapeDecoration(

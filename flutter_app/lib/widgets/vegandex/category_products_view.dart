@@ -30,7 +30,6 @@ class CategoryProductsView extends StatelessWidget {
         .where((product) => product.categoryId == category.id)
         .toList();
 
-    // Sort by brand name first, then by product name
     filtered.sort((a, b) {
       final brandComparison = a.brandName.compareTo(b.brandName);
       if (brandComparison != 0) return brandComparison;
@@ -53,9 +52,8 @@ class CategoryProductsView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header with back button; name + count centered as a group, with a
-        // trailing spacer matching the back button so the centering is
-        // symmetric (same idea as AppBar's centerTitle).
+        // Name + count centered as a group; trailing spacer matches the
+        // back button's width for symmetric centering (like centerTitle).
         Row(
           children: [
             SizedBox(
@@ -99,7 +97,6 @@ class CategoryProductsView extends StatelessWidget {
         ),
         SizedBox(height: AppSpacing.afterTitle),
 
-        // Products grid
         Expanded(
           child: products.isEmpty
               ? const EmptyStateView(

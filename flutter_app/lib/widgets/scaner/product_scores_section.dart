@@ -12,13 +12,8 @@ import 'package:vegan_app/widgets/shared/link_row.dart';
 
 /// Shows Nutriscore + Green-score inline in a scan-result card.
 ///
-/// - [enabled]: controlled by the parent (scan settings). When false, renders nothing.
-/// - [isSubscribed]: if true, fetches and shows scores with an info dialog.
-/// - [paywalled]: when true and not subscribed, non-subscribers get a few
-///   free reveals per week; once exhausted, shows a blurred "Débloquer"
-///   paywall overlay. When false, scores are shown unlocked to everyone
-///   (e.g. on non-vegan results, where there's nothing to gate).
-/// - [onDisable]: called when the user taps "Désactiver" in the info dialog.
+/// When [paywalled] and not subscribed, non-subscribers get a few free
+/// reveals per week before a blurred "Débloquer" overlay shows.
 class ProductScoresSection extends StatefulWidget {
   final String barcode;
   final bool isSubscribed;
@@ -42,8 +37,7 @@ class ProductScoresSection extends StatefulWidget {
 class _ProductScoresSectionState extends State<ProductScoresSection> {
   ProductScores? _scores;
   bool _loading = true;
-  // Scores visible to a non-subscriber (free reveal granted, or no scores
-  // found — nothing to paywall in that case)
+  // Scores visible to a non-subscriber (free reveal granted, or nothing to paywall).
   bool _unlocked = false;
 
   @override
@@ -73,7 +67,6 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
       setState(() => _loading = true);
       _fetchScores();
     }
-    // Fetch if scores were just enabled
     if (!old.enabled && widget.enabled && _scores == null) {
       setState(() => _loading = true);
       _initForBarcode();
@@ -93,8 +86,7 @@ class _ProductScoresSectionState extends State<ProductScoresSection> {
       _fetchScores();
       return;
     }
-    // Fetch first: products without any score don't consume a free reveal
-    // and there is nothing to paywall.
+    // Fetch first: a product with no score doesn't consume a free reveal.
     final scores = await _getScores(widget.barcode);
     if (!mounted) return;
     final hasScores =

@@ -15,7 +15,6 @@ class Badge {
     required this.requirement,
   });
 
-  // Check if the badge is unlocked based on user data
   bool isUnlocked({
     required int productsSent,
     required DateTime? veganSince,

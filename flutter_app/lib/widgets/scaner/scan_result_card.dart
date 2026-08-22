@@ -4,11 +4,8 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_card.dart';
 
 /// Shared shell for scan-result cards (vegan / non-vegan / pending
-/// validation): an [AppCard] with a colored border matching [accentColor],
-/// product name + brand on the left, optional [scores] (Nutri-Score /
-/// Green-score) top-right, a status row (icon + colored label, with an
-/// optional smaller [statusDetail] appended) below, and optional
-/// [extraRows] for boycott/biodynamic warnings or extra context.
+/// validation): colored border, name/brand, status row, optional
+/// [scores] and [extraRows].
 class ScanResultCard extends StatelessWidget {
   final String name;
   final String brand;
@@ -34,9 +31,8 @@ class ScanResultCard extends StatelessWidget {
     this.extraRows = const [],
   });
 
-  /// Colored-circle status icon for states without a dedicated asset
-  /// (pending validation) — same visual language as the solid-check/
-  /// solid-close assets (colored circle + white glyph).
+  /// Colored-circle status icon for states without a dedicated asset —
+  /// matches the solid-check/solid-close assets' look.
   static Widget circleIcon(IconData icon, Color color, {double? size}) {
     final s = size ?? 64.w;
     return Container(

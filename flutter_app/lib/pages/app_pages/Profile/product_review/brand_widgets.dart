@@ -4,6 +4,7 @@ import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/validator_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/widgets/shared/search_field.dart';
 
 class BrandSelect extends StatefulWidget {
   final ValidatorBrand? initialBrand;
@@ -130,10 +131,8 @@ class _BrandSelectorSheet extends StatefulWidget {
 
 class _BrandSelectorSheetState extends State<_BrandSelectorSheet> {
   final TextEditingController _ctrl = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
   List<ValidatorBrand> _results = [];
   bool _searching = false;
-  bool _isFocused = false;
 
   @override
   void initState() {
@@ -142,20 +141,11 @@ class _BrandSelectorSheetState extends State<_BrandSelectorSheet> {
       _ctrl.text = widget.initialQuery!;
       _search(widget.initialQuery!);
     }
-    _focusNode.addListener(_handleFocusChange);
-  }
-
-  void _handleFocusChange() {
-    if (_isFocused != _focusNode.hasFocus) {
-      setState(() => _isFocused = _focusNode.hasFocus);
-    }
   }
 
   @override
   void dispose() {
     _ctrl.dispose();
-    _focusNode.removeListener(_handleFocusChange);
-    _focusNode.dispose();
     super.dispose();
   }
 
@@ -202,47 +192,24 @@ class _BrandSelectorSheetState extends State<_BrandSelectorSheet> {
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[800])),
               SizedBox(height: 16.h),
-              Container(
-                decoration: ShapeDecoration(
-                  color: Colors.white,
-                  shape: squircleBorder(
-                    radius: 12.r,
-                    side: BorderSide(
-                      color: _isFocused ? kAccentYellow : kBorderDefault,
-                      width: _isFocused ? 1.5 : 1,
-                    ),
-                  ),
-                ),
-                child: TextField(
-                  controller: _ctrl,
-                  focusNode: _focusNode,
-                  autofocus: true,
-                  onChanged: _search,
-                  decoration: InputDecoration(
-                    hintText: 'Rechercher…',
-                    hintStyle: TextStyle(fontSize: 36.sp, color: Colors.grey[400]),
-                    prefixIcon: Image.asset(
-                      'lib/assets/images/icons/search-line.webp',
-                      width: 44.sp,
-                      height: 44.sp,
-                      color: Colors.grey[600],
-                      colorBlendMode: BlendMode.srcIn,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
-                    suffixIcon: _searching
-                        ? Padding(
-                            padding: EdgeInsets.all(12.w),
-                            child: SizedBox(
-                              width: 20.w,
-                              height: 20.w,
-                              child: const CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : null,
-                  ),
-                  style: TextStyle(fontSize: 38.sp),
-                ),
+              SearchField(
+                controller: _ctrl,
+                hintText: 'Rechercher…',
+                autofocus: true,
+                onChanged: _search,
+                radius: 12,
+                iconSize: 44,
+                fontSize: 38,
+                trailing: _searching
+                    ? Padding(
+                        padding: EdgeInsets.all(12.w),
+                        child: SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: const CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : null,
               ),
               SizedBox(height: 12.h),
               Expanded(

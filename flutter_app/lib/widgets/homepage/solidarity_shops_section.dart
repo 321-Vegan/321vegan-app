@@ -43,17 +43,15 @@ class _SolidarityShopsSectionState extends State<SolidarityShopsSection> {
   @override
   void didUpdateWidget(SolidarityShopsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only re-roll when the list itself changed — not on every rebuild
-    // (e.g. the dashboard's once-a-minute savings tick), so cards don't
-    // jump between iced/plain while the user is looking at them.
+    // Only re-roll when the list itself changed, not on every rebuild, so
+    // cards don't jump between iced/plain while the user is looking at them.
     if (oldWidget.partners.length != widget.partners.length) {
       _icedIndices = _rollIcedIndices(widget.partners.length);
     }
   }
 
-  /// Card 1 (the second card) always gets the icicle decoration; after
-  /// that, the next iced card is 1-3 cards further along, picked once per
-  /// partner list rather than a fixed "every other card".
+  /// Card 1 always gets the icicle decoration; after that, the next iced
+  /// card is 1-3 cards further along, picked once per partner list.
   Set<int> _rollIcedIndices(int length) {
     if (length < 2) return {};
     final random = Random();
@@ -103,14 +101,12 @@ class _SolidarityShopsSectionState extends State<SolidarityShopsSection> {
           ),
         ),
         SizedBox(height: AppSpacing.afterTitle),
-        // IntrinsicHeight sizes the row to its tallest card's natural
-        // content height ("hug" in Figma), so it can never overflow
-        // regardless of font metrics or text length.
+        // IntrinsicHeight sizes the row to its tallest card so it never
+        // overflows, regardless of font metrics or text length.
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          // Default hard-edge clip on the viewport was cutting off the tip
-          // of the winter icicle decoration, which pokes above the card
-          // via a negative Positioned top.
+          // The default hard-edge clip was cutting off the winter icicle
+          // decoration poking above the card via a negative Positioned top.
           clipBehavior: Clip.none,
           child: IntrinsicHeight(
             child: Row(
@@ -157,8 +153,6 @@ class _ShopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Figma spec: width hug 154, radius 20, stroke 1 Border/Default,
-    // padding 20 (v) / 15 (h), gap 10 — all ×3 for ScreenUtil units.
     final card = SizedBox(
       width: 462.w,
       child: AppCard(
@@ -210,11 +204,8 @@ class _ShopCard extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 card,
-                // Icicles dripping from the card's top edge — clipped only
-                // to the top-left corner (like the stat cards' winter
-                // icicle) so square image corners don't peek out past that
-                // squircle, while the rest hangs past the card's own
-                // bounds instead of being boxed in by it.
+                // Clipped only to the top-left corner so square image corners
+                // don't peek past the squircle; the rest hangs past the card.
                 Positioned(
                   top: -20.h,
                   left: 140.w,

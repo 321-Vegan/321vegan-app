@@ -11,9 +11,8 @@ import 'notification_service.dart';
 
 class B12ReminderService {
   static const String _settingsKey = 'b12_reminder_settings';
-  static const int _notificationId = 1000; // Unique ID for B12 notifications
-  static const int _biweeklyNotificationId =
-      1001; // Second ID for biweekly alternating
+  static const int _notificationId = 1000;
+  static const int _biweeklyNotificationId = 1001; // biweekly's second slot
   static const String _intakeHistoryKey = 'b12_intake_history';
 
   static final NotificationService _notificationService = NotificationService();
@@ -25,7 +24,6 @@ class B12ReminderService {
 
   static void _notifyHistoryChanged() => historyRevision.value++;
 
-  /// Get saved reminder settings
   static Future<B12ReminderSettings> getSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final settingsJson = prefs.getString(_settingsKey);
@@ -34,7 +32,6 @@ class B12ReminderService {
       try {
         return B12ReminderSettings.fromJson(json.decode(settingsJson));
       } catch (e) {
-        // If there's an error parsing, return default settings
         return B12ReminderSettings();
       }
     }
@@ -42,23 +39,18 @@ class B12ReminderService {
     return B12ReminderSettings();
   }
 
-  /// Save reminder settings
   static Future<void> saveSettings(B12ReminderSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_settingsKey, json.encode(settings.toJson()));
-    // The streak and next-intake estimate depend on the frequency: make
-    // listening UI recompute
+    // Streak/next-intake estimates depend on frequency: make UI recompute.
     _notifyHistoryChanged();
   }
 
-  /// Adopt [frequency] as the reminder frequency when no reminder settings
-  /// were ever saved on this device (fresh install, new device), so
-  /// next-intake estimates — and the streak of intakes that predate
-  /// frequency snapshotting — follow the rhythm the history was recorded
-  /// under instead of the daily default. [lastIntake] anchors the day of
-  /// week for weekly/biweekly rhythms (the settings default would be
-  /// Monday regardless of when the user actually takes their B12).
-  /// Reminders themselves stay disabled — only the rhythm is adopted.
+  /// Adopts [frequency] as the reminder frequency when no settings were ever
+  /// saved on this device, so estimates follow the rhythm the history was
+  /// recorded under instead of the daily default. [lastIntake] anchors the
+  /// day of week for weekly/biweekly rhythms. Reminders themselves stay
+  /// disabled — only the rhythm is adopted.
   static Future<void> adoptFrequencyIfUnset(
       ReminderFrequency frequency, DateTime lastIntake) async {
     final prefs = await SharedPreferences.getInstance();
@@ -69,9 +61,7 @@ class B12ReminderService {
     ));
   }
 
-  /// Schedule reminder based on settings
   static Future<void> scheduleReminder(B12ReminderSettings settings) async {
-    // Cancel any existing reminders first
     await cancelReminder();
 
     if (!settings.enabled) {
@@ -79,10 +69,8 @@ class B12ReminderService {
       return;
     }
 
-    // The user's choice to enable reminders must persist even if the OS
-    // notification permission is missing/denied — otherwise "enabled" here
-    // silently reverts to false and nothing ever appears as on. Permission
-    // only gates whether we can actually schedule the OS notification.
+    // "enabled" must persist even without OS notification permission —
+    // permission only gates whether we can actually schedule it.
     final hasPermission = await _notificationService.requestPermissions();
     if (hasPermission) {
       const title = '💊 Rappel B12';
@@ -117,7 +105,6 @@ class B12ReminderService {
         case ReminderFrequency.twiceWeekly:
           if (settings.daysOfWeek != null && settings.daysOfWeek!.length == 2) {
             final sorted = List<int>.from(settings.daysOfWeek!)..sort();
-            // Schedule two weekly notifications, one for each selected day
             await _notificationService.scheduleWeeklyNotification(
               id: _notificationId,
               title: title,
@@ -160,7 +147,6 @@ class B12ReminderService {
     await saveSettings(settings);
   }
 
-  /// Schedule a biweekly notification
   static Future<void> _scheduleBiweeklyNotification({
     required int id,
     required String title,
@@ -174,7 +160,6 @@ class B12ReminderService {
     final now = tz.TZDateTime.now(tz.local);
     final skipToday = await _isTakenOnDay(now);
 
-    // Calculate days until the next target day of week
     int daysUntilTarget = (dayOfWeek - now.weekday) % 7;
     if (daysUntilTarget == 0) {
       final todayScheduledTime = tz.TZDateTime(
@@ -190,7 +175,6 @@ class B12ReminderService {
       }
     }
 
-    // Candidate date = next occurrence of this day of week
     var candidateDate = tz.TZDateTime(
       tz.local,
       now.year,
@@ -206,7 +190,6 @@ class B12ReminderService {
       final candidateDay =
           DateTime(candidateDate.year, candidateDate.month, candidateDate.day);
       final daysDiff = candidateDay.difference(startDay).inDays;
-      // If the number of weeks since start is odd, shift by 7 days
       final weeksDiff = daysDiff ~/ 7;
       if (weeksDiff % 2 != 0) {
         candidateDate = candidateDate.add(const Duration(days: 7));
@@ -237,7 +220,6 @@ class B12ReminderService {
       payload: payload,
     );
 
-    // Save the scheduled date for biweekly tracking
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(
       'b12_next_notification_date',
@@ -245,7 +227,7 @@ class B12ReminderService {
     );
   }
 
-  /// Mark that notification was received (for biweekly tracking)
+  /// Marks a notification as received (biweekly tracking).
   static Future<void> markNotificationReceived() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(
@@ -253,7 +235,6 @@ class B12ReminderService {
       DateTime.now().millisecondsSinceEpoch,
     );
 
-    // If biweekly, reschedule the next one
     final settings = await getSettings();
     if (settings.enabled && settings.frequency == ReminderFrequency.biweekly) {
       await scheduleReminder(settings);
@@ -277,7 +258,6 @@ class B12ReminderService {
     }
   }
 
-  /// Cancel all B12 reminders
   static Future<void> cancelReminder() async {
     await _notificationService.cancelNotification(_notificationId);
     await _notificationService.cancelNotification(_biweeklyNotificationId);
@@ -375,7 +355,6 @@ class B12ReminderService {
         return earliest;
 
       case ReminderFrequency.biweekly:
-        // For biweekly, check the saved next notification date
         final prefs = await SharedPreferences.getInstance();
         final nextDateMillis = prefs.getInt('b12_next_notification_date');
 
@@ -389,7 +368,6 @@ class B12ReminderService {
           } catch (e) {}
         }
 
-        // Calculate next biweekly occurrence
         if (settings.dayOfWeek == null) return null;
 
         int daysUntilTarget = (settings.dayOfWeek! - now.weekday) % 7;
@@ -446,20 +424,14 @@ class B12ReminderService {
   }
 
   /// Intakes are stored as JSON entries `{"date": "yyyy-MM-dd",
-  /// "frequency": "biweekly"}`. The date is a calendar day: unlike an epoch
-  /// timestamp, it means the same day in every timezone, so recorded days
-  /// can't shift (and get re-uploaded or duplicated by the sync) when the
-  /// device changes timezone. The frequency is the rhythm in effect when
-  /// the intake was recorded (null when unknown); the streak judges each
-  /// intake against it.
+  /// "frequency": "biweekly"}`. The date is a calendar day (not an epoch
+  /// timestamp) so it can't shift, get re-uploaded, or get duplicated by
+  /// sync when the device changes timezone.
   static final DateFormat _dayFormat = DateFormat('yyyy-MM-dd');
 
-  /// Load the intake history, migrating legacy entries in place on first
-  /// read: epoch-millis (the pre-sync format, interpreted in the current
-  /// timezone, matching how the old code displayed them) and bare
-  /// `yyyy-MM-dd` strings (the pre-frequency format). Legacy entries have
-  /// an unknown (null) frequency until the sync backfills it from the
-  /// server-side snapshots.
+  /// Loads the intake history, migrating legacy entries in place: epoch-millis
+  /// (pre-sync format) and bare `yyyy-MM-dd` strings (pre-frequency format).
+  /// Legacy entries get a null frequency until sync backfills it.
   static Future<List<B12Intake>> _loadIntakes(SharedPreferences prefs) async {
     final raw = prefs.getStringList(_intakeHistoryKey) ?? [];
     var migrated = false;
@@ -529,7 +501,6 @@ class B12ReminderService {
     final todayDate = DateTime(today.year, today.month, today.day);
     final todayKey = _dayFormat.format(todayDate);
 
-    // Don't add duplicate for same day
     if (intakes.any((intake) => _dayFormat.format(intake.date) == todayKey)) {
       return;
     }
@@ -543,11 +514,8 @@ class B12ReminderService {
     _notifyHistoryChanged();
 
     // Biweekly's OS notification is a one-off tied to a tracked "next date"
-    // (unlike daily/weekly/twice-weekly, which are OS-repeating triggers
-    // that only match on time-of-day/weekday and can't skip a single
-    // occurrence) — so if today was that scheduled date, push it out to the
-    // next occurrence now instead of leaving today's already-fired-or-not
-    // notification as the "next" one.
+    // (unlike the other frequencies' OS-repeating triggers), so push it out
+    // to the next occurrence if today was the scheduled date.
     if (settings.enabled && settings.frequency == ReminderFrequency.biweekly) {
       await scheduleReminder(settings);
     }
@@ -615,17 +583,13 @@ class B12ReminderService {
     return intakes.map((intake) => intake.date).toList();
   }
 
-  /// Current streak: number of days covered by the unbroken chain of
-  /// on-schedule intakes, from the chain's first intake through today.
-  /// Counting days (rather than intakes) keeps the streak fair across
-  /// different intake rhythms: a week on schedule is worth 7 whether it
-  /// took seven daily intakes or a single weekly one.
+  /// Current streak: days covered by the unbroken chain of on-schedule
+  /// intakes through today. Counting days (not intakes) keeps it fair across
+  /// rhythms — a week on schedule is worth 7 whether daily or weekly.
   ///
   /// Each intake allows a gap based on the frequency in effect when it was
-  /// recorded — that rhythm is what defined when the next dose was due —
-  /// so a history that mixes rhythms, or is restored onto a device
-  /// configured differently, is scored the way it was lived. Intakes with
-  /// no snapshot fall back to the configured frequency.
+  /// recorded, so a history mixing rhythms is scored the way it was lived.
+  /// Intakes with no snapshot fall back to the configured frequency.
   static Future<int> getB12Streak() async {
     final intakes = await getB12Intakes();
     if (intakes.isEmpty) return 0;
@@ -658,10 +622,9 @@ class B12ReminderService {
     return days < 1 ? 1 : days;
   }
 
-  /// Signed count of calendar days from [from] to [to], ignoring the
-  /// time-of-day. Local `difference().inDays` is one hour short across a
-  /// DST spring-forward, silently truncating a day; diffing the dates as
-  /// UTC keeps every day exactly 24h.
+  /// Signed count of calendar days from [from] to [to]. Local
+  /// `difference().inDays` is one hour short across a DST spring-forward;
+  /// diffing as UTC keeps every day exactly 24h.
   static int calendarDaysBetween(DateTime from, DateTime to) =>
       DateTime.utc(to.year, to.month, to.day)
           .difference(DateTime.utc(from.year, from.month, from.day))
@@ -698,15 +661,12 @@ class B12ReminderService {
   }
 
   /// Whether [day] was an expected intake day under [settings] — lets the
-  /// history calendar tell a genuinely missed day (due, not taken) from one
-  /// the configured rhythm never required (not due, not taken). Always
-  /// false when reminders were never enabled: there's no rhythm to be due
-  /// against, so nothing should read as "missed".
+  /// history calendar tell a genuinely missed day from one the rhythm never
+  /// required. Always false when reminders were never enabled.
   ///
-  /// Frequency isn't tracked historically (only per-intake, at the moment
-  /// it was recorded — see [B12Intake.frequency]), so this projects the
-  /// *current* settings back across the whole calendar, same as the streak
-  /// calculation's snapshot fallback.
+  /// Frequency isn't tracked historically (only per-intake — see
+  /// [B12Intake.frequency]), so this projects the *current* settings back
+  /// across the calendar, same as the streak calculation's fallback.
   static bool isDueDay(DateTime day, B12ReminderSettings settings) {
     if (!settings.enabled) return false;
     switch (settings.frequency) {

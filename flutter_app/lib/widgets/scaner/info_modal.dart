@@ -11,9 +11,8 @@ import 'package:vegan_app/widgets/shared/info_box.dart';
 class InfoModal extends StatefulWidget {
   final String description;
 
-  /// Optional plain-text context shown above [description], outside the
-  /// highlighted [InfoBox] — for explanatory copy that isn't itself the
-  /// warning/verdict (e.g. biodynamie's "what it is" paragraph).
+  /// Optional context shown above [description], outside the highlighted
+  /// [InfoBox] (e.g. biodynamie's "what it is" paragraph).
   final String? body;
 
   final BoycottMatch? boycottMatch;

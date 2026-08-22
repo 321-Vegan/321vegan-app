@@ -7,14 +7,15 @@ import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
 
-/// The two shareable looks for [ShareHomeCard]: [dark] is the original
-/// seasonal-primary-colored card, [light] is the cream/brand-green variant.
-enum ShareCardStyle { dark, light }
+/// The four shareable looks for [ShareHomeCard]: [dark] is the original
+/// seasonal-primary-colored card, [light] the cream/brand-green variant.
+/// [darkMinimal]/[lightMinimal] swap the heading and feature chips for a
+/// plain "321 Vegan" brand mark.
+enum ShareCardStyle { dark, light, darkMinimal, lightMinimal }
 
-/// The image that gets shared: the home page (counter + stats) inside a phone
-/// mockup, branded 321 Vegan, decorated with a seasonal theme. Uses fixed
-/// logical sizes (no ScreenUtil) so the captured image is identical on every
-/// device.
+/// The image that gets shared: the home page (counter + stats) inside a
+/// phone mockup. Uses fixed logical sizes (no ScreenUtil) so the captured
+/// image is identical on every device.
 class ShareHomeCard extends StatelessWidget {
   final DateTime targetDate;
   final Map<String, int> savings;
@@ -29,7 +30,11 @@ class ShareHomeCard extends StatelessWidget {
     super.key,
   });
 
-  bool get _isLight => style == ShareCardStyle.light;
+  bool get _isLight =>
+      style == ShareCardStyle.light || style == ShareCardStyle.lightMinimal;
+
+  bool get _isMinimal =>
+      style == ShareCardStyle.darkMinimal || style == ShareCardStyle.lightMinimal;
 
   @override
   Widget build(BuildContext context) {
@@ -58,21 +63,25 @@ class ShareHomeCard extends StatelessWidget {
         children: [
           _buildPhoneMockup(),
           const SizedBox(height: 14),
-          _buildHeading(),
-          const SizedBox(height: 10),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _FeatureChip('🌱 Voir son impact', light: _isLight),
-              _FeatureChip('📷 Scanner les produits', light: _isLight),
-              _FeatureChip('💸 Des réductions', light: _isLight),
-              _FeatureChip('🤝 Communautaire', light: _isLight),
-              _FeatureChip('❤️ Gratuit', light: _isLight),
-              _FeatureChip('💻 Open source', light: _isLight),
-            ],
-          ),
+          if (_isMinimal)
+            _buildBrandMark()
+          else ...[
+            _buildHeading(),
+            const SizedBox(height: 10),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _FeatureChip('🌱 Voir son impact', light: _isLight),
+                _FeatureChip('📷 Scanner les produits', light: _isLight),
+                _FeatureChip('💸 Des réductions', light: _isLight),
+                _FeatureChip('🤝 Communautaire', light: _isLight),
+                _FeatureChip('❤️ Gratuit', light: _isLight),
+                _FeatureChip('💻 Open source', light: _isLight),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -99,9 +108,25 @@ class ShareHomeCard extends StatelessWidget {
     );
   }
 
-  /// Same background the real home page shows for [theme]: its own seasonal
-  /// gradient, or the app's default cream gradient outside a season — see
-  /// AppBackground, which this mirrors.
+  Widget _buildBrandMark() {
+    final brandStyle = AppTextStyles.baloo22
+        .copyWith(color: _isLight ? theme.primaryColor : Colors.white);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset(
+          _isLight ? 'lib/assets/app_icon.png' : 'lib/assets/white_icon.png',
+          width: 22,
+          height: 22,
+        ),
+        const SizedBox(width: 6),
+        Text('321 Vegan', style: brandStyle),
+      ],
+    );
+  }
+
+  /// Mirrors AppBackground: [theme]'s seasonal gradient, or the app's
+  /// default cream gradient outside a season.
   LinearGradient get _phoneBackgroundGradient {
     const defaultGradient = LinearGradient(
       begin: Alignment.topCenter,
@@ -139,7 +164,6 @@ class ShareHomeCard extends StatelessWidget {
               height: 473,
               child: Stack(
                 children: [
-                  // Real home page background for this card's season.
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration:
@@ -148,8 +172,7 @@ class ShareHomeCard extends StatelessWidget {
                   ),
                   Column(
                     children: [
-                      // Clears the notch and the counter card overlapping
-                      // from above.
+                      // Clears the notch and the counter card above.
                       const SizedBox(height: 150),
                       ...homeStats.map(
                         (stat) =>
@@ -175,16 +198,13 @@ class ShareHomeCard extends StatelessWidget {
             ),
           ),
         ),
-        // "Vous êtes vegan depuis" counter card — deliberately wider than
-        // the phone frame so it overflows past its edges, giving the
-        // shared image a "zoomed in" pop-out look (Figma spec).
+        // Deliberately wider than the phone frame so it overflows past its
+        // edges, giving the shared image a "zoomed in" pop-out look.
         Positioned(top: 34, child: _CounterCard(targetDate: targetDate)),
       ],
     );
   }
 
-  /// Mini version of the redesigned Dashboard stat card: white surface,
-  /// hairline border, value + title on the left, illustration on the right.
   Widget _miniStatCard(HomeStat stat, int value) {
     return Container(
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
@@ -250,8 +270,7 @@ class ShareHomeCard extends StatelessWidget {
 }
 
 /// "Vous êtes vegan depuis" title + bordered digit-tile counter, mirroring
-/// [VeganCounter]'s tile design (bordered squircle box per unit, two digits
-/// split by a divider) at share-image scale.
+/// [VeganCounter]'s tile design at share-image scale.
 class _CounterCard extends StatelessWidget {
   final DateTime targetDate;
 

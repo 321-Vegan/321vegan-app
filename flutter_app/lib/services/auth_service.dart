@@ -38,7 +38,6 @@ class AuthService {
     await _clearToken();
   }
 
-  // Initialize the service and check for stored tokens
   static Future<void> init() async {
     await _loadStoredToken();
     if (isLoggedIn) {
@@ -53,7 +52,6 @@ class AuthService {
     }
   }
 
-  // Load stored access token from SharedPreferences
   static Future<void> _loadStoredToken() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -67,7 +65,6 @@ class AuthService {
     }
   }
 
-  // Store access token in SharedPreferences
   static Future<void> _storeToken(String token,
       {int expiresInSeconds = 1800}) async {
     try {
@@ -75,7 +72,6 @@ class AuthService {
       await prefs.setString('access_token', token);
       _accessToken = token;
 
-      // Calculate and store expiration time (default 30 minutes)
       _tokenExpiresAt = DateTime.now().add(Duration(seconds: expiresInSeconds));
       await prefs.setString(
           'token_expires_at', _tokenExpiresAt!.toIso8601String());
@@ -84,7 +80,6 @@ class AuthService {
     }
   }
 
-  // Clear stored token
   static Future<void> _clearToken() async {
     try {
       _tokenExpiresAt = null;
@@ -100,14 +95,12 @@ class AuthService {
     }
   }
 
-  // Check if token is expired or will expire soon, and refresh if needed
   static Future<void> _checkAndRefreshToken() async {
     if (_tokenExpiresAt == null) return;
 
     final now = DateTime.now();
     final minutesUntilExpiry = _tokenExpiresAt!.difference(now).inMinutes;
 
-    // If token is expired or will expire in less than 5 minutes, refresh it
     if (minutesUntilExpiry < 5) {
       final result = await refreshToken();
       if (result.isSuccess) {
@@ -120,7 +113,6 @@ class AuthService {
     }
   }
 
-  // Sync user data from backend to local preferences
   static Future<void> _syncUserDataToPreferences() async {
     try {
       final userResult = await getCurrentUser();
@@ -140,10 +132,8 @@ class AuthService {
     }
   }
 
-  // Check if user is logged in
   static bool get isLoggedIn => _accessToken != null;
 
-  // Get current user
   static User? get currentUser => _currentUser;
 
   // Optimistically add/update a scanned product locally (before backend confirms)
@@ -160,7 +150,6 @@ class AuthService {
     }
   }
 
-  // Login
   static Future<AuthResult<AuthToken>> login(LoginRequest request) async {
     try {
       final dio = await DioClient.getDio();
@@ -180,16 +169,12 @@ class AuthService {
         final token = AuthToken.fromJson(response.data);
         await _storeToken(token.accessToken);
 
-        // Fetch user data and sync vegan date to local storage
         await _syncUserDataToPreferences();
-
-        // Fetch subscription status from backend
         await SubscriptionService.checkSubscriptionStatus();
 
         // Seed/flush the server-side scan counter now that the user is known
         // (first login seeds it from the local scan total).
         unawaited(ScanCountSyncService.sync());
-
         // Same for B12 intakes (first sync seeds the local intake history).
         unawaited(B12SyncService.sync());
 
@@ -211,7 +196,6 @@ class AuthService {
     try {
       final dio = await DioClient.getDio();
 
-      // Use API key headers for registration
       final response = await dio.post(
         '/users/',
         data: request.toJson(),
@@ -233,7 +217,6 @@ class AuthService {
     }
   }
 
-  // Helper method to handle registration response
   static AuthResult<String> _handleRegistrationResponse(Response response) {
     if (response.statusCode != null &&
         response.statusCode! >= 200 &&
@@ -259,7 +242,8 @@ class AuthService {
     }
   }
 
-  // Refresh token (kept for manual refresh if needed, but automatic refresh is now handled by Dio interceptor)
+  // Kept for manual refresh if needed; automatic refresh is now handled by
+  // the Dio interceptor.
   static Future<AuthResult<AuthToken>> refreshToken() async {
     try {
       final dio = await DioClient.getDio();
@@ -296,11 +280,10 @@ class AuthService {
     }
   }
 
-  // Logout
   static Future<AuthResult<String>> logout() async {
-    // Last chance to push queued scan-count increments and B12 intakes for
-    // this account; whatever couldn't be sent is dropped below so it can't
-    // be attributed to another account logging in later on this device.
+    // Last chance to push queued scan-count/B12 data for this account;
+    // whatever couldn't be sent is dropped below so it can't be attributed
+    // to another account logging in later on this device.
     await Future.wait([
       ScanCountSyncService.sync(),
       B12SyncService.sync(),
@@ -332,10 +315,8 @@ class AuthService {
     }
   }
 
-  // Delete account
   static Future<AuthResult<String>> deleteAccount(
       BuildContext context, currentUser) async {
-    // Ask for confirmation before deleting account
     final confirmed = await _showDeleteConfirmationDialog(context);
     if (!confirmed) {
       return AuthResult.error('Annulation de la suppression du compte');
@@ -373,7 +354,6 @@ class AuthService {
     }
   }
 
-  // Helper method to show delete confirmation dialog
   static Future<bool> _showDeleteConfirmationDialog(
       BuildContext context) async {
     return await showDialog<bool>(
@@ -401,7 +381,6 @@ class AuthService {
         false;
   }
 
-  // Request password reset
   static Future<AuthResult<String>> requestPasswordReset(
       PasswordResetRequest request) async {
     try {
@@ -431,7 +410,6 @@ class AuthService {
     }
   }
 
-  // Confirm password reset
   static Future<AuthResult<String>> confirmPasswordReset(
       PasswordResetConfirm request) async {
     try {
@@ -462,7 +440,6 @@ class AuthService {
     }
   }
 
-  // Verify reset token
   static Future<AuthResult<String>> verifyResetToken(
       PasswordResetTokenVerify request) async {
     try {
@@ -492,7 +469,6 @@ class AuthService {
     }
   }
 
-  // Get current user info
   static Future<AuthResult<User>> getCurrentUser() async {
     try {
       final dio = await DioClient.getDio();
@@ -513,8 +489,8 @@ class AuthService {
       }
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        // Interceptor already cleared tokens if refresh failed with 401.
-        // Only clear here if _accessToken is still set (interceptor didn't handle it).
+        // Interceptor already clears tokens on a failed refresh; only clear
+        // here if it hasn't (i.e. _accessToken is still set).
         if (_accessToken != null) {
           debugPrint('❌ Authentication expired');
           await _clearToken();
@@ -589,9 +565,8 @@ class AuthService {
     try {
       final dio = await DioClient.getDio();
 
-      // Accept 4xx without throwing so expected errors (wrong password,
-      // email in use) don't hit the global 401 interceptor, which would
-      // treat a wrong-password 401 as token expiry and log the user out.
+      // Accept 4xx without throwing so a wrong-password 401 here doesn't
+      // hit the global interceptor and get treated as token expiry.
       final response = await dio.patch(
         '/me/email',
         data: {

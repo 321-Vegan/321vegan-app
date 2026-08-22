@@ -14,10 +14,8 @@ class InfoBox extends StatelessWidget {
   /// [iconAsset] is set.
   final String symbol;
 
-  /// Path to an icon asset shown instead of [symbol], e.g.
-  /// `lib/assets/images/icons/solid-check.webp`. These assets already bake
-  /// in their own badge shape (a circle, or — for the alert triangle — no
-  /// circle at all), so unlike [symbol] it's rendered without an extra
+  /// Path to an icon asset shown instead of [symbol] — these assets already
+  /// bake in their own badge shape, so unlike [symbol] there's no extra
   /// wrapping circle.
   final String? iconAsset;
 

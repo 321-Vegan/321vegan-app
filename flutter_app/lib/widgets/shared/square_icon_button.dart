@@ -3,25 +3,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 
-/// Square/squircle icon-only button (white or tinted surface, soft shadow,
-/// centered icon) used as a floating action or header control across the
-/// app — was hand-rolled independently in the scan, map, dashboard and
-/// scan-history pages before being consolidated here.
+/// Square/squircle icon-only button used as a floating action or header
+/// control across the app.
 ///
-/// Use [SquareIconButton.action] (48×48, radius 14, alpha-0.15 shadow) for
-/// the common case; it covers the scan page top row, map's floating
-/// buttons, the dashboard header icons and scan-history's "clear" button —
-/// two close-but-not-identical Figma tokens (47×47/radius 12/alpha-0.06 for
-/// the latter two) were merged into this single spec since the difference
-/// wasn't visible enough to justify two presets.
-///
-/// For anything that doesn't fit (different size/radius/shadow entirely, a
-/// non-white background with no shadow, etc.), use the base constructor
-/// directly — see `shop_detail_sheet.dart`'s itinerary button.
-///
-/// For anything that isn't a plain [Icon] (e.g. the Vegandex tinted image,
-/// or a badge overlay), pass a custom [child]/wrap the button in a [Stack]
-/// — see `map.dart`'s filter-count badge for the pattern.
+/// Use [SquareIconButton.action] for the common case (48×48, radius 14) —
+/// two close Figma tokens were merged into one spec since the difference
+/// wasn't visible enough to justify two presets. For anything else (custom
+/// size/shadow/background, or a non-[Icon] child), use the base
+/// constructor directly.
 class SquareIconButton extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget child;

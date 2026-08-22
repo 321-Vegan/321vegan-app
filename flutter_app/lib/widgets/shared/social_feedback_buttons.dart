@@ -20,7 +20,6 @@ class SocialFeedbackButtons extends StatelessWidget {
       children: [
         if (showCard) SizedBox(height: 24.h),
 
-        // Instagram button
         ElevatedButton(
           onPressed: () => openInstagram(context),
           style: ElevatedButton.styleFrom(
@@ -60,7 +59,6 @@ class SocialFeedbackButtons extends StatelessWidget {
 
         SizedBox(height: 16.h),
 
-        // Rate app button
         ElevatedButton(
           onPressed: () => rateApp(context),
           style: ElevatedButton.styleFrom(
@@ -135,8 +133,7 @@ class SocialFeedbackButtons extends StatelessWidget {
 
   /// Opens the store listing directly rather than the native in-app review
   /// dialog: Play Core / SKStoreReviewController silently no-op once a user
-  /// has already reviewed or the OS quota is used up, which would leave this
-  /// explicit button tap producing no visible result.
+  /// has already reviewed or the OS quota is used up.
   static Future<void> rateApp(BuildContext context) async {
     Uri? url;
 

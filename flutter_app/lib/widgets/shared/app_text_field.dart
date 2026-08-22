@@ -4,25 +4,15 @@ import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 
-/// Single-line text input from the Figma design system: 12pt horizontal
-/// gap between the border and the text — ×3 for ScreenUtil units, same
-/// convention as [AppTextStyles]. Width is left to the parent (the Figma
-/// frame's 356pt was that mockup's column width, not an intrinsic property
-/// of the field). Height comes from [contentPadding]'s vertical value, not
-/// a wrapping SizedBox — [TextField] sizes itself to its content, so a
-/// fixed-height box around it only adds dead space rather than growing the
-/// visible field.
+/// Single-line text input from the Figma design system. Width/height are
+/// left to the parent/content rather than fixed.
 ///
-/// The border is a squircle, matching [AppCard]/[InfoBox] — Material's
-/// `InputDecoration.border` can only be an [InputBorder] (plain rounded
-/// rect), so the squircle shape lives on a wrapping [Container] instead and
-/// the [TextField] itself goes borderless.
+/// The squircle border lives on a wrapping [Container], not
+/// `InputDecoration.border` (which only accepts a plain [InputBorder]).
 ///
-/// Validation is driven by a [FormField] wrapping a plain [TextField]
-/// (rather than [TextFormField]) so the error message can be laid out as a
-/// sibling below the bordered [Container] instead of through
-/// [InputDecoration.errorText] — which would render inside the same box the
-/// border wraps.
+/// Validation uses a [FormField] wrapping a plain [TextField] (not
+/// [TextFormField]) so the error renders as a sibling below the border,
+/// not inside it via [InputDecoration.errorText].
 class AppTextField extends StatefulWidget {
   final TextEditingController controller;
   final String? hintText;
@@ -96,11 +86,8 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     return FormField<String>(
-      // The validator ignores FormField's own cached value and always reads
-      // the controller directly, so it stays correct even when the text is
-      // set programmatically (e.g. reverse-geocoding filling the address)
-      // rather than typed — TextFormField gets this for free via an
-      // internal controller listener; a plain TextField doesn't.
+      // Reads the controller directly rather than FormField's cached value,
+      // so it stays correct when set programmatically (e.g. reverse-geocoding).
       validator: widget.validator == null
           ? null
           : (_) => widget.validator!(widget.controller.text),

@@ -16,8 +16,7 @@ class SettingsToggleTile extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   /// Optional: makes the label area (not the switch) navigate somewhere,
-  /// e.g. "Rappels" opening the detailed B12 reminder settings while the
-  /// switch itself keeps toggling inline.
+  /// e.g. "Rappels" opening the detailed B12 settings.
   final VoidCallback? onTap;
 
   const SettingsToggleTile({
@@ -32,11 +31,8 @@ class SettingsToggleTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // A floor rather than a fixed height: single-line rows (this one and
-      // SettingsRowTile, which shares the same floor) both land exactly
-      // here since neither's natural content is taller; "Rappels" (with a
-      // subtitle) is still allowed to grow past it for its extra line
-      // instead of clipping.
+      // A floor, not a fixed height: single-line rows land exactly here,
+      // while "Rappels" (with a subtitle) can grow past it.
       constraints: BoxConstraints(minHeight: 210.h),
       padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 45.h),
       decoration: ShapeDecoration(

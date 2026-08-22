@@ -61,7 +61,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
       curve: Curves.easeIn,
     );
 
-    // Start animations
     _controller.forward();
   }
 
@@ -71,10 +70,8 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
     super.dispose();
   }
 
-  // Closes the modal immediately instead of blocking on an in-modal "thank
-  // you" animation, then thanks the user via a snackbar on the underlying
-  // page — the messenger is captured before popping since this widget's
-  // context won't survive the pop.
+  // Pops immediately and thanks via a snackbar on the underlying page;
+  // messenger is captured before popping since this widget's context won't survive it.
   void _showThanksAndClose() {
     final messenger = ScaffoldMessenger.of(context);
     final primary = Theme.of(context).colorScheme.primary;
@@ -105,20 +102,17 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
   Future<void> _handleNo() async {
     if (widget.nearbyShops.isNotEmpty) {
-      // Show alternative shops instead of nullifying
       setState(() {
         _showAlternatives = true;
       });
     } else {
-      // No alternatives available - nullify as before
       await ApiService.updateScanEvent(scanEventId: widget.scanEventId);
       _showThanksAndClose();
     }
   }
 
   Future<void> _handleYes() async {
-    // If the shop wasn't linked yet (OSM-only), confirm it now so it gets
-    // created in DB and associated with the scan event.
+    // OSM-only shop: confirm it now so it's created and linked in DB.
     if (widget.shopOsmId != null) {
       await ApiService.confirmShop(
         scanEventId: widget.scanEventId,
@@ -145,14 +139,12 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
         shopId: shopId,
       );
     } else {
-      // No usable identifier - clear the shop association instead
       await ApiService.updateScanEvent(scanEventId: widget.scanEventId);
     }
     _showThanksAndClose();
   }
 
   Future<void> _handleNoneOfThese() async {
-    // User says none of the shops match - nullify
     await ApiService.updateScanEvent(scanEventId: widget.scanEventId);
     _showThanksAndClose();
   }
@@ -166,7 +158,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
       type: MaterialType.transparency,
       child: Stack(
         children: [
-          // Dark overlay
           FadeTransition(
             opacity: _fadeAnimation,
             child: Container(
@@ -174,7 +165,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
             ),
           ),
 
-          // Modal content
           Center(
             child: ScaleTransition(
               scale: _scaleAnimation,
@@ -201,7 +191,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product image
             ClipSmoothRect(
               radius: squircleRadius(24.r),
               child: SizedBox(
@@ -236,7 +225,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
             SizedBox(width: 24.w),
 
-            // Text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -248,18 +236,15 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
                   SizedBox(height: 16.h),
 
-                  // Product name highlight
-
                   Text(
                       widget.product.name,
                       style: AppTextStyles.baloo22,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                
+
                   SizedBox(height: 16.h),
 
-                  // Question text
                   RichText(
                     text: TextSpan(
                       style: AppTextStyles.bodyRegular15.copyWith(
@@ -286,10 +271,8 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
         SizedBox(height: 32.h),
 
-        // Buttons row
         Row(
           children: [
-            // No button
             Expanded(
               child: AppButton(
                 label: 'Non',
@@ -302,7 +285,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
             SizedBox(width: 16.w),
 
-            // Yes button
             Expanded(
               child: AppButton(
                 label: 'Oui',
@@ -323,7 +305,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product image
             ClipSmoothRect(
               radius: squircleRadius(24.r),
               child: SizedBox(
@@ -358,7 +339,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
             SizedBox(width: 24.w),
 
-            // Text
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,7 +363,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
         SizedBox(height: 24.h),
 
-        // Shop list
         ConstrainedBox(
           constraints: BoxConstraints(maxHeight: 600.h),
           child: ListView.separated(
@@ -451,7 +430,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
         SizedBox(height: 20.h),
 
-        // "None of these" button
         SizedBox(
           width: double.infinity,
           child: AppButton(

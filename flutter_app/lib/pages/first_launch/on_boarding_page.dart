@@ -52,11 +52,8 @@ const List<_IntroSlide> _slides = [
 final int _pageCount = _slides.length + 1;
 
 /// First-launch welcome screens: a 4-page swipeable carousel — 3 slides
-/// pitching the app's core features (scan confidence, product search,
-/// personal impact stats), each full-bleed phone screenshot's own bottom
-/// padding baked in at [kBackgroundGradientBottom] so it blends into
-/// [AppBackground] regardless of device aspect ratio — followed by the
-/// skippable [AccountSetupPage], sharing the same background/palette.
+/// pitching the app's core features, each full-bleed screenshot padded to
+/// blend into [AppBackground] — followed by the skippable [AccountSetupPage].
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
 

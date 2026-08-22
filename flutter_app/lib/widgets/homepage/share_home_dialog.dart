@@ -14,9 +14,9 @@ import 'package:vegan_app/themes/default_theme.dart';
 import 'package:vegan_app/widgets/homepage/share_home_card.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 
-/// Opens a dialog previewing the two shareable home page card looks (dark
-/// and light, swipeable), with a button to share the selected one (system
-/// share sheet: Instagram, Facebook, WhatsApp, etc.).
+/// Opens a dialog previewing the shareable home page card looks (dark,
+/// light, and their minimal variants, swipeable), with a button to share
+/// the selected one via the system share sheet.
 Future<void> showShareHomeDialog(
   BuildContext context, {
   required DateTime targetDate,
@@ -47,6 +47,8 @@ class ShareHomeDialog extends StatefulWidget {
 
 class _ShareHomeDialogState extends State<ShareHomeDialog> {
   static const List<ShareCardStyle> _styles = [
+    ShareCardStyle.darkMinimal,
+    ShareCardStyle.lightMinimal,
     ShareCardStyle.dark,
     ShareCardStyle.light,
   ];

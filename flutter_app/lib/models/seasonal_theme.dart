@@ -27,22 +27,16 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
   final List<Color> confettiColors;
   final ParticleType particleType;
 
-  /// Number of drifting snow-globe particles painted behind the whole app
-  /// (see [AppBackground]) while this theme is active. Each season tunes
-  /// its own density — e.g. winter's snowflakes are much denser than
-  /// spring's petals.
+  /// Number of drifting snow-globe particles (see [AppBackground]); each
+  /// season tunes its own density.
   final int particleCount;
 
-  /// Opacity multiplier applied on top of each particle's own random base
-  /// opacity (see [AppBackground]/[SnowGlobeOverlay]) — 1.0 keeps the
-  /// default range, lower values make the whole theme's particles more
-  /// subtle without having to touch the per-particle randomization.
+  /// Opacity multiplier on top of each particle's own random base opacity
+  /// (see [AppBackground]/[SnowGlobeOverlay]) — 1.0 keeps the default range.
   final double particleOpacity;
 
-  /// Random particle radius range (see [SnowGlobeOverlay]) — each particle
-  /// picks a radius in [particleMinRadius, particleMaxRadius] at creation
-  /// and keeps it for its lifetime. Drives rendered size directly for
-  /// winter's plain circles, and via `radius * 5` for icon/image particles.
+  /// Random particle radius range (see [SnowGlobeOverlay]); each particle
+  /// picks one at creation and keeps it for its lifetime.
   final double particleMinRadius;
   final double particleMaxRadius;
 
@@ -56,8 +50,7 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
   final String? seasonalAsset;
 
   /// Asset paths the snow-globe particles are randomly drawn from (e.g. one
-  /// per particle for summer's strawberry/orange/tomato mix). Each particle
-  /// picks one asset at creation and keeps it for its lifetime. Null/empty
+  /// per particle for summer's strawberry/orange/tomato mix). Null/empty
   /// means particles use [snowGlobeParticleIcon] or default snowflakes.
   final List<String>? snowGlobeParticleAssets;
 
@@ -175,7 +168,6 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
     );
   }
 
-  // Create a ColorScheme from this theme
   ColorScheme toColorScheme() {
     return ColorScheme.fromSeed(
       seedColor: primaryColor,
@@ -186,11 +178,9 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
     );
   }
 
-  // Create a ThemeData from this theme. Buttons, icons and every other
-  // `Theme.of(context).colorScheme`-driven color stay the app's one base
-  // palette regardless of season — only the [SeasonalTheme] extension
-  // carried below changes with the season, for the background
-  // gradient/particles ([AppBackground]) and this modal's own previews.
+  // Buttons/icons/colorScheme stay the app's one base palette regardless of
+  // season; only the [SeasonalTheme] extension below varies, driving the
+  // background gradient/particles ([AppBackground]).
   ThemeData toThemeData() {
     return ThemeData(
       scaffoldBackgroundColor: Colors.white,

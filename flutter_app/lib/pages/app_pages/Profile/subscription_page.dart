@@ -213,7 +213,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                           horizontal: 40.w, vertical: 16.h),
                       child: Column(
                         children: [
-                          // Close button, top-left like the mockup.
                           Align(
                             alignment: Alignment.centerLeft,
                             child: IconButton(
@@ -224,9 +223,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                             ),
                           ),
                           SizedBox(height: 16.h),
-                          // Already subscribed: current plan card, thank-you
-                          // header, benefits recap, community goal. The
-                          // manage-subscription button lives outside this
+                          // The manage-subscription button lives outside this
                           // scroll view, pinned to the bottom of the screen.
                           if (isSubscribed) ...[
                             if (subscription != null) ...[
@@ -241,18 +238,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                             SizedBox(height: 32.h),
                           ],
 
-                          // Header illustration
                           if (!isSubscribed) ...[
                             _buildHeader(primaryColor),
                             SizedBox(height: 32.h),
                             const SubscriptionGoalWidget(),
                             SizedBox(height: 32.h),
-
-                            // Benefits list
                             _buildBenefits(primaryColor),
                             SizedBox(height: 32.h),
 
-                            // Plan cards
                             if (SubscriptionService.products.isNotEmpty) ...[
                               _buildPlanCards(primaryColor),
                               SizedBox(height: 8.h),
@@ -270,7 +263,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                               ),
                               SizedBox(height: 24.h),
 
-                              // Error message
                               if (_errorMessage != null) ...[
                                 Padding(
                                   padding: EdgeInsets.only(bottom: 16.h),
@@ -286,15 +278,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                                 ),
                               ],
 
-                              // Purchase button
                               _buildPurchaseButton(primaryColor),
                               SizedBox(height: 20.h),
 
-                              // Restore button
                               _buildRestoreButton(),
                               SizedBox(height: 24.h),
 
-                              // Legal links
                               _buildLegalLinks(),
                             ] else ...[
                               _buildProductsUnavailable(),
@@ -720,7 +709,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             highlighted: _selectedTier == tier,
             referencePrice: referencePrice,
           ),
-          // "Populaire" badge (pale yellow tag, like the mockup)
           if (isPopular)
             Positioned(
               top: -16.h,
@@ -877,10 +865,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Widget _buildAuthOverlay(Color primaryColor) {
-    // Frosted backdrop over the still-visible subscription page. The
-    // enclosing Stack is now pinned to the exact viewport via
-    // SizedBox.expand in build(), so this Positioned.fill reliably covers
-    // the whole screen instead of stopping short at the bottom.
+    // Frosted backdrop over the still-visible page; relies on the Stack's
+    // SizedBox.expand sizing in build() to cover the whole screen.
     return Positioned.fill(
       child: ClipRect(
         child: BackdropFilter(

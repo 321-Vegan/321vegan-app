@@ -12,16 +12,14 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 
 /// Full-screen page listing the error reports sent by the current user,
-/// with their status and the team's response once handled
-/// (GET /me/error-reports). Pushed from Settings and from the Dashboard.
+/// with their status and the team's response once handled.
+/// Pushed from Settings and from the Dashboard.
 ///
-/// [initialData] lets the caller reuse an already fetched first page (the
-/// dashboard/settings fetch one for the unread-responses badge) instead of
-/// refetching it; it must have been fetched with [pageSize] items.
+/// [initialData] lets the caller reuse an already fetched first page instead
+/// of refetching it; it must have been fetched with [pageSize] items.
 class ErrorReportsPage extends StatefulWidget {
-  /// Page size used for every fetch; initial data must match it so the
-  /// "load more" page numbers line up. The badge service owns the value
-  /// because it performs the initial fetch.
+  /// Must match [initialData]'s page size so "load more" page numbers line
+  /// up. Owned by the badge service, which performs the initial fetch.
   static const int pageSize = ErrorReportBadgeService.pageSize;
 
   final ErrorReportPaginated? initialData;
@@ -154,7 +152,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              'lib/assets/images/sun-off.webp',
+              'lib/assets/images/characters/lemon-mby.webp',
               width: 220.w,
               height: 220.w,
             ),
@@ -254,9 +252,8 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
     );
   }
 
-  /// Flattens [_reports] (already newest-first from the API) into a list of
-  /// date-header / card widgets, one header per calendar day — the report
-  /// card itself no longer repeats the date once it's grouped under one.
+  /// Flattens [_reports] into date-header / card widgets, one header per
+  /// calendar day.
   List<Widget> _buildGroupedItems() {
     final items = <Widget>[];
     DateTime? lastDay;
@@ -283,8 +280,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
   }
 
   /// "Aujourd'hui/Hier à HH:mm" for a recent message, falling back to a full
-  /// date for anything older — distinct from the group header above, which
-  /// always shows the absolute date.
+  /// date for anything older.
   String _relativeTimeLabel(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -365,7 +361,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
           SizedBox(height: 24.h),
           _messageRow(
             avatar: _userAvatar(),
-            name: userName,
+            name: 'Moi',
             time: report.createdAt,
             message: report.comment,
           ),
@@ -430,9 +426,8 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
     );
   }
 
-  /// Same avatar shown on Settings/Dashboard, in a small chat-bubble circle.
-  /// Padded + contain-fit rather than clipped/cover: the avatar assets are
-  /// irregular transparent shapes that crop oddly under a hard circle clip.
+  /// Contain-fit rather than clipped/cover: the avatar assets are irregular
+  /// transparent shapes that crop oddly under a hard circle clip.
   Widget _userAvatar() {
     return SizedBox(
       width: 128.w,
@@ -449,8 +444,8 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
       width: 128.w,
       height: 128.w,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary,
+      decoration: const BoxDecoration(
+        color: Colors.white,
         shape: BoxShape.circle,
       ),
       child: Image.asset(

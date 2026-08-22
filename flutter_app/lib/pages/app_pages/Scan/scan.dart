@@ -53,10 +53,10 @@ class ScanPageState extends State<ScanPage>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   final MobileScannerController controller = MobileScannerController(
     formats: [
-      BarcodeFormat.ean13, // EAN-13 for international products
-      BarcodeFormat.ean8, // EAN-8 for smaller packages
-      BarcodeFormat.upcA, // UPC-A for US and Canadian products
-      BarcodeFormat.upcE, // UPC-E for compressed barcodes
+      BarcodeFormat.ean13,
+      BarcodeFormat.ean8,
+      BarcodeFormat.upcA,
+      BarcodeFormat.upcE,
     ],
   );
   ScanResult? productInfo;
@@ -73,12 +73,9 @@ class ScanPageState extends State<ScanPage>
   bool _isRetrying = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
-  // The Vegandex button used to show its label for a few seconds on page
-  // entry, then collapse to an icon-only square to match the history
-  // button. Disabled — the shrink animation didn't read well — but kept
-  // here in case we want it back. Toggling this on also requires
-  // uncommenting the timer in initState/dispose and the AnimatedCrossFade
-  // in _buildVegandexButton below.
+  // Vegandex button used to expand to a text label then collapse on entry;
+  // disabled (animation didn't read well) but kept for reference along with
+  // the related commented code in initState/dispose/_buildVegandexButton.
   // bool _vegandexExpanded = true;
   // Timer? _vegandexCollapseTimer;
 
@@ -106,7 +103,6 @@ class ScanPageState extends State<ScanPage>
         if (!_scannerPausedByModal) {
           controller.start();
         }
-        // Retry pending scans when app resumes
         _retryPendingScans();
         break;
       case AppLifecycleState.inactive:
@@ -130,7 +126,7 @@ class ScanPageState extends State<ScanPage>
     _loadShowBoycottPref();
     _loadShowScoresPref();
     _loadHapticFeedbackPref();
-    // Load products from already-populated cache (populated at app startup)
+    // Cache is already populated at app startup, so this loads instantly.
     _loadProductsOfInterest();
 
     // _vegandexCollapseTimer = Timer(const Duration(milliseconds: 900), () {
@@ -153,7 +149,6 @@ class ScanPageState extends State<ScanPage>
     });
   }
 
-  /// Retry pending scans when app starts or resumes
   Future<void> _retryPendingScans() async {
     if (_isRetrying) return;
     _isRetrying = true;
@@ -283,7 +278,6 @@ class ScanPageState extends State<ScanPage>
   Future<void> _showShopConfirmationDialog(
       String shopName, int scanEventId, ProductOfInterest product,
       {List<Map<String, dynamic>>? nearbyShops, String? shopOsmId}) {
-    // Stop scanner while showing modal
     controller.stop();
 
     return showDialog(
@@ -300,18 +294,15 @@ class ScanPageState extends State<ScanPage>
         );
       },
     ).then((_) {
-      // Restart scanner when modal closes
       controller.start();
     });
   }
 
   Future<bool> _checkLocationPermission() async {
     try {
-      // Try to check current permission with timeout
       LocationPermission permission = await Geolocator.checkPermission()
           .timeout(const Duration(seconds: 3));
 
-      // If denied, try to request permission
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission()
             .timeout(const Duration(seconds: 10));
@@ -320,7 +311,6 @@ class ScanPageState extends State<ScanPage>
       final hasPermission = permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always;
 
-      // Store the permission state if granted
       if (hasPermission) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('location_permission_granted', true);
@@ -328,7 +318,7 @@ class ScanPageState extends State<ScanPage>
 
       return hasPermission;
     } catch (e) {
-      // If check fails (timeout, service unavailable, etc.), use stored state
+      // Timeout or service unavailable: fall back to the last stored state.
       final prefs = await SharedPreferences.getInstance();
       final storedPermission =
           prefs.getBool('location_permission_granted') ?? false;
@@ -338,23 +328,20 @@ class ScanPageState extends State<ScanPage>
 
   Future<void> _startScanner() async {
     try {
-      // Check camera permission first
       bool hasPermission = await _checkCameraPermission();
       if (!hasPermission) {
         return;
       }
 
-      // Wait for the widget to be fully built before starting scanner
+      // Wait for the widget to be fully built before starting the scanner.
       await Future.delayed(const Duration(milliseconds: 100));
 
-      // Check if the controller is properly initialized
       if (!mounted) {
         return;
       }
 
       await controller.start();
     } catch (e) {
-      // Try to restart scanner after a longer delay in debug mode
       await Future.delayed(const Duration(milliseconds: 1000));
       if (mounted) {
         await controller.start();
@@ -414,26 +401,21 @@ class ScanPageState extends State<ScanPage>
   }
 
   Future<void> _sendScanEventIfInteresting(String ean) async {
-    // Resolve alternative EAN to main EAN if applicable
     final mainEan = _alternativeEanToMainEan[ean] ?? ean;
 
-    // Check if this product is in the products of interest
     if (!_productsOfInterest.contains(mainEan)) {
       return;
     }
 
-    // Store whether this is a new discovery before updating
     final user = AuthService.currentUser;
     final hadProductBefore =
         user?.scannedProducts?.any((sp) => sp.ean == mainEan) ?? false;
 
-    // Show modal if product found (don't wait for location)
     final product = _productsOfInterestMap[mainEan];
     if (product != null && mounted) {
-      // Stop scanner while showing modal
       controller.stop();
 
-      // Start fetching location in the background
+      // Fetch location in the background; don't block showing the modal.
       final locationFuture = _getLocationForScanEvent();
 
       await showDialog(
@@ -447,30 +429,25 @@ class ScanPageState extends State<ScanPage>
         ),
       );
 
-      // Restart scanner after modal is closed
       controller.start();
 
-      // Optimistically update scanned products locally
+      // Optimistic local update, ahead of the server confirming it.
       AuthService.addScannedProductLocally(mainEan);
 
-      // Wait for location to be fetched and send scan event
       final locationData = await locationFuture;
       final latitude = locationData.latitude;
       final longitude = locationData.longitude;
 
-      // If the user hasn't granted location permission, we don't record the
-      // scan server-side (a prompt was already shown to enable it). But if
-      // permission IS granted and we simply couldn't get a fix (offline, GPS
-      // timeout), we still queue the scan — without coordinates — so the
-      // user's collection syncs once connectivity is back.
+      // Without location permission we don't record the scan server-side (a
+      // prompt was already shown). If permission is granted but we just
+      // couldn't get a fix (offline/GPS timeout), still queue the scan
+      // without coordinates so it syncs once connectivity returns.
       if (!locationData.permissionGranted) {
         return;
       }
 
-      // Get current user ID
       final userId = AuthService.currentUser?.id;
 
-      // Use offline scan service with automatic retry
       final (success, response, shouldShowDialog) =
           await OfflineScanService.postScanEventWithOfflineSupport(
         ean: mainEan,
@@ -480,12 +457,10 @@ class ScanPageState extends State<ScanPage>
       );
 
       if (success && response != null && mounted) {
-        // Refresh user data to get updated scanned products
         if (AuthService.isLoggedIn) {
           AuthService.getCurrentUser();
         }
 
-        // Check if a shop was detected and we should show dialog
         if (shouldShowDialog) {
           final shopName = response['shop_name'] as String?;
           final scanEventId = response['id'] as int?;
@@ -493,9 +468,9 @@ class ScanPageState extends State<ScanPage>
               ?.map((s) => Map<String, dynamic>.from(s as Map))
               .toList();
 
-          // If no shop was linked yet (OSM-only), the primary shop is the
-          // first entry in nearbyShops — pass its osm_id so the modal can
-          // confirm it when the user taps "Yes".
+          // If no shop is linked yet (OSM-only), the primary shop is the
+          // first nearbyShops entry — pass its osm_id so the modal can
+          // confirm it on "Yes".
           final String? shopOsmId = (response['shop_id'] == null &&
                   nearbyShops != null &&
                   nearbyShops.isNotEmpty)
@@ -503,7 +478,6 @@ class ScanPageState extends State<ScanPage>
               : null;
 
           if (shopName != null && scanEventId != null) {
-            // Show confirmation dialog for shop location
             _showShopConfirmationDialog(shopName, scanEventId, product,
                 nearbyShops: nearbyShops, shopOsmId: shopOsmId);
           }
@@ -519,10 +493,8 @@ class ScanPageState extends State<ScanPage>
     bool hasPermission = false;
 
     try {
-      // Check if we have location permission
       hasPermission = await _checkLocationPermission();
 
-      // Get position if permission granted
       if (hasPermission) {
         final position = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
@@ -539,12 +511,10 @@ class ScanPageState extends State<ScanPage>
         }
       }
     } catch (e) {
-      // Permission is granted but we couldn't obtain a fresh position (e.g.
-      // offline or the GPS fix timed out within 5s). Don't show the "enable
-      // location" dialog — it would wrongly tell the user location is
-      // disabled. Fall back to the last known position if it's recent enough
-      // that the user is plausibly still in the same place, so shop detection
-      // keeps working; otherwise the scan is queued without coordinates.
+      // Permission granted but no fresh fix (offline/GPS timeout <5s): don't
+      // show the "enable location" dialog since that's misleading here.
+      // Fall back to a recent last-known position so shop detection still
+      // works; otherwise the scan is queued without coordinates.
       try {
         final lastKnown = await Geolocator.getLastKnownPosition();
         if (lastKnown != null &&
@@ -595,12 +565,10 @@ class ScanPageState extends State<ScanPage>
     });
   }
 
-  /// Stops the scanner, pushes the unified product search page (Additifs /
-  /// Cosmétiques / Code-barre), and restarts the scanner when it's popped.
-  /// The "Code-barre" tab pops with the chosen barcode instead of showing
-  /// its own result — feeding it into [_simulateScan] here runs it through
-  /// the exact same pipeline as a camera scan (history, haptics, Vegandex
-  /// detection, ...) instead of duplicating that logic in the search page.
+  /// Pushes the unified product search page (Additifs / Cosmétiques /
+  /// Code-barre). The "Code-barre" tab pops with the chosen barcode instead
+  /// of showing its own result — feeding it into [_simulateScan] runs it
+  /// through the same pipeline as a camera scan.
   void _openProductSearch() {
     controller.stop();
     setState(() {
@@ -631,22 +599,17 @@ class ScanPageState extends State<ScanPage>
   Future<void> _checkVeganStatusOffline(String barcode) async {
     final product = await ProductInfoHelper.getProductInfo(barcode);
 
-    // A newer scan may have already superseded this one while the lookup
-    // was in flight (e.g. the scanner misread a barcode, then read the
-    // correct one a moment later before this call returned). Acting on a
-    // stale result here would flash the wrong product, log a bogus haptic/
-    // history entry, or schedule UnknownProductModal for a barcode nobody
-    // is looking at anymore.
+    // A newer scan may have superseded this one while the lookup was in
+    // flight (e.g. a misread barcode followed by the correct one); acting on
+    // a stale result here would flash the wrong product or log bogus data.
     if (!mounted || barcode != _lastScannedBarcode) return;
 
     setState(() {
       productInfo = product;
     });
 
-    // Scan-confirmation haptic: double pulse warns that the product is not
-    // vegan, single pulse for everything else. Skipped for unknown/notFound
-    // — those don't lock in a result, just show an inline card, so there's
-    // nothing worth buzzing the user about yet.
+    // Double pulse for non-vegan, single otherwise. Skipped for
+    // unknown/notFound since those don't lock in a result yet.
     if (_hapticFeedback &&
         product.status != ScanStatus.unknown &&
         product.status != ScanStatus.notFound) {
@@ -681,13 +644,10 @@ class ScanPageState extends State<ScanPage>
 
   }
 
-  /// Opens [UnknownProductModal] for the currently displayed unknown/
-  /// not-found result, pausing the scanner while it's up and, once it's
-  /// dismissed (submitted or cancelled), clearing [productInfo] and
-  /// resuming scanning. Triggered by the "Envoyer..." button on
-  /// [UnknownProductInfoCard] rather than automatically — a misread barcode
-  /// no longer risks locking the user into the sheet before they can
-  /// rescan.
+  /// Opens [UnknownProductModal] for the current unknown/not-found result,
+  /// pausing the scanner while it's up. Triggered by the "Envoyer..." button
+  /// rather than automatically, so a misread barcode doesn't lock the user
+  /// into the sheet before they can rescan.
   Future<void> _openUnknownProductModal() async {
     final info = productInfo;
     if (info == null || !mounted) return;
@@ -758,9 +718,8 @@ class ScanPageState extends State<ScanPage>
   void _handleBarcode(BarcodeCapture event) {
     final barcode = event.barcodes.first;
     var barcodeValue = barcode.rawValue;
-    // If there is 12 digits, add a 0 at the beginning
-    // This is a workaround for EAN-13 barcodes that are sometimes scanned as 12 digits by the scan module
-    // This happens when the barcode starts with 0
+    // Workaround: EAN-13 barcodes starting with 0 sometimes get scanned as
+    // 12 digits by the scan module.
     if (barcodeValue != null && barcodeValue.length == 12) {
       barcodeValue = '0$barcodeValue';
     }
@@ -777,14 +736,13 @@ class ScanPageState extends State<ScanPage>
       // The haptic fires in _checkVeganStatusOffline once the product
       // status is known, so non-vegan products can get a distinct pattern.
 
-      // Check if we should prompt the user to create an account
       _checkAccountPrompt();
 
-      // Send scan event if it's a product of interest (don't wait for it)
+      // Fire-and-forget: send scan event if it's a product of interest.
       _sendScanEventIfInteresting(barcodeValue.toString());
 
       setState(() {
-        productInfo = null; // Reset product info for the new scan
+        productInfo = null;
       });
       _checkVeganStatusOffline(barcodeValue.toString());
     }
@@ -836,14 +794,9 @@ class ScanPageState extends State<ScanPage>
   }
 
   /// Vegandex button: icon-only square, same shape as the history button
-  /// next to it ([SquareIconButton.action]).
-  ///
-  /// It used to show a "Vegandex" text label next to the icon, expanded on
-  /// page entry and collapsing down to this same icon-only square a couple
-  /// seconds later via an [AnimatedCrossFade] — disabled (both the label
-  /// and its shrink animation) because it didn't read well as UI. See the
-  /// commented block below to bring it back (also requires uncommenting
-  /// _vegandexExpanded/_vegandexCollapseTimer above).
+  /// next to it. Used to expand into a text label on entry via
+  /// [AnimatedCrossFade]; disabled since it didn't read well — see the
+  /// commented block below to bring it back.
   Widget _buildVegandexButton() {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final pokeballImage = Image.asset(
@@ -901,9 +854,6 @@ class ScanPageState extends State<ScanPage>
       // ),
     );
 
-    // Quick decaying wiggle + pop, played on impact when
-    // ProductFoundModal's fly-in animation lands here (see
-    // _shakeVegandexButton).
     return AnimatedBuilder(
       animation: _vegandexShakeController,
       builder: (context, child) {
@@ -926,11 +876,9 @@ class ScanPageState extends State<ScanPage>
     _vegandexShakeController.forward(from: 0);
   }
 
-  /// Top search bar — tapping it opens [ProductSearchPage] (Additifs /
-  /// Cosmétiques for now, Aliment by name/barcode later). Not an editable
-  /// field here: [AbsorbPointer] keeps the whole bar a single tap target
-  /// instead of focusing the [TextField] in place. Same height/radius as
-  /// [SquareIconButton.action] so the top row reads as one line.
+  /// Tapping opens [ProductSearchPage]. Not an editable field here:
+  /// [AbsorbPointer] keeps the whole bar a single tap target instead of
+  /// focusing the [TextField] in place.
   Widget _buildTopSearchBar() {
     return GestureDetector(
       onTap: _openProductSearch,
@@ -981,9 +929,8 @@ class ScanPageState extends State<ScanPage>
     );
   }
 
-  /// Viewfinder reticle shown over the live camera while idle (nothing
-  /// scanned yet) — four rounded corner brackets, no text, no card.
-  /// [IgnorePointer] keeps it from blocking taps on the camera beneath it.
+  /// Viewfinder reticle over the live camera while idle. [IgnorePointer]
+  /// keeps it from blocking taps on the camera beneath it.
   Widget _buildScanTargetOverlay() {
     final width = 0.7.sw;
     final height = 0.5.sh;
@@ -1062,8 +1009,6 @@ class ScanPageState extends State<ScanPage>
               },
             ),
           ),
-          // Idle state (nothing scanned yet): camera behind a viewfinder
-          // reticle, no result card yet.
           _buildScanTargetOverlay(),
           if (productInfo == null)
             Positioned.fill(
@@ -1084,9 +1029,8 @@ class ScanPageState extends State<ScanPage>
                 ),
               ),
             ),
-          // Camera-area overlays (warnings + score bar) flow bottom-up in a
-          // single column ending just above the result card, so they never
-          // overlap each other whatever the device height or text length.
+          // Warnings flow bottom-up in a column ending above the result
+          // card, so they never overlap regardless of device height/length.
           if (productInfo != null)
             Positioned(
               top: 0,
@@ -1109,10 +1053,8 @@ class ScanPageState extends State<ScanPage>
                 ],
               ),
             ),
-          // Result card anchored to the bottom (clearing the "Signaler une
-          // erreur" link below it) so it sits low on screen when short and
-          // grows upward instead of overflowing when a status has a lot of
-          // content (e.g. the rejected/non-vegan card's warning rows).
+          // Anchored to the bottom so it sits low when short and grows
+          // upward instead of overflowing for content-heavy statuses.
           if (productInfo != null)
             Positioned(
               bottom: 200.h,
@@ -1184,9 +1126,7 @@ class ScanPageState extends State<ScanPage>
               ),
             ),
           ),
-          // Top row: product-name search (visual only for now), history and
-          // Vegandex. Figma spec, ×3 for ScreenUtil units — see
-          // _buildTopSearchBar/[SquareIconButton.action].
+          // Top row: search bar, history and Vegandex buttons.
           Positioned(
             top: MediaQuery.of(context).padding.top + 24,
             left: 48.w,
@@ -1234,9 +1174,8 @@ class _ScanTargetPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
-    // Draws one L-shaped bracket at [origin], with the two arms extending
-    // toward the shape's interior along (dx, dy) and rounded off by a
-    // quarter-circle corner.
+    // Draws one L-shaped bracket at [origin], arms extending along (dx, dy)
+    // with a rounded quarter-circle corner.
     void drawCorner(Offset origin, double dx, double dy) {
       final path = Path()
         ..moveTo(origin.dx + dx * cornerLength, origin.dy)

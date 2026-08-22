@@ -15,14 +15,14 @@ import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_card.dart';
 import 'package:vegan_app/widgets/shared/empty_state_view.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
+import 'package:vegan_app/widgets/shared/search_field.dart';
 
 enum _SearchCategory { aliment, cosmetique, additif }
 
-/// Unified product search page (Figma redesign): one search field, category
-/// chips, results below — Additifs, Cosmétiques, and Code-barre (which used
-/// to be three separate bottom sheets/dialogs from the Scan page). Picking a
-/// barcode result (or typing a valid one) pops this page with the code so
-/// the Scan page can run it through the same pipeline as a camera scan.
+/// Unified product search page: one search field, category chips, results
+/// below (Additifs, Cosmétiques, Code-barre). Picking a barcode result (or
+/// typing a valid one) pops this page with the code so the Scan page can
+/// run it through the same pipeline as a camera scan.
 class ProductSearchPage extends StatefulWidget {
   const ProductSearchPage({super.key});
 
@@ -33,9 +33,7 @@ class ProductSearchPage extends StatefulWidget {
 class _ProductSearchPageState extends State<ProductSearchPage> {
   _SearchCategory _category = _SearchCategory.cosmetique;
   final TextEditingController _searchController = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
   String _query = '';
-  bool _isSearchFocused = false;
 
   List<ENumberItem> _eNumbers = [];
   List<CosmeticItem> _cosmeticResults = [];
@@ -46,20 +44,11 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   void initState() {
     super.initState();
     _loadENumbers();
-    _searchFocusNode.addListener(_handleSearchFocusChange);
-  }
-
-  void _handleSearchFocusChange() {
-    if (_isSearchFocused != _searchFocusNode.hasFocus) {
-      setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
-    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
-    _searchFocusNode.removeListener(_handleSearchFocusChange);
-    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -87,11 +76,6 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
     }
   }
 
-  void _clear() {
-    _searchController.clear();
-    _onSearchChanged('');
-  }
-
   void _selectCategory(_SearchCategory category) {
     if (category == _category) return;
     setState(() {
@@ -117,9 +101,8 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
     setState(() => _barcodeResults = results);
   }
 
-  /// Called on submit (Enter/Done) — lets the user proceed with a typed
-  /// code even if it has no local suggestion (the real lookup happens back
-  /// on the Scan page, same as a camera scan of an unknown product).
+  /// Lets the user proceed with a typed code even if it has no local
+  /// suggestion; the real lookup happens back on the Scan page.
   void _submitBarcode(String raw) {
     if (_category != _SearchCategory.aliment) return;
     if (!BarcodeHelper.isValid(raw)) {
@@ -218,51 +201,17 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
               SizedBox(height: 12.h),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 48.w),
-                child: Container(
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: squircleBorder(
-                      radius: 42.r,
-                      side: BorderSide(
-                        color: _isSearchFocused ? kAccentYellow : kBorderDefault,
-                        width: _isSearchFocused ? 1.5 : 1,
-                      ),
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    focusNode: _searchFocusNode,
-                    autofocus: true,
-                    onChanged: _onSearchChanged,
-                    onSubmitted: isAliment ? _submitBarcode : null,
-                    keyboardType:
-                        isAliment ? TextInputType.number : TextInputType.text,
-                    inputFormatters: isAliment
-                        ? [FilteringTextInputFormatter.digitsOnly]
-                        : null,
-                    style: TextStyle(fontSize: 42.sp),
-                    decoration: InputDecoration(
-                      hintText: _searchHint,
-                      hintStyle:
-                          TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-                      prefixIcon: Image.asset(
-                        'lib/assets/images/icons/search-line.webp',
-                        width: 60.sp,
-                        height: 60.sp,
-                        color: Colors.grey[600],
-                        colorBlendMode: BlendMode.srcIn,
-                      ),
-                      suffixIcon: hasQuery
-                          ? IconButton(
-                              icon: Icon(Icons.clear, size: 36.sp),
-                              onPressed: _clear,
-                            )
-                          : null,
-                      contentPadding: EdgeInsets.symmetric(
-                          horizontal: 39.w, vertical: 33.h),
-                      border: InputBorder.none,
-                    ),
-                  ),
+                child: SearchField(
+                  controller: _searchController,
+                  hintText: _searchHint,
+                  autofocus: true,
+                  onChanged: _onSearchChanged,
+                  onSubmitted: isAliment ? _submitBarcode : null,
+                  keyboardType:
+                      isAliment ? TextInputType.number : TextInputType.text,
+                  inputFormatters: isAliment
+                      ? [FilteringTextInputFormatter.digitsOnly]
+                      : null,
                 ),
               ),
               if (isAliment && _barcodeError != null)
@@ -385,9 +334,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
       child: Opacity(
         opacity: enabled ? 1 : 0.45,
         child: Container(
-          // Figma: fixed 47px height, 12px radius, 11/13 padding, 7px gap —
-          // ×3 for ScreenUtil units. Same height as the search bar/action
-          // buttons above so every row on this page reads consistently.
+          // Same height as the search bar/action buttons above.
           height: 144.w,
           alignment: Alignment.center,
           padding: EdgeInsets.symmetric(horizontal: 39.w),

@@ -131,9 +131,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  /// Continuously track the user's position so the blue dot follows them as
-  /// they move. When the map is currently centered on the user, keep it
-  /// centered ("follow me"); otherwise just update the dot in place.
+  /// Tracks the user's position so the blue dot follows them; when the map
+  /// is centered on the user it keeps following ("follow me").
   void _startPositionStream() {
     _positionStreamSub?.cancel();
     _positionStreamSub = Geolocator.getPositionStream(
@@ -168,7 +167,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       }
       if (permission == LocationPermission.always ||
           permission == LocationPermission.whileInUse) {
-        // Track the position continuously so the blue dot follows the user.
         _startPositionStream();
 
         // Fast path: last known position renders the map immediately
@@ -524,7 +522,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 ),
               ),
             ),
-            // Instruction label
             Positioned(
               top: 60,
               left: 0,

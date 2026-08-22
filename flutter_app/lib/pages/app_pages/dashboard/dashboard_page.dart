@@ -132,11 +132,9 @@ class DashboardPageState extends State<DashboardPage> {
     final avatar = await PreferencesHelper.getAvatar();
     User? user;
     if (AuthService.isLoggedIn) {
-      // Snapshot before the fetch: only a cold start or a fresh login (right
-      // after logout cleared the in-memory user) leaves this null. Seeding
-      // the badge baseline only in that case — not on every reload — is
-      // what lets a fresh login after logout show popups for badges the
-      // account already has, instead of silently re-marking them as seen.
+      // Null only on cold start or right after logout. Seeding the badge
+      // baseline just in that case (not every reload) lets a fresh login
+      // show popups for badges the account already has.
       final isFirstFetchThisSession = AuthService.currentUser == null;
       final result = await AuthService.getCurrentUser();
       if (result.isSuccess) {
@@ -266,8 +264,8 @@ class DashboardPageState extends State<DashboardPage> {
 
   Future<void> _openErrorReports() async {
     // Logged-out users have no reports to show — send them through the
-    // same login/create-account gate as the Paramètres tab instead of
-    // opening a page that would just error out fetching them.
+    // same login gate as the Paramètres tab instead of a page that would
+    // just error out fetching them.
     if (!AuthService.isLoggedIn) {
       await Navigator.push(
         context,

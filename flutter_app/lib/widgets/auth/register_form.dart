@@ -54,8 +54,7 @@ class _RegisterFormState extends State<RegisterForm> {
     super.dispose();
   }
 
-  // Carries over a vegan-since date already picked as a guest (e.g. from
-  // the Dashboard counter) so it isn't lost when creating an account.
+  // Carries over a vegan-since date picked as a guest so it isn't lost on signup.
   Future<void> _loadVeganSince() async {
     final date = await PreferencesHelper.getSelectedDateFromPrefs();
     if (!mounted || date == null) return;
@@ -91,8 +90,6 @@ class _RegisterFormState extends State<RegisterForm> {
 
     setState(() => _isLoading = true);
 
-    // Retrieve products sent from local storage; vegan-since comes from
-    // the form field above (pre-filled from local storage if already set).
     final nbProductsSent =
         await PreferencesHelper.getTotalSuccessfulSubmissions();
 
@@ -105,7 +102,6 @@ class _RegisterFormState extends State<RegisterForm> {
       password: password,
       veganSince: _veganSince,
       nbProductsSent: nbProductsSent,
-      // Default values for role and isActive are set in the model
     );
 
     final result = await AuthService.register(request);
@@ -131,7 +127,6 @@ class _RegisterFormState extends State<RegisterForm> {
           );
           widget.onRegisterSuccess?.call();
         } else {
-          // Registration succeeded but login failed
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Compte créé ! Vous pouvez vous connecter.'),

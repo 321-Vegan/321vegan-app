@@ -30,7 +30,7 @@ class EmptyStateView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              'lib/assets/images/sun-off.webp',
+              'lib/assets/images/characters/lemon-mby.webp',
               width: 220.w,
               height: 220.w,
             ),

@@ -16,9 +16,8 @@ class ProductFoundModal extends StatefulWidget {
   final bool isNewDiscovery;
   final VoidCallback? onClose;
 
-  /// Called the instant the close animation finishes — the moment the card
-  /// visually lands in the Vegandex button — so the caller can react (e.g.
-  /// make the button itself buzz/shake) right on impact.
+  /// Called the instant the close animation finishes — the card visually
+  /// lands in the Vegandex button — so the caller can react (e.g. shake it).
   final VoidCallback? onArrival;
 
   const ProductFoundModal({
@@ -45,9 +44,8 @@ class _ProductFoundModalState extends State<ProductFoundModal>
   late final Animation<double> _exitMotion;
   late final Animation<double> _exitFade;
 
-  // Measures the card's actual rendered size so the translate offset can
-  // compensate for the top-right-anchored scale below (see build()) and
-  // land the shrink point exactly on the button, not half a card-width off.
+  // Measures the card's rendered size so the translate offset compensates
+  // for the top-right-anchored scale in build() and lands on the button.
   final GlobalKey _cardBoundsKey = GlobalKey();
 
   final baseUrl = dotenv.env['API_BASE_URL'];
@@ -69,11 +67,9 @@ class _ProductFoundModalState extends State<ProductFoundModal>
       duration: const Duration(milliseconds: 550),
       vsync: this,
     );
-    // Motion (position/scale/rotation) runs the full duration with a sharp
-    // acceleration near the end — like something being yanked into a drain
-    // — while opacity is held near 1 until the very last moment, then drops
-    // fast. Without that split the card was visibly fading the whole trip,
-    // reading as "dissolving" rather than "sucked into the button".
+    // Motion runs the full duration with sharp acceleration near the end;
+    // opacity stays near 1 until the very last moment then drops fast —
+    // otherwise the card reads as "dissolving" rather than "sucked in".
     _exitMotion =
         CurvedAnimation(parent: _exitController, curve: Curves.easeInQuart);
     _exitFade = CurvedAnimation(
@@ -101,10 +97,8 @@ class _ProductFoundModalState extends State<ProductFoundModal>
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
 
-    // Approximate on-screen position of the Vegandex button (top row, right
-    // edge — see scan.dart's _buildVegandexButton) so the close animation
-    // reads as the card flying up and shrinking into it, rather than a
-    // generic fade-out.
+    // Approximate on-screen position of the Vegandex button (top row,
+    // right edge — see scan.dart's _buildVegandexButton).
     final mq = MediaQuery.of(context);
     final targetDx = mq.size.width / 2 - 120.w;
     final targetDy = mq.padding.top + 24 + 72.w - mq.size.height / 2;
@@ -125,20 +119,17 @@ class _ProductFoundModalState extends State<ProductFoundModal>
           final scaleX = baseScale * (1 - stretch);
           final scaleY = baseScale * (1 + stretch);
 
-          // The scale below pivots on the card's top-right corner, which
-          // stays fixed on screen at (halfW, -halfH) from center as long as
-          // nothing else moves it — so the translate has to travel that
-          // extra distance too, or the corner (and the shrink point) ends
-          // up half a card-width past the button instead of on it.
+          // The scale pivots on the card's top-right corner, which stays
+          // fixed on screen unless translated too — otherwise the shrink
+          // point ends up half a card-width past the button.
           final cardBox =
               _cardBoundsKey.currentContext?.findRenderObject() as RenderBox?;
           final cardSize =
               (cardBox != null && cardBox.hasSize) ? cardBox.size : Size.zero;
           final endDx = targetDx - cardSize.width / 2;
           final endDy = targetDy + cardSize.height / 2;
-          // Horizontal and vertical motion ease at slightly different
-          // rates so the card arcs into the corner instead of sliding
-          // along a perfectly straight diagonal.
+          // Horizontal and vertical motion ease at different rates so the
+          // card arcs into the corner instead of sliding on a straight diagonal.
           final dx = endDx * Curves.easeIn.transform(motionT);
           final dy = endDy * Curves.easeInOutCubic.transform(motionT);
 
@@ -153,12 +144,8 @@ class _ProductFoundModalState extends State<ProductFoundModal>
               Center(
                 child: Transform.translate(
                   offset: Offset(dx, dy),
-                  // Scaling pivots on the card's own top-right corner
-                  // (roughly where it's heading) instead of its center, so
-                  // it visibly shrinks *into* that corner rather than just
-                  // getting smaller while it slides — that's what actually
-                  // reads as "sucked toward a point" instead of "shrinking
-                  // in place while drifting".
+                  // Pivots on the card's top-right corner (where it's
+                  // heading) so it shrinks *into* that point, not in place.
                   child: Transform(
                     alignment: Alignment.topRight,
                     transform: Matrix4.diagonal3Values(scaleX, scaleY, 1.0),

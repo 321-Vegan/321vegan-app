@@ -141,13 +141,9 @@ class MyAppState extends State<MyApp> {
             upgrader: _upgrader,
             child: const FirstLaunchChecker(),
           ),
-          // App-wide AnnotatedRegion: pages with an AppBar plant their own
-          // region that only carries status-bar fields, and once the engine
-          // adopts it the nav-bar styling (transparency, dark buttons) is
-          // silently dropped on the next window-focus change. Keeping this
-          // region under the whole app re-asserts the nav-bar style every
-          // frame: the AppBar wins the status-bar probe, this wins the
-          // nav-bar probe (see RenderView._updateSystemChrome).
+          // Pages with an AppBar plant their own region with only status-bar
+          // fields, which drops our nav-bar styling on the next focus change;
+          // this app-wide region re-asserts it every frame.
           builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
             value: _overlayStyle,
             child: child!,

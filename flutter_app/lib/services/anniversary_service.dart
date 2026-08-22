@@ -24,15 +24,12 @@ class AnniversaryService {
     final hasPermission = await _notificationService.requestPermissions();
     if (!hasPermission) return;
 
-    // This path runs on an explicit date change, so always (re)schedule to pick
-    // up the new date.
+    // Explicit date change, so always (re)schedule to pick up the new date.
     await _schedule(veganSince);
   }
 
-  /// Reschedule silently at app startup: only if a vegan start date exists and
-  /// notifications are already enabled.
-  /// Always (re)schedules : scheduling with the same id
-  /// overwrite, so this is cheap and guaranteed-correct.
+  /// Reschedule silently at app startup, if a vegan date exists and
+  /// notifications are enabled. Same id → cheap, idempotent overwrite.
   static Future<void> rescheduleIfNeeded() async {
     final veganSince = await PreferencesHelper.getSelectedDateFromPrefs();
     if (veganSince == null) return;
@@ -52,19 +49,16 @@ class AnniversaryService {
   /// (Re)schedule the yearly anniversary notification. Uses a fixed id, so this
   /// overwrites any existing schedule without an explicit cancel.
   ///
-  /// The yearly OS trigger ([DateTimeComponents.dateAndTime]) matches
-  /// month/day/time but NOT the year, so a registration created on the start
-  /// day would fire that same day ("year 0"). We therefore skip scheduling
-  /// while the start date is today; the next app launch ([rescheduleIfNeeded])
-  /// sets up the recurring notification, whose first fire is then next year —
-  /// the genuine one-year anniversary.
+  /// The yearly OS trigger matches month/day/time but not the year, so a
+  /// registration made on the start day would fire that same day. We skip
+  /// scheduling when the start date is today; the next launch's
+  /// [rescheduleIfNeeded] sets up the real one-year-later anniversary.
   static Future<void> _schedule(DateTime veganSince) async {
     final now = tz.TZDateTime.now(tz.local);
     if (now.year == veganSince.year &&
         now.month == veganSince.month &&
         now.day == veganSince.day) {
-      // Clear any prior schedule (e.g. the user changed their date to today) so
-      // no stale notification remains until the next launch reschedules.
+      // Clear any prior schedule so no stale notification remains.
       await cancel();
       return;
     }
@@ -78,14 +72,11 @@ class AnniversaryService {
     );
   }
 
-  /// Number of whole vegan years between [veganSince] and [now] (defaults to
-  /// the current local time). Counts from the y/m/d fields — not `inDays ~/ 365`
-  /// — so it is correct regardless of the start date's time-of-day, leap years,
-  /// or the notification fire time ([_hour]).
+  /// Whole vegan years between [veganSince] and [now]. Counts from the y/m/d
+  /// fields, not `inDays ~/ 365`, so leap years and time-of-day don't skew it.
   ///
-  /// The anniversary day is pinned to the month's length, mirroring
-  /// [_anniversaryFor]: a Feb 29 start is celebrated on Feb 28 in non-leap
-  /// years, so the year count must tick over on Feb 28 those years too.
+  /// Mirrors [_anniversaryFor]: a Feb 29 start is celebrated on Feb 28 in
+  /// non-leap years, so the year count ticks over on Feb 28 those years too.
   static int veganYears(DateTime veganSince, {DateTime? now}) {
     final reference = now ?? DateTime.now();
     final lastDayOfMonth =

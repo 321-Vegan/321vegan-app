@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// Pill button from the Figma design system: fully rounded (stadium), 13pt
-/// vertical / 23.5pt horizontal padding — ×3 for ScreenUtil units, same
-/// convention as [AppTextStyles]. Width (170pt in Figma) is left to the
-/// parent, same reasoning as [AppTextField]; height (44pt) isn't set
-/// directly either — it falls out of the padding plus the label's line
-/// height rather than a wrapping SizedBox, so it always matches the
-/// content instead of leaving dead space.
+/// Pill button from the Figma design system: fully rounded (stadium).
+/// Width/height are left to fall out of padding + content (same reasoning
+/// as [AppTextField]) rather than fixed values, so there's no dead space.
 class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;

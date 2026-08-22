@@ -75,14 +75,12 @@ class _VegandexPageState extends State<VegandexPage> {
 
   Future<void> _checkLocationPermission() async {
     try {
-      // Try to check current permission with timeout
       final permission = await Geolocator.checkPermission()
           .timeout(const Duration(seconds: 3));
 
       final hasPermission = permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always;
 
-      // Store the permission state if granted
       if (hasPermission) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('location_permission_granted', true);
@@ -94,7 +92,7 @@ class _VegandexPageState extends State<VegandexPage> {
         });
       }
     } catch (e) {
-      // If check fails (timeout, service unavailable, etc.), use stored state
+      // Timeout or service unavailable: fall back to the stored state.
       final prefs = await SharedPreferences.getInstance();
       final storedPermission =
           prefs.getBool('location_permission_granted') ?? false;
@@ -114,19 +112,15 @@ class _VegandexPageState extends State<VegandexPage> {
 
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        // If denied forever, open app settings
         if (permission == LocationPermission.deniedForever) {
           await openAppSettings();
         }
       } else if (permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always) {
-        // Store permission state if granted
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('location_permission_granted', true);
       }
     } catch (e) {
-      // Permission request timed out or failed
-      // Show message to user
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -139,15 +133,13 @@ class _VegandexPageState extends State<VegandexPage> {
       }
     }
 
-    // Re-check permission after request
     await _checkLocationPermission();
   }
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
-    // Fetch products from cache (instant) and categories in parallel
-    // Cache will auto-update in background
+    // Products load instantly from cache, which auto-updates in background.
     final results = await Future.wait([
       ProductsOfInterestCache.loadProductsOfInterest(),
       ApiService.getProductCategories(),
@@ -156,7 +148,6 @@ class _VegandexPageState extends State<VegandexPage> {
     final products = results[0] as List<ProductOfInterest>;
     final categories = results[1] as List<ProductCategory>;
 
-    // Get scanned products from current user and build a map
     final user = AuthService.currentUser;
     final scannedProductsList = user?.scannedProducts ?? [];
     final scannedProductsMap = {
@@ -193,11 +184,9 @@ class _VegandexPageState extends State<VegandexPage> {
     });
   }
 
-  // Same gate as Dashboard's _openErrorReports: Settings shows the
-  // login/create-account form (AuthGatePage) directly when logged out, so
-  // push it on top instead of just switching tabs to a screen that has no
-  // login UI of its own. Refresh on return in case the user actually logged
-  // in — the product list is scoped to the current user's scanned EANs.
+  // Same gate as Dashboard's _openErrorReports: push SettingsPage (which
+  // shows the login form when logged out) instead of just switching tabs.
+  // Refresh on return since the product list is scoped to scanned EANs.
   Future<void> _navigateToProfile() async {
     await Navigator.push(
       context,

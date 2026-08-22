@@ -286,12 +286,9 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
     );
   }
 
-  /// Green check (taken); red cross (due under the current reminder rhythm
-  /// but not taken — only for days strictly before today, since today
-  /// isn't "missed" until the day is over); a neutral yellow dash (not
-  /// taken, and the rhythm never required this day) — except today, which
-  /// only ever shows taken or nothing, never a "not needed" mark, since the
-  /// day isn't over yet.
+  /// Green check (taken); red cross (due but not taken, only before today);
+  /// neutral dash (not taken, not due). Today never shows a "not needed"
+  /// mark since the day isn't over yet.
   Widget? _buildDayStatus(DateTime date, bool taken,
       {bool isToday = false, double size = 56}) {
     if (taken) {

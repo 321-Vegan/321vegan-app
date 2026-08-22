@@ -5,15 +5,10 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/scan_result_card.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 
-/// Inline result card for a scanned product missing from the database
-/// ([ScanStatus.unknown]) or submitted before but still unidentified
-/// ([ScanStatus.notFound]). Shown alongside the live camera feed just like
-/// the vegan/non-vegan/pending cards, instead of popping
-/// [UnknownProductModal] automatically the moment the status resolves —
-/// that used to block the scanner on every misread, with only a short timer
-/// to let a follow-up read save the user. The submission sheet now only
-/// opens once the user taps in, so a misread has as long as it takes to
-/// notice instead of a fixed grace period.
+/// Inline result card for a product missing from the database
+/// ([ScanStatus.unknown]) or submitted but still unidentified
+/// ([ScanStatus.notFound]). Shown inline instead of auto-popping
+/// [UnknownProductModal], so a misread doesn't block the scanner.
 class UnknownProductInfoCard extends StatelessWidget {
   final ScanResult productInfo;
   final VoidCallback onSendInfo;

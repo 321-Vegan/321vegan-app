@@ -4,10 +4,8 @@ import '../../themes/app_text_styles.dart';
 
 /// The two-panel "device" illustration used on the Vegandex page, with the
 /// live scanned count and completion percentage overlaid on the placeholder
-/// "screens" baked into `vegandex.webp`. The overlay rectangles below are
-/// fractions of the source image's own 1006x728 bounds (measured against the
-/// asset directly), so they land in the right spot at any render size as
-/// long as the image is drawn at its native aspect ratio.
+/// "screens" in `vegandex.webp`. Overlay rectangles are fractions of the
+/// image's 1006x728 bounds, so they land correctly at any render size.
 class VegandexStatsIllustration extends StatelessWidget {
   final int scannedCount;
   final int totalCount;

@@ -14,15 +14,8 @@ import 'package:vegan_app/widgets/homepage/stat_card.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 
 /// Shows a congratulation popup celebrating the user's vegan anniversary.
-/// [years] is the number of full years the user has been vegan.
-/// [savings] is the impact-stats map computed by the home page (keyed by
-/// [HomeStat.savingsKey]).
-/// [scanCount] is the total number of products the user has scanned.
-/// [productsSent] is the number of products the user contributed to the
-/// database — null when unknown (not logged in or offline), in which case the
-/// row is hidden.
-/// [issuesReported] is the number of problems the user reported — null when
-/// unknown (not logged in or offline), in which case the row is hidden.
+/// [productsSent] and [issuesReported] are null when unknown (logged out or
+/// offline), which hides their row.
 Future<void> showAnniversaryDialog(
   BuildContext context, {
   required int years,
@@ -259,7 +252,6 @@ class AnniversaryCard extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 24.h),
-          // Recap of the user's cumulative impact so far.
           _RecapSection(
             label: 'Votre impact',
             rows: [

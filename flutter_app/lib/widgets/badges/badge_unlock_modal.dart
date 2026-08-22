@@ -38,7 +38,6 @@ class _BadgeUnlockModalState extends State<BadgeUnlockModal> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // "New Badge(s) Unlocked" text
           Text(
             widget.badges.length > 1
                 ? 'Nouveaux badges débloqués !'
@@ -55,8 +54,7 @@ class _BadgeUnlockModalState extends State<BadgeUnlockModal> {
 
           SizedBox(height: 32.h),
 
-          // Horizontal slider: one page per unlocked badge, with
-          // neighbouring badges peeking in translucent at the sides
+          // One page per badge, with neighbours peeking in translucent at the sides.
           SizedBox(
             height: 660.w,
             child: PageView.builder(
@@ -106,7 +104,6 @@ class _BadgeUnlockModalState extends State<BadgeUnlockModal> {
 
                       SizedBox(height: 32.h),
 
-                      // Badge name
                       Text(
                         badge.name,
                         style: TextStyle(
@@ -121,7 +118,6 @@ class _BadgeUnlockModalState extends State<BadgeUnlockModal> {
                         overflow: TextOverflow.ellipsis,
                       ),
 
-                      // Badge description
                       Text(
                         badge.description,
                         style: TextStyle(
@@ -150,7 +146,6 @@ class _BadgeUnlockModalState extends State<BadgeUnlockModal> {
 
           SizedBox(height: 40.h),
 
-          // Close button
           SizedBox(
             width: double.infinity,
             child: AppButton(

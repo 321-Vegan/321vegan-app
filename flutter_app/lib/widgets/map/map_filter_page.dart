@@ -323,11 +323,9 @@ class _MapFilterPageState extends State<MapFilterPage> {
     );
   }
 
-  // Card content is a fixed 270.w image box + 30.w padding on every side +
-  // two lines of text (no longer an Expanded image stretched to fill the
-  // cell), so the aspect ratio only needs to be tall enough to fit that
-  // fixed height under a ~1/3-of-width column — unlike a stretched image,
-  // it doesn't need to track the column width exactly.
+  // Card content is a fixed 270.w image box + padding + two lines of text
+  // (not an Expanded image), so the ratio just needs to fit that fixed
+  // height under a ~1/3-of-width column rather than track the width exactly.
   SliverGridDelegate get _gridDelegate =>
       SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
@@ -361,7 +359,6 @@ class _MapFilterPageState extends State<MapFilterPage> {
           child: Column(
             children: [
               SizedBox(height: 12.h),
-              // Search field
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 48.w),
                 child: Container(
@@ -407,7 +404,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
                   ),
                 ),
               ),
-              // Category chips — search applies within the selected category
+              // Search applies within the selected category.
               if (_categories.isNotEmpty) ...[
                 SizedBox(height: 30.h),
                 SizedBox(
@@ -494,7 +491,6 @@ class _MapFilterPageState extends State<MapFilterPage> {
                 }),
               ],
               SizedBox(height: AppSpacing.section),
-              // Product grid
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.symmetric(horizontal: 48.w),
@@ -564,7 +560,6 @@ class _MapFilterPageState extends State<MapFilterPage> {
                   ],
                 ),
               ),
-              // Apply button
               Padding(
                 padding: EdgeInsets.fromLTRB(48.w, 24.h, 48.w, 24.h),
                 child: SizedBox(

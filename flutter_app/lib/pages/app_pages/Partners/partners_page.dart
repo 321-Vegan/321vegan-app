@@ -14,17 +14,14 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_card.dart';
 import 'package:vegan_app/widgets/shared/empty_state_view.dart';
+import 'package:vegan_app/widgets/shared/search_field.dart';
 
-/// Sentinel category id for the synthetic "Tout" tab (real category ids
-/// from the API start at 1), so it can slot into the same chip/PageView
-/// machinery as a regular [PartnersCategory] instead of needing its own.
+/// Sentinel category id for the synthetic "Tout" tab (real ids start at 1).
 const int _kAllCategoryId = -1;
 
-/// Full partner-shops list (Figma redesign), reached from
-/// [SolidarityShopsSection]'s "Voir plus": a "Tout" tab (all partners,
-/// searchable by name) plus one chip per category, same visual language as
-/// [ProductSearchPage] (search field, chips, "Résultats (N)", [AppCard]
-/// rows).
+/// Full partner-shops list, reached from [SolidarityShopsSection]'s "Voir
+/// plus": a "Tout" tab (all partners, searchable by name) plus one chip per
+/// category.
 class PartnersPage extends StatefulWidget {
   const PartnersPage({super.key});
 
@@ -38,14 +35,9 @@ class _PartnersPageState extends State<PartnersPage> {
   int? _selectedCategoryId;
   final PageController _pageController = PageController();
   final TextEditingController _searchController = TextEditingController();
-  final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
-  bool _isSearchFocused = false;
-  // Guards against triggering the back-navigation more than once per drag
-  // while the user keeps overscrolling past the first category.
+  // Guards against popping more than once per overscroll drag.
   bool _hasPoppedForOverscroll = false;
-  // One key per category chip, so the selected one can be scrolled into
-  // view with Scrollable.ensureVisible when it changes off-screen (swipe).
   final Map<int, GlobalKey> _chipKeys = {};
   String get _baseUrl =>
       dotenv.env['API_BASE_URL'] ?? 'https://api.321vegan.fr';
@@ -54,21 +46,12 @@ class _PartnersPageState extends State<PartnersPage> {
   void initState() {
     super.initState();
     _loadPartnersInfo();
-    _searchFocusNode.addListener(_handleSearchFocusChange);
-  }
-
-  void _handleSearchFocusChange() {
-    if (_isSearchFocused != _searchFocusNode.hasFocus) {
-      setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
-    }
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     _searchController.dispose();
-    _searchFocusNode.removeListener(_handleSearchFocusChange);
-    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -76,8 +59,7 @@ class _PartnersPageState extends State<PartnersPage> {
       _chipKeys.putIfAbsent(categoryId, () => GlobalKey());
 
   /// Scrolls the chips row so the selected category's chip is visible.
-  /// Deferred to the next frame since this runs right after a setState
-  /// (onPageChanged) — the chip's context needs the new frame's layout.
+  /// Deferred to the next frame so the chip's context has its layout ready.
   void _ensureChipVisible(int categoryId) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final context = _chipKeys[categoryId]?.currentContext;
@@ -100,7 +82,6 @@ class _PartnersPageState extends State<PartnersPage> {
     setState(() {
       _partners = result;
       _isLoading = false;
-      // Always land on "Tout" regardless of what categories exist.
       _selectedCategoryId = _kAllCategoryId;
     });
   }
@@ -117,8 +98,6 @@ class _PartnersPageState extends State<PartnersPage> {
 
   List<PartnersCategory> get _categories => _categoriesFrom(_partners);
 
-  /// Chips/pages shown to the user: the synthetic "Tout" tab first, then
-  /// every real category in [_categories]'s order.
   List<PartnersCategory> get _tabs => [
         PartnersCategory(id: _kAllCategoryId, name: 'Tout'),
         ..._categories,
@@ -135,10 +114,9 @@ class _PartnersPageState extends State<PartnersPage> {
     return _partners.where((p) => p.category.id == categoryId).toList();
   }
 
-  /// Chip tap: animates the PageView instead of jumping straight to the
-  /// category, so the transition always matches a swipe. [onPageChanged]
-  /// is what actually updates [_selectedCategoryId] once the animation
-  /// lands, keeping both entry points in sync through one code path.
+  /// Animates the PageView instead of jumping straight to the category, so
+  /// the transition matches a swipe; [onPageChanged] updates
+  /// [_selectedCategoryId] once it lands.
   void _goToCategory(int index) {
     _pageController.animateToPage(
       index,
@@ -147,13 +125,10 @@ class _PartnersPageState extends State<PartnersPage> {
     );
   }
 
-  /// Swiping past the first category (dragging further "left" than there is
-  /// content) falls through to the same pop the system back-swipe would do,
-  /// instead of just bouncing uselessly at the PageView's edge.
+  /// Swiping past the first category pops the page, same as a back-swipe.
   bool _handleScrollNotification(ScrollNotification notification) {
-    // The per-category ListView bubbles its own (vertical) overscroll
-    // through here too — restrict to the PageView's horizontal axis so
-    // pulling down at the top of the list doesn't also pop the page.
+    // Restrict to the horizontal axis: the per-category ListView also
+    // bubbles its own vertical overscroll through here.
     if (notification is OverscrollNotification &&
         notification.metrics.axis == Axis.horizontal &&
         notification.overscroll < 0 &&
@@ -208,9 +183,8 @@ class _PartnersPageState extends State<PartnersPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: EdgeInsets.symmetric(horizontal: 48.w),
-            // Tab counts are small — keep every chip laid out (not just
-            // the ones currently on-screen) so its key always has a
-            // context ready for _ensureChipVisible to scroll to.
+            // Keeps every chip laid out so its key has a context ready
+            // for _ensureChipVisible to scroll to.
             cacheExtent: 5000,
             itemCount: tabs.length,
             separatorBuilder: (_, __) => SizedBox(width: 24.w),
@@ -285,48 +259,11 @@ class _PartnersPageState extends State<PartnersPage> {
     );
   }
 
-  /// Same styling as [ProductSearchPage]'s search field: filled white pill,
-  /// leading search icon, clear button once there's a query.
   Widget _buildSearchField() {
-    return Container(
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: squircleBorder(
-          radius: 42.r,
-          side: BorderSide(
-            color: _isSearchFocused ? kAccentYellow : kBorderDefault,
-            width: _isSearchFocused ? 1.5 : 1,
-          ),
-        ),
-      ),
-      child: TextField(
-        controller: _searchController,
-        focusNode: _searchFocusNode,
-        onChanged: (value) => setState(() => _searchQuery = value),
-        style: TextStyle(fontSize: 42.sp),
-        decoration: InputDecoration(
-          hintText: 'Rechercher une boutique...',
-          hintStyle: TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-          prefixIcon: Image.asset(
-            'lib/assets/images/icons/search-line.webp',
-            width: 60.sp,
-            height: 60.sp,
-            color: Colors.grey[600],
-            colorBlendMode: BlendMode.srcIn,
-          ),
-          suffixIcon: _searchQuery.isNotEmpty
-              ? IconButton(
-                  icon: Icon(Icons.clear, size: 36.sp),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _searchQuery = '');
-                  },
-                )
-              : null,
-          contentPadding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
-          border: InputBorder.none,
-        ),
-      ),
+    return SearchField(
+      controller: _searchController,
+      hintText: 'Rechercher une boutique...',
+      onChanged: (value) => setState(() => _searchQuery = value),
     );
   }
 
@@ -408,9 +345,6 @@ class _PartnersPageState extends State<PartnersPage> {
                 padding: EdgeInsets.all(12.w),
                 child: CachedNetworkImage(
                   imageUrl: logoUrl,
-                  // Logos come in all sorts of aspect ratios (wide
-                  // wordmarks, square icons…) — contain shows the whole
-                  // logo instead of cover cropping it to fill the square.
                   fit: BoxFit.contain,
                   placeholder: (context, url) => Center(
                     child: CircularProgressIndicator(

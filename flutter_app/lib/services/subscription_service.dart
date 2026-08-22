@@ -53,7 +53,6 @@ class SubscriptionService {
   /// Callback for UI to react to purchase state changes
   static VoidCallback? onSubscriptionChanged;
 
-  /// Initialize the service and start listening to purchase updates
   static Future<void> init() async {
     _isAvailable = await InAppPurchase.instance.isAvailable();
     if (!_isAvailable) {
@@ -61,50 +60,40 @@ class SubscriptionService {
       return;
     }
 
-    // Listen to purchase updates
     _purchaseSubscription = InAppPurchase.instance.purchaseStream.listen(
       _handlePurchaseUpdates,
       onDone: () => _purchaseSubscription?.cancel(),
       onError: (error) => debugPrint('Purchase stream error: $error'),
     );
 
-    // Load cached subscription status
     await _loadCachedStatus();
 
-    // Run network-dependent operations in background — don't block app startup
+    // Network-dependent — don't block app startup.
     unawaited(queryProducts());
 
-    // If logged in, check subscription status from backend
     if (AuthService.isLoggedIn) {
       unawaited(checkSubscriptionStatus());
       unawaited(_retryPendingReceipts());
     }
   }
 
-  /// Whether the store is available
   static bool get isAvailable => _isAvailable;
 
-  /// Available products from the store
   static List<ProductDetails> get products => _products;
 
-  /// Current subscription from backend
   static Subscription? get currentSubscription => _currentSubscription;
 
-  /// Whether the user has an active subscription
+  /// Checked in priority order: bypass, backend subscription, pending
+  /// receipt (temporary access), then the cached status as a fallback.
   static bool get isSubscribed {
-    // Check subscription bypass first
     if (_subscriptionBypass) return true;
-    // Then check backend subscription
     if (_currentSubscription != null && _currentSubscription!.isActive) {
       return true;
     }
-    // Grant temporary access if we have a pending receipt
     if (_hasPendingReceipt) return true;
-    // Fallback to cached status
     return _getCachedIsSubscribed();
   }
 
-  /// Query available products from the store
   static Future<void> queryProducts() async {
     if (!_isAvailable) return;
 
@@ -123,7 +112,6 @@ class SubscriptionService {
     _products = response.productDetails;
   }
 
-  /// Get a product by its ID
   static ProductDetails? getProduct(String productId) {
     try {
       return _products.firstWhere((p) => p.id == productId);
@@ -132,7 +120,6 @@ class SubscriptionService {
     }
   }
 
-  /// Get the display name for a product ID
   static String getProductDisplayName(String productId) {
     if (productId.contains('tier2')) return 'Grand soutien';
     if (productId.contains('tier1')) return 'Soutien';
@@ -142,7 +129,6 @@ class SubscriptionService {
     return 'Petit soutien';
   }
 
-  /// Initiate a purchase
   static Future<bool> buyProduct(ProductDetails product) async {
     if (!_isAvailable) return false;
 
@@ -151,13 +137,11 @@ class SubscriptionService {
         .buyNonConsumable(purchaseParam: purchaseParam);
   }
 
-  /// Restore previous purchases
   static Future<void> restorePurchases() async {
     if (!_isAvailable) return;
     await InAppPurchase.instance.restorePurchases();
   }
 
-  /// Check subscription status from backend
   static Future<Subscription?> checkSubscriptionStatus() async {
     if (!AuthService.isLoggedIn) return null;
 
@@ -169,7 +153,6 @@ class SubscriptionService {
         onSubscriptionChanged?.call();
         return _currentSubscription;
       } else {
-        // No subscription found
         _currentSubscription = null;
         await _clearCachedStatus();
       }
@@ -179,7 +162,6 @@ class SubscriptionService {
     return null;
   }
 
-  /// Handle purchase updates from the store
   static Future<void> _handlePurchaseUpdates(
       List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
@@ -222,7 +204,6 @@ class SubscriptionService {
         ? null
         : purchase.verificationData.serverVerificationData;
 
-    // Persist receipt locally before sending to backend
     await _savePendingReceipt(
       platform: platform,
       productId: purchase.productID,
@@ -305,7 +286,6 @@ class SubscriptionService {
     await prefs.remove(_pendingReceiptsKey);
   }
 
-  /// Retry verifying any pending receipts with the backend
   static Future<void> _retryPendingReceipts() async {
     if (!AuthService.isLoggedIn) return;
 
@@ -315,8 +295,8 @@ class SubscriptionService {
       return;
     }
 
-    // Only receipts still within the grace period grant access while
-    // verification is pending; older ones are just retried.
+    // Only receipts still within the grace period grant access; older
+    // ones are just retried.
     _hasPendingReceipt = _hasReceiptWithinGrace(pending);
 
     for (final receipt in pending) {
@@ -346,7 +326,6 @@ class SubscriptionService {
     }
   }
 
-  /// Start a periodic timer to retry pending receipt verification
   static void _startRetryTimer() {
     _retryTimer?.cancel();
     _retryTimer = Timer.periodic(const Duration(minutes: 5), (_) {
@@ -354,7 +333,6 @@ class SubscriptionService {
     });
   }
 
-  /// Cache subscription status locally
   static Future<void> _cacheStatus(Subscription subscription) async {
     _cachedStatus = subscription.status.name;
     _cachedExpiresAt = subscription.expiresAt;
@@ -367,7 +345,6 @@ class SubscriptionService {
     }
   }
 
-  /// Load cached subscription status
   static Future<void> _loadCachedStatus() async {
     final prefs = await SharedPreferences.getInstance();
     _subscriptionBypass = prefs.getBool(_bypassKey) ?? false;
@@ -389,7 +366,6 @@ class SubscriptionService {
     });
   }
 
-  /// Check cached subscription status
   static bool _getCachedIsSubscribed() {
     if ((_cachedStatus == 'active' || _cachedStatus == 'graceperiod') &&
         _cachedExpiresAt != null) {
@@ -398,7 +374,6 @@ class SubscriptionService {
     return false;
   }
 
-  /// Update subscription bypass from user data
   static Future<void> updateBypass(bool bypass) async {
     _subscriptionBypass = bypass;
     final prefs = await SharedPreferences.getInstance();
@@ -432,7 +407,6 @@ class SubscriptionService {
     onSubscriptionChanged?.call();
   }
 
-  /// Dispose the service
   static void dispose() {
     _purchaseSubscription?.cancel();
     _purchaseSubscription = null;

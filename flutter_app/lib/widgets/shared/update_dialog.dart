@@ -8,12 +8,10 @@ import '../../themes/app_text_styles.dart';
 import 'app_button.dart';
 import 'info_box.dart';
 
-/// Seasonal "poule" illustration (same asset family as the dashboard's
-/// "Animaux épargnés" stat card, see `stat_card.dart`), keyed by the actual
-/// calendar season ([ThemeHelper.getCurrentSeason]) rather than the user's
-/// selected/purchased theme — most users are on the default (non-seasonal)
-/// theme, so reading `Theme.of(context).extension<SeasonalTheme>()` here
-/// would show "basic" year-round regardless of the date.
+/// Seasonal "poule" illustration, keyed by the actual calendar season
+/// ([ThemeHelper.getCurrentSeason]) rather than the user's selected theme —
+/// most users are on the default theme, so reading the theme extension
+/// here would show "basic" year-round regardless of the date.
 String _seasonalPouleAsset(Season season) {
   final suffix = switch (season) {
     Season.autumn => 'autumn',
@@ -113,7 +111,6 @@ class _UpdateDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Avatar
             SizedBox(
               width: 400.w,
               height: 400.w,
@@ -123,7 +120,6 @@ class _UpdateDialog extends StatelessWidget {
               ),
             ),
             SizedBox(height: 24.h),
-            // Title
             Text(
               'Mise à jour disponible !',
               style: AppTextStyles.baloo22,
@@ -147,7 +143,6 @@ class _UpdateDialog extends StatelessWidget {
               ),
             ],
             SizedBox(height: 16.h),
-            // Body text
             if (hasNotes) ...[
               Text(
                 releaseNotes!,
@@ -164,11 +159,8 @@ class _UpdateDialog extends StatelessWidget {
                   'Mettre à jour l\'application permet d\'avoir des données à jour, les correctifs de bugs et les nouvelles fonctionnalités !',
             ),
             SizedBox(height: 32.h),
-            // Buttons — a single full-width primary CTA plus a lighter text
-            // link for the secondary action, rather than two pill buttons
-            // squeezed side by side (AppButton's padding is sized for one
-            // full-width button, and doesn't leave room for "Mettre à jour"
-            // next to another pill in this dialog's narrower width).
+            // Full-width primary CTA + text link, not two pills side by
+            // side — AppButton's padding doesn't leave room for that here.
             SizedBox(
               width: double.infinity,
               child: AppButton(
