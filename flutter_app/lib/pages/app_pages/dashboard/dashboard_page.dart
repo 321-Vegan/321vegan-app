@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:confetti/confetti.dart';
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../helpers/preference_helper.dart';
@@ -15,7 +14,6 @@ import '../../../services/auth_service.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
 import '../../../services/error_report_badge_service.dart';
-import '../../../services/products_of_interest_cache.dart';
 import '../../../services/profile_notification_service.dart';
 import '../../../services/subscription_service.dart';
 import '../../../themes/app_colors.dart';
@@ -68,7 +66,6 @@ class DashboardPageState extends State<DashboardPage> {
   bool _b12Enabled = false;
   bool _b12TakenToday = false;
   bool _b12DueToday = false;
-  Set<String> _vegandexEans = {};
   ErrorReportPaginated? _errorReportsFirstPage;
 
   @override
@@ -101,7 +98,6 @@ class DashboardPageState extends State<DashboardPage> {
       _loadUser(),
       _loadPartners(),
       _loadB12State(),
-      _loadVegandexProducts(),
       _checkErrorReportResponses(),
     ]);
     _checkForNewBadges();
@@ -190,12 +186,6 @@ class DashboardPageState extends State<DashboardPage> {
         duration: Duration(seconds: 2),
       ),
     );
-  }
-
-  Future<void> _loadVegandexProducts() async {
-    final products = await ProductsOfInterestCache.loadProductsOfInterest();
-    if (!mounted) return;
-    setState(() => _vegandexEans = products.map((p) => p.ean).toSet());
   }
 
   Future<void> _checkErrorReportResponses() async {

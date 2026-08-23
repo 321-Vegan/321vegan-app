@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/seasonal_theme.dart';
 
 SeasonalTheme summerTheme = SeasonalTheme(
   name: 'Été',
   season: Season.summer,
   primaryColor: const Color.fromARGB(255, 228, 176, 8),
-  secondaryColor: const Color(0xFF166534),
-  accentColor: const Color(0xFF60A5FA),
-  waveColor: const Color.fromARGB(255, 228, 176, 8),
-  seasonalIcon: Icons.sunny,
-  iconBackgroundColor: const Color(0xFFFEF9C3),
   confettiColors: [
     const Color(0xFFFCD34D),
     const Color(0xFF60A5FA),
@@ -20,7 +14,6 @@ SeasonalTheme summerTheme = SeasonalTheme(
   particleType: ParticleType.sunRays,
   particleCount: 40,
   particleOpacity: 0.7,
-  seasonalAsset: 'lib/assets/images/ruche.webp',
   snowGlobeParticleAssets: [
     'lib/assets/themes/particles/summer-fraise.webp',
     'lib/assets/themes/particles/summer-orange.webp',
@@ -38,6 +31,4 @@ SeasonalTheme summerTheme = SeasonalTheme(
       Color(0xFFFFFBF2),
     ],
   ),
-  iconTopPosition: -700.h,
-  iconLeftPosition: 100.w,
 );

@@ -149,8 +149,6 @@ flutter:
     - lib/assets/images/characters/radish.webp
     - lib/assets/images/characters/avocado.webp
     - lib/assets/images/characters/tomatoes.webp
-    # Helpers
-    - lib/assets/images/sun-off.webp
     # Test with la vie featured
     - lib/assets/la-vie-logo.png
     # Nutriscores / Green-score
@@ -178,11 +176,6 @@ flutter:
     - lib/assets/images/buy-premium/bee.webp
     - lib/assets/images/buy-premium/pineapple.webp
     # Seasonal themes
-    - lib/assets/images/tulipe.webp
-    - lib/assets/images/tulipe-smile.webp
-    - lib/assets/images/ruche.webp
-    - lib/assets/images/pumpkin.webp
-    - lib/assets/images/pumpkin-smile.webp
     - lib/assets/themes/plant.webp
     # Seasonal themes cards
     - lib/assets/themes/cards/leaf-autumn.webp

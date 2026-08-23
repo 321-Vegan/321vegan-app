@@ -361,7 +361,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
           SizedBox(height: 24.h),
           _messageRow(
             avatar: _userAvatar(),
-            name: 'Moi',
+            name: userName,
             time: report.createdAt,
             message: report.comment,
           ),
