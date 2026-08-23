@@ -57,7 +57,11 @@ class DashboardPageState extends State<DashboardPage> {
   Timer? _timer;
   late ConfettiController _confettiController;
 
-  User? _user;
+  // Seed with whatever AuthService already has cached (e.g. from the
+  // background sync in AuthService.init()) so the first build doesn't grey
+  // out badges/hide the contributor card while _loadUser()'s own fetch is
+  // still in flight.
+  User? _user = AuthService.currentUser;
   String? _avatar;
   List<Partners> _partners = [];
   bool _b12BannerDismissed = true; // hidden until the real value loads

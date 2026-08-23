@@ -172,6 +172,7 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMedium15.copyWith(
                   fontWeight: FontWeight.w500,
+                  color: selectedBorder,
                 ),
               ),
             ],
