@@ -5,8 +5,8 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/subscription_service.dart';
-import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/auth/auth_bottom_sheet.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
 
 class MapAccessOverlay extends StatefulWidget {
   final VoidCallback onAccessGranted;
@@ -131,87 +131,43 @@ class _MapAccessOverlayState extends State<MapAccessOverlay> {
                       if (isLoggedIn) ...[
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
+                          child: AppButton(
+                            label: 'Soutenir et débloquer',
+                            backgroundColor: primaryColor,
                             onPressed: _openSubscriptionPage,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 20.h),
-                              shape: squircleBorder(radius: 16.r),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              'Soutenir et débloquer',
-                              style: TextStyle(
-                                fontSize: 46.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                           ),
                         ),
                         if (_trialAvailable) ...[
                           SizedBox(height: 12.h),
                           SizedBox(
                             width: double.infinity,
-                            child: OutlinedButton(
+                            child: AppButton(
+                              label: 'Tester gratuitement pendant 6h',
+                              backgroundColor: Colors.white,
+                              foregroundColor: primaryColor,
+                              borderColor: primaryColor,
                               onPressed: _startFreeTrial,
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: primaryColor,
-                                side:
-                                    BorderSide(color: primaryColor, width: 1.5),
-                                padding: EdgeInsets.symmetric(vertical: 20.h),
-                                shape: squircleBorder(radius: 16.r),
-                              ),
-                              child: Text(
-                                'Tester gratuitement pendant 6h',
-                                style: TextStyle(
-                                  fontSize: 46.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                             ),
                           ),
                         ],
                       ] else ...[
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
+                          child: AppButton(
+                            label: 'Créer un compte',
+                            backgroundColor: primaryColor,
                             onPressed: () => _showAuthSheet(showRegister: true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 20.h),
-                              shape: squircleBorder(radius: 16.r),
-                              elevation: 0,
-                            ),
-                            child: Text(
-                              'Créer un compte',
-                              style: TextStyle(
-                                fontSize: 46.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
                           ),
                         ),
                         SizedBox(height: 12.h),
                         SizedBox(
                           width: double.infinity,
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                _showAuthSheet(showRegister: false),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: primaryColor,
-                              side: BorderSide(color: primaryColor, width: 1.5),
-                              padding: EdgeInsets.symmetric(vertical: 20.h),
-                              shape: squircleBorder(radius: 16.r),
-                            ),
-                            child: Text(
-                              'Se connecter',
-                              style: TextStyle(
-                                fontSize: 46.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                          child: AppButton(
+                            label: 'Se connecter',
+                            backgroundColor: Colors.white,
+                            foregroundColor: primaryColor,
+                            borderColor: primaryColor,
+                            onPressed: () => _showAuthSheet(showRegister: false),
                           ),
                         ),
                       ],

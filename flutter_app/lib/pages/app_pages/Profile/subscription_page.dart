@@ -932,45 +932,23 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                           SizedBox(height: 32.h),
                           SizedBox(
                             width: double.infinity,
-                            child: ElevatedButton(
+                            child: AppButton(
+                              label: 'Créer un compte',
+                              backgroundColor: primaryColor,
                               onPressed: () =>
                                   _showAuthSheet(showRegister: true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 20.h),
-                                shape: squircleBorder(radius: 16.r),
-                                elevation: 0,
-                              ),
-                              child: Text(
-                                'Créer un compte',
-                                style: TextStyle(
-                                  fontSize: 46.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                             ),
                           ),
                           SizedBox(height: 12.h),
                           SizedBox(
                             width: double.infinity,
-                            child: OutlinedButton(
+                            child: AppButton(
+                              label: 'Se connecter',
+                              backgroundColor: Colors.white,
+                              foregroundColor: primaryColor,
+                              borderColor: primaryColor,
                               onPressed: () =>
                                   _showAuthSheet(showRegister: false),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: primaryColor,
-                                side:
-                                    BorderSide(color: primaryColor, width: 1.5),
-                                padding: EdgeInsets.symmetric(vertical: 20.h),
-                                shape: squircleBorder(radius: 16.r),
-                              ),
-                              child: Text(
-                                'Se connecter',
-                                style: TextStyle(
-                                  fontSize: 46.sp,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                             ),
                           ),
                         ],

@@ -20,7 +20,7 @@ class AccountPromptDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Image.asset(
-            'lib/assets/images/characters/lemon-vgn.webp',
+            'lib/assets/images/characters/cow-ok.webp',
             height: 260.h,
           ),
           SizedBox(height: 24.h),

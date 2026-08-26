@@ -47,6 +47,10 @@ class SubscriptionService {
   static bool _subscriptionBypass = false;
   static bool _hasPendingReceipt = false;
   static Timer? _retryTimer;
+  /// Caps recovery restores to once per app session so a purchase that's
+  /// still broken after the first restore doesn't trigger another one on
+  /// every 5-minute retry tick.
+  static bool _hasAttemptedRecoveryRestore = false;
   static String? _cachedStatus;
   static DateTime? _cachedExpiresAt;
 
@@ -142,6 +146,21 @@ class SubscriptionService {
     await InAppPurchase.instance.restorePurchases();
   }
 
+  /// Best-effort attempt to recover a purchase whose local verification data
+  /// came back empty (a Play Billing edge case) by asking the store to
+  /// redeliver it -- restored purchases go back through the normal
+  /// purchaseStream handling and may carry a valid token this time. Silent
+  /// and fire-and-forget: on failure the receipt was already dropped, so
+  /// there's nothing further to do here.
+  static void _attemptRecoveryRestore() {
+    if (!_isAvailable || _hasAttemptedRecoveryRestore) return;
+    _hasAttemptedRecoveryRestore = true;
+    debugPrint('Attempting restorePurchases() to recover a missing token');
+    unawaited(InAppPurchase.instance
+        .restorePurchases()
+        .catchError((e) => debugPrint('Recovery restore failed: $e')));
+  }
+
   static Future<Subscription?> checkSubscriptionStatus() async {
     if (!AuthService.isLoggedIn) return null;
 
@@ -204,6 +223,19 @@ class SubscriptionService {
         ? null
         : purchase.verificationData.serverVerificationData;
 
+    // Play Billing can occasionally hand back an empty (not null) token.
+    // A receipt with no usable identifier for its platform can never verify,
+    // so don't persist/retry it -- that would retry forever every 5 minutes.
+    final bool hasValidIdentifier = Platform.isIOS
+        ? (transactionId != null && transactionId.isNotEmpty)
+        : (purchaseToken != null && purchaseToken.isNotEmpty);
+    if (!hasValidIdentifier) {
+      debugPrint(
+          'Purchase missing verification identifier for $platform, skipping: ${purchase.productID}');
+      _attemptRecoveryRestore();
+      return false;
+    }
+
     await _savePendingReceipt(
       platform: platform,
       productId: purchase.productID,
@@ -258,8 +290,10 @@ class SubscriptionService {
     final receipt = {
       'platform': platform,
       'product_id': productId,
-      if (transactionId != null) 'transaction_id': transactionId,
-      if (purchaseToken != null) 'purchase_token': purchaseToken,
+      if (transactionId != null && transactionId.isNotEmpty)
+        'transaction_id': transactionId,
+      if (purchaseToken != null && purchaseToken.isNotEmpty)
+        'purchase_token': purchaseToken,
       'timestamp': DateTime.now().toIso8601String(),
     };
     final existing = prefs.getStringList(_pendingReceiptsKey) ?? [];
@@ -286,12 +320,44 @@ class SubscriptionService {
     await prefs.remove(_pendingReceiptsKey);
   }
 
+  static Future<void> _savePendingReceiptsList(
+      List<Map<String, dynamic>> receipts) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (receipts.isEmpty) {
+      await prefs.remove(_pendingReceiptsKey);
+    } else {
+      await prefs.setStringList(
+          _pendingReceiptsKey, receipts.map(jsonEncode).toList());
+    }
+  }
+
+  /// A receipt with no usable identifier for its platform (e.g. an empty
+  /// Google purchase token) can never verify -- retrying it forever would
+  /// just hammer the backend every 5 minutes indefinitely.
+  static bool _isValidReceipt(Map<String, dynamic> receipt) {
+    if (receipt['platform'] == 'apple') {
+      final id = receipt['transaction_id'];
+      return id is String && id.isNotEmpty;
+    }
+    final token = receipt['purchase_token'];
+    return token is String && token.isNotEmpty;
+  }
+
   static Future<void> _retryPendingReceipts() async {
     if (!AuthService.isLoggedIn) return;
 
-    final pending = await _getPendingReceipts();
+    final allPending = await _getPendingReceipts();
+    final pending = allPending.where(_isValidReceipt).toList();
+    if (pending.length != allPending.length) {
+      debugPrint(
+          'Dropping ${allPending.length - pending.length} unverifiable pending receipt(s)');
+      await _savePendingReceiptsList(pending);
+      _attemptRecoveryRestore();
+    }
+
     if (pending.isEmpty) {
       _hasPendingReceipt = false;
+      _retryTimer?.cancel();
       return;
     }
 

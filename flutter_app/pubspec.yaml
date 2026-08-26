@@ -142,7 +142,7 @@ flutter:
     - lib/assets/avatars/chat.png
     - lib/assets/avatars/chien.png
     # Characters
-    - lib/assets/images/characters/lemon-vgn.webp
+    - lib/assets/images/characters/cow-ok.webp
     - lib/assets/images/characters/lemon-not.webp
     - lib/assets/images/characters/lemon-mby.webp
     - lib/assets/images/characters/watermelon.webp

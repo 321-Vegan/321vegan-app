@@ -686,7 +686,7 @@ class ScanPageState extends State<ScanPage>
       context,
       MaterialPageRoute(
         builder: (_) => const SubscriptionPage(
-          title: 'Vous scannez souvent,\npassez Premium !',
+          title: 'Vous scannez souvent,\npassez Premium ?',
         ),
       ),
     );

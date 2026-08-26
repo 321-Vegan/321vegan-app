@@ -165,8 +165,6 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset(imagePath, height: 300.h),
-              SizedBox(height: 8.h),
               Text(
                 label,
                 textAlign: TextAlign.center,
@@ -175,6 +173,8 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
                   color: selectedBorder,
                 ),
               ),
+              SizedBox(height: 8.h),
+              Image.asset(imagePath, height: 300.h),
             ],
           ),
         ),
@@ -278,7 +278,7 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
                 SizedBox(height: 42.h),
                 const InfoBox(
                     text:
-                        'Merci de n\'envoyer que des produits alimentaires, pas de cosmétiques.',
+                        'Merci d\'ajouter la photo des ingrédients ou mention végane s\'il y en a une !',
                   ),
                 if (!widget.alreadySubmitted) ...[
                   SizedBox(height: 42.h),
@@ -287,17 +287,19 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
                     children: [
                       _buildStatusCard(
                         status: VeganStatus.vegan,
-                        imagePath: 'lib/assets/images/characters/lemon-vgn.webp',
+                        imagePath: 'lib/assets/images/characters/cow-ok.webp',
                         label: 'Végane',
                       ),
                       _buildStatusCard(
                         status: VeganStatus.nonVegan,
-                        imagePath: 'lib/assets/images/characters/lemon-not.webp',
+                        //imagePath: 'lib/assets/images/characters/lemon-not.webp',
+                        imagePath: 'lib/assets/images/characters/cow-ok.webp',
                         label: 'Non-végane',
                       ),
                       _buildStatusCard(
                         status: VeganStatus.maybeVegan,
-                        imagePath: 'lib/assets/images/characters/lemon-mby.webp',
+                        //imagePath: 'lib/assets/images/characters/lemon-mby.webp',
+                        imagePath: 'lib/assets/images/characters/cow-ok.webp',
                         label: 'Ne sais pas',
                       ),
                     ],
