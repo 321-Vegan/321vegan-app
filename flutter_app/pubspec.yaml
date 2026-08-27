@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 5.0.4+1
+version: 5.0.5+1
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -144,7 +144,7 @@ flutter:
     # Characters
     - lib/assets/images/characters/cow-ok.webp
     - lib/assets/images/characters/lemon-not.webp
-    - lib/assets/images/characters/lemon-mby.webp
+    - lib/assets/images/characters/cow-mby.webp
     - lib/assets/images/characters/watermelon.webp
     - lib/assets/images/characters/radish.webp
     - lib/assets/images/characters/avocado.webp
@@ -213,7 +213,6 @@ flutter:
     # Seasonal Themes - Spring
     - lib/assets/themes/particles/spring-flower1.webp
     - lib/assets/themes/particles/spring-flower2.webp
-
     # Icons
     - lib/assets/images/icons/crown-line.webp
     - lib/assets/images/icons/solid-close.webp
@@ -232,7 +231,15 @@ flutter:
     - lib/assets/images/icons/home-on.webp
     - lib/assets/images/icons/home-off.webp
     - lib/assets/images/icons/search-line.webp
-
+    - lib/assets/images/icons/instagram.webp
+    # Remerciements
+    - lib/assets/images/remerciements/vilainevegane.webp
+    - lib/assets/images/remerciements/noemie-bertosio.webp
+    - lib/assets/images/remerciements/isabelle.webp
+    - lib/assets/images/remerciements/anabelle.webp
+    - lib/assets/images/remerciements/ancielle.webp
+    - lib/assets/images/remerciements/discord.png
+    - lib/assets/images/remerciements/github.png
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - lib/assets/images/vegandex.webp

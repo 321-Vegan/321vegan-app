@@ -214,7 +214,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              'lib/assets/images/characters/lemon-mby.webp',
+              'lib/assets/images/characters/cow-mby.webp',
               width: 220.w,
               height: 220.w,
             ),

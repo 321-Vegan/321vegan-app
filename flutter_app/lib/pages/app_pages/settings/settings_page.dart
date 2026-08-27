@@ -30,6 +30,7 @@ import '../Profile/auth_gate_page.dart';
 import '../Profile/avatar_selection_page.dart';
 import '../Profile/b12_history_sheet.dart';
 import '../Profile/b12_info_page.dart';
+import '../Profile/remerciements_page.dart';
 import '../../../widgets/b12/b12_reminder_settings_modal.dart';
 import '../Scan/scan_history_page.dart';
 import '../Scan/sent_products_page.dart';
@@ -517,7 +518,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 value: '${_user?.scanCount ?? 0}',
                 onTap: () async {
                   final history = await PreferencesHelper.getScanHistory();
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -613,6 +614,17 @@ class _SettingsPageState extends State<SettingsPage> {
                 trailing: Icon(Icons.arrow_forward_ios,
                     size: 32.sp, color: Colors.grey[400]),
                 onTap: () => SocialFeedbackButtons.rateApp(context),
+              ),
+              SettingsRowTile(
+                label: 'Remerciements',
+                labelSuffix:
+                    Icon(Icons.favorite, size: 48.sp, color: kAccentYellow),
+                trailing: Icon(Icons.arrow_forward_ios,
+                    size: 32.sp, color: Colors.grey[400]),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RemerciementsPage()),
+                ),
               ),
             ],
           ),

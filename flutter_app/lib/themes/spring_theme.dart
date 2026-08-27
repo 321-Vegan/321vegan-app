@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import '../models/seasonal_theme.dart';
 
-SeasonalTheme springTheme = SeasonalTheme(
+SeasonalTheme springTheme = const SeasonalTheme(
   name: 'Printemps',
   season: Season.spring,
-  primaryColor: const Color(0xFFBA5A86),
+  primaryColor: Color(0xFFBA5A86),
   confettiColors: [
-    const Color(0xFFFDA4AF),
-    const Color(0xFFFDE047),
-    const Color(0xFF86EFAC),
-    const Color(0xFFDDD6FE),
+    Color(0xFFFDA4AF),
+    Color(0xFFFDE047),
+    Color(0xFF86EFAC),
+    Color(0xFFDDD6FE),
   ],
   particleType: ParticleType.petals,
   particleCount: 50,
@@ -21,7 +21,7 @@ SeasonalTheme springTheme = SeasonalTheme(
   particleMinRadius: 2,
   particleMaxRadius: 4,
   // 192.05deg linear-gradient from Figma.
-  backgroundGradient: const LinearGradient(
+  backgroundGradient: LinearGradient(
     begin: Alignment(0.2087, -0.978),
     end: Alignment(-0.2087, 0.978),
     stops: [0.0, 0.3],
