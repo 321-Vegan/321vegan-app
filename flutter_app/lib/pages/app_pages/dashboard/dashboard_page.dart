@@ -39,8 +39,7 @@ import '../Profile/error_reports_page.dart';
 import '../Profile/product_review_page.dart';
 import '../settings/settings_page.dart';
 
-/// Merges the former "Accueil" and "Profil" tabs into a single home screen:
-/// vegan-since counter + impact stats, partner promos, badges and the
+/// Vegan-since counter + impact stats, partner promos, badges and the
 /// account shortcuts that used to live on the Profil tab.
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
