@@ -8,8 +8,8 @@ class AnniversaryService {
   static const int _notificationId = 2000;
 
   /// Hour of the day (local time) at which the anniversary notification fires.
-  static const int _hour = 13;
-  static const int _minute = 50;
+  static const int _hour = 10;
+  static const int _minute = 00;
 
   static final NotificationService _notificationService = NotificationService();
 
