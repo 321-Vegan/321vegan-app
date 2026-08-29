@@ -141,9 +141,10 @@ flutter:
     - lib/assets/avatars/vache.png
     - lib/assets/avatars/chat.png
     - lib/assets/avatars/chien.png
+    - lib/assets/avatars/cow-2.png
     # Characters
     - lib/assets/images/characters/cow-ok.webp
-    - lib/assets/images/characters/lemon-not.webp
+    - lib/assets/images/characters/cow-not.webp
     - lib/assets/images/characters/cow-mby.webp
     - lib/assets/images/characters/watermelon.webp
     - lib/assets/images/characters/radish.webp

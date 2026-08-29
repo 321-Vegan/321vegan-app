@@ -292,8 +292,7 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
                       ),
                       _buildStatusCard(
                         status: VeganStatus.nonVegan,
-                        //imagePath: 'lib/assets/images/characters/lemon-not.webp',
-                        imagePath: 'lib/assets/images/characters/cow-ok.webp',
+                        imagePath: 'lib/assets/images/characters/cow-not.webp',
                         label: 'Non-végane',
                       ),
                       _buildStatusCard(

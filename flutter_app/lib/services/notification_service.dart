@@ -24,6 +24,12 @@ class NotificationService {
   static final ValueNotifier<bool> showAnniversary =
       ValueNotifier<bool>(false);
 
+  /// Notifier for jumping to the Scan tab from a page that may be pushed
+  /// several routes deep (e.g. the scan/sent-products history empty
+  /// states, reached via Settings). Listeners (the home page) should pop
+  /// back to the root route and select the Scan tab.
+  static final ValueNotifier<bool> navigateToScan = ValueNotifier<bool>(false);
+
   /// Initialize the notification service
   Future<void> initialize() async {
     if (_isInitialized) return;

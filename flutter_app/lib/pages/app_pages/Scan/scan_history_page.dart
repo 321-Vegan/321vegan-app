@@ -9,6 +9,7 @@ import 'package:vegan_app/models/product_scores.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
+import 'package:vegan_app/services/notification_service.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
@@ -240,7 +241,10 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  NotificationService.navigateToScan.value = true;
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kAccentYellow,
                   foregroundColor: Colors.white,

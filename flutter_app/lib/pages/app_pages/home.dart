@@ -68,6 +68,10 @@ class MyHomePageState extends State<MyHomePage>
     NotificationService.showAnniversary.addListener(_onAnniversaryNotificationTap);
     WidgetsBinding.instance
         .addPostFrameCallback((_) => _onAnniversaryNotificationTap());
+
+    // Listen for a pushed page (e.g. scan/sent history empty state) asking
+    // to jump to the Scan tab.
+    NotificationService.navigateToScan.addListener(_onNavigateToScan);
   }
 
   @override
@@ -132,6 +136,15 @@ class MyHomePageState extends State<MyHomePage>
     );
   }
 
+  void _onNavigateToScan() {
+    if (NotificationService.navigateToScan.value && mounted) {
+      NotificationService.navigateToScan.value = false;
+      setState(() {
+        _tabController.index = _scanTabIndex;
+      });
+    }
+  }
+
   void _onTabIndexChanged() {
     if (mounted) {
       setState(() {});
@@ -158,6 +171,7 @@ class MyHomePageState extends State<MyHomePage>
     NotificationService.navigateToProfile.removeListener(_onB12NotificationTap);
     NotificationService.showAnniversary
         .removeListener(_onAnniversaryNotificationTap);
+    NotificationService.navigateToScan.removeListener(_onNavigateToScan);
     WidgetsBinding.instance.removeObserver(this);
     _tabController.removeListener(_onTabIndexChanged);
     _tabController.dispose();

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
+import 'package:vegan_app/services/notification_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
@@ -164,7 +165,10 @@ class _SentProductsPageState extends State<SentProductsPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  NotificationService.navigateToScan.value = true;
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kAccentYellow,
                   foregroundColor: Colors.white,

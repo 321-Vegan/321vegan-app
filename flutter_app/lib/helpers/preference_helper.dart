@@ -20,6 +20,7 @@ const List<String> kAvailableAvatars = [
   'vache.png',
   'chat.png',
   'chien.png',
+  'cow-2.png'
 ];
 
 class PreferencesHelper {
