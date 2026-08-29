@@ -117,6 +117,10 @@ These services are external and proprietary; their server-side code is not inclu
 
 Only the code developed by the 321 Vegan team and included in this repository is subject to AGPLv3 terms.
 
+#### Brand Assets
+
+The "321 Vegan" name, logo, app icon, and other branding assets are not covered by the AGPLv3 license and may not be reused without permission.
+
 ---
 
 © 2024 Louis Lambrecht. Released under the [AGPL-3.0 License](https://github.com/llambrecht/321vegan-app/blob/main/LICENSE).

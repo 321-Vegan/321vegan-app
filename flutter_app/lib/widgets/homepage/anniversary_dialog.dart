@@ -7,18 +7,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
 
 /// Shows a congratulation popup celebrating the user's vegan anniversary.
-/// [years] is the number of full years the user has been vegan.
-/// [savings] is the impact-stats map computed by the home page (keyed by
-/// [HomeStat.savingsKey]).
-/// [scanCount] is the total number of products the user has scanned.
-/// [productsSent] is the number of products the user contributed to the
-/// database — null when unknown (not logged in or offline), in which case the
-/// row is hidden.
-/// [issuesReported] is the number of problems the user reported — null when
-/// unknown (not logged in or offline), in which case the row is hidden.
+/// [productsSent] and [issuesReported] are null when unknown (logged out or
+/// offline), which hides their row.
 Future<void> showAnniversaryDialog(
   BuildContext context, {
   required int years,
@@ -116,9 +113,7 @@ class _AnniversaryDialogState extends State<_AnniversaryDialog> {
 
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28.r),
-      ),
+      shape: squircleBorder(radius: 28.r),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -138,55 +133,23 @@ class _AnniversaryDialogState extends State<_AnniversaryDialog> {
               child: Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: AppButton(
+                      label: 'Partager',
+                      icon: Icons.ios_share,
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.grey[700]!,
+                      borderColor: kBorderDefault,
+                      isLoading: _sharing,
                       onPressed: _sharing ? null : _share,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: primary,
-                        side: BorderSide(color: primary, width: 2),
-                        padding: EdgeInsets.symmetric(vertical: 20.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                      ),
-                      icon: _sharing
-                          ? SizedBox(
-                              width: 40.sp,
-                              height: 40.sp,
-                              child: CircularProgressIndicator(
-                                color: primary,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : Icon(Icons.ios_share, size: 44.sp),
-                      label: Text(
-                        'Partager',
-                        style: TextStyle(
-                          fontSize: 44.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                     ),
                   ),
                   SizedBox(width: 16.w),
                   Expanded(
-                    child: ElevatedButton(
+                    child: AppButton(
+                      label: 'Merci !',
+                      backgroundColor: primary,
                       onPressed:
                           _sharing ? null : () => Navigator.of(context).pop(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primary,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 20.h),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                      ),
-                      child: Text(
-                        'Merci !',
-                        style: TextStyle(
-                          fontSize: 44.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -225,7 +188,7 @@ class AnniversaryCard extends StatelessWidget {
 
   /// The congratulation message, with the years count rendered in bold.
   List<InlineSpan> _messageSpans() {
-    const bold = TextStyle(fontWeight: FontWeight.bold);
+    final bold = AppTextStyles.bodyBold15.copyWith(height: 1.4);
     return _hasYears
         ? [
             const TextSpan(text: 'Ça fait maintenant '),
@@ -236,10 +199,10 @@ class AnniversaryCard extends StatelessWidget {
                   'ça se fête ! 🥳',
             ),
           ]
-        : const [
-            TextSpan(text: 'Déjà '),
+        : [
+            const TextSpan(text: 'Déjà '),
             TextSpan(text: '1 an', style: bold),
-            TextSpan(
+            const TextSpan(
               text: ' que vous êtes végane ! '
                   'Une année à refuser d\'exploiter les animaux, '
                   'ça se fête ! 🥳',
@@ -253,52 +216,42 @@ class AnniversaryCard extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.all(32.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28.r),
+        shape: squircleBorder(radius: 28.r),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: EdgeInsets.all(24.w),
-            child: ClipOval(
-              child: Image.asset(
-                'lib/assets/avatars/cochon.png',
-                width: 200.w,
-                height: 200.w,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.person,
-                  size: 140.w,
-                  color: primary,
-                ),
+          SizedBox(
+            width: 200.w,
+            height: 200.w,
+            child: Image.asset(
+              'lib/assets/avatars/cochon.png',
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.person,
+                size: 140.w,
+                color: primary,
               ),
             ),
           ),
           SizedBox(height: 24.h),
           Text(
             'Joyeux véganniversaire !',
-            style: TextStyle(
-              fontSize: 56.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-              fontFamily: 'Baloo',
-            ),
+            style: AppTextStyles.baloo22,
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 16.h),
           Text.rich(
             TextSpan(children: _messageSpans()),
-            style: TextStyle(
-              fontSize: 42.sp,
+            style: AppTextStyles.bodyRegular15.copyWith(
               color: Colors.grey[600],
               height: 1.4,
             ),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 24.h),
-          // Recap of the user's cumulative impact so far.
           _RecapSection(
             label: 'Votre impact',
             rows: [
@@ -362,10 +315,8 @@ class _RecapSection extends StatelessWidget {
           padding: EdgeInsets.only(left: 8.w, bottom: 6.h),
           child: Text(
             label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 32.sp,
+            style: AppTextStyles.bodyBold11.copyWith(
               color: Colors.grey[500],
-              fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
             ),
           ),
@@ -373,10 +324,12 @@ class _RecapSection extends StatelessWidget {
         Container(
           width: double.infinity,
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 8.h),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: Colors.grey[200]!),
+            shape: squircleBorder(
+              radius: 16.r,
+              side: const BorderSide(color: kBorderDefault),
+            ),
           ),
           child: Column(children: rows),
         ),
@@ -423,21 +376,13 @@ class _AnniversaryStatRow extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: TextStyle(
-                fontSize: 38.sp,
-                color: Colors.grey[700],
-                fontWeight: FontWeight.w500,
-              ),
+              style: AppTextStyles.bodyMedium13.copyWith(color: Colors.grey[700]),
             ),
           ),
           SizedBox(width: 12.w),
           Text(
             '$formattedValue$unit',
-            style: TextStyle(
-              fontSize: 40.sp,
-              color: Colors.grey[900],
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTextStyles.bodyBold13.copyWith(color: kTextPrimary),
           ),
         ],
       ),

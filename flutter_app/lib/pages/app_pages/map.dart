@@ -15,12 +15,16 @@ import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/subscription_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/widgets/map/create_shop_sheet.dart';
 import 'package:vegan_app/widgets/map/map_access_overlay.dart';
-import 'package:vegan_app/widgets/map/map_filter_sheet.dart';
+import 'package:vegan_app/widgets/map/map_filter_page.dart';
 import 'package:vegan_app/widgets/map/map_search_bar.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
+import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
 class MapPage extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -127,9 +131,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  /// Continuously track the user's position so the blue dot follows them as
-  /// they move. When the map is currently centered on the user, keep it
-  /// centered ("follow me"); otherwise just update the dot in place.
+  /// Tracks the user's position so the blue dot follows them; when the map
+  /// is centered on the user it keeps following ("follow me").
   void _startPositionStream() {
     _positionStreamSub?.cancel();
     _positionStreamSub = Geolocator.getPositionStream(
@@ -164,7 +167,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       }
       if (permission == LocationPermission.always ||
           permission == LocationPermission.whileInUse) {
-        // Track the position continuously so the blue dot follows the user.
         _startPositionStream();
 
         // Fast path: last known position renders the map immediately
@@ -264,16 +266,11 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     }
   }
 
-  void _showFilterSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.85,
-        child: MapFilterSheet(
+  void _openFilterPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapFilterPage(
           selectedEans: _selectedEans,
           onApply: (newSelection) {
             setState(() => _selectedEans = newSelection);
@@ -304,17 +301,34 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
   Widget _buildMarkerIcon(Shop shop) {
     final isVegan = shop.shopType == 'vegan';
-    return Container(
-      decoration: BoxDecoration(
-        color: isVegan ? Colors.green : Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isVegan
-              ? Colors.green.shade700
-              : Theme.of(context).colorScheme.primary,
-          width: 2,
+    if (isVegan) {
+      return Container(
+        decoration: BoxDecoration(
+          color: kSemanticSuccess,
+          shape: BoxShape.circle,
+          border: Border.all(color: kSemanticSuccess, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        boxShadow: [
+        child: const Center(
+          child: Icon(Icons.eco, color: Colors.white, size: 22),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(
+          radius: 12,
+          side: const BorderSide(color: kAccentYellow, width: 1),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 4,
@@ -322,12 +336,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           ),
         ],
       ),
-      child: Center(
-        child: Icon(
-          isVegan ? Icons.eco : Icons.storefront,
-          color: isVegan ? Colors.white : Theme.of(context).colorScheme.primary,
-          size: 22,
-        ),
+      child: Image.asset(
+        'lib/assets/images/icons/pin-shop.webp',
+        color: kAccentYellow,
+        colorBlendMode: BlendMode.srcIn,
       ),
     );
   }
@@ -336,8 +348,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      // Transparent so the sheet can draw its own surface lower down, leaving
-      // room above it for the floating itinerary button to stay tappable.
+      // Transparent so the sheet's own rounded surface shows the map behind
+      // its top corners.
       backgroundColor: Colors.transparent,
       elevation: 0,
       builder: (_) => ShopDetailSheet(shop: shop),
@@ -354,9 +366,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (_) => CreateShopSheet(coordinates: coords),
     ).then((created) {
       if (created == true) _loadShops();
@@ -454,8 +464,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   }).toList(),
                   builder: (context, markers) {
                     return Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
+                      decoration: const BoxDecoration(
+                        color: kAccentYellow,
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -485,10 +495,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: Colors.white.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(8.r),
-                        boxShadow: [
+                        shape: squircleBorder(radius: 8.r),
+                        shadows: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 4,
@@ -501,16 +511,17 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                             TextStyle(fontSize: 32.sp, color: Colors.black87),
                       ),
                     ),
-                    Icon(
-                      Icons.location_pin,
+                    Image.asset(
+                      'lib/assets/images/icons/map-marker-plus.webp',
                       color: Theme.of(context).colorScheme.primary,
-                      size: 48,
+                      colorBlendMode: BlendMode.srcIn,
+                      width: 48,
+                      height: 48,
                     ),
                   ],
                 ),
               ),
             ),
-            // Instruction label
             Positioned(
               top: 60,
               left: 0,
@@ -519,9 +530,9 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 child: Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(20.r),
+                    shape: squircleBorder(radius: 20.r),
                   ),
                   child: Text(
                     'Déplacez la carte pour positionner le magasin',
@@ -530,225 +541,132 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 ),
               ),
             ),
-            // "Créer ici" + "Annuler" buttons
+            // "Créer ici" + "Annuler" buttons — same pairing as everywhere
+            // else in the app: two AppButtons, the cancel one white/outlined.
             Positioned(
               bottom: 100,
-              left: 0,
-              right: 0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              left: 48.w,
+              right: 48.w,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  OutlinedButton(
-                    onPressed: () => setState(() => _isPicking = false),
-                    style: OutlinedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: BorderSide(color: Colors.grey.shade400),
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20.w, vertical: 12.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24.r),
-                      ),
-                    ),
-                    child: Text('Annuler',
-                        style: TextStyle(
-                            fontSize: 36.sp, color: Colors.grey.shade700)),
-                  ),
-                  SizedBox(width: 12.w),
-                  ElevatedButton.icon(
+                  AppButton(
+                    label: 'Créer le magasin ici',
+                    iconAsset: 'lib/assets/images/icons/map-marker-plus.webp',
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                     onPressed: _onCreateHere,
-                    icon: const Icon(Icons.add_location_alt, size: 20),
-                    label: Text('Créer ici',
-                        style: TextStyle(
-                            fontSize: 36.sp, fontWeight: FontWeight.w600)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 20.w, vertical: 12.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24.r),
-                      ),
-                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  AppButton(
+                    label: 'Annuler',
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.grey[700]!,
+                    borderColor: kBorderDefault,
+                    onPressed: () => setState(() => _isPicking = false),
                   ),
                 ],
               ),
             ),
           ],
+          // Recenter button, alone in the bottom-right corner (Figma)
           if (!_isPicking)
             Positioned(
-              right: 24.w,
+              right: 48.w,
               bottom: 100,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 12.h),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: _showFilterSheet,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 4.w, vertical: 8.h),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.search,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 100.sp),
-                            SizedBox(height: 2.h),
-                            Text('Produits',
-                                style: TextStyle(
-                                    fontSize: 28.sp,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Container(
-                        height: 1, width: 36.w, color: Colors.grey.shade300),
-                    GestureDetector(
-                      onTap: _enterPickMode,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 4.w, vertical: 8.h),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.add_location_alt,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 100.sp),
-                            SizedBox(height: 2.h),
-                            Text('Créer',
-                                style: TextStyle(
-                                    fontSize: 28.sp,
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Container(
-                        height: 1, width: 36.w, color: Colors.grey.shade300),
-                    Builder(
-                      builder: (context) {
-                        final canRecenter =
-                            _userLocation != null && !_isCentered;
-                        final color = canRecenter
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey;
-                        return GestureDetector(
-                          onTap: canRecenter ? _recenterMap : null,
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 4.w, vertical: 8.h),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.my_location,
-                                    color: color, size: 100.sp),
-                                SizedBox(height: 2.h),
-                                Text('Recentrer',
-                                    style: TextStyle(
-                                        fontSize: 28.sp,
-                                        color: color,
-                                        fontWeight: FontWeight.w600)),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+              child: Builder(
+                builder: (context) {
+                  final canRecenter = _userLocation != null && !_isCentered;
+                  return SquareIconButton.action(
+                    icon: Icons.my_location,
+                    iconColor: canRecenter ? kTextPrimary : Colors.grey,
+                    onTap: canRecenter ? _recenterMap : null,
+                  );
+                },
               ),
             ),
-          // Place search bar (fly map to a city/address)
+          // Top row: place search bar (fly map to a city/address), product
+          // filter and create-shop buttons.
           if (!_isPicking && _hasMapAccess)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 32,
-              left: 16.w,
-              right: MediaQuery.of(context).size.width * 0.45,
-              child: MapSearchBar(
-                  key: _searchBarKey, onPlaceSelected: _onPlaceSelected),
+              top: MediaQuery.of(context).padding.top + 24,
+              left: 48.w,
+              right: 48.w,
+              child: Row(
+                // The search bar grows a results dropdown below itself; keep
+                // the buttons pinned to the first line.
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: MapSearchBar(
+                        key: _searchBarKey, onPlaceSelected: _onPlaceSelected),
+                  ),
+                  SizedBox(width: 30.w),
+                  // Active filters: yellow icon + count badge (Figma)
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      SquareIconButton.action(
+                        icon: Icons.tune,
+                        iconColor: _selectedEans.isNotEmpty
+                            ? kAccentYellow
+                            : kTextPrimary,
+                        onTap: _openFilterPage,
+                      ),
+                      if (_selectedEans.isNotEmpty)
+                        Positioned(
+                          top: -16.w,
+                          right: -16.w,
+                          child: Container(
+                            width: 66.w,
+                            height: 66.w,
+                            decoration: const BoxDecoration(
+                              color: kAccentYellow,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${_selectedEans.length}',
+                                style: TextStyle(
+                                  fontSize: 36.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  SizedBox(width: 30.w),
+                  SquareIconButton.action(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    onTap: _enterPickMode,
+                    child: Image.asset(
+                      'lib/assets/images/icons/shop-add.webp',
+                      width: 72.sp,
+                      height: 72.sp,
+                      color: Colors.white,
+                      colorBlendMode: BlendMode.srcIn,
+                    ),
+                  ),
+                ],
+              ),
             ),
           if (_isLoading)
-            const Positioned(
-              top: 120,
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 24 + 144.w + 24.h,
               left: 0,
               right: 0,
-              child: Center(
+              child: const Center(
                 child: CircularProgressIndicator(),
               ),
             ),
-          if (_selectedEans.isNotEmpty)
-            Positioned(
-              top: 110,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: GestureDetector(
-                  onTap: _showFilterSheet,
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(20.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.filter_list,
-                            size: 42.sp, color: Colors.white),
-                        SizedBox(width: 6.w),
-                        Text(
-                          '${_selectedEans.length} filtre${_selectedEans.length > 1 ? 's' : ''} actif${_selectedEans.length > 1 ? 's' : ''}',
-                          style: TextStyle(
-                            fontSize: 42.sp,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(width: 8.w),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() => _selectedEans = {});
-                            _loadShops();
-                          },
-                          child: Icon(Icons.close,
-                              size: 60.sp, color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          // Trial countdown chip
+          // Trial countdown chip, below the search/filter/create row
           if (_freeTrialActive && !SubscriptionService.isSubscribed)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 36,
-              right: 16,
+              top: MediaQuery.of(context).padding.top + 24 + 144.w + 24.h,
+              right: 48.w,
               child: GestureDetector(
                 onTap: () => Navigator.push(
                   context,
@@ -757,10 +675,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 child: Container(
                   padding:
                       EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20.r),
-                    boxShadow: [
+                    shape: squircleBorder(radius: 20.r),
+                    shadows: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 6,

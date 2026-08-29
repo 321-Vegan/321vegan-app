@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../themes/app_shapes.dart';
+
+extension LocalWallClock on DateTime {
+  /// Reinterprets this DateTime's fields as local time instead of converting.
+  /// The backend serializes local timestamps (e.g. "vegan_since") with an
+  /// incorrect trailing "Z", so `.toLocal()` would shift them again.
+  DateTime asLocalWallClock() => isUtc
+      ? DateTime(
+          year, month, day, hour, minute, second, millisecond, microsecond)
+      : this;
+}
 
 extension StringCasingExtension on String {
   String toCapitalized() =>
@@ -31,12 +42,12 @@ class Helper {
     final overlay = Overlay.of(context);
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: 60, // Distance from the top
+        top: 60,
         left: MediaQuery.of(context).size.width * 0,
         width: MediaQuery.of(context).size.width,
         child: Material(
           elevation: 10.0,
-          borderRadius: BorderRadius.circular(10),
+          shape: squircleBorder(radius: 10),
           child: Container(
             padding: const EdgeInsets.all(8),
             color: color,
@@ -46,7 +57,6 @@ class Helper {
       ),
     );
     overlay.insert(overlayEntry);
-    // Automatically remove the snack bar after some duration
     Future.delayed(const Duration(seconds: 3))
         .then((value) => overlayEntry.remove());
   }

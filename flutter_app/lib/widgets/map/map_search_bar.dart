@@ -2,6 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 
 /// A search bar that lets the user look up a place/city/address and fly the
 /// map there. Geocoding is debounced and backed by OpenStreetMap Nominatim.
@@ -21,11 +24,25 @@ class MapSearchBarState extends State<MapSearchBar> {
   List<PlaceResult> _results = [];
   bool _isSearching = false;
   int _requestId = 0;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_isFocused != _focusNode.hasFocus) {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    }
+  }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _controller.dispose();
+    _focusNode.removeListener(_handleFocusChange);
     _focusNode.dispose();
     super.dispose();
   }
@@ -82,6 +99,34 @@ class MapSearchBarState extends State<MapSearchBar> {
     _focusNode.unfocus();
   }
 
+  /// Splits [text] into plain/highlighted spans around the first
+  /// case-insensitive match of [query], so the typed portion stands out in
+  /// the suggestions list (e.g. "Mar" in "Marseille").
+  List<InlineSpan> _highlightedSpans(String text, String query) {
+    final baseStyle = AppTextStyles.bodyRegular15;
+    final matchStyle = AppTextStyles.bodyBold15.copyWith(color: kAccentYellow);
+
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) {
+      return [TextSpan(text: text, style: baseStyle)];
+    }
+
+    final matchIndex =
+        text.toLowerCase().indexOf(trimmedQuery.toLowerCase());
+    if (matchIndex == -1) {
+      return [TextSpan(text: text, style: baseStyle)];
+    }
+
+    final matchEnd = matchIndex + trimmedQuery.length;
+    return [
+      if (matchIndex > 0)
+        TextSpan(text: text.substring(0, matchIndex), style: baseStyle),
+      TextSpan(text: text.substring(matchIndex, matchEnd), style: matchStyle),
+      if (matchEnd < text.length)
+        TextSpan(text: text.substring(matchEnd), style: baseStyle),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasText = _controller.text.isNotEmpty;
@@ -90,10 +135,19 @@ class MapSearchBarState extends State<MapSearchBar> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          decoration: BoxDecoration(
+          // Same height as the square action buttons next to it (map.dart),
+          // so the whole top row reads as one line.
+          height: 144.w,
+          decoration: ShapeDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(28.r),
-            boxShadow: [
+            shape: squircleBorder(
+              radius: 42.r,
+              side: BorderSide(
+                color: _isFocused ? kAccentYellow : kBorderDefault,
+                width: _isFocused ? 1.5 : 1,
+              ),
+            ),
+            shadows: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 10,
@@ -103,10 +157,15 @@ class MapSearchBarState extends State<MapSearchBar> {
           ),
           child: Row(
             children: [
-              SizedBox(width: 14.w),
-              Icon(Icons.pin_drop,
-                  color: Theme.of(context).colorScheme.primary, size: 56.sp),
-              SizedBox(width: 8.w),
+              SizedBox(width: 39.w),
+              Image.asset(
+                'lib/assets/images/icons/search-line.webp',
+                width: 60.sp,
+                height: 60.sp,
+                color: Colors.grey[600],
+                colorBlendMode: BlendMode.srcIn,
+              ),
+              SizedBox(width: 12.w),
               Expanded(
                 child: TextField(
                   controller: _controller,
@@ -120,7 +179,7 @@ class MapSearchBarState extends State<MapSearchBar> {
                     hintText: 'Rechercher un lieu…',
                     hintStyle:
                         TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
-                    contentPadding: EdgeInsets.symmetric(vertical: 16.h),
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
               ),
@@ -143,7 +202,7 @@ class MapSearchBarState extends State<MapSearchBar> {
                   ),
                 )
               else
-                SizedBox(width: 14.w),
+                SizedBox(width: 39.w),
             ],
           ),
         ),
@@ -151,10 +210,10 @@ class MapSearchBarState extends State<MapSearchBar> {
           Container(
             margin: EdgeInsets.only(top: 6.h),
             constraints: BoxConstraints(maxHeight: 0.4.sh),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r),
-              boxShadow: [
+              shape: squircleBorder(radius: 16.r),
+              shadows: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 10,
@@ -181,9 +240,13 @@ class MapSearchBarState extends State<MapSearchBar> {
                             size: 48.sp, color: Colors.grey[500]),
                         SizedBox(width: 10.w),
                         Expanded(
-                          child: Text(
-                            place.displayName,
-                            style: TextStyle(fontSize: 38.sp),
+                          child: Text.rich(
+                            TextSpan(
+                              children: _highlightedSpans(
+                                place.displayName,
+                                _controller.text,
+                              ),
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),

@@ -11,18 +11,18 @@ class ThemeHelper {
   static const String _themePreferenceKey = 'selected_theme';
   static const String _autoThemeKey = 'auto_theme';
 
-  // Get all available themes
+  // Get all available themes, in calendar order so the theme-switcher
+  // carousel swipes through the seasons in a natural sequence.
   static List<SeasonalTheme> getAllThemes() {
     return [
       defaultTheme,
-      winterTheme,
       springTheme,
       summerTheme,
       autumnTheme,
+      winterTheme,
     ];
   }
 
-  // Detect current season based on date
   static Season getCurrentSeason() {
     final now = DateTime.now();
     final month = now.month;
@@ -53,7 +53,6 @@ class ThemeHelper {
     return Season.winter;
   }
 
-  // Get theme by season
   static SeasonalTheme getThemeBySeason(Season season) {
     switch (season) {
       case Season.defaultTheme:
@@ -69,7 +68,6 @@ class ThemeHelper {
     }
   }
 
-  // Save theme preference
   static Future<void> saveThemePreference(Season? season) async {
     final prefs = await SharedPreferences.getInstance();
     if (season == null) {
@@ -79,20 +77,16 @@ class ThemeHelper {
     }
   }
 
-  // Save auto theme preference
   static Future<void> saveAutoThemePreference(bool isAuto) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_autoThemeKey, isAuto);
   }
 
-  // Check if auto theme is enabled
   static Future<bool> isAutoThemeEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_autoThemeKey) ??
-        false; // Default to false (manual with default theme)
+    return prefs.getBool(_autoThemeKey) ?? false;
   }
 
-  // Get saved theme preference
   static Future<Season?> getSavedThemePreference() async {
     final prefs = await SharedPreferences.getInstance();
     final seasonName = prefs.getString(_themePreferenceKey);
@@ -105,7 +99,6 @@ class ThemeHelper {
     }
   }
 
-  // Get current active theme
   static Future<SeasonalTheme> getCurrentTheme() async {
     final isSubscribed = SubscriptionService.isSubscribed;
     final isAuto = await isAutoThemeEnabled();
@@ -116,7 +109,6 @@ class ThemeHelper {
       final season = getCurrentSeason();
       return getThemeBySeason(season);
     } else {
-      // Use user's saved preference
       final savedSeason = await getSavedThemePreference();
       if (savedSeason != null) {
         final savedTheme = getThemeBySeason(savedSeason);

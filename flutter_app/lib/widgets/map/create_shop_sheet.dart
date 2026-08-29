@@ -4,6 +4,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:vegan_app/services/api_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
+import 'package:vegan_app/widgets/shared/app_text_field.dart';
+import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 
 class CreateShopSheet extends StatefulWidget {
   final LatLng coordinates;
@@ -20,6 +25,7 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _countryController = TextEditingController();
+  final _shopTypeController = TextEditingController();
 
   bool _isLoadingAddress = true;
   bool _isSubmitting = false;
@@ -32,9 +38,13 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
     ('other', 'Autre'),
   ];
 
+  String _labelForType(String type) =>
+      _shopTypes.firstWhere((t) => t.$1 == type).$2;
+
   @override
   void initState() {
     super.initState();
+    _shopTypeController.text = _labelForType(_shopType);
     _reverseGeocode();
   }
 
@@ -44,6 +54,7 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
     _addressController.dispose();
     _cityController.dispose();
     _countryController.dispose();
+    _shopTypeController.dispose();
     super.dispose();
   }
 
@@ -79,6 +90,40 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
     if (mounted) setState(() => _isLoadingAddress = false);
   }
 
+  Future<void> _showShopTypePicker() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BottomSheetShell(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Type de magasin', style: AppTextStyles.baloo22),
+            SizedBox(height: 24.h),
+            for (final type in _shopTypes)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(type.$2, style: AppTextStyles.bodyRegular15),
+                trailing: type.$1 == _shopType
+                    ? Icon(Icons.check, color: Theme.of(ctx).colorScheme.primary)
+                    : null,
+                onTap: () => Navigator.of(ctx).pop(type.$1),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    if (selected != null && selected != _shopType) {
+      setState(() {
+        _shopType = selected;
+        _shopTypeController.text = _labelForType(selected);
+      });
+    }
+  }
+
   Future<void> _submit() async {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
@@ -106,14 +151,14 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
       messenger.showSnackBar(
         const SnackBar(
           content: Text('Magasin ajouté avec succès !'),
-          backgroundColor: Colors.green,
+          backgroundColor: kSemanticSuccess,
         ),
       );
     } else {
       messenger.showSnackBar(
         const SnackBar(
           content: Text('Erreur lors de l\'ajout du magasin'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     }
@@ -125,168 +170,92 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
     final lat = widget.coordinates.latitude.toStringAsFixed(5);
     final lon = widget.coordinates.longitude.toStringAsFixed(5);
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.92,
-      minChildSize: 0.6,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (context, scrollController) => Column(
-        children: [
-          Container(
-            margin: EdgeInsets.only(top: 12.h, bottom: 8.h),
-            width: 40.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SingleChildScrollView(
+        child: BottomSheetShell(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Ajouter un magasin',
-                  style: TextStyle(fontSize: 42.sp, fontWeight: FontWeight.bold),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Ajouter un magasin', style: AppTextStyles.baloo22),
+                    IconButton(
+                      onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                      iconSize: 64.sp,
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
+                SizedBox(height: 8.h),
+                Text(
+                  _isLoadingAddress
+                      ? 'Chargement de l\'adresse…'
+                      : 'Coordonnées : $lat, $lon',
+                  style: TextStyle(fontSize: 42.sp, color: Colors.grey[600]),
+                ),
+                SizedBox(height: 48.h),
+                AppTextField(
+                  controller: _nameController,
+                  hintText: 'Nom du magasin',
+                  textCapitalization: TextCapitalization.words,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
+                ),
+                SizedBox(height: 24.h),
+                AppTextField(
+                  controller: _addressController,
+                  hintText: 'Addresse',
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                SizedBox(height: 24.h),
+                AppTextField(
+                  controller: _cityController,
+                  hintText: 'Ville',
+                  textCapitalization: TextCapitalization.words,
+                ),
+                SizedBox(height: 24.h),
+                AppTextField(
+                  controller: _countryController,
+                  hintText: 'Pays',
+                  textCapitalization: TextCapitalization.words,
+                ),
+                SizedBox(height: 24.h),
+                AppTextField(
+                  controller: _shopTypeController,
+                  labelText: 'Type de magasin',
+                  readOnly: true,
+                  onTap: _isSubmitting ? null : _showShopTypePicker,
+                  suffixIcon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[500]),
+                ),
+                SizedBox(height: 42.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        label: 'Annuler',
+                        backgroundColor: kAccentYellow,
+                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                    SizedBox(width: 20.w),
+                    Expanded(
+                      child: AppButton(
+                        label: 'Ajouter',
+                        backgroundColor: primary,
+                        isLoading: _isSubmitting,
+                        onPressed: _submit,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          Expanded(
-            child: SingleChildScrollView(
-              controller: scrollController,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: primary.withValues(alpha: 0.2)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.location_pin, color: primary, size: 36.sp),
-                          SizedBox(width: 6.w),
-                          if (_isLoadingAddress) ...[
-                            SizedBox(
-                              width: 12,
-                              height: 12,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: primary),
-                            ),
-                            SizedBox(width: 6.w),
-                            Text(
-                              'Chargement de l\'adresse…',
-                              style: TextStyle(fontSize: 30.sp, color: primary),
-                            ),
-                          ] else
-                            Text(
-                              '$lat, $lon',
-                              style: TextStyle(
-                                fontSize: 30.sp,
-                                color: primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 16.h),
-                    TextFormField(
-                      controller: _nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nom du magasin *',
-                        border: OutlineInputBorder(),
-                      ),
-                      textCapitalization: TextCapitalization.words,
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Champ requis' : null,
-                    ),
-                    SizedBox(height: 12.h),
-                    TextFormField(
-                      controller: _addressController,
-                      decoration: const InputDecoration(
-                        labelText: 'Adresse',
-                        border: OutlineInputBorder(),
-                      ),
-                      textCapitalization: TextCapitalization.sentences,
-                    ),
-                    SizedBox(height: 12.h),
-                    TextFormField(
-                      controller: _cityController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ville',
-                        border: OutlineInputBorder(),
-                      ),
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                    SizedBox(height: 12.h),
-                    TextFormField(
-                      controller: _countryController,
-                      decoration: const InputDecoration(
-                        labelText: 'Pays',
-                        border: OutlineInputBorder(),
-                      ),
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                    SizedBox(height: 12.h),
-                    DropdownButtonFormField<String>(
-                      initialValue: _shopType,
-                      decoration: const InputDecoration(
-                        labelText: 'Type de magasin',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: _shopTypes
-                          .map((t) => DropdownMenuItem(value: t.$1, child: Text(t.$2)))
-                          .toList(),
-                      onChanged: (v) {
-                        if (v != null) setState(() => _shopType = v);
-                      },
-                    ),
-                    SizedBox(height: 24.h),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submit,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primary,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 14.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                        ),
-                        child: _isSubmitting
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
-                              )
-                            : Text(
-                                'Ajouter le magasin',
-                                style: TextStyle(
-                                    fontSize: 42.sp, fontWeight: FontWeight.w600),
-                              ),
-                      ),
-                    ),
-                    SizedBox(height: 32.h),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import '../../services/auth_service.dart';
 import '../../models/auth.dart';
 import '../../helpers/preference_helper.dart';
+import '../../themes/app_colors.dart';
+import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
+import '../shared/app_text_field.dart';
+import '../shared/vegan_since_date_modal.dart';
 
 class RegisterForm extends StatefulWidget {
   final VoidCallback? onRegisterSuccess;
@@ -26,9 +32,17 @@ class _RegisterFormState extends State<RegisterForm> {
   final _nicknameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _veganSinceController = TextEditingController();
+  DateTime? _veganSince;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVeganSince();
+  }
 
   @override
   void dispose() {
@@ -36,7 +50,39 @@ class _RegisterFormState extends State<RegisterForm> {
     _nicknameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _veganSinceController.dispose();
     super.dispose();
+  }
+
+  // Carries over a vegan-since date picked as a guest so it isn't lost on signup.
+  Future<void> _loadVeganSince() async {
+    final date = await PreferencesHelper.getSelectedDateFromPrefs();
+    if (!mounted || date == null) return;
+    setState(() {
+      _veganSince = date;
+      _veganSinceController.text = DateFormat.yMMMd('fr_FR').format(date);
+    });
+  }
+
+  Future<void> _pickVeganSince() async {
+    final result = await showModalBottomSheet<VeganDateResult>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => VeganSinceDateModal(initialDate: _veganSince),
+    );
+    if (result == null) return;
+
+    setState(() {
+      if (result.action == VeganDateAction.delete) {
+        _veganSince = null;
+        _veganSinceController.clear();
+      } else {
+        _veganSince = result.date;
+        _veganSinceController.text =
+            DateFormat.yMMMd('fr_FR').format(result.date!);
+      }
+    });
   }
 
   Future<void> _handleRegister() async {
@@ -44,8 +90,6 @@ class _RegisterFormState extends State<RegisterForm> {
 
     setState(() => _isLoading = true);
 
-    // Retrieve vegan date and products sent from local storage
-    final veganSince = await PreferencesHelper.getSelectedDateFromPrefs();
     final nbProductsSent =
         await PreferencesHelper.getTotalSuccessfulSubmissions();
 
@@ -56,9 +100,8 @@ class _RegisterFormState extends State<RegisterForm> {
       email: email,
       nickname: _nicknameController.text.trim(),
       password: password,
-      veganSince: veganSince,
+      veganSince: _veganSince,
       nbProductsSent: nbProductsSent,
-      // Default values for role and isActive are set in the model
     );
 
     final result = await AuthService.register(request);
@@ -79,16 +122,15 @@ class _RegisterFormState extends State<RegisterForm> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Compte créé et connecté avec succès !'),
-              backgroundColor: Colors.green,
+              backgroundColor: kSemanticSuccess,
             ),
           );
           widget.onRegisterSuccess?.call();
         } else {
-          // Registration succeeded but login failed
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Compte créé ! Vous pouvez vous connecter.'),
-              backgroundColor: Colors.green,
+              backgroundColor: kSemanticSuccess,
             ),
           );
           widget.onRegisterSuccess?.call();
@@ -98,7 +140,7 @@ class _RegisterFormState extends State<RegisterForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.error ?? 'Erreur lors de l\'inscription'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }
@@ -114,31 +156,16 @@ class _RegisterFormState extends State<RegisterForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (widget.showTitle) ...[
-            Text(
-              'Créer un compte',
-              style: TextStyle(
-                fontSize: 64.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text('S\'inscrire', style: AppTextStyles.baloo26),
             SizedBox(height: 32.h),
           ],
 
           // Email field
-          TextFormField(
+          AppTextField(
             controller: _emailController,
+            hintText: 'Email',
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'votre@email.com',
-              prefixIcon: const Icon(Icons.email_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer votre email';
@@ -150,20 +177,13 @@ class _RegisterFormState extends State<RegisterForm> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // Nickname field
-          TextFormField(
+          AppTextField(
             controller: _nicknameController,
+            hintText: 'Nom d\'utilisateur',
             autofillHints: const [AutofillHints.username],
-            decoration: InputDecoration(
-              labelText: 'Nom d\'utilisateur',
-              hintText: 'Votre pseudo',
-              prefixIcon: const Icon(Icons.person_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer un nom d\'utilisateur';
@@ -174,27 +194,42 @@ class _RegisterFormState extends State<RegisterForm> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
+
+          // Vegan since field (optional)
+          AppTextField(
+            controller: _veganSinceController,
+            hintText: 'Végane depuis (facultatif)',
+            readOnly: true,
+            onTap: _pickVeganSince,
+            suffixIcon: _veganSince != null
+                ? IconButton(
+                    icon: Icon(Icons.close,
+                        size: 40.sp, color: Colors.grey[500]),
+                    onPressed: () => setState(() {
+                      _veganSince = null;
+                      _veganSinceController.clear();
+                    }),
+                  )
+                : Icon(Icons.chevron_right,
+                    size: 44.sp, color: Colors.grey[400]),
+          ),
+          SizedBox(height: 24.h),
 
           // Password field
-          TextFormField(
+          AppTextField(
             controller: _passwordController,
+            hintText: 'Mot de passe',
             obscureText: _obscurePassword,
             autofillHints: const [AutofillHints.newPassword],
-            decoration: InputDecoration(
-              labelText: 'Mot de passe',
-              prefixIcon: const Icon(Icons.lock_outlined),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(() => _obscurePassword = !_obscurePassword);
-                },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey[500],
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
+              onPressed: () {
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -206,30 +241,25 @@ class _RegisterFormState extends State<RegisterForm> {
               return null;
             },
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
 
           // Confirm password field
-          TextFormField(
+          AppTextField(
             controller: _confirmPasswordController,
+            hintText: 'Confirmer le mot de passe',
             obscureText: _obscureConfirmPassword,
             autofillHints: const [AutofillHints.newPassword],
-            decoration: InputDecoration(
-              labelText: 'Confirmer le mot de passe',
-              prefixIcon: const Icon(Icons.lock_outlined),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureConfirmPassword
-                      ? Icons.visibility
-                      : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(
-                      () => _obscureConfirmPassword = !_obscureConfirmPassword);
-                },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscureConfirmPassword
+                    ? Icons.visibility
+                    : Icons.visibility_off,
+                color: Colors.grey[500],
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
+              onPressed: () {
+                setState(
+                    () => _obscureConfirmPassword = !_obscureConfirmPassword);
+              },
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -244,58 +274,29 @@ class _RegisterFormState extends State<RegisterForm> {
           SizedBox(height: 32.h),
 
           // Register button
-          ElevatedButton(
-            onPressed: _isLoading ? null : _handleRegister,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: _isLoading
-                ? SizedBox(
-                    height: 20.h,
-                    width: 20.h,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'S\'inscrire',
-                    style: TextStyle(
-                      fontSize: 48.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+          AppButton(
+            label: 'C\'est parti !',
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            isLoading: _isLoading,
+            onPressed: _handleRegister,
           ),
           SizedBox(height: 24.h),
 
           // Switch to login
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Déjà un compte ? ',
+          Center(
+            child: TextButton(
+              onPressed: widget.onSwitchToLogin,
+              child: Text(
+                'J\'ai déjà un compte',
                 style: TextStyle(
                   fontSize: 40.sp,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              TextButton(
-                onPressed: widget.onSwitchToLogin,
-                child: Text(
-                  'Se connecter',
-                  style: TextStyle(
-                    fontSize: 40.sp,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           ],
         ),

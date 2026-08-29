@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:in_app_review/in_app_review.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io' show Platform;
+import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 
 class SocialFeedbackButtons extends StatelessWidget {
   final bool showCard;
@@ -19,18 +20,18 @@ class SocialFeedbackButtons extends StatelessWidget {
       children: [
         if (showCard) SizedBox(height: 24.h),
 
-        // Instagram button
         ElevatedButton(
-          onPressed: () => _openInstagram(context),
+          onPressed: () => openInstagram(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.white,
             foregroundColor: Colors.black,
+            elevation: 0,
             padding: EdgeInsets.symmetric(
               horizontal: 24.w,
               vertical: 16.h,
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
+            shape: squircleBorder(
+              radius: 12.r,
               side: BorderSide(color: Colors.grey[300]!),
             ),
           ),
@@ -58,19 +59,17 @@ class SocialFeedbackButtons extends StatelessWidget {
 
         SizedBox(height: 16.h),
 
-        // Rate app button
         ElevatedButton(
-          onPressed: () => _rateApp(context),
+          onPressed: () => rateApp(context),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
+            elevation: 0,
             padding: EdgeInsets.symmetric(
               horizontal: 24.w,
               vertical: 16.h,
             ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12.r),
-            ),
+            shape: squircleBorder(radius: 12.r),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -102,27 +101,21 @@ class SocialFeedbackButtons extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(28.w),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 30,
-            offset: const Offset(0, 12),
-            spreadRadius: 0,
+        shape: squircleBorder(
+          radius: 28.r,
+          side: BorderSide(
+            color: Colors.grey[200]!,
+            width: 1,
           ),
-        ],
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 1,
         ),
       ),
       child: child,
     );
   }
 
-  static Future<void> _openInstagram(BuildContext context) async {
+  static Future<void> openInstagram(BuildContext context) async {
     final url = Uri.parse('https://www.instagram.com/321vegan.app/');
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -131,50 +124,38 @@ class SocialFeedbackButtons extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Impossible d\'ouvrir Instagram'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }
     }
   }
 
-  static Future<void> _rateApp(BuildContext context) async {
+  /// Opens the store listing directly rather than the native in-app review
+  /// dialog: Play Core / SKStoreReviewController silently no-op once a user
+  /// has already reviewed or the OS quota is used up.
+  static Future<void> rateApp(BuildContext context) async {
+    Uri? url;
+
+    if (Platform.isIOS) {
+      url = Uri.parse('https://apps.apple.com/fr/app/321-vegan/id6736880006');
+    } else if (Platform.isAndroid) {
+      url = Uri.parse(
+          'https://play.google.com/store/apps/details?id=com.app321vegan.veganapp');
+    }
+
     try {
-      final inAppReview = InAppReview.instance;
-
-      if (await inAppReview.isAvailable()) {
-        await inAppReview.requestReview();
+      if (url != null && await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       } else {
-        // Fallback: open the store page directly
-        Uri? url;
-
-        if (Platform.isIOS) {
-          url =
-              Uri.parse('https://apps.apple.com/fr/app/321-vegan/id6736880006');
-        } else if (Platform.isAndroid) {
-          url = Uri.parse(
-              'https://play.google.com/store/apps/details?id=com.app321vegan.veganapp');
-        }
-
-        if (url != null && await canLaunchUrl(url)) {
-          await launchUrl(url, mode: LaunchMode.externalApplication);
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Impossible d\'ouvrir le store'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
+        throw Exception('store url unavailable');
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Impossible d\'ouvrir le store'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }

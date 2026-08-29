@@ -9,6 +9,7 @@ class Partners {
   final String discountCode;
   final bool isAffiliate;
   final bool isActive;
+  final int displayOrder;
   final PartnersCategory category;
 
   Partners({
@@ -20,6 +21,7 @@ class Partners {
     required this.discountCode,
     required this.isAffiliate,
     required this.isActive,
+    this.displayOrder = 0,
     required this.category,
   });
 
@@ -33,6 +35,7 @@ class Partners {
       discountCode: json['discount_code'] as String,
       isAffiliate: json['is_affiliate'] as bool,
       isActive: json['is_active'] as bool,
+      displayOrder: json['display_order'] as int? ?? 0,
       category: PartnersCategory.fromJson(json['category']),
     );
   }

@@ -6,6 +6,7 @@ import 'package:vegan_app/widgets/shared/update_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:vegan_app/models/b12_reminder_settings.dart';
 import 'helpers/first_time_launch.dart';
+import 'helpers/preference_helper.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -31,6 +32,7 @@ void main() async {
   await DatabaseHelper.instance.database;
   await DatabaseHelper.instance.cosmeticsDatabase;
   await AuthService.init();
+  await PreferencesHelper.rollRandomAvatarIfEnabled();
   await SubscriptionService.init();
   await NotificationService().initialize();
   await _migrateBiweeklyReminderIfNeeded();
@@ -74,8 +76,9 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> {
   ThemeData _currentTheme = ThemeData(
     scaffoldBackgroundColor: Colors.white,
-    colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF166534)),
+    colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF15866E)),
     useMaterial3: true,
+    fontFamily: 'Karla',
   );
 
   late final Upgrader _upgrader;
@@ -138,13 +141,9 @@ class MyAppState extends State<MyApp> {
             upgrader: _upgrader,
             child: const FirstLaunchChecker(),
           ),
-          // App-wide AnnotatedRegion: pages with an AppBar plant their own
-          // region that only carries status-bar fields, and once the engine
-          // adopts it the nav-bar styling (transparency, dark buttons) is
-          // silently dropped on the next window-focus change. Keeping this
-          // region under the whole app re-asserts the nav-bar style every
-          // frame: the AppBar wins the status-bar probe, this wins the
-          // nav-bar probe (see RenderView._updateSystemChrome).
+          // Pages with an AppBar plant their own region with only status-bar
+          // fields, which drops our nav-bar styling on the next focus change;
+          // this app-wide region re-asserts it every frame.
           builder: (context, child) => AnnotatedRegion<SystemUiOverlayStyle>(
             value: _overlayStyle,
             child: child!,

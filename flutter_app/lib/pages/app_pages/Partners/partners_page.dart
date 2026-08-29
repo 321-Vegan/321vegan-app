@@ -1,11 +1,27 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/models/partners/partners.dart';
+import 'package:vegan_app/models/partners/partners_category.dart';
 import 'package:vegan_app/services/api_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_spacing.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
+import 'package:vegan_app/widgets/shared/app_background.dart';
+import 'package:vegan_app/widgets/shared/app_card.dart';
+import 'package:vegan_app/widgets/shared/empty_state_view.dart';
+import 'package:vegan_app/widgets/shared/search_field.dart';
 
+/// Sentinel category id for the synthetic "Tout" tab (real ids start at 1).
+const int _kAllCategoryId = -1;
+
+/// Full partner-shops list, reached from [SolidarityShopsSection]'s "Voir
+/// plus": a "Tout" tab (all partners, searchable by name) plus one chip per
+/// category.
 class PartnersPage extends StatefulWidget {
   const PartnersPage({super.key});
 
@@ -16,6 +32,13 @@ class PartnersPage extends StatefulWidget {
 class _PartnersPageState extends State<PartnersPage> {
   List<Partners> _partners = [];
   bool _isLoading = false;
+  int? _selectedCategoryId;
+  final PageController _pageController = PageController();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  // Guards against popping more than once per overscroll drag.
+  bool _hasPoppedForOverscroll = false;
+  final Map<int, GlobalKey> _chipKeys = {};
   String get _baseUrl =>
       dotenv.env['API_BASE_URL'] ?? 'https://api.321vegan.fr';
 
@@ -25,311 +48,361 @@ class _PartnersPageState extends State<PartnersPage> {
     _loadPartnersInfo();
   }
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  GlobalKey _chipKeyFor(int categoryId) =>
+      _chipKeys.putIfAbsent(categoryId, () => GlobalKey());
+
+  /// Scrolls the chips row so the selected category's chip is visible.
+  /// Deferred to the next frame so the chip's context has its layout ready.
+  void _ensureChipVisible(int categoryId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _chipKeys[categoryId]?.currentContext;
+      if (context == null) return;
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
   Future<void> _loadPartnersInfo() async {
     setState(() {
       _isLoading = true;
     });
 
     final result = await ApiService.getPartners();
+    if (!mounted) return;
     setState(() {
       _partners = result;
       _isLoading = false;
+      _selectedCategoryId = _kAllCategoryId;
     });
   }
 
-  Map<int, List<Partners>> _groupPartnersByCategory() {
-    final Map<int, List<Partners>> grouped = {};
-
-    for (final partner in _partners) {
-      final categoryId = partner.category.id;
-      if (!grouped.containsKey(categoryId)) {
-        grouped[categoryId] = [];
-      }
-      grouped[categoryId]!.add(partner);
+  List<PartnersCategory> _categoriesFrom(List<Partners> partners) {
+    final byId = <int, PartnersCategory>{};
+    for (final partner in partners) {
+      byId[partner.category.id] = partner.category;
     }
+    final categories = byId.values.toList()
+      ..sort((a, b) => a.displayOrder - b.displayOrder);
+    return categories;
+  }
 
-    return grouped;
+  List<PartnersCategory> get _categories => _categoriesFrom(_partners);
+
+  List<PartnersCategory> get _tabs => [
+        PartnersCategory(id: _kAllCategoryId, name: 'Tout'),
+        ..._categories,
+      ];
+
+  List<Partners> _partnersForCategory(int categoryId) {
+    if (categoryId == _kAllCategoryId) {
+      if (_searchQuery.isEmpty) return _partners;
+      final query = _searchQuery.trim().toLowerCase();
+      return _partners
+          .where((p) => p.name.toLowerCase().contains(query))
+          .toList();
+    }
+    return _partners.where((p) => p.category.id == categoryId).toList();
+  }
+
+  /// Animates the PageView instead of jumping straight to the category, so
+  /// the transition matches a swipe; [onPageChanged] updates
+  /// [_selectedCategoryId] once it lands.
+  void _goToCategory(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  /// Swiping past the first category pops the page, same as a back-swipe.
+  bool _handleScrollNotification(ScrollNotification notification) {
+    // Restrict to the horizontal axis: the per-category ListView also
+    // bubbles its own vertical overscroll through here.
+    if (notification is OverscrollNotification &&
+        notification.metrics.axis == Axis.horizontal &&
+        notification.overscroll < 0 &&
+        notification.dragDetails != null &&
+        !_hasPoppedForOverscroll) {
+      _hasPoppedForOverscroll = true;
+      Navigator.of(context).maybePop();
+    } else if (notification is ScrollEndNotification) {
+      _hasPoppedForOverscroll = false;
+    }
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header with legend
-            Padding(
-              padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
-              child: Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(24.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 30,
-                      offset: const Offset(0, 12),
-                      spreadRadius: 0,
-                    ),
-                  ],
-                  border: Border.all(
-                    color: Colors.grey[200]!,
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.card_giftcard,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 56.w,
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text(
-                            'Codes Promos Partenaires',
-                            style: TextStyle(
-                              fontSize: 52.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16.h),
-
-                    // Legend
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 48.w,
-                        ),
-                        SizedBox(width: 12.w),
-                        Expanded(
-                          child: Text(
-                            'Les codes avec une étoile sont des codes affiliés qui me donnent une commission. Les utiliser permet de soutenir 321 Vegan !',
-                            style: TextStyle(
-                              fontSize: 38.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey[700],
-                              height: 1.3,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Content
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _partners.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.card_giftcard,
-                                size: 200.sp,
-                                color: Colors.grey[400],
-                              ),
-                              SizedBox(height: 32.h),
-                              Text(
-                                'Aucun partenaire disponible',
-                                style: TextStyle(
-                                  fontSize: 52.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[800],
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 16.w, vertical: 12.h),
-                          children: _buildPartnersList(),
-                        ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  List<Widget> _buildPartnersList() {
-    final grouped = _groupPartnersByCategory();
-    final List<Widget> widgets = [];
-
-    // Sort categories by id
-    final sortedCategoryIds = grouped.keys.toList()..sort();
-
-    for (final categoryId in sortedCategoryIds) {
-      final partners = grouped[categoryId]!;
-      final categoryName = partners.first.category.name;
-
-      widgets.add(_buildCategoryTitle(categoryName));
-
-      for (final partner in partners) {
-        widgets.add(_buildPartnerCard(partner: partner));
-      }
-    }
-
-    widgets.add(SizedBox(height: 45.h));
-
-    return widgets;
-  }
-
-  Widget _buildCategoryTitle(String title) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(8.w, 24.h, 8.w, 8.h),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 48.sp,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPartnerCard({
-    required Partners partner,
-  }) {
-    // Construct the logo URL from the API base URL and logo path
-    final logoUrl = '$_baseUrl/${partner.logoPath}';
-
-    return Card(
-      margin: EdgeInsets.all(16.h),
-      elevation: 5,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16.r),
-        onTap: () => _launchWebsite(context, partner.url),
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Row(
-            children: [
-              // Logo container
-              SizedBox(
-                width: 250.w,
-                height: 250.w,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12.r),
-                  child: CachedNetworkImage(
-                    imageUrl: logoUrl,
-                    fit: BoxFit.contain,
-                    placeholder: (context, url) => Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                    errorWidget: (context, url, error) {
-                      return Container(
-                        color: Colors.grey[200],
-                        child: Icon(
-                          Icons.image_not_supported,
-                          size: 80.sp,
-                          color: Colors.grey[400],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              SizedBox(width: 16.w),
-
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Brand name with optional commission star
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            partner.name,
-                            style: TextStyle(
-                              fontSize: 52.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ),
-                        if (partner.isAffiliate)
-                          Icon(
-                            Icons.star,
-                            color: Colors.amber,
-                            size: 48.sp,
-                          ),
-                      ],
-                    ),
-
-                    SizedBox(height: 8.h),
-
-                    // Discount amount
-                    Text(
-                      partner.discountText,
-                      style: TextStyle(
-                        fontSize: 40.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange[600],
-                      ),
-                    ),
-
-                    SizedBox(height: 6.h),
-
-                    // Discount code
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12.w,
-                        vertical: 6.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20.r),
-                      ),
-                      child: Text(
-                        'Code: ${partner.discountCode}',
-                        style: TextStyle(
-                          fontSize: 36.sp,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Arrow icon
-              Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.grey[400],
-                size: 50.w,
-              ),
-            ],
+    return AppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text(
+            'Boutiques solidaires',
+            style: AppTextStyles.baloo22,
           ),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: kTextPrimary,
+        ),
+        body: SafeArea(
+          top: false,
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _partners.isEmpty
+                  ? const EmptyStateView(
+                      title: 'Aucun partenaire disponible',
+                      subtitle: 'Revenez plus tard pour découvrir nos offres.',
+                    )
+                  : _buildContent(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    final tabs = _tabs;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(height: 12.h),
+        SizedBox(
+          height: 120.h,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 48.w),
+            // Keeps every chip laid out so its key has a context ready
+            // for _ensureChipVisible to scroll to.
+            cacheExtent: 5000,
+            itemCount: tabs.length,
+            separatorBuilder: (_, __) => SizedBox(width: 24.w),
+            itemBuilder: (context, index) =>
+                _buildCategoryChip(tabs[index], index),
+          ),
+        ),
+        SizedBox(height: AppSpacing.section),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 48.w),
+          child: _buildLegendBanner(),
+        ),
+        SizedBox(height: AppSpacing.section),
+        Expanded(
+          child: NotificationListener<ScrollNotification>(
+            onNotification: _handleScrollNotification,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: tabs.length,
+              onPageChanged: (index) {
+                final categoryId = tabs[index].id;
+                setState(() => _selectedCategoryId = categoryId);
+                _ensureChipVisible(categoryId);
+              },
+              itemBuilder: (context, index) =>
+                  _buildCategoryResults(tabs[index]),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryResults(PartnersCategory category) {
+    final isAllTab = category.id == _kAllCategoryId;
+    final results = _partnersForCategory(category.id);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isAllTab) ...[
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 48.w),
+            child: _buildSearchField(),
+          ),
+          SizedBox(height: AppSpacing.item),
+        ],
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 48.w),
+          child: Text(
+            'Résultats (${results.length})',
+            style: AppTextStyles.baloo22,
+          ),
+        ),
+        SizedBox(height: AppSpacing.afterTitle),
+        Expanded(
+          child: results.isEmpty
+              ? EmptyStateView(
+                  title: 'Rien trouvé !',
+                  subtitle: isAllTab && _searchQuery.isNotEmpty
+                      ? 'Aucune boutique ne correspond à votre recherche.'
+                      : 'Aucune boutique dans cette catégorie pour le moment.',
+                )
+              : ListView.separated(
+                  padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 8.h),
+                  itemCount: results.length,
+                  separatorBuilder: (_, __) => SizedBox(height: AppSpacing.item),
+                  itemBuilder: (context, index) =>
+                      _buildPartnerCard(results[index]),
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchField() {
+    return SearchField(
+      controller: _searchController,
+      hintText: 'Rechercher une boutique...',
+      onChanged: (value) => setState(() => _searchQuery = value),
+    );
+  }
+
+  Widget _buildCategoryChip(PartnersCategory category, int index) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final isSelected = category.id == _selectedCategoryId;
+    return GestureDetector(
+      key: _chipKeyFor(category.id),
+      onTap: () => _goToCategory(index),
+      child: Container(
+        alignment: Alignment.center,
+        padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
+        decoration: ShapeDecoration(
+          color: isSelected ? kPrimaryTag : Colors.white,
+          shape: squircleBorder(
+            radius: 36.r,
+            side: BorderSide(
+              color: isSelected ? primaryColor : kBorderDefault,
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+        ),
+        child: Text(
+          category.name,
+          style: TextStyle(
+            fontSize: 39.sp,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? primaryColor : kTextPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLegendBanner() {
+    return Container(
+      padding: EdgeInsets.all(45.w),
+      decoration: ShapeDecoration(
+        color: kSecondaryTag,
+        shape: squircleBorder(
+          radius: 48.r,
+          side: const BorderSide(color: kAccentYellow),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              'Les codes promos avec une étoile sont des codes affiliés qui '
+              'me donnent une commission. Les utiliser permet de soutenir '
+              '321Vegan !',
+              style: AppTextStyles.bodyMedium15
+                  .copyWith(color: kAccentYellow, height: 1.3),
+            ),
+          ),
+          SizedBox(width: 16.w),
+          Icon(Icons.star, color: kAccentYellow, size: 56.w),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPartnerCard(Partners partner) {
+    final logoUrl = '$_baseUrl/${partner.logoPath}';
+    return GestureDetector(
+      onTap: () => _launchWebsite(context, partner.url),
+      child: AppCard(
+        radius: 60.r,
+        padding: EdgeInsets.all(45.w),
+        child: Row(
+          children: [
+            ClipSmoothRect(
+              radius: squircleRadius(33.r),
+              child: Container(
+                width: 240.w,
+                height: 240.w,
+                color: Colors.grey[100],
+                padding: EdgeInsets.all(12.w),
+                child: CachedNetworkImage(
+                  imageUrl: logoUrl,
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) => Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Icon(
+                    Icons.storefront_outlined,
+                    size: 48.sp,
+                    color: Colors.grey[400],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 60.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    partner.discountText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.baloo26,
+                  ),
+                  Text(
+                    partner.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMedium13
+                        .copyWith(color: Colors.grey[600]),
+                  ),
+                  SizedBox(height: 10.h),
+                  Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                    decoration: ShapeDecoration(
+                      color: kAccentYellow.withValues(alpha: 0.15),
+                      shape: const StadiumBorder(),
+                    ),
+                    child: Text(
+                      'Code : ${partner.discountCode}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.bodyMedium13
+                          .copyWith(color: kAccentYellow),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (partner.isAffiliate) ...[
+              SizedBox(width: 12.w),
+              Icon(Icons.star, color: kAccentYellow, size: 64.sp),
+            ],
+          ],
         ),
       ),
     );
@@ -344,7 +417,7 @@ class _PartnersPageState extends State<PartnersPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Impossible d\'ouvrir le lien'),
-          backgroundColor: Colors.red,
+          backgroundColor: kSemanticError,
         ),
       );
     }

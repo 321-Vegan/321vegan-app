@@ -1,3 +1,4 @@
+import '../helpers/helper.dart';
 import 'scanned_product.dart';
 
 class User {
@@ -55,7 +56,7 @@ class User {
       nbCheckings: json['nb_checkings'] ?? 0,
       scanCount: json['scan_count'] ?? 0,
       veganSince: json['vegan_since'] != null
-          ? DateTime.tryParse(json['vegan_since'])
+          ? DateTime.tryParse(json['vegan_since'])?.asLocalWallClock()
           : null,
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'])

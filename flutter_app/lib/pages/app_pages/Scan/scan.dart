@@ -1,70 +1,68 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:confetti/confetti.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart' show CupertinoIcons;
-import 'package:flutter/services.dart';
-import 'package:liquid_glass_easy/liquid_glass_easy.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vegan_app/helpers/database_helper.dart';
+import 'package:vegan_app/helpers/barcode_helper.dart';
 import 'package:vegan_app/helpers/haptic_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
-import 'package:vegan_app/pages/app_pages/Scan/history_modal.dart';
-import 'package:vegan_app/pages/app_pages/Scan/sent_products_modal.dart';
-import 'package:vegan_app/pages/app_pages/Scan/settings_modal.dart';
-import 'package:vegan_app/pages/app_pages/Scan/search_modal.dart';
+import 'package:vegan_app/pages/app_pages/Scan/scan_history_page.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
-import 'package:vegan_app/pages/app_pages/Search/additives.dart';
-import 'package:vegan_app/pages/app_pages/Search/cosmetics.dart';
+import 'package:vegan_app/pages/app_pages/Scan/product_search_page.dart';
 import 'package:vegan_app/models/product_of_interest.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/offline_scan_service.dart';
+import 'package:vegan_app/services/open_food_facts_service.dart';
 import 'package:vegan_app/services/scan_count_sync_service.dart';
 import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/widgets/scaner/card_product.dart';
 import 'package:vegan_app/widgets/scaner/pending_product_info_card.dart';
-import 'package:vegan_app/widgets/scaner/info_dialog_button.dart';
+import 'package:vegan_app/widgets/scaner/report_error_button.dart';
+import 'package:vegan_app/widgets/scaner/unknown_product_info_card.dart';
+import 'package:vegan_app/widgets/scaner/unknown_product_modal.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/vegan_product_info_card.dart';
 import 'package:vegan_app/widgets/scaner/shop_confirmation_modal.dart';
-import 'package:vegan_app/widgets/vegandex/vegandex_modal.dart';
+import 'package:vegan_app/pages/app_pages/Vegandex/vegandex_page.dart';
 import 'package:vegan_app/widgets/vegandex/product_found_modal.dart';
-import 'package:vegan_app/widgets/auth/register_form.dart';
-import 'package:vegan_app/widgets/auth/login_form.dart';
+import 'package:vegan_app/widgets/auth/auth_bottom_sheet.dart';
 import 'package:vegan_app/services/subscription_service.dart';
-import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/pages/app_pages/Scan/account_prompt_dialog.dart';
+import 'package:vegan_app/widgets/shared/square_icon_button.dart';
+import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 
 class ScanPage extends StatefulWidget {
-  final VoidCallback? onNavigateToProfile;
   final VoidCallback? onLoginSuccess;
 
-  const ScanPage({super.key, this.onNavigateToProfile, this.onLoginSuccess});
+  const ScanPage({super.key, this.onLoginSuccess});
 
   @override
   ScanPageState createState() => ScanPageState();
 }
 
-class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
+class ScanPageState extends State<ScanPage>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   final MobileScannerController controller = MobileScannerController(
     formats: [
-      BarcodeFormat.ean13, // EAN-13 for international products
-      BarcodeFormat.ean8, // EAN-8 for smaller packages
-      BarcodeFormat.upcA, // UPC-A for US and Canadian products
-      BarcodeFormat.upcE, // UPC-E for compressed barcodes
+      BarcodeFormat.ean13,
+      BarcodeFormat.ean8,
+      BarcodeFormat.upcA,
+      BarcodeFormat.upcE,
     ],
   );
   ScanResult? productInfo;
   List<Map<String, dynamic>> scanHistory = [];
   String? _lastScannedBarcode = '';
   late ConfettiController _confettiController;
-  final nonVeganCardKey = GlobalKey<NonVeganProductInfoCardState>();
-  bool _openOnScanPage = false;
   bool _showBoycott = true;
   bool _showScores = true;
   bool _hapticFeedback = true;
@@ -74,6 +72,16 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   bool _scannerPausedByModal = false;
   bool _isRetrying = false;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+
+  // Vegandex button used to expand to a text label then collapse on entry;
+  // disabled (animation didn't read well) but kept for reference along with
+  // the related commented code in initState/dispose/_buildVegandexButton.
+  // bool _vegandexExpanded = true;
+  // Timer? _vegandexCollapseTimer;
+
+  /// Drives a quick decaying shake + pop on the Vegandex button, played the
+  /// instant [ProductFoundModal]'s fly-in animation lands on it.
+  late final AnimationController _vegandexShakeController;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -95,7 +103,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         if (!_scannerPausedByModal) {
           controller.start();
         }
-        // Retry pending scans when app resumes
         _retryPendingScans();
         break;
       case AppLifecycleState.inactive:
@@ -110,14 +117,21 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _confettiController =
         ConfettiController(duration: const Duration(seconds: 2));
+    _vegandexShakeController = AnimationController(
+      duration: const Duration(milliseconds: 450),
+      vsync: this,
+    );
 
     _loadScanHistory();
-    _loadOpenOnScanPagePref();
     _loadShowBoycottPref();
     _loadShowScoresPref();
     _loadHapticFeedbackPref();
-    // Load products from already-populated cache (populated at app startup)
+    // Cache is already populated at app startup, so this loads instantly.
     _loadProductsOfInterest();
+
+    // _vegandexCollapseTimer = Timer(const Duration(milliseconds: 900), () {
+    //   if (mounted) setState(() => _vegandexExpanded = false);
+    // });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkLocationPermission();
@@ -135,7 +149,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     });
   }
 
-  /// Retry pending scans when app starts or resumes
   Future<void> _retryPendingScans() async {
     if (_isRetrying) return;
     _isRetrying = true;
@@ -265,7 +278,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   Future<void> _showShopConfirmationDialog(
       String shopName, int scanEventId, ProductOfInterest product,
       {List<Map<String, dynamic>>? nearbyShops, String? shopOsmId}) {
-    // Stop scanner while showing modal
     controller.stop();
 
     return showDialog(
@@ -282,18 +294,15 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         );
       },
     ).then((_) {
-      // Restart scanner when modal closes
       controller.start();
     });
   }
 
   Future<bool> _checkLocationPermission() async {
     try {
-      // Try to check current permission with timeout
       LocationPermission permission = await Geolocator.checkPermission()
           .timeout(const Duration(seconds: 3));
 
-      // If denied, try to request permission
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission()
             .timeout(const Duration(seconds: 10));
@@ -302,7 +311,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
       final hasPermission = permission == LocationPermission.whileInUse ||
           permission == LocationPermission.always;
 
-      // Store the permission state if granted
       if (hasPermission) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('location_permission_granted', true);
@@ -310,7 +318,7 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
       return hasPermission;
     } catch (e) {
-      // If check fails (timeout, service unavailable, etc.), use stored state
+      // Timeout or service unavailable: fall back to the last stored state.
       final prefs = await SharedPreferences.getInstance();
       final storedPermission =
           prefs.getBool('location_permission_granted') ?? false;
@@ -320,23 +328,20 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
   Future<void> _startScanner() async {
     try {
-      // Check camera permission first
       bool hasPermission = await _checkCameraPermission();
       if (!hasPermission) {
         return;
       }
 
-      // Wait for the widget to be fully built before starting scanner
+      // Wait for the widget to be fully built before starting the scanner.
       await Future.delayed(const Duration(milliseconds: 100));
 
-      // Check if the controller is properly initialized
       if (!mounted) {
         return;
       }
 
       await controller.start();
     } catch (e) {
-      // Try to restart scanner after a longer delay in debug mode
       await Future.delayed(const Duration(milliseconds: 1000));
       if (mounted) {
         await controller.start();
@@ -348,13 +353,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     final history = await PreferencesHelper.getScanHistory();
     setState(() {
       scanHistory = history;
-    });
-  }
-
-  Future<void> _loadOpenOnScanPagePref() async {
-    final value = await PreferencesHelper.getOpenOnScanPagePref();
-    setState(() {
-      _openOnScanPage = value;
     });
   }
 
@@ -403,26 +401,21 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   }
 
   Future<void> _sendScanEventIfInteresting(String ean) async {
-    // Resolve alternative EAN to main EAN if applicable
     final mainEan = _alternativeEanToMainEan[ean] ?? ean;
 
-    // Check if this product is in the products of interest
     if (!_productsOfInterest.contains(mainEan)) {
       return;
     }
 
-    // Store whether this is a new discovery before updating
     final user = AuthService.currentUser;
     final hadProductBefore =
         user?.scannedProducts?.any((sp) => sp.ean == mainEan) ?? false;
 
-    // Show modal if product found (don't wait for location)
     final product = _productsOfInterestMap[mainEan];
     if (product != null && mounted) {
-      // Stop scanner while showing modal
       controller.stop();
 
-      // Start fetching location in the background
+      // Fetch location in the background; don't block showing the modal.
       final locationFuture = _getLocationForScanEvent();
 
       await showDialog(
@@ -432,33 +425,29 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         builder: (context) => ProductFoundModal(
           product: product,
           isNewDiscovery: !hadProductBefore,
+          onArrival: _shakeVegandexButton,
         ),
       );
 
-      // Restart scanner after modal is closed
       controller.start();
 
-      // Optimistically update scanned products locally
+      // Optimistic local update, ahead of the server confirming it.
       AuthService.addScannedProductLocally(mainEan);
 
-      // Wait for location to be fetched and send scan event
       final locationData = await locationFuture;
       final latitude = locationData.latitude;
       final longitude = locationData.longitude;
 
-      // If the user hasn't granted location permission, we don't record the
-      // scan server-side (a prompt was already shown to enable it). But if
-      // permission IS granted and we simply couldn't get a fix (offline, GPS
-      // timeout), we still queue the scan — without coordinates — so the
-      // user's collection syncs once connectivity is back.
+      // Without location permission we don't record the scan server-side (a
+      // prompt was already shown). If permission is granted but we just
+      // couldn't get a fix (offline/GPS timeout), still queue the scan
+      // without coordinates so it syncs once connectivity returns.
       if (!locationData.permissionGranted) {
         return;
       }
 
-      // Get current user ID
       final userId = AuthService.currentUser?.id;
 
-      // Use offline scan service with automatic retry
       final (success, response, shouldShowDialog) =
           await OfflineScanService.postScanEventWithOfflineSupport(
         ean: mainEan,
@@ -468,12 +457,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
       );
 
       if (success && response != null && mounted) {
-        // Refresh user data to get updated scanned products
         if (AuthService.isLoggedIn) {
           AuthService.getCurrentUser();
         }
 
-        // Check if a shop was detected and we should show dialog
         if (shouldShowDialog) {
           final shopName = response['shop_name'] as String?;
           final scanEventId = response['id'] as int?;
@@ -481,9 +468,9 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ?.map((s) => Map<String, dynamic>.from(s as Map))
               .toList();
 
-          // If no shop was linked yet (OSM-only), the primary shop is the
-          // first entry in nearbyShops — pass its osm_id so the modal can
-          // confirm it when the user taps "Yes".
+          // If no shop is linked yet (OSM-only), the primary shop is the
+          // first nearbyShops entry — pass its osm_id so the modal can
+          // confirm it on "Yes".
           final String? shopOsmId = (response['shop_id'] == null &&
                   nearbyShops != null &&
                   nearbyShops.isNotEmpty)
@@ -491,7 +478,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               : null;
 
           if (shopName != null && scanEventId != null) {
-            // Show confirmation dialog for shop location
             _showShopConfirmationDialog(shopName, scanEventId, product,
                 nearbyShops: nearbyShops, shopOsmId: shopOsmId);
           }
@@ -507,10 +493,8 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     bool hasPermission = false;
 
     try {
-      // Check if we have location permission
       hasPermission = await _checkLocationPermission();
 
-      // Get position if permission granted
       if (hasPermission) {
         final position = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
@@ -527,12 +511,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         }
       }
     } catch (e) {
-      // Permission is granted but we couldn't obtain a fresh position (e.g.
-      // offline or the GPS fix timed out within 5s). Don't show the "enable
-      // location" dialog — it would wrongly tell the user location is
-      // disabled. Fall back to the last known position if it's recent enough
-      // that the user is plausibly still in the same place, so shop detection
-      // keeps working; otherwise the scan is queued without coordinates.
+      // Permission granted but no fresh fix (offline/GPS timeout <5s): don't
+      // show the "enable location" dialog since that's misleading here.
+      // Fall back to a recent last-known position so shop detection still
+      // works; otherwise the scan is queued without coordinates.
       try {
         final lastKnown = await Geolocator.getLastKnownPosition();
         if (lastKnown != null &&
@@ -551,101 +533,86 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     );
   }
 
-  /// Stops the scanner, clears the current result, shows [modal] in a
-  /// 90%-height bottom sheet and restarts the scanner when it closes.
-  void _showModalSheet(Widget modal) {
+  /// Stops the scanner, pushes the Vegandex page, and restarts the scanner
+  /// when it's popped — it's a full page now, not a bottom sheet.
+  void _openVegandex() {
     controller.stop();
     setState(() {
       productInfo = null;
     });
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.9,
-        child: modal,
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const VegandexPage()),
+    ).then((_) {
+      controller.start();
+    });
+  }
+
+  /// Stops the scanner, pushes the scan history page, and restarts the
+  /// scanner when it's popped — it's a full page now, not a bottom sheet.
+  void _openScanHistory() {
+    controller.stop();
+    setState(() {
+      productInfo = null;
+    });
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ScanHistoryPage(scanHistory: scanHistory),
       ),
     ).then((_) {
       controller.start();
     });
   }
 
-  void _showSearchModal({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Widget child,
-  }) {
-    _showModalSheet(SearchModal(
-      title: title,
-      subtitle: subtitle,
-      icon: icon,
-      child: child,
-    ));
-  }
-
-  void _showSettingsModal() {
-    // Stop the scanner when opening the modal
+  /// Pushes the unified product search page (Additifs / Cosmétiques /
+  /// Code-barre). The "Code-barre" tab pops with the chosen barcode instead
+  /// of showing its own result — feeding it into [_simulateScan] runs it
+  /// through the same pipeline as a camera scan.
+  void _openProductSearch() {
     controller.stop();
     setState(() {
       productInfo = null;
     });
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          child: SettingsModal(
-            initialOpenOnScanPage: _openOnScanPage,
-            onOpenOnScanPageChanged: (value) {
-              setState(() {
-                _openOnScanPage = value;
-              });
-            },
-            initialShowBoycott: _showBoycott,
-            onShowBoycottChanged: (value) {
-              setState(() {
-                _showBoycott = value;
-              });
-            },
-            initialShowScores: _showScores,
-            onShowScoresChanged: _setShowScoresPref,
-            initialHapticFeedback: _hapticFeedback,
-            onHapticFeedbackChanged: (value) {
-              setState(() {
-                _hapticFeedback = value;
-              });
-            },
-          ),
-        );
-      },
-    ).then((_) {
+    Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const ProductSearchPage()),
+    ).then((barcode) {
       controller.start();
+      if (barcode != null && barcode.isNotEmpty) {
+        _simulateScan(barcode);
+      }
     });
   }
 
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
+    // _vegandexCollapseTimer?.cancel();
     controller.dispose();
     _confettiController.dispose();
+    _vegandexShakeController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
   Future<void> _checkVeganStatusOffline(String barcode) async {
     final product = await ProductInfoHelper.getProductInfo(barcode);
+
+    // A newer scan may have superseded this one while the lookup was in
+    // flight (e.g. a misread barcode followed by the correct one); acting on
+    // a stale result here would flash the wrong product or log bogus data.
+    if (!mounted || barcode != _lastScannedBarcode) return;
+
     setState(() {
       productInfo = product;
     });
 
-    // Scan-confirmation haptic: double pulse warns that the product is not
-    // vegan, single pulse for everything else.
-    if (_hapticFeedback) {
+    // Double pulse for non-vegan, single otherwise. Skipped for
+    // unknown/notFound since those don't lock in a result yet.
+    if (_hapticFeedback &&
+        product.status != ScanStatus.unknown &&
+        product.status != ScanStatus.notFound) {
       if (product.status == ScanStatus.notVegan) {
         HapticHelper.doubleImpact();
       } else {
@@ -659,34 +626,79 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
         product.status != ScanStatus.alreadyScanned) {
       await PreferencesHelper.addBarcodeToHistory(barcode);
       _loadScanHistory();
+      // Fetched once now and cached on the history entry, so the history
+      // page never has to hit OpenFoodFacts again to show past scans.
+      unawaited(_cacheProductScores(barcode));
     }
 
     if ((product.status == ScanStatus.vegan ||
             product.status == ScanStatus.notVegan) &&
         AuthService.isLoggedIn &&
         !SubscriptionService.isSubscribed) {
-      await PreferencesHelper.incrementMembershipHitScanCount();
+      final shouldPrompt =
+          await PreferencesHelper.incrementMembershipHitScanCount();
+      if (shouldPrompt) {
+        _showMembershipPromptAfterDelay();
+      }
     }
+
   }
 
-  bool isValidEAN13(String barcode) {
-    int sum = 0;
-    for (int i = 0; i < 12; i++) {
-      int digit = int.parse(barcode[i]);
-      sum += (i % 2 == 0) ? digit : digit * 3;
-    }
-    int checksum = (10 - (sum % 10)) % 10;
-    return checksum == int.parse(barcode[12]);
+  /// Opens [UnknownProductModal] for the current unknown/not-found result,
+  /// pausing the scanner while it's up. Triggered by the "Envoyer..." button
+  /// rather than automatically, so a misread barcode doesn't lock the user
+  /// into the sheet before they can rescan.
+  Future<void> _openUnknownProductModal() async {
+    final info = productInfo;
+    if (info == null || !mounted) return;
+    _scannerPausedByModal = true;
+    controller.stop();
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => UnknownProductModal(
+        barcode: info.code,
+        alreadySubmitted: info.status == ScanStatus.notFound,
+        onLoginRequested: _showAuthBottomSheet,
+      ),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      productInfo = null;
+    });
+    _scannerPausedByModal = false;
+    controller.start();
   }
 
-  bool isValidEAN8(String barcode) {
-    int sum = 0;
-    for (int i = 0; i < 7; i++) {
-      int digit = int.parse(barcode[i]);
-      sum += (i % 2 == 0) ? digit : digit * 3;
-    }
-    int checksum = (10 - (sum % 10)) % 10;
-    return checksum == int.parse(barcode[7]);
+  Future<void> _showMembershipPromptAfterDelay() async {
+    // Small delay so the scan result shows first
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    await PreferencesHelper.snoozeMembershipPrompt();
+    if (!mounted) return;
+
+    controller.stop();
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SubscriptionPage(
+          title: 'Vous scannez souvent,\npassez Premium ?',
+        ),
+      ),
+    );
+    if (mounted) controller.start();
+  }
+
+  Future<void> _cacheProductScores(String barcode) async {
+    // Skip the network round-trip if we already fetched this product's
+    // scores on an earlier scan.
+    final cached = await PreferencesHelper.getCachedScores(barcode);
+    final scores = cached ?? await OpenFoodFactsService.fetchScores(barcode);
+    await PreferencesHelper.cacheScanScores(barcode, scores);
   }
 
   void _simulateScan(String rawValue) {
@@ -703,306 +715,17 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     ));
   }
 
-  void _showManualEanDialog() {
-    final textController = TextEditingController();
-
-    bool isValid(String raw) {
-      String normalized = raw;
-      if (normalized.length == 12) normalized = '0$normalized';
-      if (normalized.length == 13 && isValidEAN13(normalized)) return true;
-      if (normalized.length == 8 && isValidEAN8(normalized)) return true;
-      return false;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        String? errorText;
-        List<Map<String, dynamic>> suggestions = [];
-        int suggestionQueryId = 0;
-        return StatefulBuilder(
-          builder: (ctx, setStateDialog) {
-            void updateSuggestions(String raw) {
-              final prefix = raw.trim();
-              if (prefix.length < 3) {
-                suggestionQueryId++;
-                if (suggestions.isNotEmpty) {
-                  setStateDialog(() => suggestions = []);
-                }
-                return;
-              }
-              final queryId = ++suggestionQueryId;
-              DatabaseHelper.instance
-                  .queryProductsByCodePrefix(prefix)
-                  .then((results) {
-                if (queryId != suggestionQueryId || !ctx.mounted) return;
-                setStateDialog(() => suggestions = results);
-              });
-            }
-
-            void submit() {
-              final raw = textController.text.trim();
-              if (isValid(raw)) {
-                Navigator.of(ctx).pop();
-                _simulateScan(raw);
-              } else {
-                setStateDialog(
-                    () => errorText = 'Code-barres invalide (EAN-8 ou EAN-13)');
-              }
-            }
-
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 12,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(CupertinoIcons.barcode,
-                              size: 32, color: Colors.grey.shade700),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Saisir un code-barres',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Si le scan par caméra est impossible,\nsaisissez le code manuellement.',
-                                style: TextStyle(
-                                    fontSize: 13, color: Colors.grey.shade700),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    TextField(
-                      controller: textController,
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      autofocus: true,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 3,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '3017620422003',
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade300,
-                          fontWeight: FontWeight.normal,
-                          letterSpacing: 2,
-                        ),
-                        errorText: errorText,
-                        errorStyle: const TextStyle(fontSize: 13),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 16),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: Color(0xFF1A722E), width: 2),
-                        ),
-                        errorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: Colors.red),
-                        ),
-                        focusedErrorBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide:
-                              const BorderSide(color: Colors.red, width: 2),
-                        ),
-                      ),
-                      onChanged: (value) {
-                        if (errorText != null) {
-                          setStateDialog(() => errorText = null);
-                        }
-                        updateSuggestions(value);
-                      },
-                      onSubmitted: (_) => submit(),
-                    ),
-                    if (suggestions.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      ...suggestions.map((product) {
-                        final code = product['code']?.toString() ?? '';
-                        final name =
-                            ((product['name'] as String?) ?? 'Produit inconnu')
-                                .replaceAll('&quot;', "'");
-                        final brand = ((product['brand'] as String?) ?? '')
-                            .replaceAll('&quot;', "'");
-                        final statusColor = switch (product['status']) {
-                          'R' => Colors.red,
-                          'M' => Colors.orange,
-                          'N' => Colors.grey,
-                          _ => const Color(0xFF1A722E),
-                        };
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () {
-                              Navigator.of(ctx).pop();
-                              _simulateScan(code);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade50,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade200),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                      color: statusColor,
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          brand.isNotEmpty
-                                              ? '$name - $brand'
-                                              : name,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          code,
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade600,
-                                            letterSpacing: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(Icons.chevron_right,
-                                      size: 20, color: Colors.grey.shade400),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ],
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(ctx).pop(),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              side: BorderSide(color: Colors.grey.shade300),
-                              foregroundColor: Colors.grey.shade700,
-                            ),
-                            child: const Text('Annuler',
-                                style: TextStyle(fontSize: 15)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1A722E),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: const Text('Scanner',
-                                style: TextStyle(
-                                    fontSize: 15, fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   void _handleBarcode(BarcodeCapture event) {
     final barcode = event.barcodes.first;
     var barcodeValue = barcode.rawValue;
-    // If there is 12 digits, add a 0 at the beginning
-    // This is a workaround for EAN-13 barcodes that are sometimes scanned as 12 digits by the scan module
-    // This happens when the barcode starts with 0
+    // Workaround: EAN-13 barcodes starting with 0 sometimes get scanned as
+    // 12 digits by the scan module.
     if (barcodeValue != null && barcodeValue.length == 12) {
       barcodeValue = '0$barcodeValue';
     }
 
     if (barcodeValue != null && barcodeValue.length == 13) {
-      if (!isValidEAN13(barcodeValue)) {
+      if (!BarcodeHelper.isValidEAN13(barcodeValue)) {
         return;
       }
     }
@@ -1013,17 +736,13 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
       // The haptic fires in _checkVeganStatusOffline once the product
       // status is known, so non-vegan products can get a distinct pattern.
 
-      // Reset the button disabled state in NonVeganProductInfoCardState
-      nonVeganCardKey.currentState?.resetButton();
-
-      // Check if we should prompt the user to create an account
       _checkAccountPrompt();
 
-      // Send scan event if it's a product of interest (don't wait for it)
+      // Fire-and-forget: send scan event if it's a product of interest.
       _sendScanEventIfInteresting(barcodeValue.toString());
 
       setState(() {
-        productInfo = null; // Reset product info for the new scan
+        productInfo = null;
       });
       _checkVeganStatusOffline(barcodeValue.toString());
     }
@@ -1040,9 +759,6 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
 
     if (AuthService.isLoggedIn) return;
 
-    final dismissed = await PreferencesHelper.hasAccountPromptBeenDismissed();
-    if (dismissed) return;
-
     if (!mounted) return;
 
     // Small delay so the scan result shows first
@@ -1055,8 +771,10 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   void _showAccountPromptDialog() {
     controller.stop();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) =>
           AccountPromptDialog(onCreateAccount: _showAuthBottomSheet),
     ).then((_) {
@@ -1067,77 +785,167 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   void _showAuthBottomSheet() {
     controller.stop();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (context, scrollController) => ClipRRect(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
-          child: Scaffold(
-            backgroundColor: Colors.white,
-            body: SingleChildScrollView(
-              controller: scrollController,
-              padding: EdgeInsets.all(28.w),
-              child: _AuthSheetContent(
-                onSuccess: () {
-                  Navigator.of(context).pop();
-                  widget.onLoginSuccess?.call();
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
+    showAuthBottomSheet(
+      context,
+      onSuccess: () => widget.onLoginSuccess?.call(),
     ).then((_) {
       controller.start();
     });
   }
 
-  /// Gray tint shared by the scan page's glass buttons, so they stay
-  /// readable over bright scenes (the Vegandex button keeps its gold tint).
-  static const LiquidGlassAppearance _grayGlassAppearance =
-      LiquidGlassAppearance(
-    color: Color(0x80757575), // grey 600 at 50%
-    blur: LiquidGlassBlur(sigmaX: 3, sigmaY: 3),
-  );
+  /// Vegandex button: icon-only square, same shape as the history button
+  /// next to it. Used to expand into a text label on entry via
+  /// [AnimatedCrossFade]; disabled since it didn't read well — see the
+  /// commented block below to bring it back.
+  Widget _buildVegandexButton() {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final pokeballImage = Image.asset(
+      'lib/assets/images/icons/pokeball.webp',
+      width: 84.w,
+      height: 84.w,
+      color: Colors.white,
+      colorBlendMode: BlendMode.srcIn,
+    );
+    final button = SquareIconButton.action(
+      onTap: _openVegandex,
+      backgroundColor: primaryColor,
+      child: pokeballImage,
+      // child: AnimatedCrossFade(
+      //   duration: const Duration(milliseconds: 900),
+      //   sizeCurve: Curves.easeInOutCubicEmphasized,
+      //   firstCurve: Curves.easeOut,
+      //   secondCurve: Curves.easeIn,
+      //   crossFadeState: _vegandexExpanded
+      //       ? CrossFadeState.showFirst
+      //       : CrossFadeState.showSecond,
+      //   firstChild: Padding(
+      //     padding: EdgeInsets.symmetric(horizontal: 32.w),
+      //     child: SizedBox(
+      //       height: 144.w,
+      //       child: Row(
+      //         mainAxisSize: MainAxisSize.min,
+      //         mainAxisAlignment: MainAxisAlignment.center,
+      //         children: [
+      //           Flexible(
+      //             child: Text(
+      //               'Vegandex',
+      //               overflow: TextOverflow.ellipsis,
+      //               maxLines: 1,
+      //               softWrap: false,
+      //               style: TextStyle(
+      //                 color: Colors.white,
+      //                 fontWeight: FontWeight.bold,
+      //                 fontSize: 34.sp,
+      //                 fontFamily: 'Balloo2'
+      //               ),
+      //             ),
+      //           ),
+      //           SizedBox(width: 16.w),
+      //           icon,
+      //         ],
+      //       ),
+      //     ),
+      //   ),
+      //   secondChild: SizedBox(
+      //     width: 144.w,
+      //     height: 144.w,
+      //     child: Center(child: icon),
+      //   ),
+      // ),
+    );
 
-  /// Small square liquid-glass icon button (settings, history, ...),
-  /// styled consistently with [LiquidGlassButton].
-  Widget _buildGlassIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    double? iconSize,
-  }) {
-    return LiquidGlassLens(
-      style: LiquidGlassButton.defaultStyle.copyWith(
-        shape: LiquidGlassShape.roundedRectangle(
-          cornerRadius: 20.r,
-          borderWidth: 1.1,
-          lightIntensity: 1.2,
-          lightDirection: 80,
-          borderType: const OpticalBorder(
-            borderSaturation: 1.2,
-            ambientIntensity: 1.0,
-            borderSolidity: 0.35,
+    return AnimatedBuilder(
+      animation: _vegandexShakeController,
+      builder: (context, child) {
+        final t = _vegandexShakeController.value;
+        final dx = sin(t * pi * 6) * (1 - t) * 14.w;
+        final scale = 1 + sin(t.clamp(0.0, 1.0) * pi) * 0.16;
+        return Transform.translate(
+          offset: Offset(dx, 0),
+          child: Transform.scale(scale: scale, child: child),
+        );
+      },
+      child: button,
+    );
+  }
+
+  /// Haptic buzz + [_vegandexShakeController] wiggle, fired the instant a
+  /// discovered product's modal finishes flying into the button.
+  void _shakeVegandexButton() {
+    HapticHelper.impact();
+    _vegandexShakeController.forward(from: 0);
+  }
+
+  /// Tapping opens [ProductSearchPage]. Not an editable field here:
+  /// [AbsorbPointer] keeps the whole bar a single tap target instead of
+  /// focusing the [TextField] in place.
+  Widget _buildTopSearchBar() {
+    return GestureDetector(
+      onTap: _openProductSearch,
+      child: AbsorbPointer(
+        child: Container(
+          height: 144.w,
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: squircleBorder(radius: 12),
+            shadows: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              SizedBox(width: 39.w),
+              Image.asset(
+                'lib/assets/images/icons/search-line.webp',
+                width: 60.sp,
+                height: 60.sp,
+                color: Colors.grey[600],
+                colorBlendMode: BlendMode.srcIn,
+              ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: TextField(
+                  textInputAction: TextInputAction.search,
+                  style: TextStyle(fontSize: 42.sp),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: "Additif, cosmétique, code-barre...",
+                    hintStyle:
+                        TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+              SizedBox(width: 39.w),
+            ],
           ),
         ),
-        appearance: _grayGlassAppearance,
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20.r),
-          onTap: onTap,
-          child: Padding(
-            padding: EdgeInsets.all(8.w),
-            child: Icon(
-              icon,
+    );
+  }
+
+  /// Viewfinder reticle over the live camera while idle. [IgnorePointer]
+  /// keeps it from blocking taps on the camera beneath it.
+  Widget _buildScanTargetOverlay() {
+    final width = 0.7.sw;
+    final height = 0.5.sh;
+    return IgnorePointer(
+      child: Align(
+        alignment: const Alignment(0, 0.1),
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: CustomPaint(
+            painter: _ScanTargetPainter(
               color: Colors.white,
-              size: iconSize ?? 80.sp,
+              strokeWidth: 6.w,
+              cornerLength: 70.w,
+              cornerRadius: 48.w,
             ),
           ),
         ),
@@ -1148,12 +956,14 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   Widget _buildScanWarningBox(String text) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        border: Border.all(color: Colors.white, width: 2),
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
+      padding: EdgeInsets.all(15.w),
+      decoration: ShapeDecoration(
+        color: kTextPrimary,
+        shape: squircleBorder(
+          radius: 12,
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        shadows: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
@@ -1163,19 +973,21 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.warning,
-            color: Colors.orange[800],
-            size: 80.sp,
+          Image.asset(
+            'lib/assets/images/icons/alert-circle.webp',
+            width: 80.sp,
+            height: 80.sp,
+            color: Colors.white,
+            colorBlendMode: BlendMode.srcIn,
           ),
-          SizedBox(width: 12.w),
+          SizedBox(width: 10.w),
           Expanded(
             child: Text(
               text,
               style: TextStyle(
                 fontSize: 36.sp,
-                color: Colors.orange[900],
-                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -1189,31 +1001,42 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
     return Scaffold(
       body: Stack(
         children: [
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(0.0),
-                child: SizedBox(
-                  height: 0.55.sh,
-                  child: MobileScanner(
-                    controller: controller,
-                    onDetect: (BarcodeCapture capture) {
-                      _handleBarcode(capture);
-                    },
+          Positioned.fill(
+            child: MobileScanner(
+              controller: controller,
+              onDetect: (BarcodeCapture capture) {
+                _handleBarcode(capture);
+              },
+            ),
+          ),
+          _buildScanTargetOverlay(),
+          if (productInfo == null)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 48.w),
+                    child: Text(
+                      'Scannez un produit alimentaire',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyBold15.copyWith(
+                        color: Colors.white,
+                        height: 1,
+                        letterSpacing: 0,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ],
-          ),
-          // Camera-area overlays (warnings + score bar) flow bottom-up in a
-          // single column ending just above the result card, so they never
-          // overlap each other whatever the device height or text length.
+            ),
+          // Warnings flow bottom-up in a column ending above the result
+          // card, so they never overlap regardless of device height/length.
           if (productInfo != null)
             Positioned(
               top: 0,
               left: 16,
               right: 16,
-              height: 1090.h,
+              height: 1290.h,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 spacing: 24.h,
@@ -1227,170 +1050,58 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
                     _buildScanWarningBox(
                       'Ancienne recette non vegan : il se peut qu\'il y ait encore du stock avec l\'ancienne recette. Vérifiez les ingrédients.',
                     ),
-                  if (productInfo!.status == ScanStatus.vegan)
-                    ProductScoresSection(
-                      barcode: productInfo!.code,
-                      isSubscribed: SubscriptionService.isSubscribed,
-                      enabled: _showScores,
-                      onDisable: () => _setShowScoresPref(false),
-                    ),
                 ],
               ),
             ),
-          // Add the floating button for Vegandex
-          Positioned(
-            top: 180.h,
-            right: 20,
-            child: Container(
-              width: 0.25.sw,
-              height: 0.05.sh,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(40.r),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFFFFD700), // Gold
-                    Color(0xFFFFAF00), // Darker gold
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                border: Border.all(
-                  color: Colors.white,
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFFFD700).withValues(alpha: 0.5),
-                    blurRadius: 15,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(40.r),
-                  onTap: () => _showModalSheet(VegandexModal(
-                    onNavigateToProfile: widget.onNavigateToProfile,
-                  )),
-                  child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.catching_pokemon,
-                          color: Colors.white,
-                          size: 40.sp,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.4),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          "Vegandex",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 40.sp,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                blurRadius: 3,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Result card with bottom margin
+          // Anchored to the bottom so it sits low when short and grows
+          // upward instead of overflowing for content-heavy statuses.
           if (productInfo != null)
             Positioned(
-              top: 1100.h,
+              bottom: 200.h,
               left: 16,
               right: 16,
               child: switch (productInfo!.status) {
                 ScanStatus.vegan => VeganProductInfoCard(
                     productInfo: productInfo!,
                     showBoycott: _showBoycott,
-                    onBoycottToggleChanged: (value) {
-                      setState(() {
-                        _showBoycott = value;
-                      });
-                    },
+                    showScores: _showScores,
+                    onScoresDisable: () => _setShowScoresPref(false),
                   ),
                 ScanStatus.pending =>
                   PendingProductInfoCard(productInfo: productInfo!),
                 ScanStatus.alreadyScanned =>
-                  const AlreadyScannedProductInfoCard(),
-                ScanStatus.notFound =>
-                  NotFoundProductInfoCard(productInfo: productInfo!),
-                ScanStatus.unknown => NonVeganProductInfoCard(
-                    key: nonVeganCardKey,
+                  AlreadyScannedProductInfoCard(productInfo: productInfo!),
+                ScanStatus.notFound => UnknownProductInfoCard(
                     productInfo: productInfo!,
-                    confettiController: _confettiController,
-                    onNavigateToProfile: widget.onNavigateToProfile,
-                    onScannerStop: () {
-                      _scannerPausedByModal = true;
-                      controller.stop();
-                    },
-                    onScannerStart: () {
-                      _scannerPausedByModal = false;
-                      controller.start();
-                    },
+                    onSendInfo: _openUnknownProductModal,
+                  ),
+                ScanStatus.unknown => UnknownProductInfoCard(
+                    productInfo: productInfo!,
+                    onSendInfo: _openUnknownProductModal,
                   ),
                 ScanStatus.notVegan =>
                   RejectedProductInfoCard(productInfo: productInfo!),
               },
-            )
-          else // Show prompt when not loading and no data
-            Positioned(
-              top: 1100.h,
-              left: 16,
-              right: 16,
-              child: const NoResultCard(),
             ),
-          if (productInfo != null && productInfo!.status != ScanStatus.unknown)
+          if (productInfo != null &&
+              productInfo!.status != ScanStatus.unknown &&
+              productInfo!.status != ScanStatus.notFound)
             Positioned(
-              bottom: 240.h,
+              bottom: 100.h,
               left: 0,
               right: 0,
               child: Center(
-                child: productInfo!.status == ScanStatus.notFound
-                    ? SendInfoButton(
-                        barcode: productInfo!.code,
-                        onScannerStop: () {
-                          _scannerPausedByModal = true;
-                          controller.stop();
-                        },
-                        onScannerStart: () {
-                          _scannerPausedByModal = false;
-                          controller.start();
-                        },
-                      )
-                    : ReportErrorButton(
-                        barcode: productInfo!.code,
-                        onScannerStop: () {
-                          _scannerPausedByModal = true;
-                          controller.stop();
-                        },
-                        onScannerStart: () {
-                          _scannerPausedByModal = false;
-                          controller.start();
-                        },
-                      ),
+                child: ReportErrorButton(
+                  barcode: productInfo!.code,
+                  onScannerStop: () {
+                    _scannerPausedByModal = true;
+                    controller.stop();
+                  },
+                  onScannerStart: () {
+                    _scannerPausedByModal = false;
+                    controller.start();
+                  },
+                ),
               ),
             ),
           Positioned.fill(
@@ -1415,85 +1126,23 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
               ),
             ),
           ),
+          // Top row: search bar, history and Vegandex buttons.
           Positioned(
-            bottom: 100.h,
-            right: 20,
-            child: _buildGlassIconButton(
-              icon: Icons.keyboard_outlined,
-              iconSize: 90.sp,
-              onTap: _showManualEanDialog,
-            ),
-          ),
-          // Floating action cluster (positioned last to be on top):
-          // settings / history / sent products in a row, with the additives
-          // and cosmetics searches below. Single anchor point; Row/Column
-          // spacing handles the rest.
-          Positioned(
-            top: 200.h,
-            left: 60.w,
-            child: Column(
+            top: MediaQuery.of(context).padding.top + 24,
+            left: 48.w,
+            right: 48.w,
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 40.h,
               children: [
-                Row(
-                  spacing: 60.w,
-                  children: [
-                    _buildGlassIconButton(
-                      icon: Icons.settings,
-                      onTap: _showSettingsModal,
-                    ),
-                    _buildGlassIconButton(
-                      icon: Icons.history,
-                      onTap: () => _showModalSheet(
-                        HistoryModal(scanHistory: scanHistory),
-                      ),
-                    ),
-                    _buildGlassIconButton(
-                      icon: Icons.switch_access_shortcut_add_outlined,
-                      onTap: () => _showModalSheet(const SentProductsModal()),
-                    ),
-                  ],
+                Expanded(child: _buildTopSearchBar()),
+                SizedBox(width: 30.w),
+                SquareIconButton.action(
+                  icon: Icons.history,
+                  iconColor: kTextPrimary,
+                  onTap: _openScanHistory,
                 ),
-                IntrinsicWidth(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    spacing: 24.h,
-                    children: [
-                      LiquidGlassButton(
-                        label: 'Additifs 🔎',
-                        icon: Icons.science,
-                        height: 100.h,
-                        fontSize: 40.sp,
-                        iconSize: 80.sp,
-                        style: LiquidGlassButton.defaultStyle.copyWith(
-                          appearance: _grayGlassAppearance,
-                        ),
-                        onPressed: () => _showSearchModal(
-                          title: 'Additifs',
-                          subtitle: 'Rechercher un additif',
-                          icon: Icons.science,
-                          child: const AdditivesPage(),
-                        ),
-                      ),
-                      LiquidGlassButton(
-                        label: 'Cosmétiques 🔎',
-                        icon: Icons.soap_rounded,
-                        height: 100.h,
-                        fontSize: 40.sp,
-                        iconSize: 80.sp,
-                        style: LiquidGlassButton.defaultStyle.copyWith(
-                          appearance: _grayGlassAppearance,
-                        ),
-                        onPressed: () => _showSearchModal(
-                          title: 'Cosmétiques',
-                          subtitle: 'Rechercher une marque',
-                          icon: Icons.soap_rounded,
-                          child: const CosmeticsPage(),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                SizedBox(width: 30.w),
+                _buildVegandexButton(),
               ],
             ),
           ),
@@ -1503,30 +1152,54 @@ class ScanPageState extends State<ScanPage> with WidgetsBindingObserver {
   }
 }
 
-class _AuthSheetContent extends StatefulWidget {
-  final VoidCallback onSuccess;
+/// Paints the four rounded corner brackets of the scan viewfinder reticle.
+class _ScanTargetPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double cornerLength;
+  final double cornerRadius;
 
-  const _AuthSheetContent({required this.onSuccess});
+  _ScanTargetPainter({
+    required this.color,
+    required this.strokeWidth,
+    required this.cornerLength,
+    required this.cornerRadius,
+  });
 
   @override
-  State<_AuthSheetContent> createState() => _AuthSheetContentState();
-}
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
 
-class _AuthSheetContentState extends State<_AuthSheetContent> {
-  bool _showRegister = true;
-
-  @override
-  Widget build(BuildContext context) {
-    if (_showRegister) {
-      return RegisterForm(
-        onRegisterSuccess: widget.onSuccess,
-        onSwitchToLogin: () => setState(() => _showRegister = false),
-      );
-    } else {
-      return LoginForm(
-        onLoginSuccess: widget.onSuccess,
-        onSwitchToRegister: () => setState(() => _showRegister = true),
-      );
+    // Draws one L-shaped bracket at [origin], arms extending along (dx, dy)
+    // with a rounded quarter-circle corner.
+    void drawCorner(Offset origin, double dx, double dy) {
+      final path = Path()
+        ..moveTo(origin.dx + dx * cornerLength, origin.dy)
+        ..lineTo(origin.dx + dx * cornerRadius, origin.dy)
+        ..quadraticBezierTo(
+          origin.dx,
+          origin.dy,
+          origin.dx,
+          origin.dy + dy * cornerRadius,
+        )
+        ..lineTo(origin.dx, origin.dy + dy * cornerLength);
+      canvas.drawPath(path, paint);
     }
+
+    drawCorner(Offset.zero, 1, 1);
+    drawCorner(Offset(size.width, 0), -1, 1);
+    drawCorner(Offset(0, size.height), 1, -1);
+    drawCorner(Offset(size.width, size.height), -1, -1);
   }
+
+  @override
+  bool shouldRepaint(covariant _ScanTargetPainter oldDelegate) =>
+      color != oldDelegate.color ||
+      strokeWidth != oldDelegate.strokeWidth ||
+      cornerLength != oldDelegate.cornerLength ||
+      cornerRadius != oldDelegate.cornerRadius;
 }

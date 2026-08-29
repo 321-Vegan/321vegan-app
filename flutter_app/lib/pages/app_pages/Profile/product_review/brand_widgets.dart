@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/validator_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/widgets/shared/search_field.dart';
 
 class BrandSelect extends StatefulWidget {
   final ValidatorBrand? initialBrand;
@@ -32,9 +35,7 @@ class _BrandSelectState extends State<BrandSelect> {
     final result = await showModalBottomSheet<ValidatorBrand>(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
+      shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
       builder: (ctx) => _BrandSelectorSheet(
         initialQuery: _selected?.name ?? widget.initialQuery,
       ),
@@ -62,18 +63,20 @@ class _BrandSelectState extends State<BrandSelect> {
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[300]!),
-        borderRadius: BorderRadius.circular(12.r),
+      decoration: ShapeDecoration(
         color: Colors.white,
+        shape: squircleBorder(
+          radius: 12.r,
+          side: BorderSide(color: Colors.grey[300]!),
+        ),
       ),
       child: Row(
         children: [
           Expanded(
             child: InkWell(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12.r),
-                bottomLeft: Radius.circular(12.r),
+              customBorder: squircleBorderOnly(
+                topLeft: 12.r,
+                bottomLeft: 12.r,
               ),
               onTap: _openSelector,
               child: Padding(
@@ -189,28 +192,24 @@ class _BrandSelectorSheetState extends State<_BrandSelectorSheet> {
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[800])),
               SizedBox(height: 16.h),
-              TextField(
+              SearchField(
                 controller: _ctrl,
+                hintText: 'Rechercher…',
                 autofocus: true,
                 onChanged: _search,
-                decoration: InputDecoration(
-                  hintText: 'Rechercher…',
-                  hintStyle: TextStyle(fontSize: 36.sp, color: Colors.grey[400]),
-                  prefixIcon: Icon(Icons.search, size: 44.sp),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.r)),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-                  suffixIcon: _searching
-                      ? Padding(
-                          padding: EdgeInsets.all(12.w),
-                          child: SizedBox(
-                            width: 20.w,
-                            height: 20.w,
-                            child: const CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : null,
-                ),
-                style: TextStyle(fontSize: 38.sp),
+                radius: 12,
+                iconSize: 44,
+                fontSize: 38,
+                trailing: _searching
+                    ? Padding(
+                        padding: EdgeInsets.all(12.w),
+                        child: SizedBox(
+                          width: 20.w,
+                          height: 20.w,
+                          child: const CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    : null,
               ),
               SizedBox(height: 12.h),
               Expanded(
@@ -335,7 +334,7 @@ class _CreateBrandDialogState extends State<_CreateBrandDialog> {
             ),
             if (_error != null) ...[
               SizedBox(height: 10.h),
-              Text(_error!, style: TextStyle(fontSize: 34.sp, color: Colors.red[700])),
+              Text(_error!, style: TextStyle(fontSize: 34.sp, color: kSemanticError)),
             ],
           ],
         ),
@@ -350,6 +349,7 @@ class _CreateBrandDialogState extends State<_CreateBrandDialog> {
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Colors.white,
+            elevation: 0,
           ),
           child: _submitting
               ? SizedBox(
@@ -447,11 +447,13 @@ class _ParentBrandSearchState extends State<_ParentBrandSearch> {
         ),
         if (_suggestions.isNotEmpty)
           Container(
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: Colors.grey[200]!),
-              boxShadow: [
+              shape: squircleBorder(
+                radius: 8.r,
+                side: BorderSide(color: Colors.grey[200]!),
+              ),
+              shadows: [
                 BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 8)
               ],
             ),

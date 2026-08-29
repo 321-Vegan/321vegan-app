@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,28 +11,22 @@ class ProductsOfInterestCache {
   static const String _lastUpdateKey = 'products_of_interest_last_update';
   static const Duration _cacheExpiry = Duration(hours: 12);
 
+  /// In-flight background refresh, shared by every caller. Without this,
+  /// app startup (initializeAtStartup) and the first screen to load
+  /// (scan/vegandex/map, each calling loadProductsOfInterest) race to fire
+  /// their own API call before any of them has written back _lastUpdateKey,
+  /// so on a weak in-shop connection they'd otherwise compete as several
+  /// redundant simultaneous requests instead of one.
+  static Future<void>? _pendingRefresh;
+
   /// Initialize cache at app startup as the user is most likely to have correct internet connexion
   /// Returns immediately (non-blocking) but triggers background update if needed
   static void initializeAtStartup() {
     // Don't await - let it run in background without blocking app startup
     Future(() async {
-      try {
-        final shouldRefresh = await shouldUpdate();
-        if (shouldRefresh) {
-          // Update cache in background with timeout
-          await ApiService.getInterestingProducts()
-              .timeout(const Duration(seconds: 10))
-              .then((products) {
-            if (products.isNotEmpty) {
-              _saveToCache(products);
-            }
-          }).catchError((e) {
-            // Silently fail - cache will be updated next time
-            debugPrint('Startup cache update failed (expected if offline): $e');
-          });
-        }
-      } catch (e) {
-        debugPrint('Cache initialization error: $e');
+      final shouldRefresh = await shouldUpdate();
+      if (shouldRefresh) {
+        await _refreshInBackground();
       }
     });
   }
@@ -48,7 +43,7 @@ class ProductsOfInterestCache {
       if (shouldRefresh) {
         // Update from API in background with timeout
         // This won't block the UI
-        _updateFromApiInBackground();
+        unawaited(_refreshInBackground());
       }
 
       return cachedProducts;
@@ -76,23 +71,27 @@ class ProductsOfInterestCache {
     }
   }
 
-  /// Update cache from API in background
-  static void _updateFromApiInBackground() {
-    // Run in background without waiting
-    Future(() async {
-      try {
-        // Add timeout to prevent slow network from blocking
-        final products = await ApiService.getInterestingProducts()
-            .timeout(const Duration(seconds: 10));
-
-        if (products.isNotEmpty) {
-          await _saveToCache(products);
-        }
-      } catch (e) {
-        // Silently fail - we already have cached data
-        debugPrint('Background update failed (expected if offline): $e');
-      }
+  /// Fetches from the API and saves to cache, deduped via [_pendingRefresh]
+  /// so concurrent callers share one in-flight request.
+  static Future<void> _refreshInBackground() {
+    return _pendingRefresh ??= _doRefresh().whenComplete(() {
+      _pendingRefresh = null;
     });
+  }
+
+  static Future<void> _doRefresh() async {
+    try {
+      // Add timeout to prevent slow network from blocking
+      final products = await ApiService.getInterestingProducts()
+          .timeout(const Duration(seconds: 10));
+
+      if (products.isNotEmpty) {
+        await _saveToCache(products);
+      }
+    } catch (e) {
+      // Silently fail - we already have cached data
+      debugPrint('Background update failed (expected if offline): $e');
+    }
   }
 
   /// Force update from API (useful for manual refresh)
@@ -129,7 +128,7 @@ class ProductsOfInterestCache {
     }
   }
 
-  /// Check if cache needs update (older than 24 hours)
+  /// Check if cache needs update (older than 12 hours)
   static Future<bool> shouldUpdate() async {
     try {
       final prefs = await SharedPreferences.getInstance();

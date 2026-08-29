@@ -1,25 +1,40 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:vegan_app/helpers/time_counter/time_counter.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
-import 'package:vegan_app/widgets/wave_clipper.dart';
 
-/// The image that gets shared: the home page (counter + stats) inside a phone
-/// mockup, branded 321 Vegan, decorated with a seasonal theme. Uses fixed
-/// logical sizes (no ScreenUtil) so the captured image is identical on every
-/// device.
+/// The four shareable looks for [ShareHomeCard]: [dark] is the original
+/// seasonal-primary-colored card, [light] the cream/brand-green variant.
+/// [darkMinimal]/[lightMinimal] swap the heading and feature chips for a
+/// plain "321 Vegan" brand mark.
+enum ShareCardStyle { dark, light, darkMinimal, lightMinimal }
+
+/// The image that gets shared: the home page (counter + stats) inside a
+/// phone mockup. Uses fixed logical sizes (no ScreenUtil) so the captured
+/// image is identical on every device.
 class ShareHomeCard extends StatelessWidget {
   final DateTime targetDate;
   final Map<String, int> savings;
   final SeasonalTheme theme;
+  final ShareCardStyle style;
 
   const ShareHomeCard({
     required this.targetDate,
     required this.savings,
     required this.theme,
+    this.style = ShareCardStyle.dark,
     super.key,
   });
+
+  bool get _isLight =>
+      style == ShareCardStyle.light || style == ShareCardStyle.lightMinimal;
+
+  bool get _isMinimal =>
+      style == ShareCardStyle.darkMinimal || style == ShareCardStyle.lightMinimal;
 
   @override
   Widget build(BuildContext context) {
@@ -27,324 +42,331 @@ class ShareHomeCard extends StatelessWidget {
       width: 360,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Color.lerp(theme.primaryColor, Colors.black, 0.35)!,
-            theme.primaryColor,
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+        gradient: _isLight
+            ? const LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                stops: [0.0, 0.3],
+                colors: [kBackgroundGradientTop, kBackgroundGradientBottom],
+              )
+            : LinearGradient(
+                colors: [
+                  Color.lerp(theme.primaryColor, Colors.black, 0.35)!,
+                  theme.primaryColor,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('lib/assets/white_icon.png', width: 42, height: 42),
-              const SizedBox(width: 10),
-              const Text(
-                '321 Vegan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Baloo',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
           _buildPhoneMockup(),
           const SizedBox(height: 14),
-          const Text(
-            'Vous connaissez 321 Vegan ?',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Baloo',
+          if (_isMinimal)
+            _buildBrandMark()
+          else ...[
+            _buildHeading(),
+            const SizedBox(height: 10),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _FeatureChip('🌱 Voir son impact', light: _isLight),
+                _FeatureChip('📷 Scanner les produits', light: _isLight),
+                _FeatureChip('💸 Des réductions', light: _isLight),
+                _FeatureChip('🤝 Communautaire', light: _isLight),
+                _FeatureChip('❤️ Gratuit', light: _isLight),
+                _FeatureChip('💻 Open source', light: _isLight),
+              ],
             ),
-          ),
-          const SizedBox(height: 10),
-          const Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _FeatureChip('🌱 Voir son impact'),
-              _FeatureChip('📷 Scanner les produits'),
-              _FeatureChip('💸 Des réductions'),
-              _FeatureChip('🤝 Communautaire'),
-              _FeatureChip('❤️ Gratuit'),
-              _FeatureChip('💻 Open source'),
-            ],
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildPhoneMockup() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1F2937),
-        borderRadius: BorderRadius.circular(38),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: SizedBox(
-          width: 234,
-          height: 415,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    gradient: theme.backgroundGradient,
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: ClipPath(
-                  clipper: WaveClipper(),
-                  child: Container(color: theme.waveColor, height: 78),
-                ),
-              ),
-              _buildSeasonalDecoration(),
-              Column(
-                children: [
-                  // Below the wave (78px high at the edges).
-                  const SizedBox(height: 80),
-                  const Text(
-                    'Vous êtes végane depuis',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                      fontFamily: 'Baloo',
-                    ),
-                  ),
-                  _buildCounter(),
-                  const SizedBox(height: 4),
-                  ...homeStats.map(
-                    (stat) =>
-                        _miniStatCard(stat, savings[stat.savingsKey] ?? 0),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 3,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      'Depuis le ${DateFormat('dd/MM/yyyy').format(targetDate)}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontFamily: 'Baloo',
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
-              ),
-              // Notch
-              Align(
-                alignment: Alignment.topCenter,
-                child: Container(
-                  margin: const EdgeInsets.only(top: 6),
-                  width: 64,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1F2937),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Seasonal icon/asset over the wave, mirroring the home page positions
-  /// (size 889, offset -72/42 plus the theme's icon offsets and scale, on a
-  /// 1170x2532 design mapped to the 234x415 mockup screen). Note that on the
-  /// home page the theme icon offsets get ScreenUtil scaling applied twice
-  /// (once in the theme files, once in SeasonalIcon), which these values
-  /// account for.
-  Widget _buildSeasonalDecoration() {
-    final double size;
-    final double top;
-    final double left;
-    switch (theme.season) {
-      case Season.defaultTheme:
-        size = 165;
-        top = 7;
-        left = -13;
-      case Season.winter:
-        size = 110;
-        top = 6;
-        left = 4;
-      case Season.spring:
-        size = 110;
-        top = -8;
-        left = 0;
-      case Season.summer:
-        size = 150;
-        top = -40;
-        left = -2;
-      case Season.autumn:
-        size = 84;
-        top = 0;
-        left = 18;
-    }
-
-    return Positioned(
-      top: top,
-      left: left,
-      child: theme.seasonalAsset != null
-          ? Image.asset(theme.seasonalAsset!, width: size, height: size)
-          : Icon(theme.seasonalIcon, size: size, color: Colors.white),
-    );
-  }
-
-  Widget _buildCounter() {
-    final breakdown = TimeBreakdown.between(targetDate, DateTime.now());
+  Widget _buildHeading() {
+    final headingStyle = AppTextStyles.baloo22
+        .copyWith(color: _isLight ? kTextPrimary : Colors.white);
+    final brandStyle = AppTextStyles.baloo22
+        .copyWith(color: _isLight ? theme.primaryColor : Colors.white);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _counterColumn('${breakdown.years}', 'ans'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.months}', 'mois'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.days}', 'jours'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.hours}', 'heures'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.minutes}', 'min'),
-        const SizedBox(width: 8),
-        _counterColumn('${breakdown.seconds}', 'sec'),
+        Text('Vous connaissez ', style: headingStyle),
+        Image.asset(
+          _isLight ? 'lib/assets/app_icon.png' : 'lib/assets/white_icon.png',
+          width: 20,
+          height: 20,
+        ),
+        const SizedBox(width: 4),
+        Text('321 Vegan', style: brandStyle),
+        Text(' ?', style: brandStyle),
       ],
     );
   }
 
-  Widget _counterColumn(String value, String label) {
-    return Column(
+  Widget _buildBrandMark() {
+    final brandStyle = AppTextStyles.baloo22
+        .copyWith(color: _isLight ? theme.primaryColor : Colors.white);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          value.padLeft(2, '0'),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
+        Image.asset(
+          _isLight ? 'lib/assets/app_icon.png' : 'lib/assets/white_icon.png',
+          width: 22,
+          height: 22,
+        ),
+        const SizedBox(width: 6),
+        Text('321 Vegan', style: brandStyle),
+      ],
+    );
+  }
+
+  /// Mirrors AppBackground: [theme]'s seasonal gradient, or the app's
+  /// default cream gradient outside a season.
+  LinearGradient get _phoneBackgroundGradient {
+    const defaultGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [kBackgroundGradientTop, kBackgroundGradientBottom],
+    );
+    final isSeasonal = theme.season != Season.defaultTheme;
+    return isSeasonal
+        ? (theme.backgroundGradient ?? defaultGradient)
+        : defaultGradient;
+  }
+
+  Widget _buildPhoneMockup() {
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: ShapeDecoration(
+            color: const Color(0xFF1F2937),
+            shape: squircleBorder(radius: 38),
+            shadows: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ClipSmoothRect(
+            radius: squircleRadius(30),
+            child: SizedBox(
+              width: 234,
+              height: 473,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration:
+                          BoxDecoration(gradient: _phoneBackgroundGradient),
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      // Clears the notch and the counter card above.
+                      const SizedBox(height: 150),
+                      ...homeStats.map(
+                        (stat) =>
+                            _miniStatCard(stat, savings[stat.savingsKey] ?? 0),
+                      ),
+                    ],
+                  ),
+                  // Notch
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 6),
+                      width: 64,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1F2937),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        Transform.translate(
-          offset: const Offset(0, -4),
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 8, color: Colors.black),
-          ),
-        ),
+        // Deliberately wider than the phone frame so it overflows past its
+        // edges, giving the shared image a "zoomed in" pop-out look.
+        Positioned(top: 34, child: _CounterCard(targetDate: targetDate)),
       ],
     );
   }
 
   Widget _miniStatCard(HomeStat stat, int value) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(10, 0, 10, 8),
-      child: ClipPath(
-        clipper: BookDividerClipper(),
-        child: Container(
-          color: stat.cardColor,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stat.title.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          '$value',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          stat.unitName,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(
+          radius: 12,
+          side: const BorderSide(color: kBorderDefault),
+        ),
+        shadows: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            offset: const Offset(0, 2),
+            blurRadius: 6,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  stat.unitName.isEmpty ? '$value' : '$value ${stat.unitName}',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.grey[850],
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              Container(
-                width: 24,
-                height: 24,
+                const SizedBox(height: 1),
+                Text(
+                  stat.title,
+                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: Image.asset(
+              seasonalStatIllustration(stat, theme.season),
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Container(
                 decoration: BoxDecoration(
-                  color: stat.iconColor,
+                  color: stat.iconColor.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      offset: Offset(0, 1),
-                      blurRadius: 3,
-                    ),
-                  ],
                 ),
                 child: Center(
-                  child: Icon(stat.icon, color: Colors.white, size: 14),
+                  child: Icon(stat.icon, color: stat.iconColor, size: 22),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Vous êtes vegan depuis" title + bordered digit-tile counter, mirroring
+/// [VeganCounter]'s tile design at share-image scale.
+class _CounterCard extends StatelessWidget {
+  final DateTime targetDate;
+
+  const _CounterCard({required this.targetDate});
+
+  static const _units = ['ans', 'mois', 'jours', 'heures', 'min'];
+
+  @override
+  Widget build(BuildContext context) {
+    final breakdown = TimeBreakdown.between(targetDate, DateTime.now());
+    final values = [
+      breakdown.years,
+      breakdown.months,
+      breakdown.days,
+      breakdown.hours,
+      breakdown.minutes,
+    ];
+
+    return Container(
+      width: 320,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(radius: 12),
+        shadows: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Vous êtes végane depuis',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.baloo22,
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (int i = 0; i < values.length; i++)
+                _tile(values[i], _units[i]),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tile(int value, String label) {
+    final text = value.toString().padLeft(2, '0');
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: squircleBorder(
+              radius: 6,
+              side: const BorderSide(color: kBorderDefault),
+            ),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _digit(text[0]),
+                Container(width: 1, color: kBorderDefault),
+                _digit(text[1]),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+        ),
+      ],
+    );
+  }
+
+  Widget _digit(String digit) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
+      child: Text(
+        digit,
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: kTextPrimary,
+          fontFamily: 'Baloo2',
         ),
       ),
     );
@@ -353,24 +375,22 @@ class ShareHomeCard extends StatelessWidget {
 
 class _FeatureChip extends StatelessWidget {
   final String label;
+  final bool light;
 
-  const _FeatureChip(this.label);
+  const _FeatureChip(this.label, {this.light = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
+        color: light ? kSecondaryTag : Colors.white.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(14),
+        border: light ? Border.all(color: kAccentYellow) : null,
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontFamily: 'Baloo',
-        ),
+        style: AppTextStyles.bodyMedium11.copyWith(color: light ? kAccentYellow : Colors.white,)
       ),
     );
   }

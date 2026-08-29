@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
-import 'package:vegan_app/widgets/theme/snow_globe_overlay.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
+import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
+import 'package:vegan_app/widgets/shared/info_box.dart';
 
 /// Definition of one impact stat, shared between the home page cards and the
 /// share card.
@@ -16,8 +21,8 @@ class HomeStat {
   final Color cardColor;
   final String info;
 
-  /// Avatar shown in the info dialog.
-  final String avatar;
+  /// Illustration shown on the Dashboard stat card and the info dialog.
+  final String illustration;
 
   const HomeStat({
     required this.savingsKey,
@@ -27,7 +32,7 @@ class HomeStat {
     required this.iconColor,
     required this.cardColor,
     required this.info,
-    required this.avatar,
+    required this.illustration,
   });
 }
 
@@ -39,20 +44,20 @@ const List<HomeStat> homeStats = [
     icon: Icons.favorite,
     iconColor: Color.fromARGB(247, 255, 103, 153),
     cardColor: Colors.pinkAccent,
-    avatar: 'lib/assets/avatars/cochon.png',
+    illustration: 'lib/assets/images/stat-cards/animals.webp',
     info:
-        "L'industrie de l'élevage cause d'immenses souffrances aux animaux en les considérant comme des objets. Choisir le véganisme, c'est refuser cette exploitation. Ici, on souligne l'effet positif que chacun peut avoir pour un monde plus juste et durable.",
+        "L'industrie de l'élevage cause d'immenses souffrances aux animaux en les considérant comme des objets.\n\nChoisir le véganisme, c'est refuser cette exploitation.\n\nIci, on souligne l'effet positif que chacun peut avoir pour un monde plus juste et durable.",
   ),
   HomeStat(
     savingsKey: 'co2Unit',
     title: 'CO₂ non émis',
-    unitName: 'KG',
+    unitName: 'kg',
     icon: Icons.arrow_downward_sharp,
     iconColor: Color.fromARGB(255, 255, 133, 133),
     cardColor: Colors.redAccent,
-    avatar: 'lib/assets/avatars/canard.png',
+    illustration: 'lib/assets/images/stat-cards/co2.webp',
     info:
-        "L'alimentation végétale a aussi un impact sur l'environnement et permet de réduire considérablement son empreinte carbone. La quantité de CO2 économisée vient du fait que l'élevage est l'une des principales sources d'émission de gaz à effet de serre, de déforestation, de pollution de l'air et de pollution de l'eau.",
+        "L'alimentation végétale a aussi un impact sur l'environnement et permet de réduire considérablement son empreinte carbone.\n\nLa quantité de CO2 économisée vient du fait que l'élevage est l'une des principales sources d'émission de gaz à effet de serre, de déforestation, de pollution de l'air et de pollution de l'eau.",
   ),
   HomeStat(
     savingsKey: 'forestUnit',
@@ -61,9 +66,9 @@ const List<HomeStat> homeStats = [
     icon: Icons.forest_sharp,
     iconColor: Color.fromARGB(127, 105, 240, 175),
     cardColor: Color.fromARGB(197, 36, 139, 87),
-    avatar: 'lib/assets/avatars/lapin.png',
+    illustration: 'lib/assets/images/stat-cards/forest.webp',
     info:
-        "L'élevage est l'une des principales causes de déforestation. Il faut en effet énormément de place pour cultiver les céréales (notamment soja et maïs) destinés à nourrir les animaux d'élevage. Cette déforestation a des conséquences désastreuses sur la biodiversité et les communautés locales. Adopter une alimentation végétale c'est réduire la pression sur les forêts et à encourager une agriculture plus durable.",
+        "L'élevage est l'une des principales causes de déforestation. Il faut en effet énormément de place pour cultiver les céréales (notamment soja et maïs) destinés à nourrir les animaux d'élevage.\n\nCette déforestation a des conséquences désastreuses sur la biodiversité et les communautés locales.\n\nAdopter une alimentation végétale c'est réduire la pression sur les forêts et à encourager une agriculture plus durable.",
   ),
   HomeStat(
     savingsKey: 'waterUnit',
@@ -72,131 +77,171 @@ const List<HomeStat> homeStats = [
     icon: Icons.water_drop,
     iconColor: Color.fromARGB(255, 97, 166, 250),
     cardColor: Colors.blueAccent,
-    avatar: 'lib/assets/avatars/poisson.png',
+    illustration: 'lib/assets/images/stat-cards/water.webp',
     info:
-        "En choisissant d'être végétalien, vous aidez à économiser de précieuses ressources en eau. La production de produits animaux nécessite une gigantesque quantité d'eau, notamment pour l'irrigation des cultures pour les animaux d'élevage. Et cela sans parler de la pollution de l'eau due aux déjections qu'ils produisent.",
+        "En choisissant d'être végétalien, vous aidez à économiser de précieuses ressources en eau.\n\nLa production de produits animaux nécessite une gigantesque quantité d'eau, notamment pour l'irrigation des cultures pour les animaux d'élevage.\n\nEt cela sans parler de la pollution de l'eau due aux déjections qu'ils produisent.",
   ),
 ];
+
+/// Season-matched illustration assets for stat cards that have a themed set
+/// (Figma redesign), keyed by [HomeStat.savingsKey]. Seasons without a
+/// design yet fall back to that card's `basic` asset, so a card can ship
+/// with only "basic" + one seasonal variant and grow the rest over time.
+const Map<String, String> _statThemeAssetPrefix = {
+  'animalUnit': 'lib/assets/themes/cards/poule',
+  'forestUnit': 'lib/assets/themes/cards/leaf',
+  'waterUnit': 'lib/assets/themes/cards/water',
+  'co2Unit': 'lib/assets/themes/cards/planet',
+};
+
+String seasonalStatIllustration(HomeStat stat, Season? season) {
+  final prefix = _statThemeAssetPrefix[stat.savingsKey];
+  if (prefix == null) return stat.illustration;
+  final suffix = switch (season) {
+    Season.autumn => 'autumn',
+    Season.summer => 'summer',
+    Season.spring => 'spring',
+    Season.winter => 'winter',
+    _ => 'basic',
+  };
+  final asset = '$prefix-$suffix.webp';
+  return _themeAssetsWithDesign.contains(asset) ? asset : '$prefix-basic.webp';
+}
+
+/// Assets that actually exist on disk for each themed card — every card in
+/// [_statThemeAssetPrefix] must at least have its `-basic.webp` here.
+const Set<String> _themeAssetsWithDesign = {
+  'lib/assets/themes/cards/poule-autumn.webp',
+  'lib/assets/themes/cards/poule-basic.webp',
+  'lib/assets/themes/cards/poule-spring.webp',
+  'lib/assets/themes/cards/poule-summer.webp',
+  'lib/assets/themes/cards/poule-winter.webp',
+  'lib/assets/themes/cards/leaf-autumn.webp',
+  'lib/assets/themes/cards/leaf-basic.webp',
+  'lib/assets/themes/cards/leaf-spring.webp',
+  'lib/assets/themes/cards/leaf-summer.webp',
+  'lib/assets/themes/cards/leaf-winter.webp',
+  'lib/assets/themes/cards/water-basic.webp',
+  'lib/assets/themes/cards/water-summer.webp',
+  'lib/assets/themes/cards/water-winter.webp',
+  'lib/assets/themes/cards/water-autumn.webp',
+  'lib/assets/themes/cards/water-spring.webp',
+  'lib/assets/themes/cards/planet-basic.webp',
+  'lib/assets/themes/cards/planet-summer.webp',
+  'lib/assets/themes/cards/planet-winter.webp',
+  'lib/assets/themes/cards/planet-autumn.webp',
+  'lib/assets/themes/cards/planet-spring.webp',
+};
 
 Widget buildStatCard(
   BuildContext context,
   HomeStat stat,
-  int value, {
-  SeasonalTheme? theme,
-}) {
+  int value,
+) {
   final title = stat.title;
   final unit = value;
   final unitName = stat.unitName;
   final icon = stat.icon;
   final iconColor = stat.iconColor;
-  final cardColor = stat.cardColor;
-  return InkWell(
-    borderRadius: BorderRadius.circular(10),
+  final seasonal = Theme.of(context).extension<SeasonalTheme>();
+  final showIceDecoration =
+      seasonal?.season == Season.winter && stat.savingsKey == 'co2Unit';
+  final card = InkWell(
+    customBorder: squircleBorder(radius: 12),
     onTap: () {
-      showDialog(
+      showModalBottomSheet(
         context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
         builder: (context) => StatInfoDialog(stat: stat, value: value),
       );
     },
+    // Spacing between cards is owned by the Dashboard column (AppSpacing),
+    // so the card carries no outer margin.
     child: Container(
-      margin: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 0.0),
-      child: _maybeSnowGlobe(
-        theme: theme,
-        child: Stack(
-          children: [
-            ClipPath(
-              clipper: BookDividerClipper(),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      offset: const Offset(0, 2),
-                      blurRadius: 6,
-                    ),
-                  ],
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(
+          radius: 36.r,
+          side: const BorderSide(color: kBorderDefault, width: 1),
+        ),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 21.h),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  child: Text(
+                    unitName.isEmpty ? '$unit' : '$unit $unitName',
+                    key: ValueKey<int>(unit),
+                    style: AppTextStyles.baloo26.copyWith(color: Colors.grey[850]),
+                  ),
                 ),
-                padding: EdgeInsets.all(40.w),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            title.toUpperCase(),
-                            style: TextStyle(
-                              color: const Color.fromARGB(255, 255, 255, 255),
-                              fontSize: 35.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 8.sp),
-                          Row(
-                            children: <Widget>[
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 500),
-                                child: Text(
-                                  '$unit',
-                                  key: ValueKey<int>(unit),
-                                  style: TextStyle(
-                                    fontSize: 70.sp,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 500),
-                                child: Text(
-                                  unitName,
-                                  key: ValueKey<String>(unitName),
-                                  style: TextStyle(
-                                    fontSize: 50.sp,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: iconColor,
-                        shape: BoxShape.circle,
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            offset: Offset(0, 2),
-                            blurRadius: 6,
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Icon(
-                          icon,
-                          color: Colors.white,
-                          size: 90.dm,
-                        ),
-                      ),
-                    ),
-                  ],
+                SizedBox(height: 8.h),
+                Text(
+                  title,
+                  style: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 30.w),
+          SizedBox(
+            width: 270.w,
+            height: 270.w,
+            child: Image.asset(
+              seasonalStatIllustration(stat, seasonal?.season),
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Container(
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(icon, color: iconColor, size: 110.sp),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     ),
   );
+
+  if (showIceDecoration) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        card,
+        // Clipped to the card's own corner radius so square image corners
+        // don't peek out past the squircle.
+        Positioned(
+          top: -50.h,
+          left: 0,
+          child: IgnorePointer(
+            child: ClipPath(
+              clipper: ShapeBorderClipper(
+                shape: squircleBorderOnly(topLeft: 36.r),
+              ),
+              child: Image.asset(
+                'lib/assets/themes/ice_8.webp',
+                width: 580.w,
+                fit: BoxFit.fitWidth,
+                alignment: Alignment.topLeft,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  return card;
 }
 
 /// Info dialog for one impact stat
@@ -217,188 +262,75 @@ class StatInfoDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28.r)),
-      child: Container(
-        padding: EdgeInsets.all(32.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28.r),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Avatar
-            Container(
-              width: 240.w,
-              height: 240.w,
-              padding: EdgeInsets.all(24.w),
-              decoration: BoxDecoration(
-                color: stat.cardColor.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Image.asset(stat.avatar, fit: BoxFit.contain),
+    final seasonal = Theme.of(context).extension<SeasonalTheme>();
+    final valueLabel =
+        '$value ${stat.unitName}'.trim().replaceAll(RegExp(r'\s+'), ' ');
+    // Top/bottom padding and the drag handle come from BottomSheetShell.
+    return BottomSheetShell(
+      padding: EdgeInsets.fromLTRB(
+          51.w, 12.h, 51.w, MediaQuery.of(context).viewInsets.bottom + 60.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$valueLabel ${stat.title}',
+            style: TextStyle(
+              fontSize: 56.sp,
+              fontWeight: FontWeight.bold,
+              color: kTextPrimary,
             ),
-            SizedBox(height: 24.h),
-            // Title
-            Text(
-              stat.title,
-              style: TextStyle(
-                fontSize: 56.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
-              ),
-              textAlign: TextAlign.center,
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 60.h),
+          SizedBox(
+            height: 260.w,
+            child: Image.asset(
+              seasonalStatIllustration(stat, seasonal?.season),
+              fit: BoxFit.contain,
             ),
-            SizedBox(height: 8.h),
-            // Current value badge
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: stat.cardColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(20.r),
-              ),
+          ),
+          SizedBox(height: 60.h),
+          Flexible(
+            child: SingleChildScrollView(
               child: Text(
-                '$value ${stat.unitName}'.trim(),
+                stat.info,
                 style: TextStyle(
-                  color: stat.cardColor,
-                  fontSize: 36.sp,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
+                  fontSize: 42.sp,
+                  color: Colors.grey[600],
+                  height: 1.4,
                 ),
+                textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(height: 16.h),
-            // Explanation
-            Flexible(
-              child: SingleChildScrollView(
-                child: Text(
-                  stat.info,
-                  style: TextStyle(
-                    fontSize: 42.sp,
-                    color: Colors.grey[600],
-                    height: 1.4,
-                  ),
-                  textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 60.h),
+          const InfoBox(
+            text:
+                'Les calculs sont des estimations basées sur des moyennes issues d\'études scientifiques.',
+          ),
+          SizedBox(height: 60.h),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Sources',
+                  backgroundColor: kAccentYellow,
+                  onPressed: _openSources,
                 ),
               ),
-            ),
-            SizedBox(height: 12.h),
-            // Sources info box
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(12.r),
-                border: Border.all(color: Colors.blue.shade100),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(Icons.info_outline_rounded,
-                      color: Colors.blue.shade400, size: 42.sp),
-                  SizedBox(width: 10.w),
-                  Expanded(
-                    child: Text(
-                      'Les calculs sont des estimations basées sur des moyennes issues d\'études scientifiques.',
-                      style: TextStyle(
-                        fontSize: 36.sp,
-                        color: Colors.blue.shade700,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 32.h),
-            // Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _openSources,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.grey[600],
-                      side: BorderSide(color: Colors.grey[300]!, width: 2),
-                      padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Sources',
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: AppButton(
+                  label: 'D\'acc !',
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 20.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    child: Text(
-                      'Fermer',
-                      style: TextStyle(
-                        fontSize: 44.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+          SizedBox(height: 60.h),
+        ],
       ),
     );
   }
-}
-
-Widget _maybeSnowGlobe({SeasonalTheme? theme, required Widget child}) {
-  if (theme == null) return child;
-  if (theme.snowGlobeParticleAsset == null &&
-      theme.snowGlobeParticleIcon == null &&
-      theme.particleType != ParticleType.snowflakes) {
-    return child;
-  }
-  return SnowGlobeOverlay(
-    particleAsset: theme.snowGlobeParticleAsset,
-    particleIcon: theme.snowGlobeParticleIcon,
-    particleCount: 12,
-    child: child,
-  );
-}
-
-class BookDividerClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    // Start with the top left corner rounded
-    path.moveTo(0, size.height / 2);
-    path.quadraticBezierTo(0, 0, size.height / 2, 0);
-    path.lineTo(size.width, 0); // Top edge
-    path.lineTo(size.width,
-        size.height - size.height / 2); // Right edge before rounding
-    // Add rounding to the bottom right corner
-    path.quadraticBezierTo(
-        size.width, size.height, size.width - size.height / 2, size.height);
-    path.lineTo(0, size.height); // Bottom edge
-    path.close(); // Close the path for a complete shape
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

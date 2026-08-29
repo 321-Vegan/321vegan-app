@@ -18,7 +18,6 @@ migrate_working_dir/
 *.iws
 .idea/
 
-
 /android/app/google-services.json
 /ios/GoogleService-Info.plist
 
@@ -50,6 +49,7 @@ app.*.map.json
 
 # Environment variables
 .env
+CLAUDE.*
 
 /lib/assets/vegan_products.db*
 /lib/assets/cosmetics.db*

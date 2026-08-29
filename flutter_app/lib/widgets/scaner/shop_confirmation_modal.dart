@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import '../../models/product_of_interest.dart';
 import '../../services/api_service.dart';
+import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
+import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
+import '../shared/app_card.dart';
 
 class ShopConfirmationModal extends StatefulWidget {
   final String shopName;
@@ -28,13 +36,11 @@ class ShopConfirmationModal extends StatefulWidget {
 class _ShopConfirmationModalState extends State<ShopConfirmationModal>
     with TickerProviderStateMixin {
   late AnimationController _controller;
-  late AnimationController _thanksController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _thanksScaleAnimation;
-  late Animation<double> _thanksFadeAnimation;
-  bool _showThanks = false;
   bool _showAlternatives = false;
+
+  final baseUrl = dotenv.env['API_BASE_URL'];
 
   @override
   void initState() {
@@ -55,73 +61,65 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
       curve: Curves.easeIn,
     );
 
-    // Thanks animation controller
-    _thanksController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-
-    _thanksScaleAnimation = Tween<double>(begin: 0.5, end: 1.5).animate(
-      CurvedAnimation(
-        parent: _thanksController,
-        curve: Curves.easeOut,
-      ),
-    );
-
-    _thanksFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _thanksController,
-        curve: const Interval(0.3, 1.0, curve: Curves.easeOut),
-      ),
-    );
-
-    // Start animations
     _controller.forward();
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _thanksController.dispose();
     super.dispose();
   }
 
-  Future<void> _showThanksAndClose() async {
-    setState(() {
-      _showThanks = true;
-    });
-
-    // Wait for the animation to complete before closing
-    await _thanksController.forward();
-
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
+  // Pops immediately and thanks via a snackbar on the underlying page;
+  // messenger is captured before popping since this widget's context won't survive it.
+  void _showThanksAndClose() {
+    final messenger = ScaffoldMessenger.of(context);
+    final primary = Theme.of(context).colorScheme.primary;
+    Navigator.of(context).pop();
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: primary,
+          behavior: SnackBarBehavior.floating,
+          shape: squircleBorder(radius: 16.r),
+          margin: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+          duration: const Duration(seconds: 2),
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12.w),
+              Text(
+                'Merci !',
+                style: AppTextStyles.bodyBold15.copyWith(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
+      );
   }
 
   Future<void> _handleNo() async {
     if (widget.nearbyShops.isNotEmpty) {
-      // Show alternative shops instead of nullifying
       setState(() {
         _showAlternatives = true;
       });
     } else {
-      // No alternatives available - nullify as before
       await ApiService.updateScanEvent(scanEventId: widget.scanEventId);
-      await _showThanksAndClose();
+      _showThanksAndClose();
     }
   }
 
   Future<void> _handleYes() async {
-    // If the shop wasn't linked yet (OSM-only), confirm it now so it gets
-    // created in DB and associated with the scan event.
+    // OSM-only shop: confirm it now so it's created and linked in DB.
     if (widget.shopOsmId != null) {
       await ApiService.confirmShop(
         scanEventId: widget.scanEventId,
         osmId: widget.shopOsmId!,
       );
     }
-    await _showThanksAndClose();
+    _showThanksAndClose();
   }
 
   Future<void> _handleSelectShop(Map<String, dynamic> shop) async {
@@ -141,27 +139,25 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
         shopId: shopId,
       );
     } else {
-      // No usable identifier - clear the shop association instead
       await ApiService.updateScanEvent(scanEventId: widget.scanEventId);
     }
-    await _showThanksAndClose();
+    _showThanksAndClose();
   }
 
   Future<void> _handleNoneOfThese() async {
-    // User says none of the shops match - nullify
     await ApiService.updateScanEvent(scanEventId: widget.scanEventId);
-    await _showThanksAndClose();
+    _showThanksAndClose();
   }
 
   @override
   Widget build(BuildContext context) {
     final decodedShopName = widget.shopName;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Material(
       type: MaterialType.transparency,
       child: Stack(
         children: [
-          // Dark overlay
           FadeTransition(
             opacity: _fadeAnimation,
             child: Container(
@@ -169,209 +165,131 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
             ),
           ),
 
-          // Modal content
           Center(
             child: ScaleTransition(
               scale: _scaleAnimation,
-              child: Container(
-                margin: EdgeInsets.symmetric(horizontal: 40.w),
-                padding: EdgeInsets.all(32.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 40,
-                      offset: const Offset(0, 20),
-                    ),
-                  ],
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 40.w),
+                child: AppCard(
+                  padding: EdgeInsets.all(32.w),
+                  child: _showAlternatives
+                      ? _buildAlternativesContent(primary)
+                      : _buildConfirmationContent(decodedShopName, primary),
                 ),
-                child: _showAlternatives
-                    ? _buildAlternativesContent()
-                    : _buildConfirmationContent(decodedShopName),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
 
-          // "Merci !" animation overlay
-          if (_showThanks)
-            Center(
-              child: ScaleTransition(
-                scale: _thanksScaleAnimation,
-                child: FadeTransition(
-                  opacity: _thanksFadeAnimation,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 48.w,
-                      vertical: 24.h,
+  Widget _buildConfirmationContent(String decodedShopName, Color primary) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipSmoothRect(
+              radius: squircleRadius(24.r),
+              child: SizedBox(
+                width: 200.w,
+                height: 200.w,
+                child: CachedNetworkImage(
+                  imageUrl: '$baseUrl/${widget.product.image}',
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) => Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: primary,
                     ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1A722E),
-                      borderRadius: BorderRadius.circular(24.r),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF1A722E).withValues(alpha: 0.4),
-                          blurRadius: 30,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
+                  ),
+                  errorWidget: (context, url, error) => Center(
                     child: Text(
-                      'Merci !',
+                      widget.product.name.isNotEmpty
+                          ? widget.product.name[0].toUpperCase()
+                          : '?',
                       style: TextStyle(
-                        fontSize: 72.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        fontFamily: 'Baloo2',
+                        fontSize: 64.sp,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -1,
+                        color: primary.withValues(alpha: 0.4),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildConfirmationContent(String decodedShopName) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Icon
-        Container(
-          width: 120.w,
-          height: 120.w,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFF1A722E).withValues(alpha: 0.1),
-          ),
-          child: Icon(
-            Icons.store,
-            size: 70.sp,
-            color: const Color(0xFF1A722E),
-          ),
-        ),
+            SizedBox(width: 24.w),
 
-        SizedBox(height: 24.h),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Confirmation du magasin',
+                    style: AppTextStyles.baloo22.copyWith(color: kSemanticSuccess),
+                  ),
 
-        // Title
-        Text(
-          'Confirmation du magasin',
-          style: TextStyle(
-            fontSize: 52.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1A722E),
-          ),
-          textAlign: TextAlign.center,
-        ),
+                  SizedBox(height: 16.h),
 
-        SizedBox(height: 20.h),
+                  Text(
+                      widget.product.name,
+                      style: AppTextStyles.baloo22,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
 
-        // Product name highlight
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 20.w,
-            vertical: 12.h,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Text(
-            widget.product.name,
-            style: TextStyle(
-              fontSize: 48.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[900],
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+                  SizedBox(height: 16.h),
 
-        SizedBox(height: 20.h),
-
-        // Question text
-        RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: TextStyle(
-              fontSize: 44.sp,
-              color: Colors.grey[700],
-              height: 1.4,
-            ),
-            children: [
-              const TextSpan(
-                  text: 'Avez-vous trouvé ce produit à\n'),
-              TextSpan(
-                text: decodedShopName,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF1A722E),
-                  fontSize: 46.sp,
-                ),
+                  RichText(
+                    text: TextSpan(
+                      style: AppTextStyles.bodyRegular15.copyWith(
+                        color: Colors.grey[700],
+                        height: 1.4,
+                      ),
+                      children: [
+                        const TextSpan(
+                            text: 'Avez-vous trouvé ce produit à '),
+                        TextSpan(
+                          text: decodedShopName,
+                          style:
+                              AppTextStyles.bodyBold15.copyWith(color: kSemanticSuccess),
+                        ),
+                        const TextSpan(text: ' ?'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const TextSpan(text: ' ?'),
-            ],
-          ),
+            ),
+          ],
         ),
 
         SizedBox(height: 32.h),
 
-        // Buttons row
         Row(
           children: [
-            // No button
             Expanded(
-              child: ElevatedButton(
+              child: AppButton(
+                label: 'Non',
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.grey[700]!,
+                borderColor: kBorderDefault,
                 onPressed: _handleNo,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[300],
-                  foregroundColor: Colors.grey[800],
-                  padding: EdgeInsets.symmetric(
-                    vertical: 20.h,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
-                  elevation: 2,
-                ),
-                child: Text(
-                  'Non',
-                  style: TextStyle(
-                    fontSize: 48.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
             ),
 
             SizedBox(width: 16.w),
 
-            // Yes button
             Expanded(
-              child: ElevatedButton(
+              child: AppButton(
+                label: 'Oui',
+                backgroundColor: primary,
                 onPressed: _handleYes,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A722E),
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(
-                    vertical: 20.h,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16.r),
-                  ),
-                  elevation: 4,
-                ),
-                child: Text(
-                  'Oui',
-                  style: TextStyle(
-                    fontSize: 48.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
             ),
           ],
@@ -380,54 +298,73 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
     );
   }
 
-  Widget _buildAlternativesContent() {
+  Widget _buildAlternativesContent(Color primary) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Icon
-        Container(
-          width: 120.w,
-          height: 120.w,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFF1A722E).withValues(alpha: 0.1),
-          ),
-          child: Icon(
-            Icons.store_mall_directory,
-            size: 70.sp,
-            color: const Color(0xFF1A722E),
-          ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipSmoothRect(
+              radius: squircleRadius(24.r),
+              child: SizedBox(
+                width: 200.w,
+                height: 200.w,
+                child: CachedNetworkImage(
+                  imageUrl: '$baseUrl/${widget.product.image}',
+                  fit: BoxFit.contain,
+                  placeholder: (context, url) => Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: primary,
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => Center(
+                    child: Text(
+                      widget.product.name.isNotEmpty
+                          ? widget.product.name[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        fontFamily: 'Baloo2',
+                        fontSize: 64.sp,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -1,
+                        color: primary.withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(width: 24.w),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Autres magasins à proximité',
+                    style: AppTextStyles.baloo22,
+                  ),
+
+                  SizedBox(height: 8.h),
+
+                  Text(
+                    'Étiez-vous dans l\'un de ces magasins ?',
+                    style: AppTextStyles.bodyRegular13
+                        .copyWith(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
 
         SizedBox(height: 24.h),
 
-        // Title
-        Text(
-          'Autres magasins à proximité',
-          style: TextStyle(
-            fontSize: 48.sp,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1A722E),
-          ),
-          textAlign: TextAlign.center,
-        ),
-
-        SizedBox(height: 16.h),
-
-        Text(
-          'Étiez-vous dans l\'un de ces magasins ?',
-          style: TextStyle(
-            fontSize: 40.sp,
-            color: Colors.grey[600],
-          ),
-          textAlign: TextAlign.center,
-        ),
-
-        SizedBox(height: 24.h),
-
-        // Shop list
         ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: 300.h),
+          constraints: BoxConstraints(maxHeight: 600.h),
           child: ListView.separated(
             shrinkWrap: true,
             itemCount: widget.nearbyShops.length,
@@ -446,36 +383,26 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
                 child: ElevatedButton(
                   onPressed: () => _handleSelectShop(shop),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A722E),
+                    backgroundColor: primary,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(
                       horizontal: 20.w,
                       vertical: 20.h,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                    elevation: 4,
+                    shape: squircleBorder(radius: 42.r),
+                    elevation: 0,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.store,
-                        size: 44.sp,
-                        color: Colors.white,
-                      ),
-                      SizedBox(width: 12.w),
                       Flexible(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               name,
-                              style: TextStyle(
-                                fontSize: 44.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: AppTextStyles.bodyBold15
+                                  .copyWith(color: Colors.white),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               textAlign: TextAlign.center,
@@ -483,8 +410,7 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
                             if (subtitle.isNotEmpty)
                               Text(
                                 subtitle,
-                                style: TextStyle(
-                                  fontSize: 36.sp,
+                                style: AppTextStyles.bodyRegular13.copyWith(
                                   color: Colors.white.withValues(alpha: 0.7),
                                 ),
                                 maxLines: 1,
@@ -504,27 +430,14 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
 
         SizedBox(height: 20.h),
 
-        // "None of these" button
         SizedBox(
           width: double.infinity,
-          child: ElevatedButton(
+          child: AppButton(
+            label: 'Aucun de ceux-ci',
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.grey[700]!,
+            borderColor: kBorderDefault,
             onPressed: _handleNoneOfThese,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[300],
-              foregroundColor: Colors.grey[800],
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16.r),
-              ),
-              elevation: 2,
-            ),
-            child: Text(
-              'Aucun de ceux-ci',
-              style: TextStyle(
-                fontSize: 44.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
           ),
         ),
       ],

@@ -4,12 +4,7 @@ import '../models/seasonal_theme.dart';
 const SeasonalTheme defaultTheme = SeasonalTheme(
   name: 'Défaut',
   season: Season.defaultTheme,
-  primaryColor: Color(0xFF166534),
-  secondaryColor: Color(0xFF22C55E),
-  accentColor: Color(0xFF86EFAC),
-  waveColor: Color(0xFF166534),
-  seasonalIcon: Icons.sunny,
-  iconBackgroundColor: Color(0xFFF0FDF4),
+  primaryColor: Color(0xFF15866E),
   confettiColors: [
     Colors.red,
     Colors.blue,

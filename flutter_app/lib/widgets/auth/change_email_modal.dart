@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../helpers/preference_helper.dart';
+import '../../themes/app_colors.dart';
+import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
+import '../shared/app_text_field.dart';
+import '../shared/bottom_sheet_shell.dart';
+import '../shared/form_error_banner.dart';
 
 class ChangeEmailModal extends StatefulWidget {
   final String currentEmail;
@@ -18,29 +24,72 @@ class ChangeEmailModal extends StatefulWidget {
 }
 
 class _ChangeEmailModalState extends State<ChangeEmailModal> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
+  String? _errorMessage;
+  String? _pendingEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPendingEmail();
+    _emailController.addListener(_handleInputChanged);
+    _passwordController.addListener(_handleInputChanged);
+  }
+
+  void _handleInputChanged() => setState(() {});
+
+  bool get _canSubmit =>
+      _emailController.text.trim().isNotEmpty &&
+      _passwordController.text.isNotEmpty;
+
+  Future<void> _loadPendingEmail() async {
+    final pending = await PreferencesHelper.getPendingEmailChange();
+    // If the backend email already matches the pending one, the change was
+    // confirmed (on the web) — clear it and drop the badge.
+    if (pending != null && pending == widget.currentEmail) {
+      await PreferencesHelper.clearPendingEmailChange();
+    }
+    if (mounted) {
+      setState(() {
+        _pendingEmail =
+            (pending != null && pending != widget.currentEmail) ? pending : null;
+      });
+    }
+  }
 
   @override
   void dispose() {
+    _emailController.removeListener(_handleInputChanged);
+    _passwordController.removeListener(_handleInputChanged);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
     final newEmail = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (newEmail.isEmpty ||
+        !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(newEmail)) {
+      setState(() => _errorMessage = 'Veuillez entrer un email valide');
+      return;
+    }
+    if (password.isEmpty) {
+      setState(() => _errorMessage = 'Veuillez entrer votre mot de passe');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     final result = await AuthService.requestEmailChange(
       newEmail: newEmail,
-      currentPassword: _passwordController.text,
+      currentPassword: password,
     );
 
     if (result.isSuccess) {
@@ -49,26 +98,28 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
 
     if (!mounted) return;
 
-    setState(() => _isLoading = false);
-
     if (result.isSuccess) {
+      setState(() {
+        _isLoading = false;
+        _pendingEmail = newEmail;
+      });
       widget.onChangeRequested?.call();
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.data ??
               'Un email de confirmation a été envoyé à votre nouvelle adresse.'),
-          backgroundColor: Colors.green,
+          backgroundColor: kSemanticSuccess,
           duration: const Duration(seconds: 6),
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error ?? 'Une erreur est survenue.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // Kept on-screen (not a SnackBar): the sheet stays open so the user
+      // can retry, and a page-level SnackBar would render behind it.
+      setState(() {
+        _isLoading = false;
+        _errorMessage = result.error ?? 'Une erreur est survenue.';
+      });
     }
   }
 
@@ -79,145 +130,60 @@ class _ChangeEmailModalState extends State<ChangeEmailModal> {
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: SingleChildScrollView(
-        child: Container(
-          padding: EdgeInsets.all(24.w),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        'Changer d\'email',
-                        style: TextStyle(
-                          fontSize: 60.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey[800],
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed:
-                          _isLoading ? null : () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.close),
-                      iconSize: 64.sp,
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 16.h),
-
-                // Current email
+        child: BottomSheetShell(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Modifier votre email', style: AppTextStyles.baloo22),
+                ],
+              ),
+              Text(
+                'Email actuel : ${widget.currentEmail}',
+                style: TextStyle(fontSize: 42.sp, color: Colors.grey[600]),
+              ),
+              if (_pendingEmail != null) ...[
+                SizedBox(height: 4.h),
                 Text(
-                  'Email actuel : ${widget.currentEmail}',
+                  'Email en attente : $_pendingEmail',
                   style: TextStyle(
-                    fontSize: 40.sp,
-                    color: Colors.grey[600],
+                    fontSize: 42.sp,
+                    fontWeight: FontWeight.w600,
+                    color: kAccentYellow,
                   ),
                 ),
-
-                SizedBox(height: 32.h),
-
-                // New email field
-                TextFormField(
-                  controller: _emailController,
-                  enabled: !_isLoading,
-                  keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                  decoration: InputDecoration(
-                    labelText: 'Nouvel email',
-                    hintText: 'votre@email.com',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                  validator: (value) {
-                    final email = value?.trim() ?? '';
-                    if (email.isEmpty) {
-                      return 'Veuillez entrer votre nouvel email';
-                    }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                        .hasMatch(email)) {
-                      return 'Veuillez entrer un email valide';
-                    }
-                    return null;
-                  },
-                ),
-
-                SizedBox(height: 16.h),
-
-                // Current password field
-                TextFormField(
-                  controller: _passwordController,
-                  enabled: !_isLoading,
-                  obscureText: _obscurePassword,
-                  autofillHints: const [AutofillHints.password],
-                  decoration: InputDecoration(
-                    labelText: 'Mot de passe actuel',
-                    prefixIcon: const Icon(Icons.lock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre mot de passe';
-                    }
-                    return null;
-                  },
-                ),
-
-                SizedBox(height: 24.h),
-
-                // Submit button
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 24.w,
-                          height: 24.w,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          'Envoyer le lien de confirmation',
-                          style: TextStyle(
-                            fontSize: 44.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
-
-                SizedBox(height: 120.h),
               ],
-            ),
+              SizedBox(height: 48.h),
+              AppTextField(
+                controller: _emailController,
+                hintText: 'Nouvel email',
+                enabled: !_isLoading,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+              ),
+              SizedBox(height: 24.h),
+              AppTextField(
+                controller: _passwordController,
+                hintText: 'Mot de passe',
+                enabled: !_isLoading,
+                obscureText: true,
+                autofillHints: const [AutofillHints.password],
+              ),
+              if (_errorMessage != null) ...[
+                SizedBox(height: 24.h),
+                FormErrorBanner(message: _errorMessage!),
+              ],
+              SizedBox(height: 32.h),
+              AppButton(
+                label: 'Envoyer le lien de confirmation',
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                isLoading: _isLoading,
+                onPressed: _canSubmit ? _submit : null,
+              ),
+            ],
           ),
         ),
       ),

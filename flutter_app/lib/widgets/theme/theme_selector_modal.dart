@@ -1,13 +1,29 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/seasonal_theme.dart';
-import '../../helpers/preference_helper.dart';
 import '../../helpers/theme_helper.dart';
 import '../../main.dart';
 import '../../services/subscription_service.dart';
 import '../../pages/app_pages/Profile/subscription_page.dart';
-import 'snow_globe_overlay.dart';
+import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
+import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
+import '../shared/info_box.dart';
+import '../shared/page_dots_indicator.dart';
+
+/// Card illustration, keyed by season — the "poule" mascot dressed for
+/// each season.
+String _pouleAssetForSeason(Season season) {
+  final suffix = switch (season) {
+    Season.spring => 'spring',
+    Season.summer => 'summer',
+    Season.autumn => 'autumn',
+    Season.winter => 'winter',
+    Season.defaultTheme => 'basic',
+  };
+  return 'lib/assets/themes/cards/poule-$suffix.webp';
+}
 
 class ThemeSelectorModal extends StatefulWidget {
   const ThemeSelectorModal({super.key});
@@ -16,26 +32,19 @@ class ThemeSelectorModal extends StatefulWidget {
   State<ThemeSelectorModal> createState() => _ThemeSelectorModalState();
 }
 
-class _ThemeSelectorModalState extends State<ThemeSelectorModal>
-    with TickerProviderStateMixin {
+class _ThemeSelectorModalState extends State<ThemeSelectorModal> {
   bool _isAutoTheme = true;
   Season? _selectedSeason;
-  bool _themedNavBar = false;
   bool _isLoading = true;
   late PageController _pageController;
   int _currentPage = 0;
   double _pageOffset = 0;
-  late AnimationController _iconAnimController;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(viewportFraction: 0.75);
+    _pageController = PageController(viewportFraction: 0.72);
     _pageController.addListener(_onPageScroll);
-    _iconAnimController = AnimationController(
-      duration: const Duration(seconds: 5),
-      vsync: this,
-    )..repeat(reverse: true);
     _loadCurrentSettings();
   }
 
@@ -43,7 +52,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
   void dispose() {
     _pageController.removeListener(_onPageScroll);
     _pageController.dispose();
-    _iconAnimController.dispose();
     super.dispose();
   }
 
@@ -58,7 +66,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
   Future<void> _loadCurrentSettings() async {
     final isAuto = await ThemeHelper.isAutoThemeEnabled();
     final savedSeason = await ThemeHelper.getSavedThemePreference();
-    final themedNavBar = await PreferencesHelper.getThemedNavBarPref();
     final allThemes = ThemeHelper.getAllThemes();
 
     final activeSeason = isAuto
@@ -71,7 +78,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
     setState(() {
       _isAutoTheme = isAuto;
-      _themedNavBar = themedNavBar;
       _selectedSeason = savedSeason ??
           (isAuto ? ThemeHelper.getCurrentSeason() : Season.defaultTheme);
       _currentPage = initialIndex;
@@ -84,44 +90,10 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     _pageController.removeListener(_onPageScroll);
     _pageController.dispose();
     _pageController = PageController(
-      viewportFraction: 0.75,
+      viewportFraction: 0.72,
       initialPage: initialIndex,
     );
     _pageController.addListener(_onPageScroll);
-  }
-
-  Future<void> _saveThemeSettings() async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    await ThemeHelper.saveAutoThemePreference(_isAutoTheme);
-    if (!_isAutoTheme && _selectedSeason != null) {
-      await ThemeHelper.saveThemePreference(_selectedSeason);
-    }
-
-    if (!mounted) return;
-    final myAppState = MyApp.of(context);
-    if (myAppState != null) {
-      await myAppState.updateTheme();
-    }
-
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    Navigator.of(context).pop(true);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Thème mis à jour avec succès !',
-            style: TextStyle(fontSize: 50.sp, fontFamily: 'Baloo'),
-          ),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-        ),
-      );
   }
 
   Future<void> _applyThemeSilently() async {
@@ -135,15 +107,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         await myAppState.updateTheme();
       }
     }
-  }
-
-  // Applies immediately: the pref notifier restyles the bottom bar live,
-  // independently of the seasonal theme's "Appliquer" button.
-  Future<void> _setThemedNavBar(bool value) async {
-    await PreferencesHelper.setThemedNavBarPref(value);
-    setState(() {
-      _themedNavBar = value;
-    });
   }
 
   void _openSubscriptionPage() {
@@ -163,47 +126,13 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         getter(allThemes[index]), getter(allThemes[nextIndex]), t)!;
   }
 
-  // Per-season icon animation values
-  _IconAnimValues _getIconAnim(Season season, double t) {
-    // t goes 0→1→0 (reverse repeat)
-    final sinT = math.sin(t * math.pi);
-    switch (season) {
-      case Season.defaultTheme:
-        // Gentle pulse
-        return _IconAnimValues(
-          rotation: 0,
-          scale: 1.0 + sinT * 0.06,
-        );
-      case Season.spring:
-        return _IconAnimValues(
-          rotation: math.sin(t * math.pi * 2) * 0.12,
-          scale: 1.0 + sinT * 0.1,
-        );
-      case Season.summer:
-        return _IconAnimValues(
-          rotation: math.sin(t * math.pi * 1.5) * 0.25,
-          scale: 1.0 + math.sin(t * math.pi * 0.7) * 0.04,
-        );
-      case Season.autumn:
-        return _IconAnimValues(
-          rotation: math.sin(t * math.pi * 1.5) * 0.25,
-          scale: 1.0 + math.sin(t * math.pi * 0.7) * 0.04,
-        );
-      case Season.winter:
-        return _IconAnimValues(
-          rotation: t * math.pi,
-          scale: 1.0 + sinT * 0.08,
-        );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+          shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
         ),
         child: const Center(child: CircularProgressIndicator()),
       );
@@ -212,17 +141,14 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     final isSubscribed = SubscriptionService.isSubscribed;
     final currentSeason = ThemeHelper.getCurrentSeason();
     final allThemes = ThemeHelper.getAllThemes();
-    final currentTheme = allThemes[_currentPage.clamp(0, allThemes.length - 1)];
-    final isCurrentLocked = currentTheme.isPremium && !isSubscribed;
 
     return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+      decoration: ShapeDecoration(
+        shape: squircleBorderOnly(topLeft: 28.r, topRight: 28.r),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // Background gradient
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
@@ -233,49 +159,37 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
 
           Column(
             children: [
+
               _buildHeader(),
+
+              SizedBox(height: 32.h),
 
               if (isSubscribed)
                 Padding(
-                  padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 12.h),
+                  padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 0),
                   child: _buildAutoThemeToggle(currentSeason),
                 ),
 
-              // Theme name + description above carousel
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: Column(
-                  key: ValueKey(_currentPage),
-                  children: [
-                    Text(
-                      currentTheme.name,
-                      style: TextStyle(
-                        fontSize: 64.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               SizedBox(height: 16.h),
 
-              // Carousel
               SizedBox(
-                height: 680.h,
+                height: 620.h,
                 child: PageView.builder(
                   controller: _pageController,
-                  physics: null,
                   itemCount: allThemes.length,
                   onPageChanged: (index) {
+                    final theme = allThemes[index];
+                    final isLocked = theme.isPremium && !isSubscribed;
                     setState(() {
                       _currentPage = index;
                       if (_isAutoTheme) {
                         _isAutoTheme = false;
                       }
-                      _selectedSeason = allThemes[index].season;
+                      _selectedSeason = theme.season;
                     });
+                    if (!isLocked) {
+                      _applyThemeSilently();
+                    }
                   },
                   itemBuilder: (context, index) {
                     final theme = allThemes[index];
@@ -292,41 +206,37 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
                 ),
               ),
 
-              SizedBox(height: 16.h),
+              SizedBox(height: 20.h),
 
-              // Page indicator
               _buildPageIndicator(allThemes),
 
-              // Bottom menu color toggle
-              _buildNavBarColorToggle(currentTheme),
+              SizedBox(height: 24.h),
 
-              // Info text for non-subscribers
-              if (!isSubscribed)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: const InfoBox(
+                  text:
+                      'L\'abonnement débloque tous les thèmes. En y souscrivant, vous permettez au projet 321 Vegan de continuer d\'exister et de se développer. Merci !',
+                ),
+              ),
+
+              if (!isSubscribed) ...[
+                SizedBox(height: 20.h),
                 Padding(
-                  padding: EdgeInsets.all(8.h),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.info_outline,
-                          size: 64.sp, color: Colors.grey[400]),
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        child: Text(
-                          'L\'abonnement soutien débloque tous les thèmes. Y souscrire permet au projet 321 Vegan de continuer d\'exister et de se développer. Merci !',
-                          style: TextStyle(
-                            fontSize: 45.sp,
-                            color: Colors.grey[500],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                  padding: EdgeInsets.symmetric(horizontal: 24.w),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: AppButton(
+                      label: 'Débloquer tous les thèmes',
+                      iconAsset: 'lib/assets/images/icons/crown-line.webp',
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      onPressed: _openSubscriptionPage,
+                    ),
                   ),
                 ),
+              ],
 
-              // Bottom button
-              _buildBottomButton(currentTheme, isCurrentLocked),
-              SizedBox(height: 60.h),
+              SizedBox(height: 32.h),
             ],
           ),
         ],
@@ -352,11 +262,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
             children: [
               Text(
                 'Thèmes',
-                style: TextStyle(
-                  fontSize: 60.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
+                style: AppTextStyles.baloo22,
               ),
               const Spacer(),
               GestureDetector(
@@ -387,7 +293,7 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     return GestureDetector(
       onTap: () async {
         if (!_isAutoTheme) {
-          // Turning auto ON: animate first, then lock
+          // Animate to the current-season page first, then lock auto mode on.
           final allThemes = ThemeHelper.getAllThemes();
           final seasonIndex = allThemes
               .indexWhere((t) => t.season == ThemeHelper.getCurrentSeason())
@@ -402,7 +308,6 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
             _applyThemeSilently();
           }
         } else {
-          // Turning auto OFF
           setState(() => _isAutoTheme = false);
         }
       },
@@ -410,9 +315,9 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeInOut,
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 8.h),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: _isAutoTheme ? currentTheme.primaryColor : Colors.grey[200],
-          borderRadius: BorderRadius.circular(50.r),
+          shape: squircleBorder(radius: 50.r),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -420,55 +325,19 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
             Icon(
               Icons.auto_awesome,
               size: 64.sp,
-              color: _isAutoTheme ? Colors.white : Colors.grey[500],
+              color: _isAutoTheme ? Colors.white : kTextPrimary,
             ),
             SizedBox(width: 10.w),
             Text(
               _isAutoTheme
                   ? 'Mode automatique · ${ThemeHelper.getThemeBySeason(currentSeason).name}'
                   : 'Activer le mode automatique',
-              style: TextStyle(
-                fontSize: 46.sp,
-                fontWeight: FontWeight.w600,
-                color: _isAutoTheme ? Colors.white : Colors.grey[600],
+              style: AppTextStyles.bodyBold15.copyWith(
+                color: _isAutoTheme ? Colors.white : kTextPrimary,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNavBarColorToggle(SeasonalTheme currentTheme) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24.w, 8.h, 24.w, 0),
-      child: Row(
-        children: [
-          Icon(
-            Icons.palette_outlined,
-            size: 52.sp,
-            color: Colors.grey[600],
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Text(
-              'Menu de navigation aux couleurs du thème',
-              style: TextStyle(
-                fontSize: 44.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
-            ),
-          ),
-          Switch(
-            value: _themedNavBar,
-            onChanged: _setThemedNavBar,
-            activeThumbColor: Colors.white,
-            activeTrackColor: currentTheme.primaryColor,
-            inactiveThumbColor: Colors.white,
-            inactiveTrackColor: Colors.grey[300],
-          ),
-        ],
       ),
     );
   }
@@ -479,332 +348,78 @@ class _ThemeSelectorModalState extends State<ThemeSelectorModal>
     required bool isLocked,
     required bool isCurrentSeason,
   }) {
-    final distance = _pageOffset - index;
-    final absDistance = distance.abs().clamp(0.0, 1.0);
-    // Scale down non-centered cards
-    final scale = 1.0 - (absDistance * 0.08);
+    final isSelected = index == _currentPage;
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: scale, end: scale),
-      duration: const Duration(milliseconds: 50),
-      builder: (context, scaleVal, child) {
-        return Transform.scale(
-          scale: scaleVal,
-          child: child,
-        );
-      },
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-        child: GestureDetector(
-          onTap: isLocked ? _openSubscriptionPage : null,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28.r),
-              gradient: LinearGradient(
-                colors: [theme.waveColor, theme.primaryColor],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+      child: GestureDetector(
+        onTap: isLocked ? _openSubscriptionPage : null,
+        child: Container(
+          decoration: ShapeDecoration(
+            color: isSelected
+                ? theme.primaryColor.withValues(alpha: 0.12)
+                : Colors.white,
+            shape: squircleBorder(
+              radius: 32.r,
+              side: BorderSide(
+                color: isSelected ? theme.primaryColor : kBorderDefault,
+                width: isSelected ? 2 : 1,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.primaryColor.withValues(alpha: 0.3),
-                  blurRadius: 24,
-                  offset: const Offset(0, 10),
-                  spreadRadius: 1,
-                ),
-              ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28.r),
-              child: _buildCardSnowGlobe(
-                theme: theme,
-                child: Stack(
+          ),
+          child: Stack(
+            children: [
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Content overlay
-                    Padding(
-                      padding: EdgeInsets.all(24.w),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Top badges
-                          Row(
-                            children: [
-                              if (_isAutoTheme && isCurrentSeason)
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 10.w, vertical: 5.h),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.25),
-                                    borderRadius: BorderRadius.circular(10.r),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.auto_awesome,
-                                          size: 28.sp, color: Colors.white),
-                                      SizedBox(width: 4.w),
-                                      Text(
-                                        'Saison actuelle',
-                                        style: TextStyle(
-                                          fontSize: 28.sp,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              const Spacer(),
-                              if (isLocked)
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 10.w, vertical: 5.h),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(10.r),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.lock,
-                                          size: 28.sp, color: Colors.white),
-                                      SizedBox(width: 4.w),
-                                      Text(
-                                        'Premium',
-                                        style: TextStyle(
-                                          fontSize: 28.sp,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
-                          ),
-
-                          const Spacer(),
-
-                          // Central animated icon
-                          Center(
-                            child: AnimatedBuilder(
-                              animation: _iconAnimController,
-                              builder: (context, child) {
-                                final anim = _getIconAnim(
-                                    theme.season, _iconAnimController.value);
-                                return Transform.scale(
-                                  scale: anim.scale,
-                                  child: Transform.rotate(
-                                    angle: anim.rotation,
-                                    child: Container(
-                                      padding: EdgeInsets.all(24.w),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.18),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: theme.seasonalAsset != null
-                                          ? Image.asset(
-                                              theme.seasonalAsset!,
-                                              width: 150.sp,
-                                              height: 150.sp,
-                                            )
-                                          : Icon(
-                                              theme.seasonalIcon,
-                                              size: 130.sp,
-                                              color: Colors.white,
-                                            ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-
-                          const Spacer(),
-
-                          // Bottom: theme name
-                          Text(
-                            theme.name,
-                            style: TextStyle(
-                              fontSize: 60.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 4.h),
-                          // Color dots
-                          Row(
-                            children: [
-                              _buildCardColorDot(theme.primaryColor),
-                              SizedBox(width: 8.w),
-                              _buildCardColorDot(theme.secondaryColor),
-                              SizedBox(width: 8.w),
-                              _buildCardColorDot(theme.accentColor),
-                            ],
-                          ),
-                        ],
+                    Image.asset(
+                      _pouleAssetForSeason(theme.season),
+                      width: 320.sp,
+                      height: 320.sp,
+                      fit: BoxFit.contain,
+                    ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      theme.name,
+                      style: AppTextStyles.baloo26.copyWith(
+                        color: isSelected ? theme.primaryColor : kTextPrimary,
                       ),
                     ),
-
-                    // Lock overlay
-                    if (isLocked)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.35),
-                          ),
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(20.w),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.lock_outline,
-                                    size: 100.sp,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                SizedBox(height: 16.h),
-                                Container(
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 18.w, vertical: 8.h),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber[700],
-                                    borderRadius: BorderRadius.circular(14.r),
-                                  ),
-                                  child: Text(
-                                    'Débloqué avec l\'abonnement soutien',
-                                    style: TextStyle(
-                                      fontSize: 34.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCardSnowGlobe({
-    required SeasonalTheme theme,
-    required Widget child,
-  }) {
-    if (theme.snowGlobeParticleAsset == null &&
-        theme.snowGlobeParticleIcon == null &&
-        theme.particleType != ParticleType.snowflakes) {
-      return child;
-    }
-    final br = BorderRadius.circular(28.r);
-    return SnowGlobeOverlay(
-      particleAsset: theme.snowGlobeParticleAsset,
-      particleIcon: theme.snowGlobeParticleIcon,
-      particleCount: theme.particleType == ParticleType.snowflakes ? 15 : 10,
-      borderRadius: br,
-      child: child,
-    );
-  }
-
-  Widget _buildCardColorDot(Color color) {
-    return Container(
-      width: 22.w,
-      height: 22.w,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 1.5),
-      ),
-    );
-  }
-
-  Widget _buildPageIndicator(List<SeasonalTheme> themes) {
-    final activeColor = _lerpThemeColor((t) => t.primaryColor);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(themes.length, (index) {
-        final isActive = index == _currentPage;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          margin: EdgeInsets.symmetric(horizontal: 4.w),
-          width: isActive ? 32.w : 10.w,
-          height: 10.w,
-          decoration: BoxDecoration(
-            color: isActive ? activeColor : Colors.grey[300],
-            borderRadius: BorderRadius.circular(5.r),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildBottomButton(SeasonalTheme currentTheme, bool isLocked) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24.w, 4.h, 24.w, 8.h),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: isLocked ? _openSubscriptionPage : _saveThemeSettings,
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                isLocked ? Colors.amber[700] : currentTheme.primaryColor,
-            foregroundColor: Colors.white,
-            padding: EdgeInsets.symmetric(vertical: 20.h),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18.r),
-            ),
-            elevation: 0,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isLocked ? Icons.lock_open : Icons.check_circle_outline,
-                size: 46.sp,
-              ),
-              SizedBox(width: 10.w),
-              Text(
-                isLocked ? 'Débloquer' : 'Appliquer',
-                style: TextStyle(
-                  fontSize: 48.sp,
-                  fontWeight: FontWeight.bold,
+              if (isLocked)
+                Positioned(
+                  right: 64.w,
+                  top: 64.h,
+                  child: Container(
+                    padding: EdgeInsets.all(10.w),
+                    decoration: const BoxDecoration(
+                      color: kAccentYellow,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.lock_outline,
+                      size: 64.sp,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class _IconAnimValues {
-  final double rotation;
-  final double scale;
-
-  const _IconAnimValues({required this.rotation, required this.scale});
+  Widget _buildPageIndicator(List<SeasonalTheme> themes) {
+    // Active dot picks up the swiped-to theme's own color rather than the
+    // app's flat colorScheme.primary — each page here is a different theme.
+    return PageDotsIndicator(
+      count: themes.length,
+      currentIndex: _currentPage,
+      activeColor: _lerpThemeColor((t) => t.primaryColor),
+    );
+  }
 }

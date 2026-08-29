@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/auth_service.dart';
 import '../../models/auth.dart';
+import '../../themes/app_colors.dart';
+import '../../themes/app_text_styles.dart';
+import '../shared/app_button.dart';
+import '../shared/app_text_field.dart';
 
 class LoginForm extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -50,9 +54,9 @@ class _LoginFormState extends State<LoginForm> {
 
       if (result.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+         const SnackBar(
             content: Text('Connexion réussie !'),
-            backgroundColor: Colors.green,
+            backgroundColor: kSemanticSuccess,
           ),
         );
         widget.onLoginSuccess?.call();
@@ -60,7 +64,7 @@ class _LoginFormState extends State<LoginForm> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(result.error ?? 'Erreur de connexion'),
-            backgroundColor: Colors.red,
+            backgroundColor: kSemanticError,
           ),
         );
       }
@@ -75,30 +79,15 @@ class _LoginFormState extends State<LoginForm> {
         child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Connexion',
-            style: TextStyle(
-              fontSize: 64.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
-            ),
-            textAlign: TextAlign.center,
-          ),
+          Text('Connexion', style: AppTextStyles.baloo26),
           SizedBox(height: 32.h),
 
           // Email field
-          TextFormField(
+          AppTextField(
             controller: _emailController,
+            hintText: 'Email',
             keyboardType: TextInputType.emailAddress,
             autofillHints: const [AutofillHints.email],
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'votre@email.com',
-              prefixIcon: const Icon(Icons.email_outlined),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer votre email';
@@ -113,24 +102,19 @@ class _LoginFormState extends State<LoginForm> {
           SizedBox(height: 16.h),
 
           // Password field
-          TextFormField(
+          AppTextField(
             controller: _passwordController,
+            hintText: 'Mot de passe',
             obscureText: _obscurePassword,
             autofillHints: const [AutofillHints.password],
-            decoration: InputDecoration(
-              labelText: 'Mot de passe',
-              prefixIcon: const Icon(Icons.lock_outlined),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                ),
-                onPressed: () {
-                  setState(() => _obscurePassword = !_obscurePassword);
-                },
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                color: Colors.grey[500],
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
+              onPressed: () {
+                setState(() => _obscurePassword = !_obscurePassword);
+              },
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -150,6 +134,7 @@ class _LoginFormState extends State<LoginForm> {
                 'Mot de passe oublié ?',
                 style: TextStyle(
                   fontSize: 40.sp,
+                  fontWeight: FontWeight.w600,
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
@@ -158,58 +143,29 @@ class _LoginFormState extends State<LoginForm> {
           SizedBox(height: 24.h),
 
           // Login button
-          ElevatedButton(
-            onPressed: _isLoading ? null : _handleLogin,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 16.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r),
-              ),
-            ),
-            child: _isLoading
-                ? SizedBox(
-                    height: 20.h,
-                    width: 20.h,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Text(
-                    'Se connecter',
-                    style: TextStyle(
-                      fontSize: 48.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+          AppButton(
+            label: 'Se connecter',
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            isLoading: _isLoading,
+            onPressed: _handleLogin,
           ),
           SizedBox(height: 24.h),
 
           // Switch to register
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Pas encore de compte ? ',
+          Center(
+            child: TextButton(
+              onPressed: widget.onSwitchToRegister,
+              child: Text(
+                'Je n\'ai pas de compte',
                 style: TextStyle(
                   fontSize: 40.sp,
-                  color: Colors.grey[600],
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.underline,
+                  decorationColor: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              TextButton(
-                onPressed: widget.onSwitchToRegister,
-                child: Text(
-                  'S\'inscrire',
-                  style: TextStyle(
-                    fontSize: 40.sp,
-                    color: Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
           ],
         ),

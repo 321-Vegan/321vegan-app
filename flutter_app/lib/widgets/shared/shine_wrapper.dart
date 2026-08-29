@@ -1,5 +1,7 @@
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../themes/app_shapes.dart';
 
 class ShineWrapper extends StatefulWidget {
   const ShineWrapper({
@@ -36,8 +38,8 @@ class _ShineWrapperState extends State<ShineWrapper>
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(widget.borderRadius.r),
+    return ClipSmoothRect(
+      radius: squircleRadius(widget.borderRadius.r),
       child: AnimatedBuilder(
         animation: _shineController,
         builder: (context, child) {

@@ -26,12 +26,8 @@ class ApiService {
         'x-api-key': _apiKey,
       };
 
-  /// Post a product with its vegan status
-  /// [ean] - The product's barcode
-  /// [status] - One of: "VEGAN", "NON_VEGAN", "MAYBE_VEGAN"
-  /// [productName] - Name of the product (optional)
-  /// [brand] - Brand of the product (optional)
-  /// Returns the product ID on success, or null on failure
+  /// Posts a product with its vegan status ("VEGAN", "NON_VEGAN",
+  /// "MAYBE_VEGAN"). Returns the product ID on success, or null on failure.
   static Future<int?> postProduct({
     required String ean,
     required String status,
@@ -41,7 +37,6 @@ class ApiService {
     try {
       final url = Uri.parse('$_baseUrl/products/');
 
-      // Get the current user's ID if logged in
       final userId = AuthService.currentUser?.id;
 
       final body = json.encode({
@@ -71,9 +66,7 @@ class ApiService {
     }
   }
 
-  /// Upload a photo for a product using the user's JWT token
-  /// [productId] - The product's ID
-  /// [photo] - The image file to upload
+  /// Uploads a photo for a product using the user's JWT token.
   static Future<bool> uploadProductImage({
     required int productId,
     required File photo,
@@ -134,11 +127,8 @@ class ApiService {
     }
   }
 
-  /// Post an error report
-  /// [ean] - The product's barcode/EAN
-  /// [comment] - User's comment about the error
-  /// [contact] - User's contact information (email/phone)
-  /// Automatically adds the logged-in user's ID to created_by if available
+  /// Posts an error report. Adds the logged-in user's ID to created_by when
+  /// available.
   static Future<bool> postErrorReport({
     required String ean,
     required String comment,
@@ -147,7 +137,6 @@ class ApiService {
     try {
       final url = Uri.parse('$_baseUrl/error-reports/');
 
-      // Get the current user's ID if logged in
       final userId = AuthService.currentUser?.id;
 
       final body = json.encode({
@@ -227,19 +216,15 @@ class ApiService {
     }
   }
 
-  /// Post a scan event for a product of interest
-  /// [ean] - The product's barcode
-  /// [latitude] - User's latitude (optional)
-  /// [longitude] - User's longitude (optional)
-  /// [userId] - The user who scanned. Queued offline scans must pass the id
-  /// captured at scan time: falling back to [AuthService.currentUser] here is
-  /// only correct for live scans (on a retry at app startup the profile may
-  /// not be loaded yet, and the event would be posted anonymously).
+  /// Posts a scan event for a product of interest.
   ///
-  /// Returns the parsed response body on success (2xx), or `null` when the
-  /// server is reachable but rejects the request (non-2xx). Network/connection
-  /// failures (no response received) are rethrown so callers can distinguish
-  /// "no internet" from "server said no" — important for retry/queue logic.
+  /// [userId]: queued offline scans must pass the id captured at scan time —
+  /// falling back to [AuthService.currentUser] is only correct for live scans
+  /// (a startup retry may run before the profile loads, posting anonymously).
+  ///
+  /// Returns the parsed body on 2xx, null on non-2xx (server rejected).
+  /// Network failures are rethrown so callers can distinguish "no internet"
+  /// from "server said no" for retry/queue logic.
   static Future<Map<String, dynamic>?> postScanEvent({
     required String ean,
     double? latitude,
@@ -257,8 +242,7 @@ class ApiService {
       if (effectiveUserId != null) 'user_id': effectiveUserId,
     });
 
-    // A network error here (SocketException, timeout, etc.) propagates to the
-    // caller on purpose — see the doc comment above.
+    // Network errors propagate to the caller on purpose — see doc above.
     final response = await http.post(
       url,
       headers: _headers,
@@ -272,15 +256,11 @@ class ApiService {
     return null;
   }
 
-  /// Record a B12 intake day for the current user (requires user JWT:
-  /// the server attributes the intake to the token's user).
-  /// [intakeDate] - The day the B12 was taken, formatted 'yyyy-MM-dd'
-  /// [frequency] - The supplementation rhythm in effect when it was taken
-  /// ("daily", "weekly", "twice_weekly", "biweekly")
+  /// Records a B12 intake day for the current user (server JWT). [intakeDate]
+  /// is 'yyyy-MM-dd'; [frequency] is the rhythm in effect when taken.
   ///
-  /// Returns the HTTP status code. 409 means the day is already recorded
-  /// server-side and can be treated as synced. Network/connection failures
-  /// are rethrown so callers can keep queued intakes for retry.
+  /// Returns the HTTP status code — 409 means already recorded (treat as
+  /// synced). Network failures are rethrown so callers can retry queued intakes.
   static Future<int> postB12Intake({
     required String intakeDate,
     String? frequency,
@@ -309,10 +289,8 @@ class ApiService {
     }
   }
 
-  /// Get all B12 intakes recorded server-side for the current user
-  /// (requires user JWT).
-  /// Returns the intakes (dates at local midnight, with the frequency
-  /// snapshotted at recording time), or null on failure.
+  /// Gets all B12 intakes recorded server-side (dates at local midnight,
+  /// frequency snapshotted at recording time). Null on failure.
   static Future<List<B12Intake>?> getB12Intakes() async {
     try {
       final dio = await DioClient.getDio();
@@ -364,9 +342,7 @@ class ApiService {
     }
   }
 
-  /// Update a scan event.
-  /// If [shopId] is provided, updates the shop association.
-  /// If [shopId] is null, removes location data and shop association.
+  /// Updates a scan event's shop association; a null [shopId] removes it.
   static Future<bool> updateScanEvent({
     required int scanEventId,
     int? shopId,
@@ -479,8 +455,8 @@ class ApiService {
   // Get all partners
   static Future<List<Partners>> getPartners() async {
     try {
-      final url =
-          Uri.parse('$_baseUrl/partners/search?is_active=true&page_size=100');
+      final url = Uri.parse(
+          '$_baseUrl/partners/search?is_active=true&page_size=100&sortby=display_order&direction=asc');
 
       final response = await http.get(
         url,
@@ -631,10 +607,8 @@ class ApiService {
     }
   }
 
-  /// Report a product as not found in a shop
-  /// [ean] - The product's barcode
-  /// [shopId] - The shop's ID
-  /// Returns true on success or if already reported (409)
+  /// Reports a product as not found in a shop. True on success or if
+  /// already reported (409).
   static Future<bool> postProductNotFoundReport({
     required String ean,
     required int shopId,
@@ -666,10 +640,8 @@ class ApiService {
     }
   }
 
-  /// Report a product as found in a shop
-  /// [ean] - The product's barcode
-  /// [shopId] - The shop's ID
-  /// Returns true on success or if already reported (409)
+  /// Reports a product as found in a shop. True on success or if already
+  /// reported (409).
   static Future<bool> postProductFoundReport({
     required String ean,
     required int shopId,

@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/models/validator_product.dart';
 import 'package:vegan_app/services/validator_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_spacing.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'constants.dart';
 import 'shared_widgets.dart';
 import 'validating_phase.dart';
@@ -103,7 +107,7 @@ class _ProductReviewPageState extends State<ProductReviewPage> {
       appBar: AppBar(
         title: Text(
           'Validation des produits',
-          style: TextStyle(fontSize: 46.sp, fontWeight: FontWeight.bold),
+          style: AppTextStyles.baloo22,
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
@@ -158,12 +162,16 @@ class _ProductReviewPageState extends State<ProductReviewPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 100.sp, color: Colors.red),
+          Icon(Icons.error_outline, size: 100.sp, color: kSemanticError),
           SizedBox(height: 16.h),
           Text('Erreur de chargement',
               style: TextStyle(fontSize: 48.sp, fontWeight: FontWeight.bold)),
           SizedBox(height: 24.h),
-          ElevatedButton(onPressed: _loadProducts, child: const Text('Réessayer')),
+          ElevatedButton(
+            onPressed: _loadProducts,
+            style: ElevatedButton.styleFrom(elevation: 0),
+            child: const Text('Réessayer'),
+          ),
         ],
       ),
     );
@@ -201,7 +209,8 @@ class _SetupPhaseState extends State<_SetupPhase> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
+      padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.pageHorizontal, vertical: 24.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -211,9 +220,9 @@ class _SetupPhaseState extends State<_SetupPhase> {
                 Container(
                   width: 120.w,
                   height: 120.w,
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16.r),
+                    shape: squircleBorder(radius: 16.r),
                   ),
                   child: Icon(Icons.edit_note_outlined,
                       size: 120.sp, color: Theme.of(context).colorScheme.primary),
@@ -275,9 +284,9 @@ class _SetupPhaseState extends State<_SetupPhase> {
                     padding: EdgeInsets.only(bottom: 10.h),
                     child: Material(
                       color: Colors.transparent,
-                      borderRadius: BorderRadius.circular(14.r),
+                      shape: squircleBorder(radius: 14.r),
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(14.r),
+                        customBorder: squircleBorder(radius: 14.r),
                         onTap: count == 0
                             ? null
                             : () => setState(() {
@@ -290,12 +299,14 @@ class _SetupPhaseState extends State<_SetupPhase> {
                         child: Container(
                           padding:
                               EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-                          decoration: BoxDecoration(
+                          decoration: ShapeDecoration(
                             color: checked ? s.color.withValues(alpha: 0.08) : Colors.grey[50],
-                            borderRadius: BorderRadius.circular(14.r),
-                            border: Border.all(
-                              color: checked ? s.color : Colors.grey[200]!,
-                              width: checked ? 2 : 1,
+                            shape: squircleBorder(
+                              radius: 14.r,
+                              side: BorderSide(
+                                color: checked ? s.color : Colors.grey[200]!,
+                                width: checked ? 2 : 1,
+                              ),
                             ),
                           ),
                           child: Row(
@@ -324,11 +335,11 @@ class _SetupPhaseState extends State<_SetupPhase> {
                               Container(
                                 padding: EdgeInsets.symmetric(
                                     horizontal: 12.w, vertical: 4.h),
-                                decoration: BoxDecoration(
+                                decoration: ShapeDecoration(
                                   color: count > 0
                                       ? s.color.withValues(alpha: 0.12)
                                       : Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(12.r),
+                                  shape: squircleBorder(radius: 12.r),
                                 ),
                                 child: Text('$count',
                                     style: TextStyle(
@@ -399,9 +410,7 @@ class _SetupPhaseState extends State<_SetupPhase> {
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 20.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
+                shape: squircleBorder(radius: 14.r),
               ),
             ),
           ),
@@ -448,10 +457,9 @@ class _CompletedPhase extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 foregroundColor: Colors.white,
+                elevation: 0,
                 padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.r),
-                ),
+                shape: squircleBorder(radius: 14.r),
               ),
               child: Text('Retour',
                   style: TextStyle(fontSize: 44.sp, fontWeight: FontWeight.bold)),

@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 4.9.4+1
+version: 5.0.5+1
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
@@ -32,8 +32,6 @@ dependencies:
     sdk: flutter
   video_player: ^2.9.2
   share_plus: ^10.1.4
-  introduction_screen: ^3.1.0
-  convex_bottom_bar: ^3.2.0
   shared_preferences: ^2.3.2
   intl: ^0.20.2
   flutter_localization: ^0.2.1
@@ -71,7 +69,6 @@ dependencies:
   path: ^1.8.0
   archive: ^3.6.1
   url_launcher: ^6.3.0
-  in_app_review: ^2.0.9
   upgrader: ^11.3.0
   sensors_plus: ^7.0.0
   flutter_map: ^8.2.2
@@ -81,6 +78,7 @@ dependencies:
   http_cache_file_store: ^2.0.0
   liquid_glass_easy: ^3.2.2
   vibration: ^3.2.0
+  figma_squircle: ^0.6.3
 
 dev_dependencies:
   flutter_test:
@@ -116,22 +114,22 @@ flutter:
     - lib/assets/app_icon.png
     - lib/assets/logo_instagram.png
     - lib/assets/vegan_products.db.gz
-    - lib/assets/intro/home-1.webp
-    - lib/assets/intro/scan-1.webp
-    - lib/assets/intro/map.webp
-    - lib/assets/intro/partners.webp
-    - lib/assets/badges/500products.png
+    # Intro
+    - lib/assets/intro/p1-phone.webp
+    - lib/assets/intro/p2-phone.webp
+    - lib/assets/intro/p3-phone.webp
     # Badges
-    - lib/assets/badges/1an.png
-    - lib/assets/badges/2ans.png
-    - lib/assets/badges/5ans.png
-    - lib/assets/badges/10ans.png
-    - lib/assets/badges/error1.png
-    - lib/assets/badges/soutien.png
-    - lib/assets/badges/1product.png
-    - lib/assets/badges/10products.png
-    - lib/assets/badges/50products.png
-    - lib/assets/badges/100products.png
+    - lib/assets/badges/1an.webp
+    - lib/assets/badges/2ans.webp
+    - lib/assets/badges/5ans.webp
+    - lib/assets/badges/10ans.webp
+    - lib/assets/badges/sherlock.webp
+    - lib/assets/badges/soutien.webp
+    - lib/assets/badges/1product.webp
+    - lib/assets/badges/10products.webp
+    - lib/assets/badges/50products.webp
+    - lib/assets/badges/100products.webp
+    - lib/assets/badges/500products.webp
     # Avatars
     - lib/assets/avatars/lapin.png
     - lib/assets/avatars/ver.png
@@ -142,15 +140,16 @@ flutter:
     - lib/assets/avatars/cochon.png
     - lib/assets/avatars/vache.png
     - lib/assets/avatars/chat.png
-    # Seasons
-    - lib/assets/abonnement-popup-vid.mp4
-    - lib/assets/images/pumpkin-smile.webp
-    - lib/assets/images/pumpkin.webp
-    - lib/assets/images/marguerite.webp
-    - lib/assets/images/tulipe.webp
-    - lib/assets/images/tulipe-smile.webp
-    - lib/assets/images/papillon.webp
-    - lib/assets/images/ruche.webp
+    - lib/assets/avatars/chien.png
+    - lib/assets/avatars/cow-2.png
+    # Characters
+    - lib/assets/images/characters/cow-ok.webp
+    - lib/assets/images/characters/cow-not.webp
+    - lib/assets/images/characters/cow-mby.webp
+    - lib/assets/images/characters/watermelon.webp
+    - lib/assets/images/characters/radish.webp
+    - lib/assets/images/characters/avocado.webp
+    - lib/assets/images/characters/tomatoes.webp
     # Test with la vie featured
     - lib/assets/la-vie-logo.png
     # Nutriscores / Green-score
@@ -166,8 +165,85 @@ flutter:
     - lib/assets/images/nutri-eco-scores/green-score-d.webp
     - lib/assets/images/nutri-eco-scores/green-score-e.webp
     - lib/assets/images/nutri-eco-scores/green-score-f.webp
+    # Stat cards
+    - lib/assets/images/stat-cards/animals.webp
+    - lib/assets/images/stat-cards/co2.webp
+    - lib/assets/images/stat-cards/forest.webp
+    - lib/assets/images/stat-cards/water.webp
+    # Premium buy page
+    - lib/assets/images/buy-premium/seed.webp
+    - lib/assets/images/buy-premium/flower.webp
+    - lib/assets/images/buy-premium/tree.webp
+    - lib/assets/images/buy-premium/bee.webp
+    - lib/assets/images/buy-premium/pineapple.webp
+    # Seasonal themes
+    - lib/assets/themes/plant.webp
+    # Seasonal themes cards
+    - lib/assets/themes/cards/leaf-autumn.webp
+    - lib/assets/themes/cards/leaf-summer.webp
+    - lib/assets/themes/cards/leaf-spring.webp
+    - lib/assets/themes/cards/leaf-winter.webp
+    - lib/assets/themes/cards/leaf-basic.webp
+    - lib/assets/themes/cards/water-basic.webp
+    - lib/assets/themes/cards/water-summer.webp
+    - lib/assets/themes/cards/water-spring.webp
+    - lib/assets/themes/cards/water-winter.webp
+    - lib/assets/themes/cards/water-autumn.webp
+    - lib/assets/themes/cards/planet-basic.webp
+    - lib/assets/themes/cards/planet-summer.webp
+    - lib/assets/themes/cards/planet-spring.webp
+    - lib/assets/themes/cards/planet-winter.webp
+    - lib/assets/themes/cards/planet-autumn.webp
+    - lib/assets/themes/cards/poule-basic.webp
+    - lib/assets/themes/cards/poule-summer.webp
+    - lib/assets/themes/cards/poule-spring.webp
+    - lib/assets/themes/cards/poule-winter.webp
+    - lib/assets/themes/cards/poule-autumn.webp
+    # Seasonal Themes - Winter
+    - lib/assets/themes/ice_8.webp
+    - lib/assets/themes/ice_2.webp
+    - lib/assets/themes/ice_10.webp
+    # Seasonal Themes - Autumn
+    - lib/assets/themes/plant.webp
+    - lib/assets/themes/particles/autumn-leaf.webp
+    # Seasonal Themes - Summer
+    - lib/assets/themes/burst.webp
+    - lib/assets/themes/particles/summer-fraise.webp
+    - lib/assets/themes/particles/summer-orange.webp
+    - lib/assets/themes/particles/summer-tomate.webp
+    # Seasonal Themes - Spring
+    - lib/assets/themes/particles/spring-flower1.webp
+    - lib/assets/themes/particles/spring-flower2.webp
+    # Icons
+    - lib/assets/images/icons/crown-line.webp
+    - lib/assets/images/icons/solid-close.webp
+    - lib/assets/images/icons/info-circle.webp
+    - lib/assets/images/icons/alert-circle.webp
+    - lib/assets/images/icons/solid-check.webp
+    - lib/assets/images/icons/pokeball.webp
+    - lib/assets/images/icons/calendar.webp
+    - lib/assets/images/icons/award-line.webp
+    - lib/assets/images/icons/clipboard-check.webp
+    - lib/assets/images/icons/pin-shop.webp
+    - lib/assets/images/icons/shop-add.webp
+    - lib/assets/images/icons/map-marker-plus.webp
+    - lib/assets/images/icons/map-on.webp
+    - lib/assets/images/icons/map-off.webp
+    - lib/assets/images/icons/home-on.webp
+    - lib/assets/images/icons/home-off.webp
+    - lib/assets/images/icons/search-line.webp
+    - lib/assets/images/icons/instagram.webp
+    # Remerciements
+    - lib/assets/images/remerciements/vilainevegane.webp
+    - lib/assets/images/remerciements/noemie-bertosio.webp
+    - lib/assets/images/remerciements/isabelle.webp
+    - lib/assets/images/remerciements/anabelle.webp
+    - lib/assets/images/remerciements/ancielle.webp
+    - lib/assets/images/remerciements/discord.png
+    - lib/assets/images/remerciements/github.png
     # Others
     - lib/assets/affiche-321vegan-a4.png
+    - lib/assets/images/vegandex.webp
     - .env
 
   fonts:
@@ -177,6 +253,22 @@ flutter:
     - family: Baloo
       fonts:
         - asset: fonts/Baloo-Regular.ttf
+    - family: Baloo2
+      fonts:
+        - asset: fonts/Baloo2-Regular.ttf
+        - asset: fonts/Baloo2-Medium.ttf
+          weight: 500
+        - asset: fonts/Baloo2-SemiBold.ttf
+          weight: 600
+        - asset: fonts/Baloo2-Bold.ttf
+          weight: 700
+        - asset: fonts/Baloo2-ExtraBold.ttf
+          weight: 800
+    - family: Karla
+      fonts:
+        - asset: fonts/Karla-VariableFont.ttf
+        - asset: fonts/Karla-VariableFont.ttf
+          weight: 700
     - family: OrangeJuice
       fonts:
         - asset: fonts/orangejuice.ttf
