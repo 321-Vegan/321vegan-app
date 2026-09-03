@@ -7,6 +7,10 @@ import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
 import '../shared/app_text_field.dart';
 
+/// Same check the email field's validator uses, so the submit-button gate
+/// and the inline error agree.
+final RegExp _kEmailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
 class LoginForm extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
   final VoidCallback? onSwitchToRegister;
@@ -29,6 +33,21 @@ class _LoginFormState extends State<LoginForm> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_onFieldChanged);
+    _passwordController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() => setState(() {});
+
+  /// Every required field has a value and the email looks valid — gates the
+  /// submit button.
+  bool get _canSubmit =>
+      _kEmailRegExp.hasMatch(_emailController.text.trim()) &&
+      _passwordController.text.isNotEmpty;
 
   @override
   void dispose() {
@@ -92,8 +111,7 @@ class _LoginFormState extends State<LoginForm> {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer votre email';
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                  .hasMatch(value)) {
+              if (!_kEmailRegExp.hasMatch(value)) {
                 return 'Veuillez entrer un email valide';
               }
               return null;
@@ -147,7 +165,7 @@ class _LoginFormState extends State<LoginForm> {
             label: 'Se connecter',
             backgroundColor: Theme.of(context).colorScheme.primary,
             isLoading: _isLoading,
-            onPressed: _handleLogin,
+            onPressed: _canSubmit ? _handleLogin : null,
           ),
           SizedBox(height: 24.h),
 

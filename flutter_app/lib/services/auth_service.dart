@@ -9,6 +9,7 @@ import '../models/user.dart';
 import '../models/scanned_product.dart';
 import '../helpers/preference_helper.dart';
 import '../themes/app_colors.dart';
+import 'b12_reminder_service.dart';
 import 'b12_sync_service.dart';
 import 'dio_client.dart';
 import 'scan_count_sync_service.dart';
@@ -292,6 +293,10 @@ class AuthService {
       ScanCountSyncService.clearUnsynced(),
       B12SyncService.clearPending(),
     ]);
+    // The B12 reminder is a personal, account-scoped routine — turn it off
+    // (keeping frequency/time) so it can't keep firing for the next account
+    // on this device.
+    await B12ReminderService.disable();
 
     try {
       final dio = await DioClient.getDio();
@@ -327,6 +332,7 @@ class AuthService {
       ScanCountSyncService.clearUnsynced(),
       B12SyncService.clearPending(),
     ]);
+    await B12ReminderService.disable();
     try {
       final dio = await DioClient.getDio();
 

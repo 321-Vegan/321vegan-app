@@ -74,9 +74,11 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
       onTap: widget.onTap,
       child: Column(
         children: [
-          SizedBox(
+          FractionallySizedBox(
+            widthFactor: 0.72,
+            child: SizedBox(
             // Room for the bee overflowing above/below the slim bar.
-            height: beeSize + 50.h,
+            height: beeSize,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final barWidth = constraints.maxWidth;
@@ -87,6 +89,7 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
                     final beeLeft = (barWidth * progress - beeSize / 2)
                         .clamp(0.0, barWidth - beeSize);
                     return Stack(
+                      clipBehavior: Clip.none,
                       alignment: Alignment.centerLeft,
                       children: [
                         Container(
@@ -130,8 +133,9 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
                 );
               },
             ),
+            ),
           ),
-          SizedBox(height: 8.h),
+          SizedBox(height: 5.h),
           Text(
             '$count/$goal soutiens pour être à temps plein sur l\'app',
             style: TextStyle(

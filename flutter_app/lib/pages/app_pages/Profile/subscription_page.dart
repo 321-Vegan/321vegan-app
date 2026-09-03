@@ -78,12 +78,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   @override
   void initState() {
     super.initState();
-    SubscriptionService.onSubscriptionChanged = _onSubscriptionChanged;
+    SubscriptionService.revision.addListener(_onSubscriptionChanged);
   }
 
   @override
   void dispose() {
-    SubscriptionService.onSubscriptionChanged = null;
+    SubscriptionService.revision.removeListener(_onSubscriptionChanged);
     super.dispose();
   }
 
@@ -240,11 +240,11 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
                           if (!isSubscribed) ...[
                             _buildHeader(primaryColor),
-                            SizedBox(height: 32.h),
+                            SizedBox(height: 38.h),
                             const SubscriptionGoalWidget(),
-                            SizedBox(height: 32.h),
+                            SizedBox(height: 38.h),
                             _buildBenefits(primaryColor),
-                            SizedBox(height: 32.h),
+                            SizedBox(height: 38.h),
 
                             if (SubscriptionService.products.isNotEmpty) ...[
                               _buildPlanCards(primaryColor),
@@ -262,24 +262,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                                 ),
                               ),
                               SizedBox(height: 24.h),
-
-                              if (_errorMessage != null) ...[
-                                Padding(
-                                  padding: EdgeInsets.only(bottom: 16.h),
-                                  child: Text(
-                                    _errorMessage!,
-                                    style: TextStyle(
-                                      fontSize: 38.sp,
-                                      color: const Color(0xFFFFC9C9),
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-
-                              _buildPurchaseButton(primaryColor),
-                              SizedBox(height: 20.h),
 
                               _buildRestoreButton(),
                               SizedBox(height: 24.h),
@@ -300,6 +282,30 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                     Padding(
                       padding: EdgeInsets.fromLTRB(40.w, 16.h, 40.w, 24.h),
                       child: _buildManageSubscriptionButton(),
+                    ),
+                  // Sticky "S'abonner" — kept out of the scroll view so it
+                  // stays visible while the user browses tiers.
+                  if (!isSubscribed && SubscriptionService.products.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(40.w, 12.h, 40.w, 20.h),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_errorMessage != null) ...[
+                            Text(
+                              _errorMessage!,
+                              style: TextStyle(
+                                fontSize: 38.sp,
+                                color: const Color(0xFFFFC9C9),
+                                fontWeight: FontWeight.w600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 12.h),
+                          ],
+                          _buildPurchaseButton(primaryColor),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -442,37 +448,45 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       'Soutien pour faire vivre l\'app',
     ];
 
-    return Column(
-      children: [
-        for (final benefit in benefits)
-          Padding(
-            padding: EdgeInsets.only(bottom: 24.h),
-            child: Row(
-              children: [
-                Container(
-                  width: 72.w,
-                  height: 72.w,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.check, size: 44.sp, color: primaryColor),
-                ),
-                SizedBox(width: 24.w),
-                Expanded(
-                  child: Text(
-                    benefit,
-                    style: TextStyle(
-                      fontSize: 44.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
+    // IntrinsicWidth so every row shares the widest one's width (check
+    // icons stay aligned); Center pulls the whole block to the middle.
+    return Center(
+      child: IntrinsicWidth(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final benefit in benefits)
+              Padding(
+                padding: EdgeInsets.only(bottom: 24.h),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 72.w,
+                      height: 72.w,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child:
+                          Icon(Icons.check, size: 44.sp, color: primaryColor),
                     ),
-                  ),
+                    SizedBox(width: 24.w),
+                    Flexible(
+                      child: Text(
+                        benefit,
+                        style: TextStyle(
+                          fontSize: 44.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-      ],
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -505,17 +519,22 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       );
     }
 
-    return Container(
-      padding: EdgeInsets.all(6.w),
-      decoration: ShapeDecoration(
-        color: Colors.black.withValues(alpha: 0.15),
-        shape: squircleBorder(radius: 34.r),
-      ),
-      child: Row(
-        children: [
-          option('Par mois', false),
-          option('Par an', true),
-        ],
+    return Center(
+      child: FractionallySizedBox(
+        widthFactor: 0.62,
+        child: Container(
+          padding: EdgeInsets.all(6.w),
+          decoration: ShapeDecoration(
+            color: Colors.black.withValues(alpha: 0.15),
+            shape: squircleBorder(radius: 34.r),
+          ),
+          child: Row(
+            children: [
+              option('Par mois', false),
+              option('Par an', true),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -892,22 +911,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Image.asset(
-                            'lib/assets/images/buy-premium/pineapple.webp',
-                            fit: BoxFit.contain,
-                            height: 200.h,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(
-                              padding: EdgeInsets.all(24.w),
-                              decoration: BoxDecoration(
-                                color: primaryColor.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.lock_outline,
-                                size: 120.sp,
-                                color: primaryColor,
-                              ),
-                            ),
+                            'lib/assets/images/characters/cow-mby.webp',
+                            width: 220.w,
+                            height: 220.w,
                           ),
                           SizedBox(height: 24.h),
                           Text(
@@ -939,14 +945,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                                   _showAuthSheet(showRegister: true),
                             ),
                           ),
-                          SizedBox(height: 12.h),
+                          SizedBox(height: 32.h),
                           SizedBox(
                             width: double.infinity,
                             child: AppButton(
                               label: 'Se connecter',
-                              backgroundColor: Colors.white,
-                              foregroundColor: primaryColor,
-                              borderColor: primaryColor,
+                              backgroundColor: kAccentYellow,
                               onPressed: () =>
                                   _showAuthSheet(showRegister: false),
                             ),

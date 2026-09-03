@@ -51,7 +51,7 @@ class ScanResultCard extends StatelessWidget {
       borderWidth: 3,
       padding: EdgeInsets.all(45.w),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Column(

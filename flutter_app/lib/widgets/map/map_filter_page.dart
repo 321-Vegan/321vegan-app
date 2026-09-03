@@ -122,7 +122,7 @@ class _MapFilterPageState extends State<MapFilterPage> {
               ? primaryColor.withValues(alpha: 0.08)
               : Colors.white,
           shape: squircleBorder(
-            radius: 42.r,
+            radius: 100.r,
             side: BorderSide(
               color: isSelected ? primaryColor : kBorderDefault,
               width: isSelected ? 1.5 : 1,
@@ -381,13 +381,18 @@ class _MapFilterPageState extends State<MapFilterPage> {
                       hintText: 'Nom du produit ou marque…',
                       hintStyle: AppTextStyles.bodyRegular15
                           .copyWith(color: Colors.grey[500]),
-                      prefixIcon: Image.asset(
-                        'lib/assets/images/icons/search-line.webp',
-                        width: 60.sp,
-                        height: 60.sp,
-                        color: Colors.grey[600],
-                        colorBlendMode: BlendMode.srcIn,
+                      prefixIcon: Padding(
+                        padding: EdgeInsets.only(left: 39.w, right: 12.w),
+                        child: Image.asset(
+                          'lib/assets/images/icons/search-line.webp',
+                          width: 60.sp,
+                          height: 60.sp,
+                          color: Colors.grey[600],
+                          colorBlendMode: BlendMode.srcIn,
+                        ),
                       ),
+                      prefixIconConstraints: BoxConstraints(
+                          minWidth: 60.sp, minHeight: 60.sp),
                       suffixIcon: _search.isNotEmpty
                           ? IconButton(
                               icon: Icon(Icons.clear, size: 36.sp),

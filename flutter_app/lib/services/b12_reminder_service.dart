@@ -263,6 +263,16 @@ class B12ReminderService {
     await _notificationService.cancelNotification(_biweeklyNotificationId);
   }
 
+  /// Cancels the scheduled reminder and turns it off, keeping the
+  /// frequency/time so it can be re-enabled in one tap. Called on logout /
+  /// account deletion: the reminder is a personal, account-scoped routine
+  /// and must not keep firing for the next account on this device.
+  static Future<void> disable() async {
+    final settings = await getSettings();
+    if (!settings.enabled) return;
+    await scheduleReminder(settings.copyWith(enabled: false));
+  }
+
   /// Get next scheduled notification time. If today's dose was already
   /// taken, today's slot (even if its time-of-day hasn't passed yet) is
   /// skipped in favor of the next one — otherwise a same-day reminder would

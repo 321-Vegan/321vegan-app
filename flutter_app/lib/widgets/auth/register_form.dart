@@ -10,6 +10,10 @@ import '../shared/app_button.dart';
 import '../shared/app_text_field.dart';
 import '../shared/vegan_since_date_modal.dart';
 
+/// Same check the email field's validator uses, so the submit-button gate
+/// and the inline error agree.
+final RegExp _kEmailRegExp = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+
 class RegisterForm extends StatefulWidget {
   final VoidCallback? onRegisterSuccess;
   final VoidCallback? onSwitchToLogin;
@@ -42,7 +46,25 @@ class _RegisterFormState extends State<RegisterForm> {
   void initState() {
     super.initState();
     _loadVeganSince();
+    for (final c in [
+      _emailController,
+      _nicknameController,
+      _passwordController,
+      _confirmPasswordController,
+    ]) {
+      c.addListener(_onFieldChanged);
+    }
   }
+
+  void _onFieldChanged() => setState(() {});
+
+  /// Every required field has a value and the email looks valid (Végane
+  /// depuis is optional) — gates the submit button.
+  bool get _canSubmit =>
+      _kEmailRegExp.hasMatch(_emailController.text.trim()) &&
+      _nicknameController.text.trim().isNotEmpty &&
+      _passwordController.text.isNotEmpty &&
+      _confirmPasswordController.text.isNotEmpty;
 
   @override
   void dispose() {
@@ -170,8 +192,7 @@ class _RegisterFormState extends State<RegisterForm> {
               if (value == null || value.isEmpty) {
                 return 'Veuillez entrer votre email';
               }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                  .hasMatch(value)) {
+              if (!_kEmailRegExp.hasMatch(value)) {
                 return 'Veuillez entrer un email valide';
               }
               return null;
@@ -278,7 +299,7 @@ class _RegisterFormState extends State<RegisterForm> {
             label: 'C\'est parti !',
             backgroundColor: Theme.of(context).colorScheme.primary,
             isLoading: _isLoading,
-            onPressed: _handleRegister,
+            onPressed: _canSubmit ? _handleRegister : null,
           ),
           SizedBox(height: 24.h),
 

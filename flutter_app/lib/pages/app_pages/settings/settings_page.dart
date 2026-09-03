@@ -26,6 +26,7 @@ import '../../../widgets/shared/social_feedback_buttons.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/theme/theme_selector_modal.dart';
 import '../../../main.dart';
+import '../home.dart';
 import '../Profile/auth_gate_page.dart';
 import '../Profile/avatar_selection_page.dart';
 import '../Profile/b12_history_sheet.dart';
@@ -67,6 +68,15 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _loadAll();
+  }
+
+  /// After logging in from the Settings auth gate, land on the Dashboard
+  /// (the "accueil") rather than staying on this Paramètres screen.
+  void _goToHome() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const MyHomePage()),
+      (route) => false,
+    );
   }
 
   Future<void> _loadAll() async {
@@ -377,7 +387,7 @@ class _SettingsPageState extends State<SettingsPage> {
               : AuthService.isLoggedIn
                   ? _buildLoggedInBody(context)
                   : SingleChildScrollView(
-                      child: AuthGatePage(onLoginSuccess: _loadAll),
+                      child: AuthGatePage(onLoginSuccess: _goToHome),
                     ),
         ),
       ),
@@ -712,7 +722,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       SizedBox(height: 16.h),
                       Container(
                         padding: EdgeInsets.symmetric(
-                            horizontal: 24.w, vertical: 10.h),
+                            horizontal: 45.w, vertical: 10.h),
                         decoration: ShapeDecoration(
                           color: kAccentYellow,
                           shape: squircleBorder(radius: 30),

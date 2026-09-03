@@ -17,7 +17,7 @@ class VegandexStatsIllustration extends StatelessWidget {
   });
 
   static const double _imageAspectRatio = 1006 / 728;
-  static const Rect _countRect = Rect.fromLTRB(0.094, 0.305, 0.438, 0.679);
+  static const Rect _countRect = Rect.fromLTRB(0.078, 0.275, 0.422, 0.649);
   static const Rect _percentRect = Rect.fromLTRB(0.594, 0.323, 0.921, 0.482);
 
   @override

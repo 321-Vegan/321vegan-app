@@ -88,7 +88,7 @@ class B12InfoPage extends StatelessWidget {
         SizedBox(height: AppSpacing.afterTitle),
         Text(
           body,
-          style: AppTextStyles.bodyRegular13.copyWith(
+          style: AppTextStyles.bodyRegular15.copyWith(
             color: Colors.grey[700],
             height: 1.5,
           ),

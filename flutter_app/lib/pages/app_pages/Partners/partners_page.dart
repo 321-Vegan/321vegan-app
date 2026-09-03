@@ -14,7 +14,6 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_card.dart';
 import 'package:vegan_app/widgets/shared/empty_state_view.dart';
-import 'package:vegan_app/widgets/shared/search_field.dart';
 
 /// Sentinel category id for the synthetic "Tout" tab (real ids start at 1).
 const int _kAllCategoryId = -1;
@@ -34,8 +33,6 @@ class _PartnersPageState extends State<PartnersPage> {
   bool _isLoading = false;
   int? _selectedCategoryId;
   final PageController _pageController = PageController();
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
   // Guards against popping more than once per overscroll drag.
   bool _hasPoppedForOverscroll = false;
   final Map<int, GlobalKey> _chipKeys = {};
@@ -51,7 +48,6 @@ class _PartnersPageState extends State<PartnersPage> {
   @override
   void dispose() {
     _pageController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -104,13 +100,7 @@ class _PartnersPageState extends State<PartnersPage> {
       ];
 
   List<Partners> _partnersForCategory(int categoryId) {
-    if (categoryId == _kAllCategoryId) {
-      if (_searchQuery.isEmpty) return _partners;
-      final query = _searchQuery.trim().toLowerCase();
-      return _partners
-          .where((p) => p.name.toLowerCase().contains(query))
-          .toList();
-    }
+    if (categoryId == _kAllCategoryId) return _partners;
     return _partners.where((p) => p.category.id == categoryId).toList();
   }
 
@@ -219,18 +209,10 @@ class _PartnersPageState extends State<PartnersPage> {
   }
 
   Widget _buildCategoryResults(PartnersCategory category) {
-    final isAllTab = category.id == _kAllCategoryId;
     final results = _partnersForCategory(category.id);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (isAllTab) ...[
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 48.w),
-            child: _buildSearchField(),
-          ),
-          SizedBox(height: AppSpacing.item),
-        ],
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 48.w),
           child: Text(
@@ -241,11 +223,10 @@ class _PartnersPageState extends State<PartnersPage> {
         SizedBox(height: AppSpacing.afterTitle),
         Expanded(
           child: results.isEmpty
-              ? EmptyStateView(
+              ? const EmptyStateView(
                   title: 'Rien trouvé !',
-                  subtitle: isAllTab && _searchQuery.isNotEmpty
-                      ? 'Aucune boutique ne correspond à votre recherche.'
-                      : 'Aucune boutique dans cette catégorie pour le moment.',
+                  subtitle:
+                      'Aucune boutique dans cette catégorie pour le moment.',
                 )
               : ListView.separated(
                   padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 8.h),
@@ -259,23 +240,19 @@ class _PartnersPageState extends State<PartnersPage> {
     );
   }
 
-  Widget _buildSearchField() {
-    return SearchField(
-      controller: _searchController,
-      hintText: 'Rechercher une boutique...',
-      onChanged: (value) => setState(() => _searchQuery = value),
-    );
-  }
-
   Widget _buildCategoryChip(PartnersCategory category, int index) {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final isSelected = category.id == _selectedCategoryId;
+    // The horizontal ListView pins every chip to the row's full height, so
+    // alignment (not vertical padding) is what vertically centres the label.
+    // A forced strut keeps the emoji-prefixed names on the same line metrics
+    // as the plain ones so they all sit dead-centre.
     return GestureDetector(
       key: _chipKeyFor(category.id),
       onTap: () => _goToCategory(index),
       child: Container(
         alignment: Alignment.center,
-        padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
+        padding: EdgeInsets.symmetric(horizontal: 39.w),
         decoration: ShapeDecoration(
           color: isSelected ? kPrimaryTag : Colors.white,
           shape: squircleBorder(
@@ -288,8 +265,15 @@ class _PartnersPageState extends State<PartnersPage> {
         ),
         child: Text(
           category.name,
+          textAlign: TextAlign.center,
+          strutStyle: StrutStyle(
+            fontSize: 39.sp,
+            height: 1.1,
+            forceStrutHeight: true,
+          ),
           style: TextStyle(
             fontSize: 39.sp,
+            height: 1.1,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
             color: isSelected ? primaryColor : kTextPrimary,
           ),
@@ -335,6 +319,8 @@ class _PartnersPageState extends State<PartnersPage> {
         radius: 60.r,
         padding: EdgeInsets.all(45.w),
         child: Row(
+          // Keeps the affiliate star pinned to the top of the card.
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipSmoothRect(
               radius: squircleRadius(33.r),

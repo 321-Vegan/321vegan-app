@@ -6,6 +6,10 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/widgets/b12/b12_reminder_settings_modal.dart';
 import '../../models/seasonal_theme.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
+import '../../pages/app_pages/Profile/subscription_page.dart';
+import '../../services/auth_service.dart';
+import '../../services/b12_reminder_service.dart';
+import '../../services/subscription_service.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../shared/page_dots_indicator.dart';
@@ -31,6 +35,10 @@ class PromoSlide {
   /// Falls back to a generic icon-in-circle placeholder when null.
   final String? image;
 
+  /// Resolved once when the carousel mounts; when it completes with `true`
+  /// the slide is dropped (e.g. the B12 slide once a reminder is set up).
+  final Future<bool> Function()? hidden;
+
   const PromoSlide({
     required this.title,
     required this.subtitle,
@@ -39,11 +47,21 @@ class PromoSlide {
     this.pageIsBottomSheet = false,
     this.buttonLabel = 'Voir plus',
     this.image,
+    this.hidden,
   });
 }
 
 /// Static content until the real news source is wired
 final List<PromoSlide> _promoSlides = [
+  PromoSlide(
+    title: 'Soutenir 321 Vegan',
+    subtitle: 'Aidez le projet à continuer et grandir',
+    image: 'lib/assets/images/characters/cow-ok.webp',
+    page: () => const SubscriptionPage(),
+    buttonLabel: 'Soutenir',
+    hidden: () async =>
+        AuthService.isLoggedIn && SubscriptionService.isSubscribed,
+  ),
   const PromoSlide(
     title: 'Nouvelle interface !',
     subtitle: 'Un tout nouveau design pour plus de clarté.',
@@ -63,7 +81,8 @@ final List<PromoSlide> _promoSlides = [
     page: () => const B12ReminderSettingsModal(),
     pageIsBottomSheet: true,
     image: 'lib/assets/images/characters/avocado.webp',
-    buttonLabel: "Configurer maintenant"
+    buttonLabel: "Configurer maintenant",
+    hidden: () async => (await B12ReminderService.getSettings()).enabled,
   ),
   const PromoSlide(
     title: 'Merci !',
@@ -91,11 +110,34 @@ class _PromoCarouselState extends State<PromoCarousel> {
   int _page = 0;
   bool _isWrappingToStart = false;
 
-  List<PromoSlide> get _slides => widget.slides ?? _promoSlides;
+  /// Null until the per-slide [PromoSlide.hidden] checks have resolved;
+  /// the carousel stays empty until then to avoid showing a slide that is
+  /// about to be filtered out.
+  List<PromoSlide>? _slides;
 
-  // @override
-  // void initState() {
-  //   super.initState();
+  List<PromoSlide> get _sourceSlides => widget.slides ?? _promoSlides;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveSlides();
+  }
+
+  Future<void> _resolveSlides() async {
+    final source = _sourceSlides;
+    final hiddenFlags = await Future.wait([
+      for (final slide in source) slide.hidden?.call() ?? Future.value(false),
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _slides = [
+        for (var i = 0; i < source.length; i++)
+          if (!hiddenFlags[i]) source[i],
+      ];
+    });
+  }
+
+  //
   //   _startAutoScroll();
   // }
   //
@@ -122,17 +164,18 @@ class _PromoCarouselState extends State<PromoCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    if (_slides.isEmpty) return const SizedBox.shrink();
+    final slides = _slides;
+    if (slides == null || slides.isEmpty) return const SizedBox.shrink();
 
     return Column(
       children: [
         SizedBox(
           height: 396.h,
-          child: _buildPageView(),
+          child: _buildPageView(slides),
         ),
         SizedBox(height: 20.h),
         PageDotsIndicator(
-          count: _slides.length,
+          count: slides.length,
           currentIndex: _page,
           activeColor: Theme.of(context).colorScheme.primary,
         ),
@@ -140,10 +183,10 @@ class _PromoCarouselState extends State<PromoCarousel> {
     );
   }
 
-  Widget _buildPageView() {
+  Widget _buildPageView(List<PromoSlide> slides) {
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        final isLastPage = _page == _slides.length - 1;
+        final isLastPage = _page == slides.length - 1;
         if (!isLastPage || _isWrappingToStart) return false;
 
         // OverscrollNotification only fires under Android's clamping
@@ -168,12 +211,12 @@ class _PromoCarouselState extends State<PromoCarousel> {
       },
       child: PageView.builder(
         controller: _controller,
-        itemCount: _slides.length,
+        itemCount: slides.length,
         onPageChanged: (page) {
           setState(() => _page = page);
           // _startAutoScroll();
         },
-        itemBuilder: (context, index) => _PromoCard(slide: _slides[index]),
+        itemBuilder: (context, index) => _PromoCard(slide: slides[index]),
       ),
     );
   }
@@ -266,7 +309,7 @@ class _PromoCard extends StatelessWidget {
                           horizontal: 36.w, vertical: 14.h),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: squircleBorder(radius: 30.r),
+                      shape: const StadiumBorder(),
                     ),
                     child: Text(
                       slide.buttonLabel,

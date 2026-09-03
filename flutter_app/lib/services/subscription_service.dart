@@ -54,10 +54,26 @@ class SubscriptionService {
   static String? _cachedStatus;
   static DateTime? _cachedExpiresAt;
 
-  /// Callback for UI to react to purchase state changes
-  static VoidCallback? onSubscriptionChanged;
+  /// True once the backend has given a definitive answer this session — a
+  /// subscription object, or an explicit "none" — as opposed to the check
+  /// still being in flight or having failed offline.
+  static bool _backendAnswered = false;
+
+  /// Bumped on every change to subscription state (bypass, backend status,
+  /// pending receipt). Multiple listeners subscribe: the app root reloads
+  /// the seasonal theme when premium entitlement resolves, and the
+  /// subscription page refreshes its UI.
+  static final ValueNotifier<int> revision = ValueNotifier<int>(0);
+
+  static void _notifySubscriptionChanged() => revision.value++;
 
   static Future<void> init() async {
+    // Load persisted status + bypass first, unconditionally: a transient
+    // isAvailable() == false on cold start (billing service not yet bound)
+    // must not leave the user looking unsubscribed — premium seasonal
+    // themes would silently downgrade to the default for the whole session.
+    await _loadCachedStatus();
+
     _isAvailable = await InAppPurchase.instance.isAvailable();
     if (!_isAvailable) {
       debugPrint('In-app purchases not available');
@@ -69,8 +85,6 @@ class SubscriptionService {
       onDone: () => _purchaseSubscription?.cancel(),
       onError: (error) => debugPrint('Purchase stream error: $error'),
     );
-
-    await _loadCachedStatus();
 
     // Network-dependent — don't block app startup.
     unawaited(queryProducts());
@@ -96,6 +110,20 @@ class SubscriptionService {
     }
     if (_hasPendingReceipt) return true;
     return _getCachedIsSubscribed();
+  }
+
+  /// Whether premium entitlement is known one way or the other. False only
+  /// during the brief cold-start window where the backend check is still in
+  /// flight and nothing local (bypass, cache, pending receipt, logged-out
+  /// state) settles it. Callers gating cosmetic features should hold off
+  /// downgrading while this is false to avoid a visible flicker.
+  static bool get isEntitlementDetermined {
+    if (_subscriptionBypass) return true;
+    if (_currentSubscription != null) return true;
+    if (_hasPendingReceipt) return true;
+    if (_cachedStatus != null) return true;
+    if (!AuthService.isLoggedIn) return true;
+    return _backendAnswered;
   }
 
   static Future<void> queryProducts() async {
@@ -166,14 +194,18 @@ class SubscriptionService {
 
     try {
       final subscription = await ApiService.getSubscriptionStatus();
+      // The backend has now answered definitively (a subscription, or none).
+      _backendAnswered = true;
       if (subscription != null) {
         _currentSubscription = subscription;
         await _cacheStatus(_currentSubscription!);
-        onSubscriptionChanged?.call();
+        _notifySubscriptionChanged();
         return _currentSubscription;
       } else {
         _currentSubscription = null;
         await _clearCachedStatus();
+        // Let listeners (e.g. the theme) react to the confirmed downgrade.
+        _notifySubscriptionChanged();
       }
     } catch (e) {
       debugPrint('Error checking subscription: $e');
@@ -243,7 +275,7 @@ class SubscriptionService {
       purchaseToken: purchaseToken,
     );
     _hasPendingReceipt = true;
-    onSubscriptionChanged?.call();
+    _notifySubscriptionChanged();
 
     if (!AuthService.isLoggedIn) {
       debugPrint('User not logged in, receipt saved for later verification');
@@ -265,7 +297,7 @@ class SubscriptionService {
         await _clearPendingReceipts();
         _hasPendingReceipt = false;
         _retryTimer?.cancel();
-        onSubscriptionChanged?.call();
+        _notifySubscriptionChanged();
         debugPrint('Purchase verified successfully');
         return true;
       }
@@ -380,7 +412,7 @@ class SubscriptionService {
           await _clearPendingReceipts();
           _hasPendingReceipt = false;
           _retryTimer?.cancel();
-          onSubscriptionChanged?.call();
+          _notifySubscriptionChanged();
           debugPrint('Pending receipt verified successfully');
           return;
         }
@@ -444,7 +476,7 @@ class SubscriptionService {
     _subscriptionBypass = bypass;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_bypassKey, bypass);
-    onSubscriptionChanged?.call();
+    _notifySubscriptionChanged();
   }
 
   /// Clear cached status (preserves bypass since it comes from user data, not subscription)
@@ -464,13 +496,14 @@ class SubscriptionService {
     _currentSubscription = null;
     _subscriptionBypass = false;
     _hasPendingReceipt = false;
+    _backendAnswered = false;
     _retryTimer?.cancel();
     _retryTimer = null;
     await _clearCachedStatus();
     await _clearPendingReceipts();
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_bypassKey);
-    onSubscriptionChanged?.call();
+    _notifySubscriptionChanged();
   }
 
   static void dispose() {

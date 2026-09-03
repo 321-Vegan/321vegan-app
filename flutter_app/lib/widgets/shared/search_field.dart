@@ -109,7 +109,7 @@ class _SearchFieldState extends State<SearchField> {
           hintStyle:
               TextStyle(fontSize: widget.fontSize.sp, color: Colors.grey[500]),
           prefixIcon: Padding(
-            padding: EdgeInsets.only(left: 16.w),
+            padding: EdgeInsets.only(left: 39.w),
             child: Image.asset(
               'lib/assets/images/icons/search-line.webp',
               width: widget.iconSize.sp,

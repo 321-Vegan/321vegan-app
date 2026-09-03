@@ -219,7 +219,7 @@ class MyHomePageState extends State<MyHomePage>
             label: 'Accueil',
           ),
           AppBottomNavItem(
-            icon: CupertinoIcons.barcode_viewfinder,
+            iconAsset: 'lib/assets/images/icons/scan.webp',
             label: 'Scan',
           ),
           AppBottomNavItem(

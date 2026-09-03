@@ -5,6 +5,7 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/subscription_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/widgets/auth/auth_bottom_sheet.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 
@@ -93,17 +94,10 @@ class _MapAccessOverlayState extends State<MapAccessOverlay> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(24.w),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.lock_outline,
-                          size: 120.sp,
-                          color: primaryColor,
-                        ),
+                      Image.asset(
+                        'lib/assets/images/characters/cow-mby.webp',
+                        width: 220.w,
+                        height: 220.w,
                       ),
                       SizedBox(height: 24.h),
                       Text(
@@ -159,14 +153,12 @@ class _MapAccessOverlayState extends State<MapAccessOverlay> {
                             onPressed: () => _showAuthSheet(showRegister: true),
                           ),
                         ),
-                        SizedBox(height: 12.h),
+                        SizedBox(height: 32.h),
                         SizedBox(
                           width: double.infinity,
                           child: AppButton(
                             label: 'Se connecter',
-                            backgroundColor: Colors.white,
-                            foregroundColor: primaryColor,
-                            borderColor: primaryColor,
+                            backgroundColor: kAccentYellow,
                             onPressed: () => _showAuthSheet(showRegister: false),
                           ),
                         ),

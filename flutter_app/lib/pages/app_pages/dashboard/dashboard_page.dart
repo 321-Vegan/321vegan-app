@@ -15,7 +15,6 @@ import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
 import '../../../services/error_report_badge_service.dart';
 import '../../../services/profile_notification_service.dart';
-import '../../../services/subscription_service.dart';
 import '../../../themes/app_colors.dart';
 import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
@@ -31,10 +30,8 @@ import '../../../widgets/homepage/solidarity_shops_section.dart';
 import '../../../widgets/homepage/stat_card.dart';
 import '../../../widgets/homepage/vegan_counter.dart';
 import '../../../widgets/shared/app_card.dart';
-import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/b12/b12_reminder_settings_modal.dart';
-import '../Profile/subscription_page.dart';
 import '../Profile/error_reports_page.dart';
 import '../Profile/product_review_page.dart';
 import '../settings/settings_page.dart';
@@ -255,6 +252,7 @@ class DashboardPageState extends State<DashboardPage> {
     _confettiController.play();
   }
 
+  // ignore: unused_element
   Future<void> _openErrorReports() async {
     // Logged-out users have no reports to show — send them through the
     // same login gate as the Paramètres tab instead of a page that would
@@ -300,11 +298,6 @@ class DashboardPageState extends State<DashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildHeader(context),
-                    if (!SubscriptionService.isSubscribed ||
-                        !AuthService.isLoggedIn) ...[
-                      SizedBox(height: AppSpacing.section),
-                      _buildSupportButton(context),
-                    ],
                     SizedBox(height: AppSpacing.section),
                     const PromoCarousel(),
                     SizedBox(height: AppSpacing.section),
@@ -406,7 +399,7 @@ class DashboardPageState extends State<DashboardPage> {
 
   Widget _buildHeader(BuildContext context) {
     final name = _user?.nickname ?? 'Bienvenue';
-    final notifCount = ProfileNotificationService.total;
+    // final notifCount = ProfileNotificationService.total;
 
     return Row(
       children: [
@@ -464,12 +457,12 @@ class DashboardPageState extends State<DashboardPage> {
             ),
           ),
         ),
-        _buildIconButton(
-          icon: Icons.notifications_none_rounded,
-          badgeCount: notifCount,
-          onTap: _openErrorReports,
-        ),
-        SizedBox(width: 30.w),
+        // _buildIconButton(
+        //   icon: Icons.notifications_none_rounded,
+        //   badgeCount: notifCount,
+        //   onTap: _openErrorReports,
+        // ),
+        // SizedBox(width: 30.w),
         _buildIconButton(icon: Icons.settings_outlined, onTap: _openSettings),
       ],
     );
@@ -520,46 +513,6 @@ class DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  /// Full-width support pill shown to non-subscribers, carried over from
-  /// the old home page (purple gradient + heart), tap → subscription page.
-  Widget _buildSupportButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const SubscriptionPage()),
-        );
-        if (mounted) setState(() {});
-      },
-      child: ShineWrapper(
-        borderRadius: 40,
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 30.h),
-          decoration: ShapeDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF7C3AED), Color(0xFFA855F7)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: squircleBorder(radius: 40.r),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.favorite, color: Colors.white, size: 44.sp),
-              SizedBox(width: 12.w),
-              Text(
-                'Soutenir 321 Vegan',
-                style: AppTextStyles.baloo17.copyWith(color: Colors.white)
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildVeganCounterRow(BuildContext context, int? daysSince) {
     return Row(
       children: [
@@ -581,22 +534,21 @@ class DashboardPageState extends State<DashboardPage> {
             onPressed: _launchCounter,
           )
         else
-          ElevatedButton(
+          IconButton(
             onPressed: () => showShareHomeDialog(
               context,
               targetDate: _targetDate!,
               savings: _savings,
             ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 4.h),
-              shape: const StadiumBorder(),
-            ),
-            child: Text(
-              'Partager',
-              style: AppTextStyles.bodyMedium13.copyWith(color: Colors.white),
+            padding: EdgeInsets.all(8.w),
+            constraints: const BoxConstraints(),
+            visualDensity: VisualDensity.compact,
+            icon: Image.asset(
+              'lib/assets/images/icons/share-line.webp',
+              width: 72.sp,
+              height: 72.sp,
+              color: Theme.of(context).colorScheme.primary,
+              colorBlendMode: BlendMode.srcIn,
             ),
           ),
       ],

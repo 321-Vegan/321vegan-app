@@ -178,7 +178,7 @@ class _ShopCard extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: ShapeDecoration(
                 color: kAccentYellow.withValues(alpha: 0.15),
-                shape: squircleBorder(radius: 20.r),
+                shape: const StadiumBorder(),
               ),
               child: Text(
                 partner.discountCode,

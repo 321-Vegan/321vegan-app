@@ -96,10 +96,22 @@ class MyAppState extends State<MyApp> {
     );
     _updateSystemOverlayStyle();
     _loadTheme();
+    // Premium entitlement (bypass / backend status / restored receipt) can
+    // resolve after startup. When it does, re-evaluate the seasonal theme so
+    // a premium theme provisionally shown as the default now applies — and
+    // vice-versa on a confirmed downgrade.
+    SubscriptionService.revision.addListener(_loadTheme);
+  }
+
+  @override
+  void dispose() {
+    SubscriptionService.revision.removeListener(_loadTheme);
+    super.dispose();
   }
 
   Future<void> _loadTheme() async {
     final seasonalTheme = await ThemeHelper.getCurrentTheme();
+    if (!mounted) return;
     setState(() {
       _currentTheme = seasonalTheme.toThemeData();
     });

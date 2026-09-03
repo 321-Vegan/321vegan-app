@@ -101,21 +101,28 @@ class ThemeHelper {
 
   static Future<SeasonalTheme> getCurrentTheme() async {
     final isSubscribed = SubscriptionService.isSubscribed;
+    // On a cold start the backend entitlement check may still be in flight.
+    // Downgrading a premium theme to the default in that window causes a
+    // visible flicker (and sticks for the session if nothing reloads the
+    // theme afterwards), so only downgrade once entitlement is known.
+    // The app root listens to SubscriptionService.revision and re-runs this
+    // when the answer arrives.
+    final entitlementKnown = SubscriptionService.isEntitlementDetermined;
     final isAuto = await isAutoThemeEnabled();
 
     if (isAuto) {
       // Auto theme requires subscription
-      if (!isSubscribed) return defaultTheme;
+      if (!isSubscribed && entitlementKnown) return defaultTheme;
       final season = getCurrentSeason();
       return getThemeBySeason(season);
     } else {
       final savedSeason = await getSavedThemePreference();
       if (savedSeason != null) {
         final savedTheme = getThemeBySeason(savedSeason);
-        if (savedTheme.isPremium && !isSubscribed) {
+        if (savedTheme.isPremium && !isSubscribed && entitlementKnown) {
           return defaultTheme;
         }
-        return getThemeBySeason(savedSeason);
+        return savedTheme;
       } else {
         return defaultTheme;
       }

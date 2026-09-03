@@ -75,7 +75,9 @@ class SettingsRowTile extends StatelessWidget {
                     style: AppTextStyles.bodyRegular15
                         .copyWith(color: Colors.grey[500]),
                   ),
-                ),
+                )
+              else
+                const Spacer(),
               if (trailing != null) trailing!,
             ],
           ),
