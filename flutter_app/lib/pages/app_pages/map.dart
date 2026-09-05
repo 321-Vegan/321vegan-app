@@ -405,6 +405,14 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             options: MapOptions(
               initialCenter: _initialCenter!,
               initialZoom: 16,
+              // Keep the map north-up: strip the rotate gesture (twist +
+              // ctrl/trackpad) so users can't accidentally spin it.
+              // Halve the scroll-wheel/trackpad zoom step (default 0.005) so
+              // zooming feels less jumpy.
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                scrollWheelVelocity: 0.0025,
+              ),
               onMapEvent: _onMapEvent,
               onMapReady: _onMapReady,
               onTap: (_, __) => _searchBarKey.currentState?.closeResults(),
