@@ -57,6 +57,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
   // Form state
   String _selectedState = 'WAITING_PUBLISH';
   String? _selectedStatus;
+  String _selectedType = 'FOOD';
   ValidatorBrand? _selectedBrand;
   String? _offBrandQuery;
   final ScrollController _scrollCtrl = ScrollController();
@@ -77,6 +78,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
   void initState() {
     super.initState();
     _selectedStatus = widget.product.status;
+    _selectedType = widget.product.productType;
     _nameCtrl.text = widget.product.name ?? '';
     _descCtrl.text = widget.product.description ?? '';
     _problemCtrl.text = widget.product.problemDescription ?? '';
@@ -177,6 +179,7 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
       ean: widget.product.ean,
       state: _selectedState,
       status: _selectedStatus!,
+      productType: _selectedType,
       name: _nameCtrl.text.trim(),
       description: _descCtrl.text.trim(),
       brandId: _selectedBrand?.id,
@@ -973,7 +976,8 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
               return GestureDetector(
                 onTap: () => setState(() {
                   _selectedState = s.value;
-                  if (s.value == 'NEED_CONTACT') {
+                  if (s.value == 'NEED_CONTACT' ||
+                      s.value == 'TO_INVESTIGATE') {
                     _selectedStatus = 'MAYBE_VEGAN';
                   }
                 }),
@@ -1009,7 +1013,8 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
             spacing: 10.w,
             runSpacing: 10.h,
             children: productReviewStatuses.map((s) {
-              final locked = _selectedState == 'NEED_CONTACT';
+              final locked = _selectedState == 'NEED_CONTACT' ||
+                  _selectedState == 'TO_INVESTIGATE';
               final selectable = !locked || s.value == 'MAYBE_VEGAN';
               final selected = _selectedStatus == s.value;
               return GestureDetector(
@@ -1035,6 +1040,41 @@ class _ValidatingPhaseState extends State<ValidatingPhase> {
                           color: selected ? s.color : Colors.grey[600],
                         )),
                   ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          Divider(color: Colors.grey[100], height: 40.h),
+
+          // ── Type ──
+          _formLabel('Type', required: true),
+          SizedBox(height: 12.h),
+          Wrap(
+            spacing: 10.w,
+            runSpacing: 10.h,
+            children: productTypes.map((t) {
+              final selected = _selectedType == t.value;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedType = t.value),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 12.h),
+                  decoration: ShapeDecoration(
+                    color: selected ? t.color.withValues(alpha: 0.12) : Colors.grey[100],
+                    shape: squircleBorder(
+                      radius: 24.r,
+                      side: BorderSide(
+                        color: selected ? t.color : Colors.grey[300]!,
+                        width: selected ? 2 : 1,
+                      ),
+                    ),
+                  ),
+                  child: Text(t.label,
+                      style: TextStyle(
+                        fontSize: 38.sp,
+                        fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                        color: selected ? t.color : Colors.grey[600],
+                      )),
                 ),
               );
             }).toList(),

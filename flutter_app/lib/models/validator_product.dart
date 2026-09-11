@@ -22,6 +22,7 @@ class ValidatorProduct {
   final String? problemDescription;
   final String status;
   final String state;
+  final String productType;
   final DateTime? createdAt;
   final String? image;
   final ValidatorBrand? brand;
@@ -34,6 +35,7 @@ class ValidatorProduct {
     this.problemDescription,
     required this.status,
     required this.state,
+    this.productType = 'FOOD',
     this.createdAt,
     this.image,
     this.brand,
@@ -48,6 +50,7 @@ class ValidatorProduct {
       problemDescription: json['problem_description'] as String?,
       status: json['status'] as String? ?? 'VEGAN',
       state: json['state'] as String? ?? 'CREATED',
+      productType: json['product_type'] as String? ?? 'FOOD',
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String)
           : null,

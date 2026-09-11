@@ -132,12 +132,23 @@ class DashboardPageState extends State<DashboardPage> {
       // baseline just in that case (not every reload) lets a fresh login
       // show popups for badges the account already has.
       final isFirstFetchThisSession = AuthService.currentUser == null;
-      final result = await AuthService.getCurrentUser();
+      var result = await AuthService.getCurrentUser();
+      // Cold start: the first /auth/me can fail transiently (network stack
+      // not up yet, or a token-refresh race). Retry once so the dashboard
+      // doesn't render as logged-out until the user pokes another screen.
+      if (!result.isSuccess && result.error == 'NETWORK_ERROR') {
+        await Future.delayed(const Duration(seconds: 2));
+        result = await AuthService.getCurrentUser();
+      }
       if (result.isSuccess) {
         user = result.data;
         if (user != null && isFirstFetchThisSession) {
           await BadgeService.initializeBadgeTracking(user);
         }
+      } else {
+        // Transient failure — keep the last known-good profile rather than
+        // blanking the header, badges and contributor card.
+        user = AuthService.currentUser;
       }
     }
     if (!mounted) return;

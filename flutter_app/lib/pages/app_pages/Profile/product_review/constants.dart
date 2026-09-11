@@ -10,7 +10,15 @@ const productReviewStatuses = [
 const productStates = [
   (value: 'CREATED', label: 'À vérifier', color: Color(0xFF757575)),
   (value: 'NEED_CONTACT', label: 'À contacter', color: Color(0xFFF57C00)),
+  (value: 'TO_INVESTIGATE', label: 'Cosmétique à vérif', color: Color(0xFF00838F)),
   (value: 'WAITING_PUBLISH', label: 'À publier', color: Color(0xFF4527A0)),
+];
+
+// Product type — food / cosmetic / household cleaner.
+const productTypes = [
+  (value: 'FOOD', label: 'Alimentaire', color: Color(0xFF616161)),
+  (value: 'COSMETIC', label: 'Cosmétique', color: Color(0xFF616161)),
+  (value: 'HOUSEHOLD', label: 'Entretien', color: Color(0xFF616161)),
 ];
 
 const nonVeganIngredients = [

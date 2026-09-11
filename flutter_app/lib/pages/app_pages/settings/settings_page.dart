@@ -94,12 +94,22 @@ class _SettingsPageState extends State<SettingsPage> {
     User? user;
     if (AuthService.isLoggedIn) {
       final isFirstFetchThisSession = AuthService.currentUser == null;
-      final result = await AuthService.getCurrentUser();
+      var result = await AuthService.getCurrentUser();
+      // Cold start: the first /auth/me can fail transiently (network stack
+      // not up yet, or a token-refresh race). Retry once before falling
+      // back so the page doesn't render as logged-out.
+      if (!result.isSuccess && result.error == 'NETWORK_ERROR') {
+        await Future.delayed(const Duration(seconds: 2));
+        result = await AuthService.getCurrentUser();
+      }
       if (result.isSuccess) {
         user = result.data;
         if (user != null && isFirstFetchThisSession) {
           await BadgeService.initializeBadgeTracking(user);
         }
+      } else {
+        // Transient failure — keep the last known-good profile.
+        user = AuthService.currentUser;
       }
     }
     if (!mounted) return;

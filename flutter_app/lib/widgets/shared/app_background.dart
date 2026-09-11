@@ -59,18 +59,29 @@ class AppBackground extends StatelessWidget {
       );
     }
 
-    // Soft white sunburst glow, top-right corner, summer only — bleeds off
-    // both edges since the asset is a soft radial fade, not a hard shape.
+    // Soft white sunburst glow, top-right corner, summer only. The asset
+    // still carries ~20% opacity right up to its bottom/left borders, so a
+    // ShaderMask feathers those edges to zero — otherwise the glow ends on
+    // a hard rectangular seam across the upper screen.
     final summerBurst = isSeasonal && seasonal.season == Season.summer
         ? Positioned(
             top: -80.h,
             right: -80.w,
             child: IgnorePointer(
-              child: Image.asset(
-                'lib/assets/themes/burst.webp',
-                width: 900.w,
-                fit: BoxFit.fitWidth,
-                alignment: Alignment.topRight,
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (rect) => const LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [Colors.white, Colors.white, Colors.transparent],
+                  stops: [0.0, 0.35, 0.9],
+                ).createShader(rect),
+                child: Image.asset(
+                  'lib/assets/themes/burst.webp',
+                  width: 900.w,
+                  fit: BoxFit.fitWidth,
+                  alignment: Alignment.topRight,
+                ),
               ),
             ),
           )
