@@ -2,19 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/helper.dart';
 import 'package:vegan_app/models/scan_result.dart';
-import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
-import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/widgets/scaner/scan_result_card.dart';
 
 class RejectedProductInfoCard extends StatelessWidget {
   final ScanResult productInfo;
-  final bool showScores;
 
   const RejectedProductInfoCard({
     super.key,
     required this.productInfo,
-    this.showScores = true,
   });
 
   @override
@@ -43,13 +39,6 @@ class RejectedProductInfoCard extends StatelessWidget {
       ),
       statusLabel: 'Non-végane',
       statusDetail: reason,
-      // Nothing to gate on a "not vegan" result, so scores show unlocked.
-      scores: ProductScoresSection(
-        barcode: productInfo.code,
-        isSubscribed: SubscriptionService.isSubscribed,
-        paywalled: false,
-        enabled: showScores,
-      ),
     );
   }
 }
