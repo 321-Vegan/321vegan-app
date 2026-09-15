@@ -597,7 +597,7 @@ class ScanPageState extends State<ScanPage>
   }
 
   /// Fetches the product from the API in the background and, if it differs
-  /// from what's stored locally, persists the diff and re-renders — so a
+  /// from what's stored locally, persists the diff and re-renders : so a
   /// stale or missing local entry gets corrected without requiring a rescan.
   Future<void> _refreshProductFromApi(String barcode) async {
     final changed = await ProductInfoHelper.refreshFromApi(barcode);

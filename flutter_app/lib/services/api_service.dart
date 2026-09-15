@@ -128,7 +128,6 @@ class ApiService {
     }
   }
 
-  /// Get a product's full data by its EAN (anonymous-friendly, x-api-key).
   /// Null on failure, 404, or timeout.
   static Future<ValidatorProduct?> getProductByEan({required String ean}) async {
     try {

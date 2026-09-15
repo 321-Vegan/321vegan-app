@@ -50,7 +50,7 @@ class DatabaseHelper {
   /// Writes an API-sourced product into the local `products` table, replacing
   /// any existing row for [code]. Brand is always stored flat as text (never
   /// via `brand_id`) so callers don't need to maintain the brand hierarchy
-  /// locally — `ProductInfoHelper` already falls back to the text `brand`
+  /// locally : `ProductInfoHelper` already falls back to the text `brand`
   /// column when `brand_id` is null.
   Future<void> upsertProduct({
     required String code,
