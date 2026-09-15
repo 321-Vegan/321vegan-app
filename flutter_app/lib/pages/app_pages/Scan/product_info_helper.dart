@@ -1,6 +1,7 @@
 import 'package:vegan_app/helpers/database_helper.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/scan_result.dart';
+import 'package:vegan_app/services/api_service.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ProductInfoHelper {
@@ -112,5 +113,55 @@ class ProductInfoHelper {
       problem: product['problem'] as String?,
       biodynamic: status != 'M' && status != 'N' ? isBiodynamie : false,
     );
+  }
+
+  /// Fetches this barcode's product from the API and reconciles any
+  /// differing fields into the local database, so the currently displayed
+  /// (and future) scans reflect the server's up-to-date data. Returns true
+  /// if the local row was created/updated.
+  static Future<bool> refreshFromApi(String barcode) async {
+    final apiProduct = await ApiService.getProductByEan(ean: barcode);
+    if (apiProduct == null) return false;
+
+    // Mirrors the server's export filter (export.py): never let an
+    // unpublished/unreviewed state overwrite the local data.
+    const publishedStates = {'PUBLISHED', 'NEED_CONTACT', 'WAITING_BRAND_REPLY'};
+    if (!publishedStates.contains(apiProduct.state)) return false;
+
+    final status = switch (apiProduct.status) {
+      'NON_VEGAN' => 'R',
+      'MAYBE_VEGAN' => 'M',
+      'NOT_FOUND' => 'N',
+      _ => 'V',
+    };
+
+    final name = apiProduct.name?.trim();
+    final brand = apiProduct.brand?.name ?? apiProduct.description?.trim();
+    final problem = status == 'R' ? apiProduct.problemDescription : null;
+    final hasNonVeganOldRecipe = apiProduct.hasNonVeganOldReceipe ?? false;
+
+    final existing = await DatabaseHelper.instance.queryProduct(barcode);
+    if (existing.isNotEmpty) {
+      final row = existing.first;
+      final unchanged = row['name'] == name &&
+          row['brand'] == brand &&
+          row['brand_id'] == null &&
+          row['status'] == status &&
+          (row['biodynamie'] == 'Y') == apiProduct.biodynamic &&
+          row['problem'] == problem &&
+          (row['has_non_vegan_old_receipe'] == 1) == hasNonVeganOldRecipe;
+      if (unchanged) return false;
+    }
+
+    await DatabaseHelper.instance.upsertProduct(
+      code: barcode,
+      name: name,
+      brand: brand,
+      status: status,
+      biodynamic: apiProduct.biodynamic,
+      problem: problem,
+      hasNonVeganOldRecipe: hasNonVeganOldRecipe,
+    );
+    return true;
   }
 }

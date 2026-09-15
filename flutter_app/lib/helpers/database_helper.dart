@@ -47,6 +47,37 @@ class DatabaseHelper {
     return await db.query('products', where: 'code = ?', whereArgs: [barcode]);
   }
 
+  /// Writes an API-sourced product into the local `products` table, replacing
+  /// any existing row for [code]. Brand is always stored flat as text (never
+  /// via `brand_id`) so callers don't need to maintain the brand hierarchy
+  /// locally — `ProductInfoHelper` already falls back to the text `brand`
+  /// column when `brand_id` is null.
+  Future<void> upsertProduct({
+    required String code,
+    required String? name,
+    required String? brand,
+    required String status,
+    required bool biodynamic,
+    required String? problem,
+    required bool hasNonVeganOldRecipe,
+  }) async {
+    final db = await instance.database;
+    await db.insert(
+      'products',
+      {
+        'code': code,
+        'name': name,
+        'brand_id': null,
+        'brand': brand,
+        'status': status,
+        'biodynamie': biodynamic ? 'Y' : null,
+        'problem': problem,
+        'has_non_vegan_old_receipe': hasNonVeganOldRecipe ? 1 : 0,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   Future<List<Map<String, dynamic>>> queryProductsByCodePrefix(String prefix,
       {int limit = 3}) async {
     if (prefix.isEmpty) return [];

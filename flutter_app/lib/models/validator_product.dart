@@ -26,6 +26,8 @@ class ValidatorProduct {
   final DateTime? createdAt;
   final String? image;
   final ValidatorBrand? brand;
+  final bool biodynamic;
+  final bool? hasNonVeganOldReceipe;
 
   ValidatorProduct({
     required this.id,
@@ -39,6 +41,8 @@ class ValidatorProduct {
     this.createdAt,
     this.image,
     this.brand,
+    this.biodynamic = false,
+    this.hasNonVeganOldReceipe,
   });
 
   factory ValidatorProduct.fromJson(Map<String, dynamic> json) {
@@ -58,6 +62,8 @@ class ValidatorProduct {
       brand: json['brand'] != null
           ? ValidatorBrand.fromJson(json['brand'] as Map<String, dynamic>)
           : null,
+      biodynamic: json['biodynamic'] as bool? ?? false,
+      hasNonVeganOldReceipe: json['has_non_vegan_old_receipe'] as bool?,
     );
   }
 }

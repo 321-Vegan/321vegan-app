@@ -596,7 +596,24 @@ class ScanPageState extends State<ScanPage>
     super.dispose();
   }
 
+  /// Fetches the product from the API in the background and, if it differs
+  /// from what's stored locally, persists the diff and re-renders — so a
+  /// stale or missing local entry gets corrected without requiring a rescan.
+  Future<void> _refreshProductFromApi(String barcode) async {
+    final changed = await ProductInfoHelper.refreshFromApi(barcode);
+    if (!changed || !mounted || barcode != _lastScannedBarcode) return;
+
+    final refreshed = await ProductInfoHelper.getProductInfo(barcode);
+    if (!mounted || barcode != _lastScannedBarcode) return;
+
+    setState(() {
+      productInfo = refreshed;
+    });
+  }
+
   Future<void> _checkVeganStatusOffline(String barcode) async {
+    unawaited(_refreshProductFromApi(barcode));
+
     final product = await ProductInfoHelper.getProductInfo(barcode);
 
     // A newer scan may have superseded this one while the lookup was in

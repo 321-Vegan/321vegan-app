@@ -11,6 +11,7 @@ import '../models/b12_intake.dart';
 import '../models/error_report.dart';
 import '../models/product_of_interest.dart';
 import '../models/product_category.dart';
+import '../models/validator_product.dart';
 import '../models/subscription.dart';
 import '../models/shops/shop.dart';
 import '../models/shops/shop_scan_summary.dart';
@@ -120,6 +121,26 @@ class ApiService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         return response.data['id'] as int?;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get a product's full data by its EAN (anonymous-friendly, x-api-key).
+  /// Null on failure, 404, or timeout.
+  static Future<ValidatorProduct?> getProductByEan({required String ean}) async {
+    try {
+      final url = Uri.parse('$_baseUrl/products/ean/$ean');
+
+      final response = await http
+          .get(url, headers: _headers)
+          .timeout(const Duration(seconds: 8));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ValidatorProduct.fromJson(
+            json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>);
       }
       return null;
     } catch (e) {
