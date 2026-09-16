@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:upgrader/upgrader.dart';
@@ -32,19 +34,53 @@ void main() async {
   await DatabaseHelper.instance.database;
   await DatabaseHelper.instance.cosmeticsDatabase;
   await AuthService.init();
-  await PreferencesHelper.rollRandomAvatarIfEnabled();
-  await SubscriptionService.init();
-  await NotificationService().initialize();
-  await _migrateBiweeklyReminderIfNeeded();
+
+  runApp(const MyApp());
+
+  // Everything below touches the network or a native platform channel
+  // (StoreKit/Play Billing, local notifications) and must never block the
+  // first frame: a stuck platform-channel call here (e.g. StoreKit replaying
+  // an interrupted transaction after an iOS upgrade) would otherwise freeze
+  // the app on the native launch screen forever, since runApp() never gets a
+  // chance to paint anything on top of it.
+  unawaited(_initDeferred());
+}
+
+Future<void> _initDeferred() async {
+  await _withTimeout(
+    PreferencesHelper.rollRandomAvatarIfEnabled(),
+    'rollRandomAvatarIfEnabled',
+  );
+  await _withTimeout(SubscriptionService.init(), 'SubscriptionService.init');
+  await _withTimeout(
+    NotificationService().initialize(),
+    'NotificationService.initialize',
+  );
+  await _withTimeout(
+    _migrateBiweeklyReminderIfNeeded(),
+    'migrateBiweeklyReminderIfNeeded',
+  );
 
   // Keep the yearly vegan anniversary notification scheduled (silent: never
   // prompts for permission : only reschedules if already granted).
-  await AnniversaryService.rescheduleIfNeeded();
+  await _withTimeout(
+    AnniversaryService.rescheduleIfNeeded(),
+    'AnniversaryService.rescheduleIfNeeded',
+  );
 
   // Pre-load products of interest cache at app startup (when likely to have internet)
   ProductsOfInterestCache.initializeAtStartup();
+}
 
-  runApp(const MyApp());
+/// Caps a startup step so a hung network/platform-channel call (e.g. a stuck
+/// StoreKit transaction queue) can never stall the rest of deferred init —
+/// each step still runs even if an earlier one never completes.
+Future<void> _withTimeout(Future<void> future, String label) async {
+  try {
+    await future.timeout(const Duration(seconds: 10));
+  } catch (e) {
+    debugPrint('Startup step "$label" failed or timed out: $e');
+  }
 }
 
 /// One-time migration: cancel the old daily-repeating biweekly notification
