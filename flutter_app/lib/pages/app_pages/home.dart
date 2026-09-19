@@ -152,6 +152,13 @@ class MyHomePageState extends State<MyHomePage>
   }
 
   Future<void> _applyOpenOnScanPagePref() async {
+    // Cold start from a notification tap sets these flags before this page
+    // is even built, so checking here (before the pref's async gap) lets
+    // the notification's target tab win instead of racing with it.
+    if (NotificationService.navigateToProfile.value ||
+        NotificationService.showAnniversary.value) {
+      return;
+    }
     final shouldOpenOnScanPage =
         await PreferencesHelper.getOpenOnScanPagePref();
     if (shouldOpenOnScanPage && mounted) {
