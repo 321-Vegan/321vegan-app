@@ -566,7 +566,7 @@ class ScanPageState extends State<ScanPage>
   }
 
   /// Pushes the unified product search page (Additifs / Cosmétiques /
-  /// Code-barre). The "Code-barre" tab pops with the chosen barcode instead
+  /// Code-barres). The "Code-barres" tab pops with the chosen barcode instead
   /// of showing its own result — feeding it into [_simulateScan] runs it
   /// through the same pipeline as a camera scan.
   void _openProductSearch() {
@@ -931,7 +931,7 @@ class ScanPageState extends State<ScanPage>
                   decoration: InputDecoration(
                     isDense: true,
                     border: InputBorder.none,
-                    hintText: "Additif, cosmétique, code-barre...",
+                    hintText: "Additif, cosmétique, code-barres...",
                     hintStyle:
                         TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
                     contentPadding: EdgeInsets.zero,

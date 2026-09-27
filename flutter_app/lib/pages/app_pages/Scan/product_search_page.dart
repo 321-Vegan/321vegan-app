@@ -21,7 +21,7 @@ import 'package:vegan_app/widgets/shared/search_field.dart';
 enum _SearchCategory { aliment, cosmetique, additif }
 
 /// Unified product search page: one search field, category chips, results
-/// below (Additifs, Cosmétiques, Code-barre). Picking a barcode result (or
+/// below (Additifs, Cosmétiques, Code-barres). Picking a barcode result (or
 /// typing a valid one) pops this page with the code so the Scan page can
 /// run it through the same pipeline as a camera scan.
 class ProductSearchPage extends StatefulWidget {
@@ -177,13 +177,13 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   String get _searchHint => switch (_category) {
         _SearchCategory.additif => "Rechercher un additif (ex. e200, carmin…)",
         _SearchCategory.cosmetique => "Rechercher une marque (ex. Avril, Nae…)",
-        _SearchCategory.aliment => "Code-barre (ex. 3770016570121)",
+        _SearchCategory.aliment => "Code-barres (ex. 3770016570121)",
       };
 
   String get _emptyPromptTitle => switch (_category) {
         _SearchCategory.additif => 'Recherchez un additif',
         _SearchCategory.cosmetique => 'Recherchez une marque',
-        _SearchCategory.aliment => 'Entrez un code-barre',
+        _SearchCategory.aliment => 'Entrez un code-barres',
       };
 
   String get _emptyPromptSubtitle => switch (_category) {
@@ -253,7 +253,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                   padding: EdgeInsets.symmetric(horizontal: 48.w),
                   children: [
                     _buildCategoryChip(
-                      label: 'Code-barre',
+                      label: 'Code-barres',
                       icon: CupertinoIcons.barcode_viewfinder,
                       isSelected: _category == _SearchCategory.aliment,
                       enabled: true,

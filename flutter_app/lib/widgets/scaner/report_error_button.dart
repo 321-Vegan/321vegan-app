@@ -223,7 +223,7 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          "Code-barre : ${widget.barcode}",
+                          "Code-barres : ${widget.barcode}",
                           style: AppTextStyles.bodyRegular13.copyWith(
                             color: Colors.grey[500],
                           ),
