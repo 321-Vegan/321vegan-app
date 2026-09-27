@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -13,6 +15,17 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+  bool _isCoreInitialized = false;
+  static final Completer<void> _launchCheckCompleter = Completer<void>();
+
+  /// Resolves once the cold-start "was the app launched by tapping a
+  /// notification?" check has run (via [checkLaunchedFromNotification] or
+  /// [initialize], whichever runs first) — i.e. once [navigateToProfile] /
+  /// [showAnniversary] are known to reflect the launch notification, if
+  /// any. Callers that need to know before rendering (e.g. deciding the
+  /// initial tab) should await this with their own bounded timeout, since
+  /// it depends on a native platform-channel round trip.
+  static Future<void> get launchDetailsReady => _launchCheckCompleter.future;
 
   /// Notifier that fires when a B12 notification is tapped.
   /// Listeners (e.g. home page) should navigate to the profile tab.
@@ -30,19 +43,16 @@ class NotificationService {
   /// back to the root route and select the Scan tab.
   static final ValueNotifier<bool> navigateToScan = ValueNotifier<bool>(false);
 
-  /// Initialize the notification service
-  Future<void> initialize() async {
-    if (_isInitialized) return;
+  /// Minimal, fast-as-possible init: just enough of the plugin to read
+  /// whether this cold start came from tapping a notification
+  /// ([navigateToProfile] / [showAnniversary] are set accordingly).
+  /// Safe to call before [initialize] (and to call [initialize]
+  /// afterwards — the plugin is only initialized once).
+  Future<void> checkLaunchedFromNotification() => _ensureCoreInitialized();
 
+  Future<void> _ensureCoreInitialized() async {
+    if (_isCoreInitialized) return;
     try {
-      // Initialize timezone database
-      tz.initializeTimeZones();
-
-      // Get the device's local timezone
-      final TimezoneInfo timeZoneInfos =
-          await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timeZoneInfos.identifier));
-
       // Use default icon (app icon) for Android
       const androidSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -62,13 +72,36 @@ class NotificationService {
         onDidReceiveNotificationResponse: _onNotificationTap,
       );
 
+      _isCoreInitialized = true;
+
+      // Handle cold start: app was launched by tapping a notification
+      await _handleAppLaunchFromNotification();
+    } finally {
+      if (!_launchCheckCompleter.isCompleted) {
+        _launchCheckCompleter.complete();
+      }
+    }
+  }
+
+  /// Initialize the notification service
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+
+    try {
+      await _ensureCoreInitialized();
+
+      // Initialize timezone database
+      tz.initializeTimeZones();
+
+      // Get the device's local timezone
+      final TimezoneInfo timeZoneInfos =
+          await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneInfos.identifier));
+
       // Explicitly create notification channel for Android
       await _createNotificationChannel();
 
       _isInitialized = true;
-
-      // Handle cold start: app was launched by tapping a notification
-      await _handleAppLaunchFromNotification();
 
       if (kDebugMode) {
         print('Notification service initialized successfully');

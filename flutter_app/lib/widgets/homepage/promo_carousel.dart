@@ -68,7 +68,7 @@ final List<PromoSlide> _promoSlides = [
     image: 'lib/assets/images/characters/watermelon.webp',
   ),
   PromoSlide(
-    title: 'Boutiques partenaire',
+    title: 'Partenaires',
     subtitle:
         'Profitez de nouvelles réductions !',
     image: 'lib/assets/images/characters/tomatoes.webp',

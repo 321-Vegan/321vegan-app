@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/helpers/barcode_helper.dart';
 import 'package:vegan_app/helpers/database_helper.dart';
 import 'package:vegan_app/helpers/helper.dart';
+import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/e_number.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
@@ -44,6 +45,18 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   void initState() {
     super.initState();
     _loadENumbers();
+    _loadLastSearchCategory();
+  }
+
+  Future<void> _loadLastSearchCategory() async {
+    final saved = await PreferencesHelper.getLastSearchCategoryPref();
+    if (saved == null || !mounted) return;
+    for (final category in _SearchCategory.values) {
+      if (category.name == saved && category != _category) {
+        setState(() => _category = category);
+        break;
+      }
+    }
   }
 
   @override
@@ -82,6 +95,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
       _category = category;
       _barcodeError = null;
     });
+    PreferencesHelper.setLastSearchCategoryPref(category.name);
     if (category == _SearchCategory.cosmetique && _query.isNotEmpty) {
       _searchCosmetics(_query);
     } else if (category == _SearchCategory.aliment && _query.isNotEmpty) {
@@ -164,6 +178,12 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
         _SearchCategory.additif => "Rechercher un additif (ex. e200, carmin…)",
         _SearchCategory.cosmetique => "Rechercher une marque (ex. Avril, Nae…)",
         _SearchCategory.aliment => "Code-barre (ex. 3770016570121)",
+      };
+
+  String get _emptyPromptTitle => switch (_category) {
+        _SearchCategory.additif => 'Recherchez un additif',
+        _SearchCategory.cosmetique => 'Recherchez une marque',
+        _SearchCategory.aliment => 'Entrez un code-barre',
       };
 
   String get _emptyPromptSubtitle => switch (_category) {
@@ -262,7 +282,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
               Expanded(
                 child: !hasQuery
                     ? EmptyStateView(
-                        title: 'Recherchez un produit',
+                        title: _emptyPromptTitle,
                         subtitle: _emptyPromptSubtitle,
                       )
                     : Column(

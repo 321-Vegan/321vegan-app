@@ -308,6 +308,20 @@ class BoycottData {
         BoycottBrand('bueno', 'Bueno'),
       ],
     ),
+    BoycottGroup(
+      name: 'Decathlon Group',
+      reason:
+          'Decathlon vend des poissons vivants destinés à la pêche au vif dans certains de ses magasins, une pratique dénoncée et poursuivie en justice par des associations de protection animale.[1] L\'enseigne continue aussi d\'équiper les chasseurs (munitions, couteaux, appâts), facilitant cette pratique et la normalisant. Une pétition et une tribune réclamant la fermeture de son rayon chasse sont consultables sur le site de l\'association Nos Viventia.[2][3] Decathlon a aussi été accusé de s\'approvisionner en coton auprès d\'un sous-traitant chinois recourant au travail forcé de Ouïghours.[4]',
+      sources: [
+        'https://www.placegrenet.fr/2025/08/12/vente-de-poissons-vivants-pour-la-peche-au-vif-lassociation-paz-porte-plainte-contre-trois-decathlon-iserois/657646',
+        'https://www.nosviventia.com/tribune-decathlon-2026/',
+        'https://www.nosviventia.com/stop-chasse-decathlon/',
+        'https://disclose.ngo/fr/article/travail-force-en-chine-decathlon-reconnait-ses-defaillances-en-toute-discretion',
+      ],
+      brands: [
+        BoycottBrand('decathlon', 'Decathlon'),
+      ],
+    ),
   ];
 
   static const List<BoycottOther> others = [

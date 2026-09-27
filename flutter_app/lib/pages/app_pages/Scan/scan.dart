@@ -1034,7 +1034,7 @@ class ScanPageState extends State<ScanPage>
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 48.w),
                     child: Text(
-                      'Scannez un produit alimentaire',
+                      'Scannez un produit',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.bodyBold15.copyWith(
                         color: Colors.white,

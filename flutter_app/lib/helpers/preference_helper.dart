@@ -115,6 +115,16 @@ class PreferencesHelper {
     return prefs.getBool('open_on_scan_page') ?? false;
   }
 
+  static Future<void> setLastSearchCategoryPref(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_search_category', value);
+  }
+
+  static Future<String?> getLastSearchCategoryPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('last_search_category');
+  }
+
   static Future<void> addCodeToPreferences(String? code, bool success) async {
     if (code == null) return;
 

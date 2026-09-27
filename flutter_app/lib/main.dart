@@ -48,6 +48,10 @@ void main() async {
 
 Future<void> _initDeferred() async {
   await _withTimeout(
+    NotificationService().checkLaunchedFromNotification(),
+    'NotificationService.checkLaunchedFromNotification',
+  );
+  await _withTimeout(
     PreferencesHelper.rollRandomAvatarIfEnabled(),
     'rollRandomAvatarIfEnabled',
   );

@@ -34,6 +34,8 @@ class MyHomePageState extends State<MyHomePage>
   late TabController _tabController;
   late ConfettiController _confettiController;
 
+  bool _notificationForcedDashboard = false;
+
   @override
   void initState() {
     super.initState();
@@ -84,6 +86,7 @@ class MyHomePageState extends State<MyHomePage>
   void _onB12NotificationTap() {
     if (NotificationService.navigateToProfile.value && mounted) {
       NotificationService.navigateToProfile.value = false;
+      _notificationForcedDashboard = true;
       setState(() {
         _tabController.index = _dashboardTabIndex;
       });
@@ -93,6 +96,7 @@ class MyHomePageState extends State<MyHomePage>
   void _onAnniversaryNotificationTap() {
     if (NotificationService.showAnniversary.value && mounted) {
       NotificationService.showAnniversary.value = false;
+      _notificationForcedDashboard = true;
       setState(() {
         _tabController.index = _dashboardTabIndex;
       });
@@ -152,16 +156,16 @@ class MyHomePageState extends State<MyHomePage>
   }
 
   Future<void> _applyOpenOnScanPagePref() async {
-    // Cold start from a notification tap sets these flags before this page
-    // is even built, so checking here (before the pref's async gap) lets
-    // the notification's target tab win instead of racing with it.
-    if (NotificationService.navigateToProfile.value ||
-        NotificationService.showAnniversary.value) {
-      return;
-    }
     final shouldOpenOnScanPage =
         await PreferencesHelper.getOpenOnScanPagePref();
-    if (shouldOpenOnScanPage && mounted) {
+    if (!shouldOpenOnScanPage) return;
+    await NotificationService.launchDetailsReady
+        .timeout(const Duration(milliseconds: 800), onTimeout: () {});
+
+    if (!_notificationForcedDashboard &&
+        !NotificationService.navigateToProfile.value &&
+        !NotificationService.showAnniversary.value &&
+        mounted) {
       setState(() {
         _tabController.index = _scanTabIndex;
       });
