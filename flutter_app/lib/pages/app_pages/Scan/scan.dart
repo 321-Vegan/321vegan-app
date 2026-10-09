@@ -600,14 +600,18 @@ class ScanPageState extends State<ScanPage>
   /// from what's stored locally, persists the diff and re-renders : so a
   /// stale or missing local entry gets corrected without requiring a rescan.
   Future<void> _refreshProductFromApi(String barcode) async {
-    final changed = await ProductInfoHelper.refreshFromApi(barcode);
-    if (!changed || !mounted || barcode != _lastScannedBarcode) return;
-
-    final refreshed = await ProductInfoHelper.getProductInfo(barcode);
+    final (:changed, :brandAnswer) =
+        await ProductInfoHelper.refreshFromApi(barcode);
     if (!mounted || barcode != _lastScannedBarcode) return;
+    if (!changed && brandAnswer == productInfo?.brandAnswer) return;
+
+    final refreshed = changed
+        ? await ProductInfoHelper.getProductInfo(barcode)
+        : productInfo;
+    if (refreshed == null || !mounted || barcode != _lastScannedBarcode) return;
 
     setState(() {
-      productInfo = refreshed;
+      productInfo = refreshed.withBrandAnswer(brandAnswer);
     });
   }
 

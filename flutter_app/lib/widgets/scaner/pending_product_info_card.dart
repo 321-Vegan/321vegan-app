@@ -23,6 +23,7 @@ class PendingProductInfoCard extends StatelessWidget {
         kAccentYellow,
       ),
       statusLabel: 'En cours de validation',
+      brandAnswer: productInfo.brandAnswer,
       extraRows: [
         Text(
           "Certains ingrédients de ce produit ne sont pas clairs. Nous "

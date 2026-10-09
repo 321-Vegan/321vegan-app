@@ -60,7 +60,9 @@ final List<PromoSlide> _promoSlides = [
     page: () => const SubscriptionPage(),
     buttonLabel: 'Soutenir',
     hidden: () async =>
-        AuthService.isLoggedIn && SubscriptionService.isSubscribed,
+        AuthService.isLoggedIn &&
+        (SubscriptionService.isSubscribed ||
+            !SubscriptionService.isEntitlementDetermined),
   ),
   const PromoSlide(
     title: 'Nouvelle interface !',
@@ -121,6 +123,10 @@ class _PromoCarouselState extends State<PromoCarousel> {
   void initState() {
     super.initState();
     _resolveSlides();
+    // Re-resolve once premium entitlement is actually known (or changes),
+    // so the "Soutenir 321 Vegan" slide correctly hides/shows instead of
+    // staying stuck on whatever it first resolved to at cold start.
+    SubscriptionService.revision.addListener(_resolveSlides);
   }
 
   Future<void> _resolveSlides() async {
@@ -158,6 +164,7 @@ class _PromoCarouselState extends State<PromoCarousel> {
   @override
   void dispose() {
     // _autoScrollTimer?.cancel();
+    SubscriptionService.revision.removeListener(_resolveSlides);
     _controller.dispose();
     super.dispose();
   }

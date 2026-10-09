@@ -118,15 +118,20 @@ class ProductInfoHelper {
   /// Fetches this barcode's product from the API and reconciles any
   /// differing fields into the local database, so the currently displayed
   /// (and future) scans reflect the server's up-to-date data. Returns true
-  /// if the local row was created/updated.
-  static Future<bool> refreshFromApi(String barcode) async {
+  /// if the local row was created/updated, along with the brand's reply
+  /// photo key (not stored locally, so only known after this fetch).
+  static Future<({bool changed, String? brandAnswer})> refreshFromApi(
+      String barcode) async {
     final apiProduct = await ApiService.getProductByEan(ean: barcode);
-    if (apiProduct == null) return false;
+    if (apiProduct == null) return (changed: false, brandAnswer: null);
 
     // Mirrors the server's export filter (export.py): never let an
     // unpublished/unreviewed state overwrite the local data.
     const publishedStates = {'PUBLISHED', 'NEED_CONTACT', 'WAITING_BRAND_REPLY'};
-    if (!publishedStates.contains(apiProduct.state)) return false;
+    if (!publishedStates.contains(apiProduct.state)) {
+      return (changed: false, brandAnswer: null);
+    }
+    final brandAnswer = apiProduct.brandAnswer;
 
     final status = switch (apiProduct.status) {
       'NON_VEGAN' => 'R',
@@ -150,7 +155,7 @@ class ProductInfoHelper {
           (row['biodynamie'] == 'Y') == apiProduct.biodynamic &&
           row['problem'] == problem &&
           (row['has_non_vegan_old_receipe'] == 1) == hasNonVeganOldRecipe;
-      if (unchanged) return false;
+      if (unchanged) return (changed: false, brandAnswer: brandAnswer);
     }
 
     await DatabaseHelper.instance.upsertProduct(
@@ -162,6 +167,6 @@ class ProductInfoHelper {
       problem: problem,
       hasNonVeganOldRecipe: hasNonVeganOldRecipe,
     );
-    return true;
+    return (changed: true, brandAnswer: brandAnswer);
   }
 }

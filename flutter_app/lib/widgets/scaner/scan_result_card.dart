@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
+import 'package:vegan_app/widgets/scaner/brand_answer_dialog.dart';
 import 'package:vegan_app/widgets/shared/app_card.dart';
 
 /// Shared shell for scan-result cards (vegan / non-vegan / pending
@@ -19,6 +20,10 @@ class ScanResultCard extends StatelessWidget {
   final Widget? scores;
   final List<Widget> extraRows;
 
+  /// Object-storage key of the brand's reply photo; shows an eye icon next
+  /// to the brand that opens it when set.
+  final String? brandAnswer;
+
   const ScanResultCard({
     super.key,
     required this.name,
@@ -29,6 +34,7 @@ class ScanResultCard extends StatelessWidget {
     this.statusDetail,
     this.scores,
     this.extraRows = const [],
+    this.brandAnswer,
   });
 
   /// Colored-circle status icon for states without a dedicated asset —
@@ -65,12 +71,28 @@ class ScanResultCard extends StatelessWidget {
                   style: AppTextStyles.baloo22,
                 ),
                 SizedBox(height: 6.h),
-                Text(
-                  brand,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodyRegular15
-                      .copyWith(color: Colors.grey[500]),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        brand,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodyRegular15
+                            .copyWith(color: Colors.grey[500]),
+                      ),
+                    ),
+                    if (brandAnswer != null) ...[
+                      SizedBox(width: 12.w),
+                      GestureDetector(
+                        onTap: () =>
+                            showBrandAnswerDialog(context, brandAnswer!),
+                        behavior: HitTestBehavior.opaque,
+                        child: Icon(Icons.chat_outlined,
+                            size: 56.w, color: accentColor),
+                      ),
+                    ],
+                  ],
                 ),
                 SizedBox(height: 16.h),
                 Row(

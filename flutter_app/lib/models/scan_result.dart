@@ -29,6 +29,9 @@ class ScanResult {
   final String? problem;
   final bool biodynamic;
 
+  /// Object-storage key of the photo of the brand's reply, when one exists.
+  final String? brandAnswer;
+
   const ScanResult({
     required this.code,
     required this.name,
@@ -37,7 +40,19 @@ class ScanResult {
     this.hasNonVeganOldRecipe = false,
     this.problem,
     this.biodynamic = false,
+    this.brandAnswer,
   });
+
+  ScanResult withBrandAnswer(String? brandAnswer) => ScanResult(
+        code: code,
+        name: name,
+        brand: brand,
+        status: status,
+        hasNonVeganOldRecipe: hasNonVeganOldRecipe,
+        problem: problem,
+        biodynamic: biodynamic,
+        brandAnswer: brandAnswer,
+      );
 
   /// EAN-8 barcodes can collide across products, so the UI shows a warning.
   bool get isEan8 => code.length == 8;

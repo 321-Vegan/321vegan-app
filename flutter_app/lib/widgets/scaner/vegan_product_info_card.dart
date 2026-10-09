@@ -102,6 +102,7 @@ class VeganProductInfoCard extends StatelessWidget {
         colorBlendMode: BlendMode.srcIn,
       ),
       statusLabel: productInfo.biodynamic ? 'Végétalien' : 'Végane',
+      brandAnswer: productInfo.brandAnswer,
       scores: ProductScoresSection(
         barcode: productInfo.code,
         isSubscribed: SubscriptionService.isSubscribed,

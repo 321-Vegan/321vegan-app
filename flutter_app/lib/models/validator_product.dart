@@ -25,6 +25,7 @@ class ValidatorProduct {
   final String productType;
   final DateTime? createdAt;
   final String? image;
+  final String? brandAnswer;
   final ValidatorBrand? brand;
   final bool biodynamic;
   final bool? hasNonVeganOldReceipe;
@@ -40,6 +41,7 @@ class ValidatorProduct {
     this.productType = 'FOOD',
     this.createdAt,
     this.image,
+    this.brandAnswer,
     this.brand,
     this.biodynamic = false,
     this.hasNonVeganOldReceipe,
@@ -59,6 +61,7 @@ class ValidatorProduct {
           ? DateTime.tryParse(json['created_at'] as String)
           : null,
       image: json['image'] as String?,
+      brandAnswer: json['brand_answer'] as String?,
       brand: json['brand'] != null
           ? ValidatorBrand.fromJson(json['brand'] as Map<String, dynamic>)
           : null,

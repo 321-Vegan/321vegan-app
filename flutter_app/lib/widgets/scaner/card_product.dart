@@ -39,6 +39,7 @@ class RejectedProductInfoCard extends StatelessWidget {
       ),
       statusLabel: 'Non-végane',
       statusDetail: reason,
+      brandAnswer: productInfo.brandAnswer,
     );
   }
 }
