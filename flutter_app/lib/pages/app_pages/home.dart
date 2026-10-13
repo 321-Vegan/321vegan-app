@@ -20,9 +20,14 @@ import 'package:vegan_app/widgets/homepage/anniversary_dialog.dart';
 
 const int _dashboardTabIndex = 0;
 const int _scanTabIndex = 1;
+const int _mapTabIndex = 2;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
+
+  static MyHomePageState? of(BuildContext context) {
+    return context.findAncestorStateOfType<MyHomePageState>();
+  }
 
   @override
   State<MyHomePage> createState() => MyHomePageState();
@@ -192,6 +197,11 @@ class MyHomePageState extends State<MyHomePage>
 
   Future<void> _onLoginSuccess() async {
     await ProfileNotificationService.refreshAll();
+  }
+
+  /// Switches to the Map tab (e.g. from a Dashboard promo slide).
+  void goToMapTab() {
+    _tabController.animateTo(_mapTabIndex);
   }
 
   @override

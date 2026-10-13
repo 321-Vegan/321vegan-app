@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/widgets/b12/b12_reminder_settings_modal.dart';
 import '../../models/seasonal_theme.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
+import '../../pages/app_pages/home.dart';
 import '../../pages/app_pages/Profile/subscription_page.dart';
 import '../../services/auth_service.dart';
 import '../../services/b12_reminder_service.dart';
@@ -30,6 +31,10 @@ class PromoSlide {
   /// full route (e.g. [B12ReminderSettingsModal]).
   final bool pageIsBottomSheet;
 
+  /// Custom action for the "Voir plus" button (e.g. switching home tab);
+  /// takes precedence over [page] and [url].
+  final void Function(BuildContext context)? onTap;
+
   final String buttonLabel;
 
   /// Falls back to a generic icon-in-circle placeholder when null.
@@ -45,6 +50,7 @@ class PromoSlide {
     this.url,
     this.page,
     this.pageIsBottomSheet = false,
+    this.onTap,
     this.buttonLabel = 'Voir plus',
     this.image,
     this.hidden,
@@ -64,10 +70,12 @@ final List<PromoSlide> _promoSlides = [
         (SubscriptionService.isSubscribed ||
             !SubscriptionService.isEntitlementDetermined),
   ),
-  const PromoSlide(
-    title: 'Nouvelle interface !',
-    subtitle: 'Un tout nouveau design pour plus de clarté.',
-    image: 'lib/assets/images/characters/watermelon.webp',
+  PromoSlide(
+    title: 'Accèdez à la carte',
+    subtitle: 'Maintenant en accès libre !',
+    image: 'lib/assets/images/stat-cards/co2.webp',
+    onTap: (context) => MyHomePage.of(context)?.goToMapTab(),
+    buttonLabel: 'Trouver des produits',
   ),
   PromoSlide(
     title: 'Partenaires',
@@ -235,6 +243,11 @@ class _PromoCard extends StatelessWidget {
   const _PromoCard({required this.slide});
 
   Future<void> _handleButtonTap(BuildContext context) async {
+    final onTap = slide.onTap;
+    if (onTap != null) {
+      onTap(context);
+      return;
+    }
     final page = slide.page;
     if (page != null) {
       if (slide.pageIsBottomSheet) {
@@ -304,7 +317,9 @@ class _PromoCard extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
-                if (slide.url != null || slide.page != null) ...[
+                if (slide.url != null ||
+                    slide.page != null ||
+                    slide.onTap != null) ...[
                   SizedBox(height: 20.h),
                   ElevatedButton(
                     onPressed: () => _handleButtonTap(context),

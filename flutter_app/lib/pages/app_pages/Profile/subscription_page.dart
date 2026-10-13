@@ -441,7 +441,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
   Widget _buildBenefits(Color primaryColor) {
     const benefits = [
-      'Map des produits autour de vous',
       'NutriScore et GreenScore illimités',
       'Tous les thèmes débloqués',
       'Badge soutien sur votre profil',

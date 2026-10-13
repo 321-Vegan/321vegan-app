@@ -43,9 +43,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   bool _isPicking = false;
   bool _isCentered = false;
-  // One-time 6-hour free trial of the map
-  DateTime? _trialEndsAt;
-  Timer? _trialTimer;
+  bool _isShowingMembershipPrompt = false;
   Set<String> _selectedEans = {};
   LatLng? _initialCenter;
   LatLng? _userLocation;
@@ -66,46 +64,39 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     );
     _initTileCache();
     _initLocation();
-    _loadFreeTrial();
   }
 
-  Future<void> _loadFreeTrial() async {
-    final endsAt = await PreferencesHelper.getMapFreeTrialEnd();
-    if (mounted && endsAt != null && DateTime.now().isBefore(endsAt)) {
-      setState(() => _trialEndsAt = endsAt);
-      _startTrialTicker();
+  /// Counts a meaningful map action for non-subscribers and, once enough
+  /// have piled up, invites them to subscribe (same flow as the scan page).
+  Future<void> _trackMapAction() async {
+    if (SubscriptionService.isSubscribed) return;
+    final shouldPrompt =
+        await PreferencesHelper.incrementMapMembershipActionCount();
+    if (shouldPrompt) _showMembershipPromptAfterDelay();
+  }
+
+  Future<void> _showMembershipPromptAfterDelay() async {
+    if (_isShowingMembershipPrompt) return;
+    _isShowingMembershipPrompt = true;
+    // Small delay so the result of the action shows first
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) {
+      _isShowingMembershipPrompt = false;
+      return;
     }
-  }
 
-  // Refresh the countdown chip and re-lock the map once the trial expires
-  void _startTrialTicker() {
-    _trialTimer?.cancel();
-    if (_trialEndsAt == null) return;
-    _trialTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (!mounted) return;
-      setState(() {
-        if (!_freeTrialActive) {
-          _trialEndsAt = null;
-          _trialTimer?.cancel();
-        }
-      });
-    });
-  }
-
-  bool get _freeTrialActive =>
-      _trialEndsAt != null && DateTime.now().isBefore(_trialEndsAt!);
-
-  // Map is interactive when the access overlay is not showing
-  bool get _hasMapAccess =>
-      (AuthService.isLoggedIn && SubscriptionService.isSubscribed) ||
-      _freeTrialActive;
-
-  String _formatTrialRemaining() {
-    final remaining = _trialEndsAt!.difference(DateTime.now());
-    final hours = remaining.inHours;
-    final minutes = remaining.inMinutes.remainder(60);
-    if (hours > 0) return '${hours}h${minutes.toString().padLeft(2, '0')}';
-    return '$minutes min';
+    await PreferencesHelper.snoozeMapMembershipPrompt();
+    if (mounted) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const SubscriptionPage(
+            title: 'Vous utilisez souvent la carte,\nsoutenez le projet ?',
+          ),
+        ),
+      );
+    }
+    _isShowingMembershipPrompt = false;
   }
 
   Future<void> _initTileCache() async {
@@ -126,7 +117,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     _pulseController.dispose();
-    _trialTimer?.cancel();
     _positionStreamSub?.cancel();
     super.dispose();
   }
@@ -235,6 +225,11 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
   Future<void> _loadShops() async {
     if (!mounted) return;
+    // Shop endpoints require an account; the access overlay covers the map
+    if (!AuthService.isLoggedIn) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
     setState(() => _isLoading = true);
 
@@ -275,6 +270,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           onApply: (newSelection) {
             setState(() => _selectedEans = newSelection);
             _loadShops();
+            if (newSelection.isNotEmpty) _trackMapAction();
           },
         ),
       ),
@@ -344,8 +340,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     );
   }
 
-  void _onShopTap(Shop shop) {
-    showModalBottomSheet(
+  Future<void> _onShopTap(Shop shop) async {
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       // Transparent so the sheet's own rounded surface shows the map behind
@@ -354,10 +350,19 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       elevation: 0,
       builder: (_) => ShopDetailSheet(shop: shop),
     );
+    // Counted once the sheet is closed so the prompt never covers it
+    if (mounted) _trackMapAction();
   }
 
   void _enterPickMode() {
     setState(() => _isPicking = true);
+  }
+
+  void _onLoginSuccess() {
+    widget.onLoginSuccess?.call();
+    if (!mounted) return;
+    setState(() {});
+    _loadShops();
   }
 
   void _onCreateHere() {
@@ -377,6 +382,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     setState(() => _isCentered = false);
     _mapController.move(LatLng(place.latitude, place.longitude), 14);
     _loadShops();
+    _trackMapAction();
   }
 
   void _recenterMap() {
@@ -594,7 +600,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             ),
           // Top row: place search bar (fly map to a city/address), product
           // filter and create-shop buttons.
-          if (!_isPicking && _hasMapAccess)
+          if (!_isPicking && AuthService.isLoggedIn)
             Positioned(
               top: MediaQuery.of(context).padding.top + 24,
               left: 48.w,
@@ -670,63 +676,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 child: CircularProgressIndicator(),
               ),
             ),
-          // Trial countdown chip, below the search/filter/create row
-          if (_freeTrialActive && !SubscriptionService.isSubscribed)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 24 + 144.w + 24.h,
-              right: 48.w,
-              child: GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const SubscriptionPage()),
-                ),
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 14.w, vertical: 7.h),
-                  decoration: ShapeDecoration(
-                    color: Colors.white,
-                    shape: squircleBorder(radius: 20.r),
-                    shadows: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.timer_outlined,
-                          size: 42.sp,
-                          color: Theme.of(context).colorScheme.primary),
-                      SizedBox(width: 6.w),
-                      Text(
-                        'Essai gratuit : ${_formatTrialRemaining()}',
-                        style: TextStyle(
-                          fontSize: 38.sp,
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          if ((!AuthService.isLoggedIn || !SubscriptionService.isSubscribed) &&
-              !_freeTrialActive)
-            MapAccessOverlay(
-              onAccessGranted: () => setState(() {}),
-              onLoginSuccess: widget.onLoginSuccess,
-              onFreeTrial: () {
-                setState(() {
-                  _trialEndsAt = DateTime.now()
-                      .add(PreferencesHelper.mapFreeTrialDuration);
-                });
-                _startTrialTicker();
-              },
-            ),
+          if (!AuthService.isLoggedIn)
+            MapAccessOverlay(onLoginSuccess: _onLoginSuccess),
         ],
       ),
     );

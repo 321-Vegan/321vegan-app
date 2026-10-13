@@ -984,7 +984,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     }
 
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: Alignment.center,
       child: GestureDetector(
         onTap: () => _showReviewDialog(),
         child: Container(

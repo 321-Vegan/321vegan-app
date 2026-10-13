@@ -533,29 +533,34 @@ class PreferencesHelper {
     return freeScoreRevealsPerWeek - revealed.length;
   }
 
-  // Map free trial methods (one-time 6-hour unlock for non-subscribers)
-  static const String _mapFreeTrialStartKey = 'map_free_trial_started_at';
-  static const Duration mapFreeTrialDuration = Duration(hours: 6);
+  // Map membership prompt methods 
+  // map actions: opening a shop, applying a product filter, search location
+  static const String _mapMembershipActionCountKey =
+      'map_membership_action_count';
+  static const String _mapMembershipPromptNextThresholdKey =
+      'map_membership_prompt_next_threshold';
+  static const int _mapMembershipPromptInitialThreshold = 4;
+  static const int _mapMembershipPromptSnoozeActions = 4;
 
-  static Future<bool> hasUsedMapFreeTrial() async {
+  /// Increments the map action counter and returns whether this action just
+  /// crossed the next threshold, i.e. the subscription prompt should be shown.
+  static Future<bool> incrementMapMembershipActionCount() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_mapFreeTrialStartKey) != null;
+
+    final count = (prefs.getInt(_mapMembershipActionCountKey) ?? 0) + 1;
+    await prefs.setInt(_mapMembershipActionCountKey, count);
+
+    final nextThreshold =
+        prefs.getInt(_mapMembershipPromptNextThresholdKey) ??
+            _mapMembershipPromptInitialThreshold;
+    return count >= nextThreshold;
   }
 
-  static Future<void> markMapFreeTrialUsed() async {
+  static Future<void> snoozeMapMembershipPrompt() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-        _mapFreeTrialStartKey, DateTime.now().toIso8601String());
-  }
-
-  /// When the one-time map trial expires, or null if never started.
-  static Future<DateTime?> getMapFreeTrialEnd() async {
-    final prefs = await SharedPreferences.getInstance();
-    final started = prefs.getString(_mapFreeTrialStartKey);
-    if (started == null) return null;
-    final startedAt = DateTime.tryParse(started);
-    if (startedAt == null) return null;
-    return startedAt.add(mapFreeTrialDuration);
+    final count = prefs.getInt(_mapMembershipActionCountKey) ?? 0;
+    await prefs.setInt(_mapMembershipPromptNextThresholdKey,
+        count + _mapMembershipPromptSnoozeActions);
   }
 
   // Pending email change methods
