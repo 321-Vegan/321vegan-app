@@ -563,6 +563,19 @@ class PreferencesHelper {
         count + _mapMembershipPromptSnoozeActions);
   }
 
+  // One-time announcement methods (see Announcement in announcement_sheet.dart)
+  static String _announcementSeenKey(String id) => 'announcement_seen_$id';
+
+  static Future<bool> hasSeenAnnouncement(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_announcementSeenKey(id)) ?? false;
+  }
+
+  static Future<void> markAnnouncementSeen(String id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_announcementSeenKey(id), true);
+  }
+
   // Pending email change methods
   // Stores the new email the user requested but hasn't confirmed yet (the
   // confirmation happens on the web app). Used to show an "awaiting

@@ -301,9 +301,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _openErrorReports() {
-    if (_unreadErrorResponses > 0) {
-      ErrorReportBadgeService.markHandledAsSeen(
-          _errorReportsFirstPage?.items ?? []);
+    // Without the fetched page we don't know which ids to store, and an
+    // empty set would make every handled report "new" again next refresh.
+    if (_unreadErrorResponses > 0 && _errorReportsFirstPage != null) {
+      ErrorReportBadgeService.markHandledAsSeen(_errorReportsFirstPage!.items);
       setState(() => _unreadErrorResponses = 0);
     }
     Navigator.push(

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../helpers/announcements.dart';
 import '../../../helpers/preference_helper.dart';
 import '../../../helpers/vegan_savings.dart';
 import '../../../models/error_report.dart';
@@ -21,7 +22,9 @@ import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/badges/badges_grid.dart';
 import '../../../widgets/homepage/b12_reminder_banner.dart';
+import '../../../widgets/homepage/notifications_sheet.dart';
 import '../../../widgets/homepage/share_home_dialog.dart';
+import '../../../widgets/shared/announcement_sheet.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/square_icon_button.dart';
@@ -34,6 +37,7 @@ import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/b12/b12_reminder_settings_modal.dart';
 import '../Profile/error_reports_page.dart';
 import '../Profile/product_review_page.dart';
+import '../home.dart';
 import '../settings/settings_page.dart';
 
 /// Vegan-since counter + impact stats, partner promos, badges and the
@@ -263,23 +267,44 @@ class DashboardPageState extends State<DashboardPage> {
     _confettiController.play();
   }
 
-  // ignore: unused_element
-  Future<void> _openErrorReports() async {
-    // Logged-out users have no reports to show — send them through the
-    // same login gate as the Paramètres tab instead of a page that would
-    // just error out fetching them.
-    if (!AuthService.isLoggedIn) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const SettingsPage()),
-      );
-      if (mounted) refresh();
-      return;
-    }
+  Future<void> _openNotifications() async {
+    final announcements = await AnnouncementCenter.relevant(
+      goToMapTab: () => MyHomePage.of(context)?.goToMapTab(),
+    );
+    final unseenIds = await AnnouncementCenter.unseenIds(announcements);
+    if (!mounted) return;
 
-    if (ErrorReportBadgeService.unreadCount.value > 0) {
-      ErrorReportBadgeService.markHandledAsSeen(
-          _errorReportsFirstPage?.items ?? []);
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => NotificationsSheet(
+        announcements: announcements,
+        unseenAnnouncementIds: unseenIds,
+        unreadErrorResponses: AuthService.isLoggedIn
+            ? ErrorReportBadgeService.unreadCount.value
+            : null,
+        onOpenAnnouncement: _openAnnouncement,
+        onOpenErrorReports: _openErrorReports,
+      ),
+    );
+  }
+
+  Future<void> _openAnnouncement(Announcement announcement) async {
+    // Opening it from the bell counts as reading it, buttons or not
+    await PreferencesHelper.markAnnouncementSeen(announcement.id);
+    AnnouncementCenter.refreshUnseenCount();
+    if (!mounted) return;
+    await showAnnouncementSheet(context, announcement);
+  }
+
+  /// Only reachable logged in (the bell hides the row otherwise).
+  void _openErrorReports() {
+    // Without the fetched page we don't know which ids to store, and an
+    // empty set would make every handled report "new" again next refresh.
+    if (ErrorReportBadgeService.unreadCount.value > 0 &&
+        _errorReportsFirstPage != null) {
+      ErrorReportBadgeService.markHandledAsSeen(_errorReportsFirstPage!.items);
     }
     Navigator.push(
       context,
@@ -410,7 +435,7 @@ class DashboardPageState extends State<DashboardPage> {
 
   Widget _buildHeader(BuildContext context) {
     final name = _user?.nickname ?? 'Bienvenue';
-    // final notifCount = ProfileNotificationService.total;
+    final notifCount = ProfileNotificationService.total;
 
     return Row(
       children: [
@@ -468,12 +493,12 @@ class DashboardPageState extends State<DashboardPage> {
             ),
           ),
         ),
-        // _buildIconButton(
-        //   icon: Icons.notifications_none_rounded,
-        //   badgeCount: notifCount,
-        //   onTap: _openErrorReports,
-        // ),
-        // SizedBox(width: 30.w),
+        _buildIconButton(
+          icon: Icons.notifications_none_rounded,
+          badgeCount: notifCount,
+          onTap: _openNotifications,
+        ),
+        SizedBox(width: 30.w),
         _buildIconButton(icon: Icons.settings_outlined, onTap: _openSettings),
       ],
     );
@@ -494,12 +519,12 @@ class DashboardPageState extends State<DashboardPage> {
             shadows: const []),
         if (badgeCount > 0)
           Positioned(
-            right: -8.w,
-            top: -8.w,
+            right: -12.w,
+            top: -12.w,
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 15.w),
-              height: 64.w,
-              constraints: BoxConstraints(minWidth: 44.w),
+              height: 72.w,
+              constraints: BoxConstraints(minWidth: 72.w),
               decoration: ShapeDecoration(
                 color: Colors.red,
                 shape: squircleBorder(
@@ -513,7 +538,7 @@ class DashboardPageState extends State<DashboardPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24.sp,
+                      fontSize: 36.sp,
                       fontWeight: FontWeight.bold,
                       height: 1),
                 ),
@@ -649,7 +674,8 @@ class DashboardPageState extends State<DashboardPage> {
           Text('$value', style: AppTextStyles.baloo26),
           SizedBox(height: 4.h),
           Text(label,
-              style: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
+              style:
+                  AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center),
         ],
       ),

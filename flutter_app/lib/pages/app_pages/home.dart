@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vegan_app/helpers/announcements.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/widgets/shared/app_bottom_nav.dart';
 import 'package:vegan_app/helpers/vegan_savings.dart';
@@ -79,6 +79,17 @@ class MyHomePageState extends State<MyHomePage>
     // Listen for a pushed page (e.g. scan/sent history empty state) asking
     // to jump to the Scan tab.
     NotificationService.navigateToScan.addListener(_onNavigateToScan);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _showAnnouncement());
+  }
+
+  /// Shows the next unseen app news (one per launch), once the home screen
+  /// has settled.
+  Future<void> _showAnnouncement() async {
+    await Future.delayed(const Duration(seconds: 1));
+    // Don't stack it on the anniversary popup
+    if (!mounted || _notificationForcedDashboard) return;
+    await AnnouncementCenter.showNext(context, goToMapTab: goToMapTab);
   }
 
   @override

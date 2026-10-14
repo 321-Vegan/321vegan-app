@@ -71,7 +71,7 @@ final List<PromoSlide> _promoSlides = [
             !SubscriptionService.isEntitlementDetermined),
   ),
   PromoSlide(
-    title: 'Accèdez à la carte',
+    title: 'Accédez à la carte',
     subtitle: 'Maintenant en accès libre !',
     image: 'lib/assets/images/stat-cards/co2.webp',
     onTap: (context) => MyHomePage.of(context)?.goToMapTab(),

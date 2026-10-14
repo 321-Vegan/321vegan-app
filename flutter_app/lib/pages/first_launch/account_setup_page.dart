@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../helpers/announcements.dart';
 import '../../services/auth_service.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_spacing.dart';
@@ -8,6 +9,7 @@ import '../../themes/app_text_styles.dart';
 import '../../widgets/auth/forgot_password_form.dart';
 import '../../widgets/auth/login_form.dart';
 import '../../widgets/auth/register_form.dart';
+import '../../widgets/shared/announcement_sheet.dart';
 import '../../widgets/shared/app_button.dart';
 import '../../widgets/shared/app_card.dart';
 import '../app_pages/home.dart';
@@ -47,6 +49,8 @@ class _AccountSetupPageState extends State<AccountSetupPage> {
   Future<void> _finishOnboarding(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasSeenOnboarding', true);
+    // Fresh install: no need to show "what's new"
+    await markAnnouncementsSeen(appAnnouncements());
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const MyHomePage()),
