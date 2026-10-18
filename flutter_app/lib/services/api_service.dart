@@ -778,41 +778,33 @@ class ApiService {
     }
   }
 
-  /// Get the current user's review for a shop (null if none)
+  /// Get the current user's review for a shop (null if none or logged out).
+  /// Failures are thrown, not turned into null: "couldn't load it" must not
+  /// pass for "hasn't reviewed", which would offer a duplicate review.
   static Future<ShopReview?> getMyShopReview({required int shopId}) async {
-    try {
-      final dio = await DioClient.getDio();
-      final prefs = await SharedPreferences.getInstance();
-      final accessToken = prefs.getString('access_token');
-      if (accessToken == null) return null;
+    final dio = await DioClient.getDio();
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('access_token');
+    if (accessToken == null) return null;
 
-      final userId = AuthService.currentUser?.id;
-      if (userId == null) return null;
+    final userId = AuthService.currentUser?.id;
+    if (userId == null) return null;
 
-      final response = await dio.get(
-        '/shop-reviews/search',
-        queryParameters: {
-          'shop_id': shopId,
-          'user_id': userId,
-          'page_size': 1,
-        },
-        options: dio_pkg.Options(
-          headers: {'Authorization': 'Bearer $accessToken'},
-        ),
-      );
+    final response = await dio.get(
+      '/shop-reviews/search',
+      queryParameters: {
+        'shop_id': shopId,
+        'user_id': userId,
+        'page_size': 1,
+      },
+      options: dio_pkg.Options(
+        headers: {'Authorization': 'Bearer $accessToken'},
+      ),
+    );
 
-      if (response.statusCode != null &&
-          response.statusCode! >= 200 &&
-          response.statusCode! < 300 &&
-          response.data != null) {
-        final paginated = ShopReviewPaginated.fromJson(
-            response.data as Map<String, dynamic>);
-        return paginated.items.isNotEmpty ? paginated.items.first : null;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
+    final paginated =
+        ShopReviewPaginated.fromJson(response.data as Map<String, dynamic>);
+    return paginated.items.isNotEmpty ? paginated.items.first : null;
   }
 
   /// Post a new shop review
@@ -954,32 +946,26 @@ class ApiService {
   }
 
   /// The current user's rating of a product, whatever its status (null if
-  /// none or logged out).
+  /// none or logged out). Failures are thrown, not turned into null: see
+  /// [getMyShopReview].
   static Future<ProductRating?> getMyProductRating({
     required String ean,
   }) async {
     final userId = AuthService.currentUser?.id;
     if (AuthService.accessToken == null || userId == null) return null;
-    try {
-      final dio = await DioClient.getDio();
-      final response = await dio.get(
-        '/product-reviews/search',
-        queryParameters: {
-          'product___ean': ean,
-          'user_id': userId,
-          'page_size': 1,
-        },
-        options: dio_pkg.Options(headers: _ratingHeaders),
-      );
-      if (_isSuccess(response)) {
-        final paginated = ProductRatingPaginated.fromJson(
-            response.data as Map<String, dynamic>);
-        return paginated.items.isNotEmpty ? paginated.items.first : null;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
+    final dio = await DioClient.getDio();
+    final response = await dio.get(
+      '/product-reviews/search',
+      queryParameters: {
+        'product___ean': ean,
+        'user_id': userId,
+        'page_size': 1,
+      },
+      options: dio_pkg.Options(headers: _ratingHeaders),
+    );
+    final paginated =
+        ProductRatingPaginated.fromJson(response.data as Map<String, dynamic>);
+    return paginated.items.isNotEmpty ? paginated.items.first : null;
   }
 
   /// All ratings posted by the current user, pending ones included.

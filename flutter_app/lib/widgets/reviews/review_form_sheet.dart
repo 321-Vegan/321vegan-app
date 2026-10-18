@@ -16,6 +16,19 @@ class ReviewFormResult {
   const ReviewFormResult({required this.rating, this.comment});
 }
 
+/// Entries whose sending failed, by review target (e.g. `product:<ean>`),
+/// so the form comes back filled even when reopened from a new sheet. In
+/// memory only: lost when the app restarts.
+class ReviewDrafts {
+  ReviewDrafts._();
+
+  static final Map<String, ReviewFormResult> _drafts = {};
+
+  static ReviewFormResult? get(String key) => _drafts[key];
+  static void save(String key, ReviewFormResult entry) => _drafts[key] = entry;
+  static void clear(String key) => _drafts.remove(key);
+}
+
 /// Opens the rate-and-comment form as a bottom sheet and resolves with the
 /// entry, or null if dismissed. Sending is left to the caller so the same
 /// form serves shop and product reviews.

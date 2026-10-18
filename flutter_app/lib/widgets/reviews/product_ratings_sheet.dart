@@ -74,6 +74,13 @@ class _ProductRatingsSheetState extends State<_ProductRatingsSheet> {
   int? _ratingFilter;
   bool _isFiltering = false;
 
+  /// Shown above the community list when changing the filter failed (the
+  /// previous list and filter are kept).
+  String? _listError;
+
+  /// Key of this product's unsent entry in [ReviewDrafts].
+  String get _draftKey => 'product:${widget.ean}';
+
   /// Inline confirmation/error under the user's rating — a SnackBar would
   /// render behind this modal sheet.
   ({String text, Color color})? _feedback;
@@ -89,18 +96,25 @@ class _ProductRatingsSheetState extends State<_ProductRatingsSheet> {
       _isLoading = true;
       _hasError = false;
     });
+    // A failed "my rating" fetch must not pass for "not rated yet": the
+    // button would then post a duplicate rating instead of editing it.
+    var myRatingFailed = false;
     final results = await Future.wait([
       ApiService.getProductRatingSummary(ean: widget.ean),
       ApiService.getProductRatings(
           ean: widget.ean, pageSize: _pageSize, rating: _ratingFilter),
-      ApiService.getMyProductRating(ean: widget.ean),
+      ApiService.getMyProductRating(ean: widget.ean).catchError((_) {
+        myRatingFailed = true;
+        return null;
+      }),
     ]);
     if (!mounted) return;
     final summary = results[0] as ProductRatingSummary?;
     final page = results[1] as ProductRatingPaginated?;
     setState(() {
       _isLoading = false;
-      _hasError = summary == null || page == null;
+      _hasError = summary == null || page == null || myRatingFailed;
+      _listError = null;
       _summary = summary;
       _myRating = results[2] as ProductRating?;
       _ratings
@@ -132,22 +146,34 @@ class _ProductRatingsSheetState extends State<_ProductRatingsSheet> {
   /// Filters the community list on [value], or clears the filter when it's
   /// already the selected one. Only the list reloads, not the summary.
   Future<void> _toggleRatingFilter(int value) async {
+    final previousFilter = _ratingFilter;
     final filter = _ratingFilter == value ? null : value;
     setState(() {
       _ratingFilter = filter;
       _isFiltering = true;
+      _listError = null;
     });
     final page = await ApiService.getProductRatings(
         ean: widget.ean, pageSize: _pageSize, rating: filter);
     // A quicker tap on another bar may have superseded this request.
     if (!mounted || filter != _ratingFilter) return;
+    if (page == null) {
+      // Keep showing the list that matches the previous filter
+      setState(() {
+        _ratingFilter = previousFilter;
+        _isFiltering = false;
+        _listError = 'Impossible de filtrer les avis. '
+            'Vérifiez votre connexion et réessayez.';
+      });
+      return;
+    }
     setState(() {
       _isFiltering = false;
       _ratings
         ..clear()
-        ..addAll(page?.items ?? []);
+        ..addAll(page.items);
       _page = 1;
-      _pages = page?.pages ?? 1;
+      _pages = page.pages;
     });
   }
 
@@ -162,12 +188,13 @@ class _ProductRatingsSheetState extends State<_ProductRatingsSheet> {
 
   Future<void> _openForm() async {
     final existing = _myRating;
+    final draft = ReviewDrafts.get(_draftKey);
     final result = await showReviewFormSheet(
       context,
       title: existing == null ? 'Noter ce produit' : 'Modifier ma note',
       subtitle: widget.productName,
-      initialRating: existing?.rating,
-      initialComment: existing?.comment,
+      initialRating: draft?.rating ?? existing?.rating,
+      initialComment: draft != null ? draft.comment : existing?.comment,
       moderationNotice:
           'Les commentaires sont relus par l\'équipe avant d\'être publiés. '
           'Une note sans commentaire est publiée directement.',
@@ -192,15 +219,18 @@ class _ProductRatingsSheetState extends State<_ProductRatingsSheet> {
     if (!mounted) return;
 
     if (saved == null) {
+      ReviewDrafts.save(_draftKey, result);
       setState(() {
         _isSending = false;
         _feedback = (
-          text: 'Une erreur est survenue. Veuillez réessayer.',
+          text: 'L\'envoi a échoué. Vérifiez votre connexion et réessayez : '
+              'votre avis a été gardé.',
           color: kSemanticError,
         );
       });
       return;
     }
+    ReviewDrafts.clear(_draftKey);
 
     await _load();
     if (!mounted) return;
@@ -341,6 +371,13 @@ class _ProductRatingsSheetState extends State<_ProductRatingsSheet> {
         ),
       ],
       SizedBox(height: AppSpacing.section),
+      if (_listError != null) ...[
+        Text(
+          _listError!,
+          style: AppTextStyles.bodyMedium13.copyWith(color: kSemanticError),
+        ),
+        SizedBox(height: AppSpacing.item),
+      ],
       if (_ratingFilter == null && others.isEmpty)
         // hasRatings with no others means the only rating is the user's own
         summary.hasRatings

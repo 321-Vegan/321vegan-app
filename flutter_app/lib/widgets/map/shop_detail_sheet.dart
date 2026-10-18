@@ -55,6 +55,15 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
   int _reviewsTotalPages = 1;
   ShopReview? _myReview;
   ShopReviewSummary? _reviewSummary;
+  bool _reviewsError = false;
+  bool _isSendingReview = false;
+
+  /// Key of this shop's unsent entry in [ReviewDrafts].
+  String get _reviewDraftKey => 'shop:${widget.shop.id}';
+
+  /// Inline confirmation/error under the user's review — a SnackBar would
+  /// render behind this modal sheet.
+  ({String text, Color color})? _reviewFeedback;
 
   late TabController _tabController;
   final DraggableScrollableController _sheetController =
@@ -192,24 +201,44 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
 
   Future<void> _loadReviews({int page = 1}) async {
     if (!mounted) return;
-    setState(() => _isLoadingReviews = true);
+    setState(() {
+      _isLoadingReviews = true;
+      _reviewsError = false;
+    });
 
+    // A failed "my review" fetch must not pass for "no review yet": the
+    // button would then post a duplicate instead of editing it.
+    var myReviewFailed = false;
     final results = await Future.wait([
       ApiService.getShopReviews(shopId: widget.shop.id, page: page),
-      if (_isLoggedIn) ApiService.getMyShopReview(shopId: widget.shop.id),
+      if (_isLoggedIn)
+        ApiService.getMyShopReview(shopId: widget.shop.id).catchError((_) {
+          myReviewFailed = true;
+          return null;
+        }),
     ]);
 
     final paginated = results[0] as ShopReviewPaginated?;
     final myReview = _isLoggedIn ? results[1] as ShopReview? : null;
 
+    if (paginated == null || myReviewFailed) {
+      if (mounted) {
+        setState(() {
+          _isLoadingReviews = false;
+          _reviewsError = true;
+        });
+      }
+      return;
+    }
+
     if (mounted) {
       setState(() {
         final currentUserId = AuthService.currentUser?.id;
-        _reviews = (paginated?.items ?? [])
+        _reviews = paginated.items
             .where((r) => currentUserId == null || r.userId != currentUserId)
             .toList();
         _reviewsPage = page;
-        _reviewsTotalPages = paginated?.pages ?? 1;
+        _reviewsTotalPages = paginated.pages;
         _myReview = myReview;
         _isLoadingReviews = false;
       });
@@ -217,44 +246,56 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
   }
 
   Future<void> _showReviewDialog({ShopReview? existing}) async {
+    final draft = ReviewDrafts.get(_reviewDraftKey);
     final entry = await showReviewFormSheet(
       context,
       title: existing == null ? 'Laisser un avis' : 'Modifier votre avis',
       subtitle: widget.shop.name,
-      initialRating: existing?.rating,
-      initialComment: existing?.comment,
+      initialRating: draft?.rating ?? existing?.rating,
+      initialComment: draft != null ? draft.comment : existing?.comment,
     );
-    if (entry == null) return;
+    if (entry == null || !mounted) return;
 
-    ShopReview? result;
-    if (existing == null) {
-      result = await ApiService.postShopReview(
-        shopId: widget.shop.id,
-        rating: entry.rating,
-        comment: entry.comment,
-      );
-    } else {
-      result = await ApiService.updateShopReview(
-        reviewId: existing.id,
-        rating: entry.rating,
-        comment: entry.comment,
-      );
-    }
+    setState(() {
+      _isSendingReview = true;
+      _reviewFeedback = null;
+    });
+    final result = existing == null
+        ? await ApiService.postShopReview(
+            shopId: widget.shop.id,
+            rating: entry.rating,
+            comment: entry.comment,
+          )
+        : await ApiService.updateShopReview(
+            reviewId: existing.id,
+            rating: entry.rating,
+            comment: entry.comment,
+          );
+    if (!mounted) return;
 
-    if (result != null && mounted) {
-      setState(() => _myReview = result);
-      await _loadReviews(page: _reviewsPage);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Avis soumis, en attente de validation.',
-              style: TextStyle(fontSize: 44.sp),
-            ),
-          ),
+    if (result == null) {
+      ReviewDrafts.save(_reviewDraftKey, entry);
+      setState(() {
+        _isSendingReview = false;
+        _reviewFeedback = (
+          text: 'L\'envoi a échoué. Vérifiez votre connexion et réessayez !',
+          color: kSemanticError,
         );
-      }
+      });
+      return;
     }
+
+    ReviewDrafts.clear(_reviewDraftKey);
+    setState(() {
+      _isSendingReview = false;
+      _myReview = result;
+      _reviewFeedback = (
+        text: 'Avis soumis, en attente de validation.',
+        color: kSemanticSuccess,
+      );
+    });
+    _loadReviewSummary();
+    await _loadReviews(page: _reviewsPage);
   }
 
   // ── Itinerary ─────────────────────────────────────────────────────────────
@@ -726,12 +767,28 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       padding: EdgeInsets.fromLTRB(
           16.w, 24.h, 16.w, 24.h + MediaQuery.of(context).padding.bottom),
       children: [
-        if (_reviews.isEmpty) ...[
+        if (_reviewsError) ...[
+          const ReviewsEmptyState(
+            title: 'Impossible de charger les avis',
+            subtitle: 'Vérifiez votre connexion et réessayez.',
+          ),
+          SizedBox(height: AppSpacing.item),
+          Center(
+            child: AppButton(
+              label: 'Réessayer',
+              backgroundColor: kAccentYellow,
+              onPressed: () {
+                _loadReviewSummary();
+                _loadReviews(page: _reviewsPage);
+              },
+            ),
+          ),
+        ] else if (_reviews.isEmpty) ...[
           _buildEmptyReviews(),
           SizedBox(height: 20.h),
-          _buildMyReviewSection(),
+          ..._buildMyReviewSection(),
         ] else ...[
-          _buildMyReviewSection(),
+          ..._buildMyReviewSection(),
           SizedBox(height: 16.h),
           for (final review in _reviews) _buildReviewCard(review),
           SizedBox(height: 12.h),
@@ -755,7 +812,24 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     );
   }
 
-  Widget _buildMyReviewSection() {
+  /// The user's review (or the button to write one), followed by the
+  /// inline send feedback.
+  List<Widget> _buildMyReviewSection() {
+    final feedback = _reviewFeedback;
+    return [
+      _buildMyReview(),
+      if (feedback != null) ...[
+        SizedBox(height: 18.h),
+        Text(
+          feedback.text,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.bodyMedium13.copyWith(color: feedback.color),
+        ),
+      ],
+    ];
+  }
+
+  Widget _buildMyReview() {
     final primary = Theme.of(context).colorScheme.primary;
 
     if (!_isLoggedIn) {
@@ -776,8 +850,15 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
         date: mine.createdAt,
         highlighted: true,
         badge: RatingStatusChip(status: ReviewStatus.fromApi(mine.status)),
-        trailing: Icon(Icons.edit_outlined, size: 54.sp, color: primary),
-        onTap: () => _showReviewDialog(existing: mine),
+        trailing: _isSendingReview
+            ? SizedBox(
+                width: 48.sp,
+                height: 48.sp,
+                child: const CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(Icons.edit_outlined, size: 54.sp, color: primary),
+        onTap:
+            _isSendingReview ? null : () => _showReviewDialog(existing: mine),
       );
     }
 
@@ -786,7 +867,8 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
         label: 'Laisser un avis',
         icon: Icons.rate_review,
         backgroundColor: primary,
-        onPressed: () => _showReviewDialog(),
+        isLoading: _isSendingReview,
+        onPressed: _isSendingReview ? null : () => _showReviewDialog(),
       ),
     );
   }
