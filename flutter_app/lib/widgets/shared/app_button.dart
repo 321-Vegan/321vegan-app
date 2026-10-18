@@ -66,7 +66,12 @@ class AppButton extends StatelessWidget {
                 valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
               ),
             )
-          : Row(
+          // scaleDown: a label too long for a half-width button shrinks a
+          // little instead of overflowing; no effect when it fits. (Not a
+          // Flexible: buttons also sit in unbounded-width Rows.)
+          : FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -88,6 +93,7 @@ class AppButton extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ],
+              ),
             ),
     );
   }

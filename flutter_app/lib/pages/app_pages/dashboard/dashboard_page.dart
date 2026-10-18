@@ -269,7 +269,7 @@ class DashboardPageState extends State<DashboardPage> {
 
   Future<void> _openNotifications() async {
     final announcements = await AnnouncementCenter.relevant(
-      goToMapTab: () => MyHomePage.of(context)?.goToMapTab(),
+      home: MyHomePage.of(context),
     );
     final unseenIds = await AnnouncementCenter.unseenIds(announcements);
     if (!mounted) return;

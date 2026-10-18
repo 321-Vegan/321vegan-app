@@ -115,95 +115,105 @@ class AnnouncementSheet extends StatelessWidget {
     final hasAction = announcement.onPrimary != null;
 
     return BottomSheetShell(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
+      // The shell gives its child unbounded height: cap it below the screen
+      // (minus the shell's handle and paddings) so long content scrolls
+      // instead of overflowing on small phones.
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Transform.flip(
-                flipX: announcement.mirrorImage,
-                child: Image.asset(announcement.image, height: 260.h),
-              ),
-              if (announcement.badge != null)
-                Positioned(
-                  top: 0,
-                  right: -40.w,
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 20.w, vertical: 6.h),
-                    decoration: ShapeDecoration(
-                      color: kAccentYellow,
-                      shape: squircleBorder(radius: 20.r),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Transform.flip(
+                    flipX: announcement.mirrorImage,
+                    child: Image.asset(announcement.image, height: 260.h),
+                  ),
+                  if (announcement.badge != null)
+                    Positioned(
+                      top: 0,
+                      right: -40.w,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 20.w, vertical: 6.h),
+                        decoration: ShapeDecoration(
+                          color: kAccentYellow,
+                          shape: squircleBorder(radius: 20.r),
+                        ),
+                        child: Text(
+                          announcement.badge!,
+                          style: AppTextStyles.bodyBold11
+                              .copyWith(color: Colors.white),
+                        ),
+                      ),
                     ),
-                    child: Text(
-                      announcement.badge!,
-                      style: AppTextStyles.bodyBold11
-                          .copyWith(color: Colors.white),
+                ],
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                announcement.title,
+                style: AppTextStyles.baloo26,
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                announcement.message,
+                style: AppTextStyles.bodyRegular15.copyWith(
+                  color: Colors.grey[600],
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (announcement.features.isNotEmpty) ...[
+                SizedBox(height: 32.h),
+                Center(
+                  child: IntrinsicWidth(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final feature in announcement.features)
+                          _FeatureRow(label: feature, color: primary),
+                      ],
                     ),
                   ),
                 ),
-            ],
-          ),
-          SizedBox(height: 24.h),
-          Text(
-            announcement.title,
-            style: AppTextStyles.baloo26,
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            announcement.message,
-            style: AppTextStyles.bodyRegular15.copyWith(
-              color: Colors.grey[600],
-              height: 1.4,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (announcement.features.isNotEmpty) ...[
-            SizedBox(height: 32.h),
-            Center(
-              child: IntrinsicWidth(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    for (final feature in announcement.features)
-                      _FeatureRow(label: feature, color: primary),
-                  ],
-                ),
-              ),
-            ),
-          ],
-          if (announcement.note != null) ...[
-            SizedBox(height: 24.h),
-            InfoBox(text: announcement.note!),
-          ],
-          SizedBox(height: 32.h),
-          Row(
-            children: [
-              if (hasAction) ...[
-                Expanded(
-                  child: AppButton(
-                    label: announcement.secondaryLabel,
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.grey[700]!,
-                    borderColor: kBorderDefault,
-                    onPressed: () => Navigator.of(context).pop(false),
-                  ),
-                ),
-                SizedBox(width: 16.w),
               ],
-              Expanded(
-                child: AppButton(
-                  label: announcement.primaryLabel,
-                  backgroundColor: primary,
-                  onPressed: () => Navigator.of(context).pop(true),
-                ),
+              if (announcement.note != null) ...[
+                SizedBox(height: 24.h),
+                InfoBox(text: announcement.note!),
+              ],
+              SizedBox(height: 32.h),
+              Row(
+                children: [
+                  if (hasAction) ...[
+                    Expanded(
+                      child: AppButton(
+                        label: announcement.secondaryLabel,
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.grey[700]!,
+                        borderColor: kBorderDefault,
+                        onPressed: () => Navigator.of(context).pop(false),
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                  ],
+                  Expanded(
+                    child: AppButton(
+                      label: announcement.primaryLabel,
+                      backgroundColor: primary,
+                      onPressed: () => Navigator.of(context).pop(true),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

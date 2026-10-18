@@ -36,61 +36,71 @@ class NotificationsSheet extends StatelessWidget {
     final isEmpty = announcements.isEmpty && unreadErrors == null;
 
     return BottomSheetShell(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Notifications', style: AppTextStyles.baloo22),
-          SizedBox(height: 24.h),
-          if (isEmpty)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 48.h),
-              child: Center(
-                child: Text(
-                  'Aucune notification pour le moment',
-                  style: AppTextStyles.bodyRegular15
-                      .copyWith(color: Colors.grey[600]),
+      // The shell gives its child unbounded height: cap it below the screen
+      // (minus the shell's handle and paddings) so long content scrolls
+      // instead of overflowing on small phones.
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.8,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Notifications', style: AppTextStyles.baloo22),
+              SizedBox(height: 24.h),
+              if (isEmpty)
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 48.h),
+                  child: Center(
+                    child: Text(
+                      'Aucune notification pour le moment',
+                      style: AppTextStyles.bodyRegular15
+                          .copyWith(color: Colors.grey[600]),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          if (unreadErrors != null)
-            _NotificationTile(
-              leading: _IconBadge(
-                icon: Icons.chat,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              title: 'Réponses à vos signalements',
-              subtitle: switch (unreadErrors) {
-                0 => 'Aucune nouvelle réponse',
-                1 => '1 nouvelle réponse',
-                _ => '$unreadErrors nouvelles réponses',
-              },
-              unread: unreadErrors > 0,
-              onTap: () {
-                Navigator.of(context).pop();
-                onOpenErrorReports();
-              },
-            ),
-          for (final announcement in announcements)
-            _NotificationTile(
-              leading: Transform.flip(
-                flipX: announcement.mirrorImage,
-                child: Image.asset(
-                  announcement.image,
-                  width: 110.w,
-                  height: 110.w,
-                  fit: BoxFit.contain,
+              if (unreadErrors != null)
+                _NotificationTile(
+                  leading: _IconBadge(
+                    icon: Icons.chat,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: 'Réponses à vos signalements',
+                  subtitle: switch (unreadErrors) {
+                    0 => 'Aucune nouvelle réponse',
+                    1 => '1 nouvelle réponse',
+                    _ => '$unreadErrors nouvelles réponses',
+                  },
+                  unread: unreadErrors > 0,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    onOpenErrorReports();
+                  },
                 ),
-              ),
-              title: announcement.title,
-              subtitle: announcement.message,
-              unread: unseenAnnouncementIds.contains(announcement.id),
-              onTap: () {
-                Navigator.of(context).pop();
-                onOpenAnnouncement(announcement);
-              },
-            ),
-        ],
+              for (final announcement in announcements)
+                _NotificationTile(
+                  leading: Transform.flip(
+                    flipX: announcement.mirrorImage,
+                    child: Image.asset(
+                      announcement.image,
+                      width: 110.w,
+                      height: 110.w,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                  title: announcement.title,
+                  subtitle: announcement.message,
+                  unread: unseenAnnouncementIds.contains(announcement.id),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    onOpenAnnouncement(announcement);
+                  },
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -89,7 +89,7 @@ class MyHomePageState extends State<MyHomePage>
     await Future.delayed(const Duration(seconds: 1));
     // Don't stack it on the anniversary popup
     if (!mounted || _notificationForcedDashboard) return;
-    await AnnouncementCenter.showNext(context, goToMapTab: goToMapTab);
+    await AnnouncementCenter.showNext(context, home: this);
   }
 
   @override
@@ -213,6 +213,11 @@ class MyHomePageState extends State<MyHomePage>
   /// Switches to the Map tab (e.g. from a Dashboard promo slide).
   void goToMapTab() {
     _tabController.animateTo(_mapTabIndex);
+  }
+
+  /// Switches to the Scan tab (e.g. from an announcement).
+  void goToScanTab() {
+    _tabController.animateTo(_scanTabIndex);
   }
 
   @override
