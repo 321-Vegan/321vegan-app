@@ -23,6 +23,7 @@ class ShopReview {
   final int shopId;
   final int userId;
   final String? userNickname;
+  final bool userIsPremium;
   final int rating;
   final String? comment;
   final String status;
@@ -33,6 +34,7 @@ class ShopReview {
     required this.shopId,
     required this.userId,
     this.userNickname,
+    this.userIsPremium = false,
     required this.rating,
     this.comment,
     required this.status,
@@ -45,6 +47,7 @@ class ShopReview {
       shopId: json['shop_id'] as int,
       userId: json['user_id'] as int,
       userNickname: json['user_nickname'] as String?,
+      userIsPremium: json['user_is_premium'] == true,
       rating: json['rating'] as int,
       comment: json['comment'] as String?,
       status: (json['status'] as String? ?? 'pending').toLowerCase(),

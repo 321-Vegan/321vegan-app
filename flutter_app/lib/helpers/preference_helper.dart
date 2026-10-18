@@ -336,6 +336,36 @@ class PreferencesHelper {
     return null;
   }
 
+  /// Persists a product's rating average/count onto its history entries,
+  /// like [cacheScanScores], so the history page shows ratings without one
+  /// API call per entry. Unlike scores a rating evolves, so every entry for
+  /// [barcode] is updated, not just the latest one.
+  static Future<void> cacheScanRating(
+    String barcode, {
+    required double average,
+    required int count,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final historyJson = prefs.getString('scan_history');
+    if (historyJson == null) return;
+
+    final history =
+        List<Map<String, dynamic>>.from(json.decode(historyJson));
+    var changed = false;
+    for (var i = 0; i < history.length; i++) {
+      if (history[i]['barcode'] != barcode) continue;
+      history[i] = {
+        ...history[i],
+        'rating_avg': average,
+        'rating_count': count,
+      };
+      changed = true;
+    }
+    if (changed) {
+      await prefs.setString('scan_history', json.encode(history));
+    }
+  }
+
   static Future<List<Map<String, dynamic>>> getScanHistory() async {
     final prefs = await SharedPreferences.getInstance();
     String? historyJson = prefs.getString('scan_history');

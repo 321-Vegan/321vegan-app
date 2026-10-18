@@ -5,11 +5,11 @@ import 'package:vegan_app/models/boycott_data.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
-import 'package:vegan_app/themes/app_shapes.dart';
-import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
+import 'package:vegan_app/widgets/scaner/product_rating_pill.dart';
 import 'package:vegan_app/widgets/scaner/product_scores_section.dart';
 import 'package:vegan_app/widgets/scaner/scan_result_card.dart';
+import 'package:vegan_app/widgets/shared/tag_chip.dart';
 
 class VeganProductInfoCard extends StatelessWidget {
   final ScanResult productInfo;
@@ -17,12 +17,26 @@ class VeganProductInfoCard extends StatelessWidget {
   final bool showScores;
   final VoidCallback? onScoresDisable;
 
+  /// Pause/resume the camera while the ratings sheet is open.
+  final VoidCallback? onScannerStop;
+  final VoidCallback? onScannerStart;
+
+  /// Product rating, provided by the scan page (null while unknown).
+  final double? ratingAverage;
+  final int? ratingCount;
+  final VoidCallback? onRatingSheetClosed;
+
   const VeganProductInfoCard({
     super.key,
     required this.productInfo,
     this.showBoycott = true,
     this.showScores = true,
     this.onScoresDisable,
+    this.onScannerStop,
+    this.onScannerStart,
+    this.ratingAverage,
+    this.ratingCount,
+    this.onRatingSheetClosed,
   });
 
   BoycottMatch? getBoycottMatch() {
@@ -40,7 +54,10 @@ class VeganProductInfoCard extends StatelessWidget {
     String? body,
     BoycottMatch? boycottMatch,
   }) {
-    return GestureDetector(
+    return TagChip(
+      label: label,
+      icon: Icons.thumb_down,
+      color: kSemanticError,
       onTap: () {
         showModalBottomSheet(
           context: context,
@@ -53,24 +70,6 @@ class VeganProductInfoCard extends StatelessWidget {
           ),
         );
       },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-        decoration: ShapeDecoration(
-          color: kSemanticError.withValues(alpha: 0.12),
-          shape: squircleBorder(radius: 30.r),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.thumb_down, color: kSemanticError, size: 36.sp),
-            SizedBox(width: 8.w),
-            Text(
-              label,
-              style: AppTextStyles.bodyMedium13.copyWith(color: kSemanticError),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -110,23 +109,41 @@ class VeganProductInfoCard extends StatelessWidget {
         onDisable: onScoresDisable,
       ),
       extraRows: [
-        if (isBoycotted && showBoycott)
-          _buildWarningChip(
-            context,
-            label: 'À éviter',
-            description:
-                "Les produits notés 'À éviter' sont des produits de marques qui ont des actions néfastes pour l'environnement, la santé, les droits des animaux ou les droits humains. Nous vous encourageons à boycotter ces marques pour soutenir des pratiques éthiques et responsables.",
-            boycottMatch: boycottMatch,
-          )
-        else if (productInfo.biodynamic)
-          _buildWarningChip(
-            context,
-            label: 'Biodynamie',
-            body:
-                "La biodynamie est une méthode agricole qui utilise des préparations d'origine animale, telles que des cornes de vache ou des organes d'animaux, dans ses pratiques de culture. Cette approche est issue de l'anthroposophie, un courant ésotérique aux dérives parfois considérées comme sectaires.",
-            description:
-                "En raison de l'utilisation d'éléments animaux et de son ancrage idéologique, nous ne considérons pas les produits issus de la biodynamie comme compatibles avec les principes du véganisme.",
-          ),
+        Wrap(
+          spacing: 16.w,
+          runSpacing: 12.h,
+          children: [
+            if (isBoycotted && showBoycott)
+              _buildWarningChip(
+                context,
+                label: 'À éviter',
+                description:
+                    "Les produits notés 'À éviter' sont des produits de marques qui ont des actions néfastes pour l'environnement, la santé, les droits des animaux ou les droits humains. Nous vous encourageons à boycotter ces marques pour soutenir des pratiques éthiques et responsables.",
+                boycottMatch: boycottMatch,
+              )
+            else if (productInfo.biodynamic)
+              _buildWarningChip(
+                context,
+                label: 'Biodynamie',
+                body:
+                    "La biodynamie est une méthode agricole qui utilise des préparations d'origine animale, telles que des cornes de vache ou des organes d'animaux, dans ses pratiques de culture. Cette approche est issue de l'anthroposophie, un courant ésotérique aux dérives parfois considérées comme sectaires.",
+                description:
+                    "En raison de l'utilisation d'éléments animaux et de son ancrage idéologique, nous ne considérons pas les produits issus de la biodynamie comme compatibles avec les principes du véganisme.",
+              ),
+            // Biodynamic products aren't considered vegan: not rated.
+            if (!productInfo.biodynamic)
+              ProductRatingPill(
+                barcode: productInfo.code,
+                productName: productInfo.name,
+                brandName: productInfo.brand,
+                average: ratingAverage,
+                count: ratingCount,
+                onScannerStop: onScannerStop,
+                onScannerStart: onScannerStart,
+                onSheetClosed: onRatingSheetClosed,
+              ),
+          ],
+        ),
       ],
     );
   }

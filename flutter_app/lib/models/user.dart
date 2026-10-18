@@ -10,6 +10,7 @@ class User {
   final int? nbProductsSent;
   final int? supporterLevel;
   final int? nbErrorReports;
+  final int nbProductRatings;
   final int? nbProductsModified;
   final int? nbCheckings;
   final int scanCount;
@@ -29,6 +30,7 @@ class User {
     required this.nbProductsSent,
     required this.supporterLevel,
     required this.nbErrorReports,
+    this.nbProductRatings = 0,
     this.nbProductsModified,
     this.nbCheckings,
     this.scanCount = 0,
@@ -52,6 +54,7 @@ class User {
       nbProductsSent: json['nb_products_sent'] ?? 0,
       supporterLevel: json['supporter'] ?? 0,
       nbErrorReports: json['nb_error_reports'] ?? 0,
+      nbProductRatings: json['nb_product_reviews'] ?? 0,
       nbProductsModified: json['nb_products_modified'] ?? 0,
       nbCheckings: json['nb_checkings'] ?? 0,
       scanCount: json['scan_count'] ?? 0,

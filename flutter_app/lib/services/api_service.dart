@@ -11,6 +11,7 @@ import '../models/b12_intake.dart';
 import '../models/error_report.dart';
 import '../models/product_of_interest.dart';
 import '../models/product_category.dart';
+import '../models/product_rating.dart';
 import '../models/validator_product.dart';
 import '../models/subscription.dart';
 import '../models/shops/shop.dart';
@@ -876,6 +877,186 @@ class ApiService {
           response.statusCode! >= 200 &&
           response.statusCode! < 300) {
         return ShopReview.fromJson(response.data as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ── Product ratings ──────────────────────────────────────────────────────
+
+  /// Reads are open to logged-out users through the API key; the user's
+  /// token takes precedence server-side when there is one.
+  static Map<String, String> get _ratingHeaders {
+    final accessToken = AuthService.accessToken;
+    return {
+      'x-api-key': _apiKey,
+      if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+    };
+  }
+
+  static bool _isSuccess(dio_pkg.Response response) =>
+      response.statusCode != null &&
+      response.statusCode! >= 200 &&
+      response.statusCode! < 300 &&
+      response.data != null;
+
+  /// Approved ratings summary of a product (null on failure or unknown EAN).
+  static Future<ProductRatingSummary?> getProductRatingSummary({
+    required String ean,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        '/product-reviews/products/ean/$ean/summary',
+        options: dio_pkg.Options(headers: _ratingHeaders),
+      );
+      if (_isSuccess(response)) {
+        return ProductRatingSummary.fromJson(
+            response.data as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Paginated approved ratings of a product, most recent first, optionally
+  /// restricted to one [rating] value.
+  static Future<ProductRatingPaginated?> getProductRatings({
+    required String ean,
+    int page = 1,
+    int pageSize = 10,
+    int? rating,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        '/product-reviews/search',
+        queryParameters: {
+          'product___ean': ean,
+          'status': 'APPROVED',
+          if (rating != null) 'rating': rating,
+          'page': page,
+          'page_size': pageSize,
+        },
+        options: dio_pkg.Options(headers: _ratingHeaders),
+      );
+      if (_isSuccess(response)) {
+        return ProductRatingPaginated.fromJson(
+            response.data as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// The current user's rating of a product, whatever its status (null if
+  /// none or logged out).
+  static Future<ProductRating?> getMyProductRating({
+    required String ean,
+  }) async {
+    final userId = AuthService.currentUser?.id;
+    if (AuthService.accessToken == null || userId == null) return null;
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        '/product-reviews/search',
+        queryParameters: {
+          'product___ean': ean,
+          'user_id': userId,
+          'page_size': 1,
+        },
+        options: dio_pkg.Options(headers: _ratingHeaders),
+      );
+      if (_isSuccess(response)) {
+        final paginated = ProductRatingPaginated.fromJson(
+            response.data as Map<String, dynamic>);
+        return paginated.items.isNotEmpty ? paginated.items.first : null;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// All ratings posted by the current user, pending ones included.
+  static Future<ProductRatingPaginated?> getMyProductRatings({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final userId = AuthService.currentUser?.id;
+    if (AuthService.accessToken == null || userId == null) return null;
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        '/product-reviews/search',
+        queryParameters: {
+          'user_id': userId,
+          'page': page,
+          'page_size': pageSize,
+        },
+        options: dio_pkg.Options(headers: _ratingHeaders),
+      );
+      if (_isSuccess(response)) {
+        return ProductRatingPaginated.fromJson(
+            response.data as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Rates a product (1 to 5). Null on failure.
+  static Future<ProductRating?> postProductRating({
+    required String ean,
+    required int rating,
+    String? comment,
+  }) async {
+    if (AuthService.accessToken == null) return null;
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.post(
+        '/product-reviews/',
+        data: {
+          'ean': ean,
+          'rating': rating,
+          if (comment != null && comment.isNotEmpty) 'comment': comment,
+        },
+        options: dio_pkg.Options(headers: _ratingHeaders),
+      );
+      if (_isSuccess(response)) {
+        return ProductRating.fromJson(response.data as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Updates the current user's rating. A changed comment goes back to
+  /// moderation server-side.
+  static Future<ProductRating?> updateProductRating({
+    required int ratingId,
+    required int rating,
+    String? comment,
+  }) async {
+    if (AuthService.accessToken == null) return null;
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.put(
+        '/product-reviews/$ratingId',
+        data: {
+          'rating': rating,
+          'comment': comment,
+        },
+        options: dio_pkg.Options(headers: _ratingHeaders),
+      );
+      if (_isSuccess(response)) {
+        return ProductRating.fromJson(response.data as Map<String, dynamic>);
       }
       return null;
     } catch (e) {

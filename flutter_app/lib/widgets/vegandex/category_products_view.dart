@@ -17,12 +17,16 @@ class CategoryProductsView extends StatelessWidget {
   final Map<String, dynamic> scannedProducts;
   final VoidCallback onBack;
 
+  /// Tapping a product card (opens its ratings).
+  final ValueChanged<ProductOfInterest>? onProductTap;
+
   const CategoryProductsView({
     super.key,
     required this.category,
     required this.allProducts,
     required this.scannedProducts,
     required this.onBack,
+    this.onProductTap,
   });
 
   List<ProductOfInterest> _getProductsForCategory() {
@@ -135,83 +139,89 @@ class CategoryProductsView extends StatelessWidget {
 
   Widget _buildProductCard(
       ProductOfInterest product, bool isScanned, String? baseUrl) {
-    return Container(
-      padding: EdgeInsets.all(24.w),
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: squircleBorder(radius: 24.r, side: const BorderSide(color: kBorderDefault)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AspectRatio(
-            aspectRatio: 1,
-            child: Stack(
-              children: [
-                ClipSmoothRect(
-                  radius: squircleRadius(16.r),
-                  child: ColorFiltered(
-                    colorFilter: isScanned
-                        ? const ColorFilter.mode(
-                            Colors.transparent,
-                            BlendMode.multiply,
-                          )
-                        : const ColorFilter.mode(
-                            Colors.grey,
-                            BlendMode.saturation,
+    final shape = squircleBorder(
+        radius: 24.r, side: const BorderSide(color: kBorderDefault));
+    return Material(
+      color: Colors.white,
+      shape: shape,
+      child: InkWell(
+        onTap: onProductTap == null ? null : () => onProductTap!(product),
+        customBorder: shape,
+        child: Padding(
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AspectRatio(
+                aspectRatio: 1,
+                child: Stack(
+                  children: [
+                    ClipSmoothRect(
+                      radius: squircleRadius(16.r),
+                      child: ColorFiltered(
+                        colorFilter: isScanned
+                            ? const ColorFilter.mode(
+                                Colors.transparent,
+                                BlendMode.multiply,
+                              )
+                            : const ColorFilter.mode(
+                                Colors.grey,
+                                BlendMode.saturation,
+                              ),
+                        child: CachedNetworkImage(
+                          imageUrl: '$baseUrl/${product.image}',
+                          fit: BoxFit.contain,
+                          placeholder: (context, url) => Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.grey[400],
+                            ),
                           ),
-                    child: CachedNetworkImage(
-                      imageUrl: '$baseUrl/${product.image}',
-                      fit: BoxFit.contain,
-                      placeholder: (context, url) => Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.grey[400],
+                          errorWidget: (context, url, error) {
+                            return Container(
+                              color: Colors.grey[100],
+                              child: Icon(
+                                Icons.image_not_supported,
+                                size: 48.sp,
+                                color: Colors.grey[400],
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      errorWidget: (context, url, error) {
-                        return Container(
-                          color: Colors.grey[100],
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 48.sp,
-                            color: Colors.grey[400],
-                          ),
-                        );
-                      },
                     ),
-                  ),
+                    if (isScanned)
+                      Positioned(
+                        top: 6.w,
+                        right: 6.w,
+                        child: Container(
+                          padding: EdgeInsets.all(6.w),
+                          decoration:
+                              const BoxDecoration(color: kSemanticSuccess, shape: BoxShape.circle),
+                          child: Icon(Icons.check, size: 64.sp, color: Colors.white),
+                        ),
+                      ),
+                  ],
                 ),
-                if (isScanned)
-                  Positioned(
-                    top: 6.w,
-                    right: 6.w,
-                    child: Container(
-                      padding: EdgeInsets.all(6.w),
-                      decoration:
-                          const BoxDecoration(color: kSemanticSuccess, shape: BoxShape.circle),
-                      child: Icon(Icons.check, size: 64.sp, color: Colors.white),
-                    ),
-                  ),
-              ],
-            ),
+              ),
+              SizedBox(height: 12.h),
+              Text(
+                product.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMedium15.copyWith(height: 1.1),
+              ),
+              Text(
+                product.brandName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[500]),
+              ),
+            ],
           ),
-          SizedBox(height: 12.h),
-          Text(
-            product.name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodyMedium15.copyWith(height: 1.1),
-          ),
-          Text(
-            product.brandName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[500]),
-          ),
-        ],
+        ),
       ),
     );
   }

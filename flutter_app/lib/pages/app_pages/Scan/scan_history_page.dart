@@ -9,12 +9,14 @@ import 'package:vegan_app/models/product_scores.dart';
 import 'package:vegan_app/models/scan_result.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
+import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/notification_service.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/scaner/info_modal.dart';
+import 'package:vegan_app/widgets/scaner/product_rating_pill.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
@@ -166,6 +168,29 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
         ecoscoreGrade: item['ecoscore'] as String?,
       );
 
+  /// Rating cached on the history entry at scan time (see
+  /// [PreferencesHelper.cacheScanRating]); null for entries scanned before.
+  ({double average, int count})? _cachedRating(Map<String, dynamic> item) {
+    final average = item['rating_avg'] as num?;
+    final count = item['rating_count'] as int?;
+    if (average == null || count == null) return null;
+    return (average: average.toDouble(), count: count);
+  }
+
+  /// The user may have rated from the sheet: refresh this one product's
+  /// rating (a single call, after a user action) and re-read the history.
+  Future<void> _refreshRating(String barcode) async {
+    final summary = await ApiService.getProductRatingSummary(ean: barcode);
+    if (summary == null) return;
+    await PreferencesHelper.cacheScanRating(
+      barcode,
+      average: summary.ratingAvg,
+      count: summary.ratingCount,
+    );
+    final history = await PreferencesHelper.getScanHistory();
+    if (mounted) setState(() => _history = history);
+  }
+
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
@@ -312,6 +337,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                     barcode: barcode,
                     product: product,
                     scores: _cachedScores(item),
+                    rating: _cachedRating(item),
                   );
                 },
               ),
@@ -454,6 +480,7 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
     required String barcode,
     required ScanResult product,
     required ProductScores scores,
+    ({double average, int count})? rating,
   }) {
     final name = product.name.isNotEmpty ? product.name : product.code;
     final brand = product.brand;
@@ -514,6 +541,20 @@ class _ScanHistoryPageState extends State<ScanHistoryPage> {
                         ),
                       ],
                     ),
+                    // Biodynamic products aren't considered vegan: not rated.
+                    if (product.status == ScanStatus.vegan &&
+                        !product.biodynamic) ...[
+                      SizedBox(height: 16.h),
+                      ProductRatingPill(
+                        barcode: barcode,
+                        productName: name,
+                        brandName: brand,
+                        average: rating?.average,
+                        count: rating?.count,
+                        hideWhenUnknown: false,
+                        onSheetClosed: () => _refreshRating(barcode),
+                      ),
+                    ],
                   ],
                 ),
               ),

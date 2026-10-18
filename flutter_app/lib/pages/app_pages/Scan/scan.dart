@@ -16,6 +16,7 @@ import 'package:vegan_app/pages/app_pages/Scan/product_info_helper.dart';
 import 'package:vegan_app/pages/app_pages/Scan/product_search_page.dart';
 import 'package:vegan_app/models/product_of_interest.dart';
 import 'package:vegan_app/models/scan_result.dart';
+import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/offline_scan_service.dart';
 import 'package:vegan_app/services/open_food_facts_service.dart';
@@ -60,6 +61,10 @@ class ScanPageState extends State<ScanPage>
     ],
   );
   ScanResult? productInfo;
+
+  /// Approved ratings of the current vegan product, fetched once per scan
+  /// (see [_loadProductRating]); null while unknown.
+  ({double average, int count})? _productRating;
   List<Map<String, dynamic>> scanHistory = [];
   String? _lastScannedBarcode = '';
   late ConfettiController _confettiController;
@@ -650,6 +655,10 @@ class ScanPageState extends State<ScanPage>
       // Fetched once now and cached on the history entry, so the history
       // page never has to hit OpenFoodFacts again to show past scans.
       unawaited(_cacheProductScores(barcode));
+      // Biodynamic products aren't considered vegan: not rated.
+      if (product.status == ScanStatus.vegan && !product.biodynamic) {
+        unawaited(_loadProductRating(barcode));
+      }
     }
 
     if ((product.status == ScanStatus.vegan ||
@@ -694,6 +703,18 @@ class ScanPageState extends State<ScanPage>
     controller.start();
   }
 
+  /// Camera pause/resume around a sheet opened from the scan result
+  /// (error report, product ratings).
+  void _pauseScannerForModal() {
+    _scannerPausedByModal = true;
+    controller.stop();
+  }
+
+  void _resumeScannerAfterModal() {
+    _scannerPausedByModal = false;
+    controller.start();
+  }
+
   Future<void> _showMembershipPromptAfterDelay() async {
     // Small delay so the scan result shows first
     await Future.delayed(const Duration(seconds: 3));
@@ -720,6 +741,31 @@ class ScanPageState extends State<ScanPage>
     final cached = await PreferencesHelper.getCachedScores(barcode);
     final scores = cached ?? await OpenFoodFactsService.fetchScores(barcode);
     await PreferencesHelper.cacheScanScores(barcode, scores);
+  }
+
+  /// Fetches the product's rating summary for the result card and caches it
+  /// on the history entries (like the scores), so the history page doesn't
+  /// fetch it again. Also called after the ratings sheet closes, since the
+  /// user may have rated. Runs after [PreferencesHelper.addBarcodeToHistory]
+  /// so there is an entry to cache it on.
+  /// Binds [barcode] now: the result may be gone when the sheet closes.
+  VoidCallback _reloadProductRatingFor(String barcode) =>
+      () => _loadProductRating(barcode);
+
+  Future<void> _loadProductRating(String barcode) async {
+    final summary =
+        await ApiService.getProductRatingSummary(ean: barcode);
+    if (summary == null) return;
+    await PreferencesHelper.cacheScanRating(
+      barcode,
+      average: summary.ratingAvg,
+      count: summary.ratingCount,
+    );
+    if (!mounted || barcode != _lastScannedBarcode) return;
+    setState(() {
+      _productRating =
+          (average: summary.ratingAvg, count: summary.ratingCount);
+    });
   }
 
   void _simulateScan(String rawValue) {
@@ -764,6 +810,7 @@ class ScanPageState extends State<ScanPage>
 
       setState(() {
         productInfo = null;
+        _productRating = null;
       });
       _checkVeganStatusOffline(barcodeValue.toString());
     }
@@ -1087,6 +1134,12 @@ class ScanPageState extends State<ScanPage>
                     showBoycott: _showBoycott,
                     showScores: _showScores,
                     onScoresDisable: () => _setShowScoresPref(false),
+                    onScannerStop: _pauseScannerForModal,
+                    onScannerStart: _resumeScannerAfterModal,
+                    ratingAverage: _productRating?.average,
+                    ratingCount: _productRating?.count,
+                    onRatingSheetClosed:
+                        _reloadProductRatingFor(productInfo!.code),
                   ),
                 ScanStatus.pending =>
                   PendingProductInfoCard(productInfo: productInfo!),
@@ -1114,14 +1167,8 @@ class ScanPageState extends State<ScanPage>
               child: Center(
                 child: ReportErrorButton(
                   barcode: productInfo!.code,
-                  onScannerStop: () {
-                    _scannerPausedByModal = true;
-                    controller.stop();
-                  },
-                  onScannerStart: () {
-                    _scannerPausedByModal = false;
-                    controller.start();
-                  },
+                  onScannerStop: _pauseScannerForModal,
+                  onScannerStart: _resumeScannerAfterModal,
                 ),
               ),
             ),

@@ -12,6 +12,7 @@ import '../../../services/products_of_interest_cache.dart';
 import '../../../themes/app_colors.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/shared/app_background.dart';
+import '../../../widgets/reviews/product_ratings_sheet.dart';
 import '../../../widgets/shared/empty_state_view.dart';
 import '../../../widgets/vegandex/category_list_view.dart';
 import '../../../widgets/vegandex/category_products_view.dart';
@@ -184,6 +185,15 @@ class _VegandexPageState extends State<VegandexPage> {
     });
   }
 
+  void _openProductRatings(ProductOfInterest product) {
+    showProductRatingsSheet(
+      context,
+      ean: product.ean,
+      productName: product.name,
+      brandName: product.brandName,
+    );
+  }
+
   // Same gate as Dashboard's _openErrorReports: push SettingsPage (which
   // shows the login form when logged out) instead of just switching tabs.
   // Refresh on return since the product list is scoped to scanned EANs.
@@ -292,6 +302,7 @@ class _VegandexPageState extends State<VegandexPage> {
               allProducts: _products,
               scannedProducts: _scannedProducts,
               onBack: _onBackToCategories,
+              onProductTap: _openProductRatings,
             ),
           );
   }

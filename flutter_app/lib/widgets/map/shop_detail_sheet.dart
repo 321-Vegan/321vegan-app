@@ -15,6 +15,13 @@ import 'package:vegan_app/services/products_of_interest_cache.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
+import 'package:vegan_app/models/review_status.dart';
+import 'package:vegan_app/themes/app_spacing.dart';
+import 'package:vegan_app/widgets/reviews/rating_status_chip.dart';
+import 'package:vegan_app/widgets/reviews/review_card.dart';
+import 'package:vegan_app/widgets/reviews/review_form_sheet.dart';
+import 'package:vegan_app/widgets/reviews/reviews_empty_state.dart';
+import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
 class ShopDetailSheet extends StatefulWidget {
@@ -210,135 +217,27 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
   }
 
   Future<void> _showReviewDialog({ShopReview? existing}) async {
-    int selectedRating = existing?.rating ?? 0;
-    final commentController =
-        TextEditingController(text: existing?.comment ?? '');
-
-    final confirmed = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return StatefulBuilder(builder: (ctx, setSheetState) {
-          return Container(
-            decoration: ShapeDecoration(
-              color: Theme.of(ctx).scaffoldBackgroundColor,
-              shape: squircleBorderOnly(topLeft: 20.r, topRight: 20.r),
-            ),
-            padding: EdgeInsets.only(
-              left: 24.w,
-              right: 24.w,
-              top: 12.h,
-              bottom: MediaQuery.of(ctx).viewInsets.bottom +
-                  MediaQuery.of(ctx).padding.bottom +
-                  64.h,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Handle bar
-                Center(
-                  child: Container(
-                    width: 40.w,
-                    height: 4.h,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      borderRadius: BorderRadius.circular(2.r),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20.h),
-                Text(
-                  existing == null ? 'Laisser un avis' : 'Modifier votre avis',
-                  style:
-                      TextStyle(fontSize: 52.sp, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 20.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (i) {
-                    return GestureDetector(
-                      onTap: () => setSheetState(() => selectedRating = i + 1),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4.w),
-                        child: Icon(
-                          i < selectedRating ? Icons.star : Icons.star_border,
-                          size: 80.r,
-                          color: Colors.amber,
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-                SizedBox(height: 20.h),
-                TextFormField(
-                  controller: commentController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Dites-nous ce que vous pensez !',
-                    border: const OutlineInputBorder(),
-                    labelStyle: TextStyle(fontSize: 44.sp),
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                  style: TextStyle(fontSize: 44.sp),
-                ),
-                SizedBox(height: 24.h),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 12.h),
-                          shape: squircleBorder(radius: 12.r),
-                        ),
-                        child:
-                            Text('Annuler', style: TextStyle(fontSize: 44.sp)),
-                      ),
-                    ),
-                    SizedBox(width: 12.w),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: selectedRating == 0
-                            ? null
-                            : () => Navigator.pop(ctx, true),
-                        style: ElevatedButton.styleFrom(
-                          elevation: 0,
-                          padding: EdgeInsets.symmetric(vertical: 12.h),
-                          shape: squircleBorder(radius: 12.r),
-                        ),
-                        child:
-                            Text('Envoyer', style: TextStyle(fontSize: 44.sp)),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        });
-      },
+    final entry = await showReviewFormSheet(
+      context,
+      title: existing == null ? 'Laisser un avis' : 'Modifier votre avis',
+      subtitle: widget.shop.name,
+      initialRating: existing?.rating,
+      initialComment: existing?.comment,
     );
-
-    if (confirmed != true) return;
+    if (entry == null) return;
 
     ShopReview? result;
     if (existing == null) {
       result = await ApiService.postShopReview(
         shopId: widget.shop.id,
-        rating: selectedRating,
-        comment: commentController.text.trim().isEmpty
-            ? null
-            : commentController.text.trim(),
+        rating: entry.rating,
+        comment: entry.comment,
       );
     } else {
       result = await ApiService.updateShopReview(
         reviewId: existing.id,
-        rating: selectedRating,
-        comment: commentController.text.trim().isEmpty
-            ? null
-            : commentController.text.trim(),
+        rating: entry.rating,
+        comment: entry.comment,
       );
     }
 
@@ -843,234 +742,65 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
   }
 
   Widget _buildEmptyReviews() {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
-      child: Column(
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Container(
-                padding: EdgeInsets.all(28.r),
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.chat_bubble_outline,
-                  size: 110.r,
-                  color: primary,
-                ),
-              ),
-              Positioned(
-                right: 18.w,
-                top: 14.h,
-                child: Container(
-                  padding: EdgeInsets.all(8.r),
-                  decoration: BoxDecoration(
-                    color: Colors.amber,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Icon(Icons.star, size: 40.r, color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 18.h),
-          Text(
-            'Aucun avis pour le moment',
-            style: TextStyle(
-              fontSize: 50.sp,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Soyez le premier à mettre un avis 🌱',
-            style: TextStyle(fontSize: 44.sp, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    // _reviews excludes the user's own review: if they left one, it's not
+    // "no review" but "no other review".
+    if (_myReview != null) {
+      return const ReviewsEmptyState(
+        title: 'Pas d\'autre avis pour le moment',
+        subtitle: 'Les avis des autres utilisateur·ices apparaîtront ici.',
+      );
+    }
+    return const ReviewsEmptyState(
+      subtitle: 'Soyez le premier à mettre un avis 🌱',
     );
   }
 
   Widget _buildMyReviewSection() {
+    final primary = Theme.of(context).colorScheme.primary;
+
     if (!_isLoggedIn) {
-      return Container(
-        padding: EdgeInsets.all(12.r),
-        decoration: ShapeDecoration(
-          color: Colors.grey[100],
-          shape: squircleBorder(radius: 12.r),
-        ),
-        child: Text(
-          'Connectez-vous pour laisser un avis.',
-          style: TextStyle(fontSize: 46.sp, color: Colors.grey[600]),
-          textAlign: TextAlign.center,
-        ),
+      return Text(
+        'Connectez-vous pour laisser un avis.',
+        style: AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[600]),
+        textAlign: TextAlign.center,
       );
     }
 
-    if (_myReview != null) {
-      return Container(
-        padding: EdgeInsets.all(12.r),
-        decoration: ShapeDecoration(
-          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.06),
-          shape: squircleBorder(
-            radius: 12.r,
-            side: BorderSide(
-              color:
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-            ),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Votre avis',
-                  style: TextStyle(
-                    fontSize: 48.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => _showReviewDialog(existing: _myReview),
-                  child: Icon(Icons.edit,
-                      size: 48.r, color: Theme.of(context).colorScheme.primary),
-                ),
-              ],
-            ),
-            SizedBox(height: 4.h),
-            _buildStars(_myReview!.rating),
-            if (_myReview!.comment != null &&
-                _myReview!.comment!.isNotEmpty) ...[
-              SizedBox(height: 6.h),
-              Text(
-                _myReview!.comment!,
-                style: TextStyle(fontSize: 44.sp, color: Colors.grey[700]),
-              ),
-            ],
-            SizedBox(height: 4.h),
-            Text(
-              _myReview!.status == 'approved'
-                  ? 'Validé'
-                  : 'En attente de validation',
-              style: TextStyle(
-                fontSize: 38.sp,
-                fontStyle: FontStyle.italic,
-                color: _myReview!.status == 'approved'
-                    ? kSemanticSuccess
-                    : Colors.orange,
-              ),
-            ),
-          ],
-        ),
+    final mine = _myReview;
+    if (mine != null) {
+      return ReviewCard(
+        nickname: mine.userNickname ?? AuthService.currentUser?.nickname,
+        isPremium: mine.userIsPremium,
+        rating: mine.rating,
+        comment: mine.comment,
+        date: mine.createdAt,
+        highlighted: true,
+        badge: RatingStatusChip(status: ReviewStatus.fromApi(mine.status)),
+        trailing: Icon(Icons.edit_outlined, size: 54.sp, color: primary),
+        onTap: () => _showReviewDialog(existing: mine),
       );
     }
 
-    return Align(
-      alignment: Alignment.center,
-      child: GestureDetector(
-        onTap: () => _showReviewDialog(),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-          decoration: ShapeDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            shape: squircleBorder(radius: 20.r),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.rate_review,
-                color: Colors.white,
-                size: 60.sp,
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                'Laisser un avis',
-                style: TextStyle(
-                  fontSize: 45.sp,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
+    return Center(
+      child: AppButton(
+        label: 'Laisser un avis',
+        icon: Icons.rate_review,
+        backgroundColor: primary,
+        onPressed: () => _showReviewDialog(),
       ),
     );
   }
 
   Widget _buildReviewCard(ShopReview review) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10.h),
-      padding: EdgeInsets.all(12.r),
-      decoration: ShapeDecoration(
-        color: Colors.white,
-        shape: squircleBorder(
-          radius: 12.r,
-          side: BorderSide(color: Colors.grey[200]!),
-        ),
+    return Padding(
+      padding: EdgeInsets.only(bottom: AppSpacing.item),
+      child: ReviewCard(
+        nickname: review.userNickname,
+        isPremium: review.userIsPremium,
+        rating: review.rating,
+        comment: review.comment,
+        date: review.createdAt,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                review.userNickname ?? 'Anonyme',
-                style: TextStyle(
-                  fontSize: 46.sp,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              if (review.createdAt != null)
-                Text(
-                  _formatDate(review.createdAt!),
-                  style: TextStyle(fontSize: 38.sp, color: Colors.grey[500]),
-                ),
-            ],
-          ),
-          SizedBox(height: 4.h),
-          _buildStars(review.rating),
-          if (review.comment != null && review.comment!.isNotEmpty) ...[
-            SizedBox(height: 6.h),
-            Text(
-              review.comment!,
-              style: TextStyle(fontSize: 44.sp, color: Colors.grey[700]),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStars(int rating) {
-    return Row(
-      children: List.generate(5, (i) {
-        return Icon(
-          i < rating ? Icons.star : Icons.star_border,
-          size: 48.r,
-          color: Colors.amber,
-        );
-      }),
     );
   }
 
@@ -1098,10 +828,6 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
         ),
       ],
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 
   // ── Main build ────────────────────────────────────────────────────────────
