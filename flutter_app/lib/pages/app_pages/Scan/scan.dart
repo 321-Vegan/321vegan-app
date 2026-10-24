@@ -573,7 +573,8 @@ class ScanPageState extends State<ScanPage>
   /// Pushes the unified product search page (Additifs / Cosmétiques /
   /// Code-barres). The "Code-barres" tab pops with the chosen barcode instead
   /// of showing its own result — feeding it into [_simulateScan] runs it
-  /// through the same pipeline as a camera scan.
+  /// through the same pipeline as a camera scan, minus the Vegandex /
+  /// scan-event step (see [_handleBarcode]).
   void _openProductSearch() {
     controller.stop();
     setState(() {
@@ -585,7 +586,7 @@ class ScanPageState extends State<ScanPage>
     ).then((barcode) {
       controller.start();
       if (barcode != null && barcode.isNotEmpty) {
-        _simulateScan(barcode);
+        _simulateScan(barcode, manualEntry: true);
       }
     });
   }
@@ -768,7 +769,7 @@ class ScanPageState extends State<ScanPage>
     });
   }
 
-  void _simulateScan(String rawValue) {
+  void _simulateScan(String rawValue, {bool manualEntry = false}) {
     var barcodeValue = rawValue.trim();
     if (barcodeValue.length == 12) {
       barcodeValue = '0$barcodeValue';
@@ -777,12 +778,16 @@ class ScanPageState extends State<ScanPage>
     if (_lastScannedBarcode == barcodeValue) {
       _lastScannedBarcode = ''; // allow re-scanning same barcode in debug
     }
-    _handleBarcode(BarcodeCapture(
-      barcodes: [Barcode(rawValue: barcodeValue)],
-    ));
+    _handleBarcode(
+      BarcodeCapture(barcodes: [Barcode(rawValue: barcodeValue)]),
+      manualEntry: manualEntry,
+    );
   }
 
-  void _handleBarcode(BarcodeCapture event) {
+  /// [manualEntry]: the barcode was typed, not scanned. It then doesn't
+  /// count as finding the product: no Vegandex discovery, and no scan event
+  /// (which would place the product in the nearby shop on the map).
+  void _handleBarcode(BarcodeCapture event, {bool manualEntry = false}) {
     final barcode = event.barcodes.first;
     var barcodeValue = barcode.rawValue;
     // Workaround: EAN-13 barcodes starting with 0 sometimes get scanned as
@@ -806,7 +811,7 @@ class ScanPageState extends State<ScanPage>
       _checkAccountPrompt();
 
       // Fire-and-forget: send scan event if it's a product of interest.
-      _sendScanEventIfInteresting(barcodeValue.toString());
+      if (!manualEntry) _sendScanEventIfInteresting(barcodeValue.toString());
 
       setState(() {
         productInfo = null;
