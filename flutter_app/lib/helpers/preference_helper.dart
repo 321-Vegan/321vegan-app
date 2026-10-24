@@ -115,6 +115,18 @@ class PreferencesHelper {
     return prefs.getBool('open_on_scan_page') ?? false;
   }
 
+  /// Layer shown on the map ("shops" or "restaurants"), restored on the
+  /// next visit.
+  static Future<void> setLastMapLayerPref(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_map_layer', value);
+  }
+
+  static Future<String?> getLastMapLayerPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('last_map_layer');
+  }
+
   static Future<void> setLastSearchCategoryPref(String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('last_search_category', value);

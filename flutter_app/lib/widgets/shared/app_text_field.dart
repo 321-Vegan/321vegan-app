@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
@@ -19,6 +20,10 @@ class AppTextField extends StatefulWidget {
   final int? maxLength;
   final TextCapitalization textCapitalization;
   final TextInputType? keyboardType;
+
+  /// Restricts what can be typed or pasted (e.g. digits only): the
+  /// [keyboardType] is only a hint to the keyboard.
+  final List<TextInputFormatter>? inputFormatters;
   final int minLines;
   final int maxLines;
   final bool obscureText;
@@ -44,6 +49,7 @@ class AppTextField extends StatefulWidget {
     this.maxLength,
     this.textCapitalization = TextCapitalization.none,
     this.keyboardType,
+    this.inputFormatters,
     this.minLines = 1,
     this.maxLines = 1,
     this.obscureText = false,
@@ -115,6 +121,7 @@ class _AppTextFieldState extends State<AppTextField> {
                 maxLength: widget.maxLength,
                 textCapitalization: widget.textCapitalization,
                 keyboardType: widget.keyboardType,
+                inputFormatters: widget.inputFormatters,
                 minLines: widget.minLines,
                 maxLines: widget.obscureText ? 1 : widget.maxLines,
                 obscureText: widget.obscureText,

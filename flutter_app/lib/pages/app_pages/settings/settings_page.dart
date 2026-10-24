@@ -38,7 +38,7 @@ import '../Scan/scan_history_page.dart';
 import '../Scan/sent_products_page.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import '../Profile/error_reports_page.dart';
-import '../Profile/my_product_ratings_page.dart';
+import '../Profile/my_contributions_page.dart';
 import '../Profile/subscription_page.dart';
 
 /// Full-screen "Paramètres", reached from the Dashboard's gear icon.
@@ -317,10 +317,10 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _openMyProductRatings() async {
+  Future<void> _openMyContributions() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const MyProductRatingsPage()),
+      MaterialPageRoute(builder: (_) => const MyContributionsPage()),
     );
     // Ratings may have been added or edited from the list.
     if (mounted) _loadUser();
@@ -579,10 +579,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     : null,
                 onTap: _openErrorReports,
               ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.section),
+          SettingsSection(
+            title: 'Contributions',
+            children: [
               SettingsRowTile(
-                label: 'Notes',
-                value: '${_user?.nbProductRatings ?? 0}',
-                onTap: _openMyProductRatings,
+                label: 'Mes contributions',
+                onTap: _openMyContributions,
               ),
             ],
           ),

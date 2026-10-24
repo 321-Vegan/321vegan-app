@@ -48,7 +48,8 @@ class ReviewerName extends StatelessWidget {
 /// [header] goes above the author row (e.g. the rated product on the
 /// "Mes notes" page), [badge] next to the date (e.g. moderation status),
 /// [trailing] at the end of the author row (e.g. an edit button; hidden
-/// with the author row when [showAuthor] is false).
+/// with the author row when [showAuthor] is false), [footer] under the
+/// comment (e.g. a restaurant review's detailed ratings and photos).
 class ReviewCard extends StatelessWidget {
   final String? nickname;
   final bool isPremium;
@@ -58,6 +59,7 @@ class ReviewCard extends StatelessWidget {
   final Widget? header;
   final Widget? badge;
   final Widget? trailing;
+  final Widget? footer;
   final VoidCallback? onTap;
 
   /// Highlights the card (current user's own review).
@@ -76,6 +78,7 @@ class ReviewCard extends StatelessWidget {
     this.header,
     this.badge,
     this.trailing,
+    this.footer,
     this.onTap,
     this.highlighted = false,
     this.showAuthor = true,
@@ -149,6 +152,10 @@ class ReviewCard extends StatelessWidget {
                   comment!,
                   style: AppTextStyles.bodyRegular15.copyWith(height: 1.3),
                 ),
+              ],
+              if (footer != null) ...[
+                SizedBox(height: 16.h),
+                footer!,
               ],
             ],
           ),

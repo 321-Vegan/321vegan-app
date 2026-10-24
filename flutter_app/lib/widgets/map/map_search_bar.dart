@@ -176,7 +176,7 @@ class MapSearchBarState extends State<MapSearchBar> {
                   decoration: InputDecoration(
                     isDense: true,
                     border: InputBorder.none,
-                    hintText: 'Rechercher un lieu…',
+                    hintText: 'Rechercher l\'endroit...',
                     hintStyle:
                         TextStyle(fontSize: 42.sp, color: Colors.grey[500]),
                     contentPadding: EdgeInsets.zero,
