@@ -225,7 +225,7 @@ class _MapSearchPageState extends State<MapSearchPage> {
                   controller: _controller,
                   hintText: widget.includeRestaurants
                       ? 'Rechercher un lieu, une adresse...'
-                      : 'Rechercher l\'endroit...',
+                      : 'Rechercher l\'adresse...',
                   autofocus: true,
                   textInputAction: TextInputAction.search,
                   onChanged: _onChanged,

@@ -890,7 +890,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                       query: _searchQuery,
                       hintText: _layer == _MapLayer.restaurants
                           ? 'Rechercher un lieu, une adresse...'
-                          : 'Rechercher l\'endroit...',
+                          : 'Rechercher l\'adresse',
                       onTap: _openSearch,
                       onClear: () => setState(() => _searchQuery = ''),
                     ),

@@ -581,8 +581,8 @@ class PreferencesHelper {
       'map_membership_action_count';
   static const String _mapMembershipPromptNextThresholdKey =
       'map_membership_prompt_next_threshold';
-  static const int _mapMembershipPromptInitialThreshold = 4;
-  static const int _mapMembershipPromptSnoozeActions = 4;
+  static const int _mapMembershipPromptInitialThreshold = 5;
+  static const int _mapMembershipPromptSnoozeActions = 10;
 
   /// Increments the map action counter and returns whether this action just
   /// crossed the next threshold, i.e. the subscription prompt should be shown.

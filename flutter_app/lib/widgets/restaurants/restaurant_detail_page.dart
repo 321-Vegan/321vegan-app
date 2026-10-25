@@ -15,6 +15,7 @@ import 'package:vegan_app/widgets/restaurants/photo_viewer_page.dart';
 import 'package:vegan_app/widgets/restaurants/create_restaurant_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_labels.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_report_sheets.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_share.dart';
 import 'package:vegan_app/widgets/reviews/rating_status_chip.dart';
 import 'package:vegan_app/widgets/reviews/rating_summary.dart';
 import 'package:vegan_app/widgets/reviews/review_card.dart';
@@ -1020,6 +1021,67 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     );
   }
 
+  /// Share, save, itinerary and "…" buttons of the header, with their
+  /// spacing.
+  List<Widget> _buildHeaderActions(Restaurant r) => [
+        if (_isLoggedIn) ...[
+          Semantics(
+            button: true,
+            label: _isSaved ? 'Retirer des sauvegardés' : 'Sauvegarder',
+            child: SquareIconButton(
+              onTap: _toggleSaved,
+              size: 102.w,
+              radius: 30.r,
+              backgroundColor: Colors.white,
+              shadows: const [],
+              child: Icon(
+                _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                color: Theme.of(context).colorScheme.primary,
+                size: 54.sp,
+              ),
+            ),
+          ),
+          SizedBox(width: 24.w),
+        ],
+        Semantics(
+          button: true,
+          label: 'Partager',
+          child: Builder(
+            // Its own context: the share popover points at the button
+            builder: (buttonContext) => SquareIconButton(
+              onTap: () => shareRestaurant(buttonContext, r, summary: _summary),
+              size: 102.w,
+              radius: 30.r,
+              backgroundColor: Colors.white,
+              shadows: const [],
+              child: Icon(
+                Icons.send_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 54.sp,
+              ),
+            ),
+          ),
+        ),
+        if (r.hasStorefront) ...[
+          SizedBox(width: 24.w),
+          SquareIconButton(
+            onTap: _openItinerary,
+            size: 102.w,
+            radius: 30.r,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            shadows: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+            child: Icon(Icons.map, color: Colors.white, size: 54.sp),
+          ),
+        ],
+        if (_isLoggedIn && r.validated) _buildSuggestMenu(),
+      ];
+
   Widget _buildHeader() {
     final r = _restaurant;
     final summary = _summary;
@@ -1037,86 +1099,80 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(r.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyles.baloo26),
+          // Beside the name, or above it when the name would not fit
+          LayoutBuilder(builder: (context, constraints) {
+            final actions = _buildHeaderActions(r);
+            final nameBlock = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(r.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.baloo26),
+                if (reviewCount > 0 && ratingAvg != null) ...[
+                  SizedBox(height: 3.h),
+                  Row(
+                    children: [
+                      Icon(Icons.star, size: 48.sp, color: kAccentYellow),
+                      SizedBox(width: 6.w),
+                      Text(
+                        formatRatingAverage(ratingAvg),
+                        style: TextStyle(
+                          fontSize: 44.sp,
+                          fontWeight: FontWeight.w600,
+                          color: kAccentYellow,
                         ),
-                        if (reviewCount > 0 && ratingAvg != null) ...[
-                          SizedBox(width: 18.w),
-                          Icon(Icons.star, size: 48.sp, color: kAccentYellow),
-                          SizedBox(width: 6.w),
-                          Text(
-                            formatRatingAverage(ratingAvg),
-                            style: TextStyle(
-                              fontSize: 44.sp,
-                              fontWeight: FontWeight.w600,
-                              color: kAccentYellow,
-                            ),
-                          ),
-                          SizedBox(width: 6.w),
-                          Text('(${formatRatingCount(reviewCount)})',
-                              style: TextStyle(
-                                  fontSize: 40.sp, color: Colors.grey[500])),
-                        ],
-                      ],
-                    ),
-                    // Vegan status right under the name, apart from the kinds
-                    // of place
-                    SizedBox(height: 9.h),
-                    VeganStatusChip(isFullyVegan: r.isFullyVegan),
-                  ],
-                ),
-              ),
-              if (_isLoggedIn) ...[
-                SizedBox(width: 24.w),
-                Semantics(
-                  button: true,
-                  label: _isSaved ? 'Retirer des sauvegardés' : 'Sauvegarder',
-                  child: SquareIconButton(
-                    onTap: _toggleSaved,
-                    size: 102.w,
-                    radius: 30.r,
-                    backgroundColor: Colors.white,
-                    shadows: const [],
-                    child: Icon(
-                      _isSaved ? Icons.bookmark : Icons.bookmark_border,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 54.sp,
-                    ),
+                      ),
+                      SizedBox(width: 6.w),
+                      Text('(${formatRatingCount(reviewCount)})',
+                          style: TextStyle(
+                              fontSize: 40.sp, color: Colors.grey[500])),
+                    ],
                   ),
-                ),
+                ],
+                // Vegan status under the name and rating, apart from the
+                // kinds of place
+                SizedBox(height: 9.h),
+                VeganStatusChip(isFullyVegan: r.isFullyVegan),
               ],
-              if (r.hasStorefront) ...[
-                SizedBox(width: 24.w),
-                SquareIconButton(
-                  onTap: _openItinerary,
-                  size: 102.w,
-                  radius: 30.r,
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  shadows: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                  child: Icon(Icons.map, color: Colors.white, size: 54.sp),
+            );
+            // Square buttons and gaps, plus the "…" menu's 48 px
+            final buttonCount =
+                1 + (_isLoggedIn ? 1 : 0) + (r.hasStorefront ? 1 : 0);
+            final actionsWidth = buttonCount * (102.w + 24.w) +
+                (_isLoggedIn && r.validated ? kMinInteractiveDimension : 0);
+            final namePainter = TextPainter(
+              text: TextSpan(text: r.name, style: AppTextStyles.baloo26),
+              textScaler: MediaQuery.textScalerOf(context),
+              textDirection: TextDirection.ltr,
+              maxLines: 1,
+            )..layout();
+            final nameFits =
+                namePainter.width <= constraints.maxWidth - actionsWidth;
+            namePainter.dispose();
+
+            if (nameFits) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: nameBlock),
+                  SizedBox(width: 24.w),
+                  ...actions,
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: actions,
                 ),
+                SizedBox(height: 12.h),
+                nameBlock,
               ],
-              if (_isLoggedIn && r.validated) _buildSuggestMenu(),
-            ],
-          ),
+            );
+          }),
           SizedBox(height: 9.h),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
