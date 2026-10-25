@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:latlong2/latlong.dart';
+import '../../helpers/map_search_history.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../services/geocoding_service.dart';
 import '../../services/restaurant_api_service.dart';
@@ -42,6 +43,9 @@ class _MapSearchPageState extends State<MapSearchPage> {
   bool _isSearching = false;
   int _requestId = 0;
 
+  /// Shown while nothing is typed; restaurants only on their layer.
+  List<MapSearchHistoryEntry> _history = [];
+
   // Nominatim asks for at least 3 characters; restaurant names can be short.
   static const _minPlaceLength = 3;
   static const _minRestaurantLength = 2;
@@ -53,6 +57,22 @@ class _MapSearchPageState extends State<MapSearchPage> {
   void initState() {
     super.initState();
     if (_controller.text.trim().length >= _minLength) _search(_controller.text);
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final history = await MapSearchHistory.all();
+    if (!mounted) return;
+    setState(() => _history = [
+          for (final entry in history)
+            if (widget.includeRestaurants || !entry.isRestaurant) entry,
+        ]);
+  }
+
+  /// Remembers the choice, then pops it for the map.
+  Future<void> _choose(Object result) async {
+    await MapSearchHistory.add(result);
+    if (mounted) Navigator.of(context).pop(result);
   }
 
   @override
@@ -136,6 +156,7 @@ class _MapSearchPageState extends State<MapSearchPage> {
     TextStyle? titleStyle,
     String? subtitle,
     Color? subtitleColor,
+    Widget? trailing,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -169,9 +190,58 @@ class _MapSearchPageState extends State<MapSearchPage> {
                 ],
               ),
             ),
+            if (trailing != null) trailing,
           ],
         ),
       ),
+    );
+  }
+
+  Widget _historyRow(MapSearchHistoryEntry entry) {
+    final result = entry.result;
+    return _row(
+      leading: Icon(Icons.history, size: 60.sp, color: Colors.grey[600]),
+      title: entry.title,
+      subtitle: result is Restaurant ? result.city : null,
+      trailing: IconButton(
+        tooltip: 'Retirer de l\'historique',
+        icon: Icon(Icons.close, size: 48.sp, color: Colors.grey[500]),
+        onPressed: () async {
+          await MapSearchHistory.remove(entry);
+          _loadHistory();
+        },
+      ),
+      onTap: () => _choose(result),
+    );
+  }
+
+  Widget _buildHistory() {
+    return ListView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(60.w, 18.h, 36.w, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text('Recherches récentes',
+                    style: AppTextStyles.bodyBold15),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await MapSearchHistory.clear();
+                  _loadHistory();
+                },
+                child: Text('Tout effacer',
+                    style: AppTextStyles.bodyMedium13
+                        .copyWith(color: Colors.grey[600])),
+              ),
+            ],
+          ),
+        ),
+        for (final entry in _history) _historyRow(entry),
+      ],
     );
   }
 
@@ -193,7 +263,7 @@ class _MapSearchPageState extends State<MapSearchPage> {
         if (restaurant.city != null) restaurant.city!,
       ].join(' · ').ifNotEmpty,
       subtitleColor: closed ? kSemanticError : null,
-      onTap: () => Navigator.of(context).pop(restaurant),
+      onTap: () => _choose(restaurant),
     );
   }
 
@@ -201,7 +271,7 @@ class _MapSearchPageState extends State<MapSearchPage> {
     return _row(
       leading: Icon(Icons.place_outlined, size: 60.sp, color: Colors.grey[600]),
       title: place.displayName,
-      onTap: () => Navigator.of(context).pop(place),
+      onTap: () => _choose(place),
     );
   }
 
@@ -249,26 +319,28 @@ class _MapSearchPageState extends State<MapSearchPage> {
                 ),
               ),
               Expanded(
-                child: noResults
-                    ? Padding(
-                        padding: EdgeInsets.only(top: 60.h),
-                        child: Text(
-                          'Aucun résultat',
-                          style: AppTextStyles.bodyRegular15
-                              .copyWith(color: Colors.grey[600]),
-                        ),
-                      )
-                    : ListView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        padding: EdgeInsets.only(
-                            bottom: MediaQuery.of(context).padding.bottom),
-                        children: [
-                          for (final restaurant in _restaurants)
-                            _restaurantRow(restaurant),
-                          for (final place in _places) _placeRow(place),
-                        ],
-                      ),
+                child: _controller.text.trim().isEmpty && _history.isNotEmpty
+                    ? _buildHistory()
+                    : noResults
+                        ? Padding(
+                            padding: EdgeInsets.only(top: 60.h),
+                            child: Text(
+                              'Aucun résultat',
+                              style: AppTextStyles.bodyRegular15
+                                  .copyWith(color: Colors.grey[600]),
+                            ),
+                          )
+                        : ListView(
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            padding: EdgeInsets.only(
+                                bottom: MediaQuery.of(context).padding.bottom),
+                            children: [
+                              for (final restaurant in _restaurants)
+                                _restaurantRow(restaurant),
+                              for (final place in _places) _placeRow(place),
+                            ],
+                          ),
               ),
             ],
           ),

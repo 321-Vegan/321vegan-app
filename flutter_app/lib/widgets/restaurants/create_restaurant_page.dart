@@ -22,6 +22,7 @@ import '../shared/form_error_banner.dart';
 import '../shared/info_box.dart';
 import '../shared/picked_photos_row.dart';
 import '../../helpers/osm_place_info.dart';
+import '../../helpers/restaurant_drafts.dart';
 import 'opening_hours_editor.dart';
 import 'pin_picker_page.dart';
 import 'restaurant_detail_page.dart';
@@ -48,18 +49,23 @@ class CreateRestaurantPage extends StatefulWidget {
   /// The restaurant to propose a change of, null to create one.
   final Restaurant? original;
 
-  const CreateRestaurantPage({super.key, required this.mapCenter})
+  /// A creation left unfinished, to go on with.
+  final RestaurantDraft? draft;
+
+  const CreateRestaurantPage({super.key, required this.mapCenter, this.draft})
       : original = null;
 
   CreateRestaurantPage.suggest({super.key, required Restaurant restaurant})
       : original = restaurant,
+        draft = null,
         mapCenter = LatLng(restaurant.latitude, restaurant.longitude);
 
   @override
   State<CreateRestaurantPage> createState() => _CreateRestaurantPageState();
 }
 
-class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
+class _CreateRestaurantPageState extends State<CreateRestaurantPage>
+    with WidgetsBindingObserver {
   static const int _maxPhotosPerKind = 10;
 
   final _formKey = GlobalKey<FormState>();
@@ -76,6 +82,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
   final _website = TextEditingController();
   final _facebook = TextEditingController();
   final _instagram = TextEditingController();
+  final _menuUrl = TextEditingController();
   final _comment = TextEditingController();
 
   final Set<String> _tags = {};
@@ -133,7 +140,25 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
   int? get _currentFeaturedId => widget.original?.featuredPhoto?.id;
   int? get _featuredId => _proposedFeaturedId ?? _currentFeaturedId;
 
+  /// The draft this creation is saved to, once saved (or opened from one).
+  late String? _draftId = widget.draft?.id;
+
+  /// The form as opened, to tell whether leaving loses anything.
+  String _savedSnapshot = '';
+
+  /// The form as last saved in the background, not to save it twice.
+  String? _autosavedSnapshot;
+
+  /// The draft was created by a background save only: leaving without
+  /// saving removes it.
+  bool _draftFromAutosave = false;
+
   bool get _isCaterer => _tags.contains(RestaurantTags.caterer);
+
+  /// A grocery and nothing else: no menu to show (link or photos), as
+  /// [Restaurant.hasNoMenu].
+  bool get _hasNoMenu =>
+      _tags.length == 1 && _tags.contains(RestaurantTags.grocery);
 
   /// No cow milk in a fully vegan place: the surcharge question is moot.
   bool get _asksMilkPrice => _veganStatus != VeganStatus.fullyVegan;
@@ -144,7 +169,174 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
     super.initState();
     final original = widget.original;
     if (original != null) _prefill(original);
+    final draft = widget.draft;
+    if (draft != null) _restoreDraft(draft);
+    _savedSnapshot = _snapshot();
     _address.addListener(_onAddressChanged);
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// The app may be closed for good once in the background: a creation in
+  /// progress is saved as a draft then.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _autosave();
+    }
+  }
+
+  Future<void> _autosave() async {
+    if (_isSuggestion || !_hasUnsavedChanges) return;
+    final snapshot = _snapshot();
+    if (snapshot == _autosavedSnapshot) return;
+    _autosavedSnapshot = snapshot;
+    final isNew = _draftId == null;
+    await _saveDraft();
+    if (isNew) _draftFromAutosave = true;
+  }
+
+  // ── Drafts and leaving ───────────────────────────────────────────────────
+
+  /// The form's state, for a draft.
+  Map<String, dynamic> _draftFields() => {
+        'name': _name.text,
+        'address': _address.text,
+        'city': _city.text,
+        'country': _country.text,
+        'description': _description.text,
+        'vegan_options': _veganOptions.text,
+        'service_area': _serviceArea.text,
+        'hours_note': _hoursNote.text,
+        'surcharge': _surcharge.text,
+        'phone': _phone.text,
+        'website': _website.text,
+        'facebook': _facebook.text,
+        'instagram': _instagram.text,
+        'menu_url': _menuUrl.text,
+        'tags': _tags.toList(),
+        'service_options': _serviceOptions.toList(),
+        'vegan_status': _veganStatus,
+        'has_storefront': _hasStorefront,
+        'hours': _hours.map((s) => s.toJson()).toList(),
+        'hours_unknown': _hoursUnknown,
+        'milk_price': _milkPrice.name,
+        if (_position != null) ...{
+          'latitude': _position!.latitude,
+          'longitude': _position!.longitude,
+        },
+        'position_from_pin': _positionFromPin,
+        'geocoded_address': _geocodedAddress,
+      };
+
+  void _restoreDraft(RestaurantDraft draft) {
+    final f = draft.fields;
+    String text(String key) => f[key] as String? ?? '';
+    _name.text = text('name');
+    _address.text = text('address');
+    _city.text = text('city');
+    _country.text = text('country');
+    _description.text = text('description');
+    _veganOptions.text = text('vegan_options');
+    _serviceArea.text = text('service_area');
+    _hoursNote.text = text('hours_note');
+    _surcharge.text = text('surcharge');
+    _phone.text = text('phone');
+    _website.text = text('website');
+    _facebook.text = text('facebook');
+    _instagram.text = text('instagram');
+    _menuUrl.text = text('menu_url');
+    _tags.addAll((f['tags'] as List?)?.cast<String>() ?? []);
+    _serviceOptions
+        .addAll((f['service_options'] as List?)?.cast<String>() ?? []);
+    _veganStatus = f['vegan_status'] as String?;
+    _hasStorefront = f['has_storefront'] as bool? ?? true;
+    _hours = [
+      for (final slot in (f['hours'] as List?) ?? [])
+        OpeningSlot.fromJson((slot as Map).cast<String, dynamic>()),
+    ];
+    _hoursUnknown = f['hours_unknown'] as bool? ?? false;
+    _milkPrice =
+        _MilkPrice.values.asNameMap()[f['milk_price']] ?? _MilkPrice.unknown;
+    final lat = (f['latitude'] as num?)?.toDouble();
+    final lng = (f['longitude'] as num?)?.toDouble();
+    _position = lat != null && lng != null ? LatLng(lat, lng) : null;
+    _positionFromPin = f['position_from_pin'] as bool? ?? false;
+    _geocodedAddress = f['geocoded_address'] as String?;
+    // Photos the system may have removed are left out
+    _menuPhotos = [
+      for (final path in draft.menuPhotos)
+        if (File(path).existsSync()) File(path),
+    ];
+    _placePhotos = [
+      for (final path in draft.placePhotos)
+        if (File(path).existsSync()) File(path),
+    ];
+    _chosenMainPhoto = _placePhotos
+        .where((photo) => photo.path == draft.mainPhoto)
+        .firstOrNull;
+  }
+
+  String _snapshot() => jsonEncode({
+        'fields': _draftFields(),
+        'menu': _menuPhotos.map((p) => p.path).toList(),
+        'place': _placePhotos.map((p) => p.path).toList(),
+        'main': _mainPhoto?.path,
+      });
+
+  bool get _hasUnsavedChanges =>
+      !_isSubmitting && _snapshot() != _savedSnapshot;
+
+  Future<void> _saveDraft() async {
+    final draft = await RestaurantDrafts.save(
+      id: _draftId,
+      fields: _draftFields(),
+      menuPhotos: _menuPhotos,
+      placePhotos: _placePhotos,
+      mainPhoto: _mainPhoto,
+    );
+    _draftId = draft.id;
+  }
+
+  /// Asks before leaving a form with changes: a creation can be kept as a
+  /// draft, a suggestion is just dropped. Dismissed: stays on the form.
+  Future<void> _confirmLeave() async {
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => _isSuggestion
+          ? AppDialog(
+              image: 'lib/assets/images/characters/cow-mby.webp',
+              title: 'Abandonner la proposition ?',
+              message: 'Vos modifications ne seront pas envoyées.',
+              primaryLabel: 'Continuer la proposition',
+              onPrimary: () => Navigator.of(ctx).pop(false),
+              secondaryLabel: 'Abandonner',
+              onSecondary: () => Navigator.of(ctx).pop(true),
+            )
+          : AppDialog(
+              image: 'lib/assets/images/characters/cow-mby.webp',
+              title: 'Quitter la création ?',
+              message: 'Gardez-la en brouillon sur ce téléphone pour la '
+                  'reprendre plus tard, depuis « Ajouter un lieu » ou vos '
+                  'contributions.',
+              primaryLabel: 'Enregistrer le brouillon',
+              onPrimary: () async {
+                await _saveDraft();
+                _draftFromAutosave = false;
+                if (ctx.mounted) Navigator.of(ctx).pop(true);
+              },
+              secondaryLabel: 'Quitter sans enregistrer',
+              onSecondary: () async {
+                // Saved in the background only: not wanted after all
+                final draftId = _draftId;
+                if (_draftFromAutosave && draftId != null) {
+                  await RestaurantDrafts.delete(draftId);
+                }
+                if (ctx.mounted) Navigator.of(ctx).pop(true);
+              },
+            ),
+    );
+    if (leave == true && mounted) Navigator.of(context).pop();
   }
 
   void _prefill(Restaurant r) {
@@ -160,6 +352,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
     _website.text = r.website ?? '';
     _facebook.text = r.facebook ?? '';
     _instagram.text = r.instagram ?? '';
+    _menuUrl.text = r.menuUrl ?? '';
     _tags.addAll(r.tags);
     _serviceOptions.addAll(r.serviceOptions);
     _veganStatus = r.veganStatus;
@@ -184,6 +377,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _debounce?.cancel();
     for (final c in [
       _name,
@@ -199,6 +393,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       _website,
       _facebook,
       _instagram,
+      _menuUrl,
       _comment,
     ]) {
       c.dispose();
@@ -307,6 +502,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
     text(_website, info.website, 'site');
     text(_facebook, info.facebook, 'Facebook');
     text(_instagram, info.instagram, 'Instagram');
+    text(_menuUrl, info.menuUrl, 'menu');
 
     _osmNotice = filled.isEmpty
         ? null
@@ -409,6 +605,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
         'website': _text(_website),
         'facebook': _text(_facebook),
         'instagram': _text(_instagram),
+        'menu_url': _hasNoMenu ? null : _text(_menuUrl),
       };
 
   /// Sends the fields that differ from the prefilled form, and the photos
@@ -554,9 +751,12 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
               ),
           ],
         ),
+        // Leaving in orange, going on in green, as the app's other pairs
         primaryLabel: 'C\'est le même lieu',
+        primaryColor: kAccentYellow,
         onPrimary: () => Navigator.of(ctx).pop(false),
-        secondaryLabel: 'Non, c\'est un autre lieu',
+        secondaryLabel: 'Continuer, c\'est un autre lieu',
+        secondaryColor: kSemanticSuccess,
         onSecondary: () => Navigator.of(ctx).pop(true),
       ),
     );
@@ -627,7 +827,8 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
     await _uploadPhotos(
       restaurant.id,
       [
-        for (final photo in _menuPhotos) (RestaurantPhoto.kindMenu, photo),
+        if (!_hasNoMenu)
+          for (final photo in _menuPhotos) (RestaurantPhoto.kindMenu, photo),
         for (final photo in _placePhotos) (RestaurantPhoto.kindPlace, photo),
       ],
       mainPhoto: _mainPhoto,
@@ -674,7 +875,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
         builder: (ctx) => AppDialog(
           image: 'lib/assets/images/characters/cow-not.webp',
           title: 'Photos non envoyées',
-          message: 'Le restaurant est bien enregistré, mais ${failed.length} '
+          message: 'Le lieu est bien enregistré, mais ${failed.length} '
               'photo${failed.length > 1 ? 's n\'ont' : ' n\'a'} pas pu être '
               'envoyée${failed.length > 1 ? 's' : ''}.',
           content: reasons.isEmpty
@@ -695,6 +896,9 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
         return _uploadPhotos(restaurantId, failed, mainPhoto: mainPhoto);
       }
     }
+    // Created: the draft it came from is done
+    final draftId = _draftId;
+    if (draftId != null) await RestaurantDrafts.delete(draftId);
     if (mounted) Navigator.of(context).pop(true);
   }
 
@@ -1016,357 +1220,98 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
 
-    return AppBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: Text(
-              _isSuggestion
-                  ? 'Proposer une modification'
-                  : 'Ajouter un restaurant',
-              style: AppTextStyles.baloo22
-                  .copyWith(fontWeight: const FontWeight(500))),
-          centerTitle: true,
+    // Typing doesn't rebuild the page, so whether something would be lost
+    // is checked when leaving, not through canPop
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_hasUnsavedChanges) {
+          _confirmLeave();
+        } else {
+          Navigator.of(context).pop();
+        }
+      },
+      child: AppBackground(
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          elevation: 0,
-          foregroundColor: kTextPrimary,
-        ),
-        body: SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              Expanded(
-                child: Form(
-                  key: _formKey,
-                  child: ListView(
-                    padding: EdgeInsets.fromLTRB(AppSpacing.pageHorizontal, 0,
-                        AppSpacing.pageHorizontal, 48.h),
-                    children: [
-                      SizedBox(height: 12.h),
-                      InfoBox(
-                        text: _isSuggestion
-                            ? 'Corrigez ce qui a changé : la proposition sera '
-                                'vérifiée par l\'équipe avant d\'être appliquée.'
-                            : 'Seuls les lieux 100 % véganes ou avec au moins une '
-                                'option végane bien identifiée sont référencés. '
-                                'Le lieu sera visible pour tout le monde après validation.',
-                      ),
-                      _section('Le lieu', [
-                        AppTextField(
-                          controller: _name,
-                          hintText: 'Nom',
-                          textCapitalization: TextCapitalization.words,
-                          validator: _required,
-                          enabled: !_isSubmitting,
+          appBar: AppBar(
+            title: Text(
+                _isSuggestion ? 'Proposer une modification' : 'Ajouter un lieu',
+                style: AppTextStyles.baloo22
+                    .copyWith(fontWeight: const FontWeight(500))),
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            foregroundColor: kTextPrimary,
+          ),
+          body: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Form(
+                    key: _formKey,
+                    child: ListView(
+                      padding: EdgeInsets.fromLTRB(AppSpacing.pageHorizontal, 0,
+                          AppSpacing.pageHorizontal, 48.h),
+                      children: [
+                        SizedBox(height: 12.h),
+                        InfoBox(
+                          text: _isSuggestion
+                              ? 'Corrigez ce qui a changé : la proposition sera '
+                                  'vérifiée par l\'équipe avant d\'être appliquée.'
+                              : 'Seuls les lieux 100 % véganes ou avec au moins une '
+                                  'option végane bien identifiée sont référencés. '
+                                  'Le lieu sera visible pour tout le monde après validation.',
                         ),
-                        _gap(),
-                        AppTextField(
-                          controller: _address,
-                          hintText: _withStorefront
-                              ? 'Adresse ou nom du lieu (ex : Le Kitchen, Lyon)'
-                              : 'Adresse (non publiée)',
-                          textCapitalization: TextCapitalization.sentences,
-                          enabled: !_isSubmitting,
-                          suffixIcon:
-                              Icon(Icons.search, color: Colors.grey[500]),
-                        ),
-                        if (_suggestions.isNotEmpty) _buildSuggestions(),
-                        _gap(),
-                        AppTextField(
-                          controller: _city,
-                          hintText: 'Ville',
-                          textCapitalization: TextCapitalization.words,
-                          validator: _withStorefront ? null : _required,
-                          enabled: !_isSubmitting,
-                        ),
-                        _gap(),
-                        AppTextField(
-                          controller: _country,
-                          hintText: 'Pays',
-                          textCapitalization: TextCapitalization.words,
-                          enabled: !_isSubmitting,
-                        ),
-                        if (_withStorefront) ...[
-                          _gap(),
-                          _buildPositionRow(),
-                          if (_osmNotice != null) ...[
-                            SizedBox(height: 12.h),
-                            InfoBox(text: _osmNotice!),
-                          ],
-                        ],
-                        _gap(),
-                        AppTextField(
-                          controller: _description,
-                          hintText: 'Description (facultatif)',
-                          textCapitalization: TextCapitalization.sentences,
-                          minLines: 2,
-                          maxLines: 5,
-                          maxLength: 2000,
-                          enabled: !_isSubmitting,
-                        ),
-                      ]),
-                      _section('Type de lieu', [
-                        Wrap(
-                          spacing: 18.w,
-                          runSpacing: 18.h,
-                          children: [
-                            for (final (value, label) in RestaurantTags.all)
-                              _choiceChip(
-                                label,
-                                _tags.contains(value),
-                                () => setState(() => _tags.contains(value)
-                                    ? _tags.remove(value)
-                                    : _tags.add(value)),
-                                icon: restaurantTagIcon(value),
-                                iconColor: restaurantTagColor(value),
-                              ),
-                          ],
-                        ),
-                        if (_isCaterer) ...[
-                          _gap(),
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            value: !_hasStorefront,
-                            onChanged: _isSubmitting
-                                ? null
-                                : (v) => setState(() => _hasStorefront = !v),
-                            title: Text('Sans boutique',
-                                style: AppTextStyles.bodyMedium15),
-                            subtitle: Text(
-                              'Livraison ou événements uniquement : le pin sera '
-                              'placé au centre de la ville, l\'adresse ne sera '
-                              'pas publiée.',
-                              style: AppTextStyles.bodyRegular13
-                                  .copyWith(color: Colors.grey[600]),
-                            ),
-                          ),
-                          if (!_hasStorefront)
-                            AppTextField(
-                              controller: _serviceArea,
-                              hintText:
-                                  'Zone servie (ex : Lyon et 30 km autour)',
-                              validator: _required,
-                              enabled: !_isSubmitting,
-                            ),
-                        ],
-                      ]),
-                      _section(
-                        'Sur place, à emporter, livraison ?',
-                        subtitle: 'Plusieurs choix possibles',
-                        [
-                          Wrap(
-                            spacing: 18.w,
-                            runSpacing: 18.h,
-                            children: [
-                              for (final (value, label)
-                                  in RestaurantServiceOptions.all)
-                                // Nothing to eat on site without storefront
-                                if (_withStorefront ||
-                                    value != RestaurantServiceOptions.dineIn)
-                                  _choiceChip(
-                                    label,
-                                    _serviceOptions.contains(value),
-                                    () => setState(() =>
-                                        _serviceOptions.contains(value)
-                                            ? _serviceOptions.remove(value)
-                                            : _serviceOptions.add(value)),
-                                  ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      _section('Végane ?', [
-                        Wrap(
-                          spacing: 18.w,
-                          runSpacing: 18.h,
-                          children: [
-                            _choiceChip(
-                              '100 % végane',
-                              _veganStatus == VeganStatus.fullyVegan,
-                              () => setState(
-                                  () => _veganStatus = VeganStatus.fullyVegan),
-                            ),
-                            _choiceChip(
-                              'Options véganes',
-                              _veganStatus == VeganStatus.veganOptions,
-                              () => setState(() =>
-                                  _veganStatus = VeganStatus.veganOptions),
-                            ),
-                          ],
-                        ),
-                        if (_veganStatus == VeganStatus.veganOptions) ...[
-                          _gap(),
+                        _section('Le lieu', [
                           AppTextField(
-                            controller: _veganOptions,
-                            hintText: 'Quelles options, et comment elles sont '
-                                'signalées sur la carte',
-                            textCapitalization: TextCapitalization.sentences,
-                            minLines: 2,
-                            maxLines: 5,
-                            maxLength: 2000,
+                            controller: _name,
+                            hintText: 'Nom',
+                            textCapitalization: TextCapitalization.words,
                             validator: _required,
                             enabled: !_isSubmitting,
                           ),
-                        ],
-                      ]),
-                      _section(
-                        _withStorefront ? 'Horaires' : 'Horaires de commande',
-                        subtitle: RestaurantTags.accommodations
-                                .any(_tags.contains)
-                            ? 'Pour un hébergement : les horaires du restaurant, '
-                                'ou à défaut du petit-déjeuner.'
-                            : null,
-                        [
-                          CheckboxListTile(
-                            contentPadding: EdgeInsets.zero,
-                            value: _hoursUnknown,
-                            onChanged: _isSubmitting
-                                ? null
-                                : (v) =>
-                                    setState(() => _hoursUnknown = v ?? false),
-                            title: Text('Je ne connais pas les horaires',
-                                style: AppTextStyles.bodyRegular15),
+                          _gap(),
+                          AppTextField(
+                            controller: _address,
+                            hintText: _withStorefront
+                                ? 'Adresse ou nom du lieu (ex : Le Kitchen, Lyon)'
+                                : 'Adresse (non publiée)',
+                            textCapitalization: TextCapitalization.sentences,
+                            enabled: !_isSubmitting,
+                            suffixIcon:
+                                Icon(Icons.search, color: Colors.grey[500]),
                           ),
-                          if (!_hoursUnknown) ...[
-                            OpeningHoursEditor(
-                              slots: _hours,
-                              enabled: !_isSubmitting,
-                              onChanged: (slots) =>
-                                  setState(() => _hours = slots),
-                            ),
+                          if (_suggestions.isNotEmpty) _buildSuggestions(),
+                          _gap(),
+                          AppTextField(
+                            controller: _city,
+                            hintText: 'Ville',
+                            textCapitalization: TextCapitalization.words,
+                            validator: _withStorefront ? null : _required,
+                            enabled: !_isSubmitting,
+                          ),
+                          _gap(),
+                          AppTextField(
+                            controller: _country,
+                            hintText: 'Pays',
+                            textCapitalization: TextCapitalization.words,
+                            enabled: !_isSubmitting,
+                          ),
+                          if (_withStorefront) ...[
                             _gap(),
-                            AppTextField(
-                              controller: _hoursNote,
-                              hintText:
-                                  'Précision (ex : fermé les jours fériés)',
-                              enabled: !_isSubmitting,
-                            ),
-                          ],
-                        ],
-                      ),
-                      if (_asksMilkPrice)
-                        _section(
-                          'Supplément lait végétal',
-                          subtitle: 'Pour les boissons chaudes, s\'il y en a.',
-                          [
-                            Wrap(
-                              spacing: 18.w,
-                              runSpacing: 18.h,
-                              children: [
-                                for (final (price, label) in const [
-                                  (_MilkPrice.unknown, 'Je ne sais pas'),
-                                  (_MilkPrice.noHotDrinks, 'Pas concerné'),
-                                  (_MilkPrice.same, 'Même prix'),
-                                  (
-                                    _MilkPrice.plantCostsMore,
-                                    'Végétal plus cher'
-                                  ),
-                                  (
-                                    _MilkPrice.cowCostsMore,
-                                    'Végétal moins cher'
-                                  ),
-                                ])
-                                  _choiceChip(
-                                    label,
-                                    _milkPrice == price,
-                                    () => setState(() => _milkPrice = price),
-                                    // Plant milk price compared to cow's
-                                    icon: switch (price) {
-                                      _MilkPrice.same => Icons.drag_handle,
-                                      _MilkPrice.plantCostsMore =>
-                                        Icons.trending_up,
-                                      _MilkPrice.cowCostsMore =>
-                                        Icons.trending_down,
-                                      _ => null,
-                                    },
-                                    iconColor: switch (price) {
-                                      _MilkPrice.plantCostsMore =>
-                                        kSemanticError,
-                                      _MilkPrice.cowCostsMore =>
-                                        kSemanticSuccess,
-                                      _ => Colors.grey[600],
-                                    },
-                                  ),
-                              ],
-                            ),
-                            if (_milkPrice == _MilkPrice.plantCostsMore ||
-                                _milkPrice == _MilkPrice.cowCostsMore) ...[
-                              _gap(),
-                              AppTextField(
-                                controller: _surcharge,
-                                hintText: 'Différence de prix en € (ex : 0,50)',
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                enabled: !_isSubmitting,
-                              ),
+                            _buildPositionRow(),
+                            if (_osmNotice != null) ...[
+                              SizedBox(height: 12.h),
+                              InfoBox(text: _osmNotice!),
                             ],
                           ],
-                        ),
-                      _section(
-                        'Contact',
-                        subtitle: _withStorefront
-                            ? 'Facultatif'
-                            : 'Au moins un moyen de commander',
-                        [
-                          AppTextField(
-                            controller: _phone,
-                            hintText: 'Téléphone',
-                            keyboardType: TextInputType.phone,
-                            // Digits and the usual separators, nothing else
-                            // (the phone keyboard alone lets letters through)
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                  RegExp(r'[0-9+ .()-]')),
-                            ],
-                            validator: _phoneValidator,
-                            enabled: !_isSubmitting,
-                          ),
                           _gap(),
                           AppTextField(
-                            controller: _website,
-                            hintText: 'Site web',
-                            keyboardType: TextInputType.url,
-                            enabled: !_isSubmitting,
-                          ),
-                          _gap(),
-                          AppTextField(
-                            controller: _facebook,
-                            hintText: 'Facebook (lien ou nom de la page)',
-                            keyboardType: TextInputType.url,
-                            enabled: !_isSubmitting,
-                          ),
-                          _gap(),
-                          AppTextField(
-                            controller: _instagram,
-                            hintText: 'Instagram (ex. @govegan)',
-                            enabled: !_isSubmitting,
-                          ),
-                        ],
-                      ),
-                      if (_isSuggestion) ...[
-                        if (_removablePhotos.isNotEmpty)
-                          _section(
-                            'Photos à retirer',
-                            subtitle: 'Touchez les photos qui ne sont plus à '
-                                'jour (ancien menu...) pour les marquer. '
-                                'Elles seront retirées à l\'envoi, après '
-                                'validation. Pour en ajouter, passez par '
-                                'l\'onglet Photos.',
-                            [_buildRemovablePhotos()],
-                          ),
-                        if (_removablePhotos.length > 1)
-                          _section(
-                            'Photo principale',
-                            subtitle: 'Celle affichée en haut de la fiche '
-                                '(★). Touchez-en une autre pour la proposer.',
-                            [_buildFeaturedPicker()],
-                          ),
-                        _section('Commentaire', subtitle: 'Facultatif', [
-                          AppTextField(
-                            controller: _comment,
-                            hintText: 'Ex : horaires d\'hiver affichés sur la '
-                                'porte',
+                            controller: _description,
+                            hintText: 'Description (facultatif)',
                             textCapitalization: TextCapitalization.sentences,
                             minLines: 2,
                             maxLines: 5,
@@ -1374,75 +1319,362 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                             enabled: !_isSubmitting,
                           ),
                         ]),
-                      ] else ...[
+                        _section('Type de lieu', [
+                          Wrap(
+                            spacing: 18.w,
+                            runSpacing: 18.h,
+                            children: [
+                              for (final (value, label) in RestaurantTags.all)
+                                _choiceChip(
+                                  label,
+                                  _tags.contains(value),
+                                  () => setState(() => _tags.contains(value)
+                                      ? _tags.remove(value)
+                                      : _tags.add(value)),
+                                  icon: restaurantTagIcon(value),
+                                  iconColor: restaurantTagColor(value),
+                                ),
+                            ],
+                          ),
+                          if (_isCaterer) ...[
+                            _gap(),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              value: !_hasStorefront,
+                              onChanged: _isSubmitting
+                                  ? null
+                                  : (v) => setState(() => _hasStorefront = !v),
+                              title: Text('Sans boutique',
+                                  style: AppTextStyles.bodyMedium15),
+                              subtitle: Text(
+                                'Livraison ou événements uniquement : le pin sera '
+                                'placé au centre de la ville, l\'adresse ne sera '
+                                'pas publiée.',
+                                style: AppTextStyles.bodyRegular13
+                                    .copyWith(color: Colors.grey[600]),
+                              ),
+                            ),
+                            if (!_hasStorefront)
+                              AppTextField(
+                                controller: _serviceArea,
+                                hintText:
+                                    'Zone servie (ex : Lyon et 30 km autour)',
+                                validator: _required,
+                                enabled: !_isSubmitting,
+                              ),
+                          ],
+                        ]),
                         _section(
-                          'Photos du menu',
-                          subtitle: _veganStatus == VeganStatus.veganOptions
-                              ? 'Fortement conseillé : elles prouvent l\'option '
-                                  'végane à la validation.'
-                              : 'Facultatif',
+                          'Sur place, à emporter, livraison ?',
+                          subtitle: 'Plusieurs choix possibles',
                           [
-                            PickedPhotosRow(
-                              photos: _menuPhotos,
-                              max: _maxPhotosPerKind,
-                              enabled: !_isSubmitting,
-                              onChanged: (p) => setState(() => _menuPhotos = p),
+                            Wrap(
+                              spacing: 18.w,
+                              runSpacing: 18.h,
+                              children: [
+                                for (final (value, label)
+                                    in RestaurantServiceOptions.all)
+                                  // Nothing to eat on site without storefront
+                                  if (_withStorefront ||
+                                      value != RestaurantServiceOptions.dineIn)
+                                    _choiceChip(
+                                      label,
+                                      _serviceOptions.contains(value),
+                                      () => setState(() =>
+                                          _serviceOptions.contains(value)
+                                              ? _serviceOptions.remove(value)
+                                              : _serviceOptions.add(value)),
+                                    ),
+                              ],
                             ),
                           ],
                         ),
-                        _section(
-                          'Photos du lieu',
-                          subtitle: _placePhotos.length > 1
-                              ? 'Facultatif. Touchez une photo pour en faire '
-                                  'la photo principale (★).'
-                              : 'Facultatif. La première sera la photo '
-                                  'principale.',
-                          [
-                            PickedPhotosRow(
-                              photos: _placePhotos,
-                              max: _maxPhotosPerKind,
+                        _section('Végane ?', [
+                          Wrap(
+                            spacing: 18.w,
+                            runSpacing: 18.h,
+                            children: [
+                              _choiceChip(
+                                '100 % végane',
+                                _veganStatus == VeganStatus.fullyVegan,
+                                () => setState(() =>
+                                    _veganStatus = VeganStatus.fullyVegan),
+                              ),
+                              _choiceChip(
+                                'Options véganes',
+                                _veganStatus == VeganStatus.veganOptions,
+                                () => setState(() =>
+                                    _veganStatus = VeganStatus.veganOptions),
+                              ),
+                            ],
+                          ),
+                          if (_veganStatus == VeganStatus.veganOptions) ...[
+                            _gap(),
+                            AppTextField(
+                              controller: _veganOptions,
+                              hintText:
+                                  'Quelles options, et comment elles sont '
+                                  'signalées sur la carte',
+                              textCapitalization: TextCapitalization.sentences,
+                              minLines: 2,
+                              maxLines: 5,
+                              maxLength: 2000,
+                              validator: _required,
                               enabled: !_isSubmitting,
-                              onChanged: (p) =>
-                                  setState(() => _placePhotos = p),
-                              featured: _mainPhoto,
-                              onFeaturedChanged: (photo) =>
-                                  setState(() => _chosenMainPhoto = photo),
                             ),
                           ],
+                        ]),
+                        _section(
+                          _withStorefront ? 'Horaires' : 'Horaires de commande',
+                          subtitle: RestaurantTags.accommodations
+                                  .any(_tags.contains)
+                              ? 'Pour un hébergement : les horaires du restaurant, '
+                                  'ou à défaut du petit-déjeuner.'
+                              : null,
+                          [
+                            CheckboxListTile(
+                              contentPadding: EdgeInsets.zero,
+                              value: _hoursUnknown,
+                              onChanged: _isSubmitting
+                                  ? null
+                                  : (v) => setState(
+                                      () => _hoursUnknown = v ?? false),
+                              title: Text('Je ne connais pas les horaires',
+                                  style: AppTextStyles.bodyRegular15),
+                            ),
+                            if (!_hoursUnknown) ...[
+                              OpeningHoursEditor(
+                                slots: _hours,
+                                enabled: !_isSubmitting,
+                                onChanged: (slots) =>
+                                    setState(() => _hours = slots),
+                              ),
+                              _gap(),
+                              AppTextField(
+                                controller: _hoursNote,
+                                hintText:
+                                    'Précision (ex : fermé les jours fériés)',
+                                enabled: !_isSubmitting,
+                              ),
+                            ],
+                          ],
                         ),
+                        if (_asksMilkPrice)
+                          _section(
+                            'Supplément lait végétal',
+                            subtitle:
+                                'Pour les boissons chaudes, s\'il y en a.',
+                            [
+                              Wrap(
+                                spacing: 18.w,
+                                runSpacing: 18.h,
+                                children: [
+                                  for (final (price, label) in const [
+                                    (_MilkPrice.unknown, 'Je ne sais pas'),
+                                    (_MilkPrice.noHotDrinks, 'Pas concerné'),
+                                    (_MilkPrice.same, 'Même prix'),
+                                    (
+                                      _MilkPrice.plantCostsMore,
+                                      'Végétal plus cher'
+                                    ),
+                                    (
+                                      _MilkPrice.cowCostsMore,
+                                      'Végétal moins cher'
+                                    ),
+                                  ])
+                                    _choiceChip(
+                                      label,
+                                      _milkPrice == price,
+                                      () => setState(() => _milkPrice = price),
+                                      // Plant milk price compared to cow's
+                                      icon: switch (price) {
+                                        _MilkPrice.same => Icons.drag_handle,
+                                        _MilkPrice.plantCostsMore =>
+                                          Icons.trending_up,
+                                        _MilkPrice.cowCostsMore =>
+                                          Icons.trending_down,
+                                        _ => null,
+                                      },
+                                      iconColor: switch (price) {
+                                        _MilkPrice.plantCostsMore =>
+                                          kSemanticError,
+                                        _MilkPrice.cowCostsMore =>
+                                          kSemanticSuccess,
+                                        _ => Colors.grey[600],
+                                      },
+                                    ),
+                                ],
+                              ),
+                              if (_milkPrice == _MilkPrice.plantCostsMore ||
+                                  _milkPrice == _MilkPrice.cowCostsMore) ...[
+                                _gap(),
+                                AppTextField(
+                                  controller: _surcharge,
+                                  hintText:
+                                      'Différence de prix en € (ex : 0,50)',
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
+                                  enabled: !_isSubmitting,
+                                ),
+                              ],
+                            ],
+                          ),
+                        _section(
+                          'Contact',
+                          subtitle: _withStorefront
+                              ? 'Facultatif'
+                              : 'Au moins un moyen de commander',
+                          [
+                            AppTextField(
+                              controller: _phone,
+                              hintText: 'Téléphone',
+                              keyboardType: TextInputType.phone,
+                              // Digits and the usual separators, nothing else
+                              // (the phone keyboard alone lets letters through)
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'[0-9+ .()-]')),
+                              ],
+                              validator: _phoneValidator,
+                              enabled: !_isSubmitting,
+                            ),
+                            _gap(),
+                            AppTextField(
+                              controller: _website,
+                              hintText: 'Site web',
+                              keyboardType: TextInputType.url,
+                              enabled: !_isSubmitting,
+                            ),
+                            _gap(),
+                            AppTextField(
+                              controller: _facebook,
+                              hintText: 'Facebook (lien ou nom de la page)',
+                              keyboardType: TextInputType.url,
+                              enabled: !_isSubmitting,
+                            ),
+                            _gap(),
+                            AppTextField(
+                              controller: _instagram,
+                              hintText: 'Instagram (ex. @govegan)',
+                              enabled: !_isSubmitting,
+                            ),
+                            if (!_hasNoMenu) ...[
+                              _gap(),
+                              AppTextField(
+                                controller: _menuUrl,
+                                hintText:
+                                    'Lien vers le menu en ligne (facultatif)',
+                                keyboardType: TextInputType.url,
+                                enabled: !_isSubmitting,
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (_isSuggestion) ...[
+                          if (_removablePhotos.isNotEmpty)
+                            _section(
+                              'Photos à retirer',
+                              subtitle: 'Touchez les photos qui ne sont plus à '
+                                  'jour (ancien menu...) pour les marquer. '
+                                  'Elles seront retirées à l\'envoi, après '
+                                  'validation. Pour en ajouter, passez par '
+                                  'l\'onglet Photos.',
+                              [_buildRemovablePhotos()],
+                            ),
+                          if (_removablePhotos.length > 1)
+                            _section(
+                              'Photo principale',
+                              subtitle: 'Celle affichée en haut de la fiche '
+                                  '(★). Touchez-en une autre pour la proposer.',
+                              [_buildFeaturedPicker()],
+                            ),
+                          _section('Commentaire', subtitle: 'Facultatif', [
+                            AppTextField(
+                              controller: _comment,
+                              hintText:
+                                  'Ex : horaires d\'hiver affichés sur la '
+                                  'porte',
+                              textCapitalization: TextCapitalization.sentences,
+                              minLines: 2,
+                              maxLines: 5,
+                              maxLength: 2000,
+                              enabled: !_isSubmitting,
+                            ),
+                          ]),
+                        ] else ...[
+                          if (!_hasNoMenu)
+                            _section(
+                              'Photos du menu',
+                              subtitle: _veganStatus == VeganStatus.veganOptions
+                                  ? 'Fortement conseillé : elles prouvent l\'option '
+                                      'végane à la validation.'
+                                  : 'Facultatif',
+                              [
+                                PickedPhotosRow(
+                                  photos: _menuPhotos,
+                                  max: _maxPhotosPerKind,
+                                  enabled: !_isSubmitting,
+                                  onChanged: (p) =>
+                                      setState(() => _menuPhotos = p),
+                                ),
+                              ],
+                            ),
+                          _section(
+                            'Photos du lieu',
+                            subtitle: _placePhotos.length > 1
+                                ? 'Facultatif. Touchez une photo pour en faire '
+                                    'la photo principale (★).'
+                                : 'Facultatif. La première sera la photo '
+                                    'principale.',
+                            [
+                              PickedPhotosRow(
+                                photos: _placePhotos,
+                                max: _maxPhotosPerKind,
+                                enabled: !_isSubmitting,
+                                onChanged: (p) =>
+                                    setState(() => _placePhotos = p),
+                                featured: _mainPhoto,
+                                onFeaturedChanged: (photo) =>
+                                    setState(() => _chosenMainPhoto = photo),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(48.w, 18.h, 48.w, 24.h),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_error != null) ...[
+                        FormErrorBanner(message: _error!),
+                        SizedBox(height: 18.h),
+                      ],
+                      if (_progress != null) ...[
+                        Text(_progress!,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.bodyRegular13
+                                .copyWith(color: Colors.grey[600])),
+                        SizedBox(height: 12.h),
+                      ],
+                      AppButton(
+                        label: _isSuggestion
+                            ? 'Envoyer la proposition'
+                            : 'Envoyer',
+                        backgroundColor: primary,
+                        isLoading: _isSubmitting,
+                        onPressed: _submit,
+                      ),
                     ],
                   ),
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.fromLTRB(48.w, 18.h, 48.w, 24.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (_error != null) ...[
-                      FormErrorBanner(message: _error!),
-                      SizedBox(height: 18.h),
-                    ],
-                    if (_progress != null) ...[
-                      Text(_progress!,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyRegular13
-                              .copyWith(color: Colors.grey[600])),
-                      SizedBox(height: 12.h),
-                    ],
-                    AppButton(
-                      label:
-                          _isSuggestion ? 'Envoyer la proposition' : 'Envoyer',
-                      backgroundColor: primary,
-                      isLoading: _isSubmitting,
-                      onPressed: _submit,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

@@ -10,7 +10,8 @@ typedef PageLoader<T> = Future<({List<T> items, int pages})?> Function(
 /// List loaded page by page as the user scrolls, with pull-to-refresh and
 /// the standard empty/error states. [itemBuilder] gets a `reload` callback
 /// to refresh the list after an item changed (e.g. edited in a sheet).
-/// Keeps its content when it scrolls out of a TabBarView.
+/// Keeps its content when it scrolls out of a TabBarView. [header] scrolls
+/// with the items, above them (or above the empty state).
 class PaginatedListView<T> extends StatefulWidget {
   final PageLoader<T> loadPage;
   final Widget Function(BuildContext context, T item, VoidCallback reload)
@@ -18,6 +19,7 @@ class PaginatedListView<T> extends StatefulWidget {
   final String emptyTitle;
   final String emptySubtitle;
   final String errorTitle;
+  final Widget? header;
 
   const PaginatedListView({
     super.key,
@@ -26,6 +28,7 @@ class PaginatedListView<T> extends StatefulWidget {
     required this.emptyTitle,
     required this.emptySubtitle,
     required this.errorTitle,
+    this.header,
   });
 
   @override
@@ -119,12 +122,20 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>>
         onButtonTap: _loadFirstPage,
       );
     }
+    final header = widget.header;
     if (_items.isEmpty) {
-      return EmptyStateView(
+      final empty = EmptyStateView(
         title: widget.emptyTitle,
         subtitle: widget.emptySubtitle,
       );
+      if (header == null) return empty;
+      return ListView(
+        padding: EdgeInsets.fromLTRB(
+            AppSpacing.pageHorizontal, 24.h, AppSpacing.pageHorizontal, 32.h),
+        children: [header, SizedBox(height: 60.h), empty],
+      );
     }
+    final offset = header == null ? 0 : 1;
     return RefreshIndicator(
       onRefresh: () => _loadFirstPage(showLoader: false),
       child: ListView.separated(
@@ -132,9 +143,11 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>>
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.fromLTRB(
             AppSpacing.pageHorizontal, 24.h, AppSpacing.pageHorizontal, 32.h),
-        itemCount: _items.length + (_isLoadingMore ? 1 : 0),
+        itemCount: offset + _items.length + (_isLoadingMore ? 1 : 0),
         separatorBuilder: (_, __) => SizedBox(height: AppSpacing.item),
-        itemBuilder: (context, index) {
+        itemBuilder: (context, position) {
+          if (position < offset) return header!;
+          final index = position - offset;
           if (index >= _items.length) {
             return const Padding(
               padding: EdgeInsets.all(16.0),

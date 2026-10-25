@@ -198,33 +198,38 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   // ── Photos ────────────────────────────────────────────────────────────────
 
   Future<void> _addPhotos() async {
-    final kind = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => BottomSheetShell(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Ajouter une photo', style: AppTextStyles.baloo22),
-            SizedBox(height: 24.h),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.menu_book_outlined),
-              title: Text('Du menu', style: AppTextStyles.bodyRegular15),
-              onTap: () => Navigator.of(ctx).pop(RestaurantPhoto.kindMenu),
+    // A grocery only has photos of the place: no need to ask
+    final kind = _restaurant.hasNoMenu
+        ? RestaurantPhoto.kindPlace
+        : await showModalBottomSheet<String>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (ctx) => BottomSheetShell(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Ajouter une photo', style: AppTextStyles.baloo22),
+                  SizedBox(height: 24.h),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.menu_book_outlined),
+                    title: Text('Du menu', style: AppTextStyles.bodyRegular15),
+                    onTap: () =>
+                        Navigator.of(ctx).pop(RestaurantPhoto.kindMenu),
+                  ),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.storefront_outlined),
+                    title: Text('Du lieu', style: AppTextStyles.bodyRegular15),
+                    onTap: () =>
+                        Navigator.of(ctx).pop(RestaurantPhoto.kindPlace),
+                  ),
+                ],
+              ),
             ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.storefront_outlined),
-              title: Text('Du lieu', style: AppTextStyles.bodyRegular15),
-              onTap: () => Navigator.of(ctx).pop(RestaurantPhoto.kindPlace),
-            ),
-          ],
-        ),
-      ),
-    );
+          );
     if (kind == null || !mounted) return;
 
     final remaining = _maxPhotosPerKind - _restaurant.photosOfKind(kind).length;
@@ -336,7 +341,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
       subtitle: _restaurant.name,
       initialRating: draft?.rating ?? existing?.rating,
       initialComment: draft != null ? draft.comment : existing?.comment,
-      criteria: [for (final c in RestaurantCriterion.all) (c.field, c.label)],
+      criteria: [
+        for (final c in RestaurantCriterion.all)
+          // Nothing to taste on the spot in a grocery
+          if (!(_restaurant.hasNoMenu && c.key == 'taste')) (c.field, c.label),
+      ],
       initialCriteria: initialCriteria,
       lockedCriteria: {if (_restaurant.isFullyVegan) 'rating_choice'},
       maxPhotos: _maxPhotosPerReview - (existing?.photos.length ?? 0),
@@ -561,6 +570,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
               'Options véganes',
               Text(r.veganOptionsDetails!,
                   style: AppTextStyles.bodyRegular15.copyWith(height: 1.3))),
+        if (r.menuUrl != null)
+          Padding(
+            padding: EdgeInsets.only(top: 24.h),
+            child: _contactRow(Icons.menu_book_outlined, 'Voir le menu',
+                _socialUrl(r.menuUrl!, r.menuUrl!)),
+          ),
         if (surcharge != null)
           Padding(
             padding: EdgeInsets.only(top: 36.h),
@@ -673,7 +688,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
       padding: EdgeInsets.fromLTRB(
           48.w, 24.h, 48.w, 64.h + MediaQuery.of(context).padding.bottom),
       children: [
-        _photoGrid('Menu', _restaurant.photosOfKind(RestaurantPhoto.kindMenu)),
+        if (!_restaurant.hasNoMenu)
+          _photoGrid(
+              'Menu', _restaurant.photosOfKind(RestaurantPhoto.kindMenu)),
         _photoGrid('Lieu', _restaurant.photosOfKind(RestaurantPhoto.kindPlace)),
         SizedBox(height: AppSpacing.section),
         Center(
@@ -903,7 +920,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
           if (_reviews.isEmpty) ...[
             if (_myReview == null)
               const ReviewsEmptyState(
-                  subtitle: 'Soyez le premier à mettre un avis 🌱'),
+                  subtitle: 'Soyez la première personne à mettre un avis  🌱'),
             SizedBox(height: 20.h),
             ..._buildMyReviewSection(),
           ] else ...[

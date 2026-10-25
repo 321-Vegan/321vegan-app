@@ -6,7 +6,8 @@ import 'app_button.dart';
 
 /// The app's dialog look (as the update dialog): an illustration, a title,
 /// a message, optional [content], then a full-width primary button and a
-/// grey text link for the secondary choice.
+/// grey text link for the secondary choice — or a second button when
+/// [secondaryColor] is given (two real choices).
 class AppDialog extends StatelessWidget {
   /// Asset of the illustration, e.g. a character from
   /// `lib/assets/images/characters/`.
@@ -21,6 +22,7 @@ class AppDialog extends StatelessWidget {
   final Color? primaryColor;
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
+  final Color? secondaryColor;
 
   const AppDialog({
     super.key,
@@ -33,6 +35,7 @@ class AppDialog extends StatelessWidget {
     this.primaryColor,
     this.secondaryLabel,
     this.onSecondary,
+    this.secondaryColor,
   });
 
   @override
@@ -72,7 +75,17 @@ class AppDialog extends StatelessWidget {
                 onPressed: onPrimary,
               ),
             ),
-            if (secondaryLabel != null) ...[
+            if (secondaryLabel != null && secondaryColor != null) ...[
+              SizedBox(height: 18.h),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: secondaryLabel!,
+                  backgroundColor: secondaryColor!,
+                  onPressed: onSecondary,
+                ),
+              ),
+            ] else if (secondaryLabel != null) ...[
               SizedBox(height: 8.h),
               TextButton(
                 onPressed: onSecondary,

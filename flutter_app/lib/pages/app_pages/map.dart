@@ -10,6 +10,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
+import 'package:vegan_app/helpers/restaurant_drafts.dart';
 import 'package:vegan_app/models/restaurants/restaurant.dart';
 import 'package:vegan_app/models/shops/shop.dart';
 import 'package:vegan_app/pages/app_pages/Profile/saved_restaurants_page.dart';
@@ -29,6 +30,7 @@ import 'package:vegan_app/widgets/map/map_search_page.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
 import 'package:vegan_app/widgets/restaurants/create_restaurant_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_detail_page.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_drafts_list.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_filter_sheet.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_pin.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
@@ -504,11 +506,21 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     });
   }
 
+  /// Opens the creation form, after offering to go on with a draft saved
+  /// on this device.
   Future<void> _createRestaurant() async {
+    RestaurantDraft? draft;
+    final drafts = await RestaurantDrafts.all();
+    if (!mounted) return;
+    if (drafts.isNotEmpty) {
+      final choice = await showRestaurantDraftPicker(context, drafts);
+      if (choice == null || !mounted) return;
+      draft = choice.draft;
+    }
     final result = await Navigator.of(context).push<Object>(
       MaterialPageRoute(
-        builder: (_) =>
-            CreateRestaurantPage(mapCenter: _mapController.camera.center),
+        builder: (_) => CreateRestaurantPage(
+            mapCenter: _mapController.camera.center, draft: draft),
       ),
     );
     if (!mounted) return;
@@ -523,7 +535,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     if (result != true) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Merci ! Le restaurant sera visible après '
+        content: Text('Merci ! Le lieu sera visible après '
             'validation.'),
         backgroundColor: kSemanticSuccess,
       ),

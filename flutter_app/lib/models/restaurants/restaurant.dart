@@ -20,6 +20,7 @@ class RestaurantTags {
   ];
 
   static const caterer = 'caterer';
+  static const grocery = 'grocery';
 
   /// Accommodations are listed for their restaurant or breakfast.
   static const accommodations = {'hotel', 'guesthouse', 'hostel'};
@@ -248,6 +249,9 @@ class Restaurant {
   final String? website;
   final String? facebook;
   final String? instagram;
+
+  /// Online menu (web page or PDF), when the place has one.
+  final String? menuUrl;
   final String operatingStatus;
   final DateTime? closedFrom;
   final DateTime? closedUntil;
@@ -286,6 +290,7 @@ class Restaurant {
     this.website,
     this.facebook,
     this.instagram,
+    this.menuUrl,
     this.operatingStatus = OperatingStatus.open,
     this.closedFrom,
     this.closedUntil,
@@ -301,6 +306,10 @@ class Restaurant {
 
   bool get isFullyVegan => veganStatus == VeganStatus.fullyVegan;
   bool get isCaterer => tags.contains(RestaurantTags.caterer);
+
+  /// A grocery and nothing else: no menu (link or photos).
+  bool get hasNoMenu =>
+      tags.length == 1 && tags.first == RestaurantTags.grocery;
   bool get isPermanentlyClosed =>
       operatingStatus == OperatingStatus.permanentlyClosed;
 
@@ -341,6 +350,7 @@ class Restaurant {
       website: json['website'] as String?,
       facebook: json['facebook'] as String?,
       instagram: json['instagram'] as String?,
+      menuUrl: json['menu_url'] as String?,
       operatingStatus:
           json['operating_status'] as String? ?? OperatingStatus.open,
       closedFrom: _date(json['closed_from']),

@@ -808,7 +808,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       );
     }
     return const ReviewsEmptyState(
-      subtitle: 'Soyez le premier à mettre un avis 🌱',
+      subtitle: 'Soyez la première personne à mettre un avis 🌱',
     );
   }
 

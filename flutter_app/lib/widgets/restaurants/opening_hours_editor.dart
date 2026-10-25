@@ -3,11 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
+import 'opening_slot_sheet.dart';
 
-/// Week schedule input: a row per day with its slots (tap one to remove
-/// it), a "+" to add one, e.g. 12:00–14:30 then 19:00–23:00, and a menu to
-/// add the slots of another day. A slot closing before it opens ends
-/// after midnight.
+/// Week schedule input: a row per day with its slots (tap one to change
+/// it, its cross to remove it), a "+" to add one (to several days at once
+/// if wanted), e.g. 12:00–14:30 then 19:00–23:00, and a menu to add the
+/// slots of another day. A slot closing before it opens ends after
+/// midnight.
 class OpeningHoursEditor extends StatelessWidget {
   final List<OpeningSlot> slots;
   final ValueChanged<List<OpeningSlot>> onChanged;
@@ -20,42 +22,58 @@ class OpeningHoursEditor extends StatelessWidget {
     this.enabled = true,
   });
 
-  static String _format(TimeOfDay time) =>
-      '${time.hour.toString().padLeft(2, '0')}:'
-      '${time.minute.toString().padLeft(2, '0')}';
+  /// Adds a slot from the wheels sheet, to [day] and the other days
+  /// picked there. A day where it would overlap another slot is skipped
+  /// (and named).
+  Future<void> _addSlot(BuildContext context, int day) async {
+    final entry = await showOpeningSlotSheet(context, day: day);
+    if (entry == null || !context.mounted) return;
 
-  Future<TimeOfDay?> _pickTime(
-      BuildContext context, String help, TimeOfDay initial) {
-    return showTimePicker(
-      context: context,
-      initialTime: initial,
-      helpText: help,
-      builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
-        child: child!,
-      ),
-    );
+    var updated = [...slots];
+    final skipped = <int>[];
+    for (final d in entry.days.toList()..sort()) {
+      final daySlots = [
+        for (final service in entry.services)
+          OpeningSlot(day: d, open: service.open, close: service.close),
+      ];
+      // Already there: nothing to add
+      final missing = [
+        for (final slot in daySlots)
+          if (!updated.any((s) => s.day == d && s.label == slot.label)) slot,
+      ];
+      if (missing.isEmpty) continue;
+      final withSlots = [...updated, ...missing];
+      if (OpeningSlot.anyOverlap(withSlots)) {
+        skipped.add(d);
+      } else {
+        updated = withSlots;
+      }
+    }
+    if (updated.length != slots.length) onChanged(updated);
+    if (skipped.isNotEmpty) {
+      _warn(
+          context,
+          'Pas ajouté le ${skipped.map(dayName).join(', ')} : ces horaires '
+          'chevauchent un autre créneau.');
+    }
   }
 
-  Future<void> _addSlot(BuildContext context, int day) async {
-    final open = await _pickTime(
-        context,
-        '${dayName(day, capitalize: true)} : ouverture',
-        const TimeOfDay(hour: 12, minute: 0));
-    if (open == null || !context.mounted) return;
-    final close = await _pickTime(
-        context,
-        '${dayName(day, capitalize: true)} : fermeture',
-        TimeOfDay(hour: (open.hour + 3) % 24, minute: open.minute));
-    if (close == null || !context.mounted) return;
-
-    if (open == close) {
-      _warn(context, 'L\'ouverture et la fermeture doivent être différentes.');
-      return;
-    }
-    final slot =
-        OpeningSlot(day: day, open: _format(open), close: _format(close));
-    final updated = [...slots, slot];
+  /// Changes the times of [slot], on its own day.
+  Future<void> _editSlot(BuildContext context, OpeningSlot slot) async {
+    final entry = await showOpeningSlotSheet(context,
+        day: slot.day,
+        open: slot.open,
+        close: slot.close,
+        allowOtherDays: false);
+    if (entry == null || !context.mounted) return;
+    final changed = entry.services.first;
+    final updated = [
+      for (final s in slots)
+        s == slot
+            ? OpeningSlot(
+                day: slot.day, open: changed.open, close: changed.close)
+            : s,
+    ];
     if (OpeningSlot.anyOverlap(updated)) {
       _warn(context, 'Ce créneau chevauche un autre créneau.');
       return;
@@ -146,6 +164,9 @@ class OpeningHoursEditor extends StatelessWidget {
                           InputChip(
                             label: Text(slot.label,
                                 style: AppTextStyles.bodyRegular13),
+                            tooltip: 'Modifier le créneau',
+                            onPressed:
+                                enabled ? () => _editSlot(context, slot) : null,
                             onDeleted: enabled
                                 ? () => onChanged([...slots]..remove(slot))
                                 : null,

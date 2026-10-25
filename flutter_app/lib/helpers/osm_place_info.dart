@@ -14,6 +14,7 @@ class OsmPlaceInfo {
   final String? website;
   final String? facebook;
   final String? instagram;
+  final String? menuUrl;
 
   const OsmPlaceInfo({
     this.name,
@@ -25,6 +26,7 @@ class OsmPlaceInfo {
     this.website,
     this.facebook,
     this.instagram,
+    this.menuUrl,
   });
 
   /// OSM category/type → restaurant tag.
@@ -91,6 +93,7 @@ class OsmPlaceInfo {
       website: tag(['website', 'contact:website']),
       facebook: tag(['contact:facebook', 'facebook']),
       instagram: tag(['contact:instagram', 'instagram']),
+      menuUrl: tag(['website:menu', 'menu:url']),
     );
   }
 }

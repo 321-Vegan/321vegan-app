@@ -12,7 +12,7 @@ class ReviewsEmptyState extends StatelessWidget {
   const ReviewsEmptyState({
     super.key,
     this.title = 'Aucun avis pour le moment',
-    this.subtitle = 'Soyez le premier à donner votre avis 🌱',
+    this.subtitle = 'Soyez la première personne à mettre un avis 🌱',
   });
 
   @override

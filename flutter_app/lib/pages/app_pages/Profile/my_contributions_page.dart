@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:vegan_app/helpers/restaurant_drafts.dart';
+import 'package:vegan_app/widgets/restaurants/create_restaurant_page.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_drafts_list.dart';
 import 'package:vegan_app/models/product_rating.dart';
 import 'package:vegan_app/models/restaurants/restaurant.dart';
 import 'package:vegan_app/models/restaurants/restaurant_review.dart';
@@ -48,8 +52,8 @@ class MyContributionsPage extends StatelessWidget {
               tabAlignment: TabAlignment.center,
               tabs: [
                 Tab(text: 'Notes'),
-                Tab(text: 'Avis restos'),
-                Tab(text: 'Restos'),
+                Tab(text: 'Avis'),
+                Tab(text: 'Lieux'),
                 Tab(text: 'Propositions'),
               ],
             ),
@@ -197,12 +201,80 @@ class _RestaurantReviewsTab extends StatelessWidget {
 
 // ── Restaurants created ─────────────────────────────────────────────────────
 
-class _RestaurantsTab extends StatelessWidget {
+class _RestaurantsTab extends StatefulWidget {
   const _RestaurantsTab();
+
+  @override
+  State<_RestaurantsTab> createState() => _RestaurantsTabState();
+}
+
+/// The restaurants created, with the drafts saved on this device above.
+class _RestaurantsTabState extends State<_RestaurantsTab> {
+  List<RestaurantDraft> _drafts = [];
+
+  /// Changed to reload the list once a draft is sent.
+  int _listVersion = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDrafts();
+  }
+
+  Future<void> _loadDrafts() async {
+    final drafts = await RestaurantDrafts.all();
+    if (mounted) setState(() => _drafts = drafts);
+  }
+
+  Future<void> _openDraft(RestaurantDraft draft) async {
+    final lat = (draft.fields['latitude'] as num?)?.toDouble();
+    final lng = (draft.fields['longitude'] as num?)?.toDouble();
+    final created = await Navigator.of(context).push<Object>(
+      MaterialPageRoute(
+        builder: (_) => CreateRestaurantPage(
+          // Where the pin picker starts without a position: France
+          mapCenter: lat != null && lng != null
+              ? LatLng(lat, lng)
+              : const LatLng(46.2276, 2.2137),
+          draft: draft,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    await _loadDrafts();
+    if (created == true) setState(() => _listVersion++);
+  }
+
+  Future<void> _deleteDraft(RestaurantDraft draft) async {
+    if (await confirmDeleteRestaurantDraft(context, draft)) _loadDrafts();
+  }
+
+  Widget? _buildDrafts() {
+    if (_drafts.isEmpty) return null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Brouillons sur ce téléphone', style: AppTextStyles.bodyBold15),
+        SizedBox(height: 18.h),
+        for (final draft in _drafts) ...[
+          RestaurantDraftCard(
+            draft: draft,
+            onTap: () => _openDraft(draft),
+            onDelete: () => _deleteDraft(draft),
+          ),
+          SizedBox(height: 18.h),
+        ],
+        SizedBox(height: 18.h),
+        Text('Envoyés', style: AppTextStyles.bodyBold15),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return PaginatedListView<Restaurant>(
+      key: ValueKey(_listVersion),
+      header: _buildDrafts(),
       loadPage: (page) => RestaurantApiService.getMyRestaurants(
           page: page, pageSize: _pageSize),
       emptyTitle: 'Aucun restaurant',
@@ -255,6 +327,7 @@ const _fieldLabels = {
   'website': 'site',
   'facebook': 'Facebook',
   'instagram': 'Instagram',
+  'menu_url': 'menu',
   'operating_status': 'ouverture',
   'closed_from': 'fermeture',
   'closed_until': 'fermeture',

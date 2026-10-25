@@ -120,9 +120,8 @@ class _ReviewFormSheetState extends State<_ReviewFormSheet> {
   late int? _rating = widget.initialRating;
   late final Map<String, int?> _criteria = {...widget.initialCriteria};
   late List<File> _photos = [...widget.initialPhotos];
-  // Locked values were not entered by the user: no reason to unfold
-  late bool _criteriaExpanded = widget.initialCriteria.entries
-      .any((e) => e.value != null && !widget.lockedCriteria.contains(e.key));
+  // Unfolded from the start, so the detailed ratings get noticed
+  bool _criteriaExpanded = true;
 
   @override
   void dispose() {
