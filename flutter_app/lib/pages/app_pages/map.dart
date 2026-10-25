@@ -38,7 +38,7 @@ import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 /// Places shown on the map, one kind at a time.
 enum _MapLayer { shops, restaurants }
 
-const _compactPinsBelowZoom = 16.0;
+const _compactPinsBelowZoom = 15.0;
 
 /// A bit smaller than the shop pins (40), to make room for the stars.
 const double _restaurantPinSize = 34;
@@ -424,7 +424,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
         for (final restaurant in _restaurants)
           Marker(
             point: LatLng(restaurant.latitude, restaurant.longitude),
-            // Widens with several tags; the reviews stars sit above
+            // Widens with several tags; the reviews average sits above
             width: RestaurantPin.widthFor(restaurant, _restaurantPinSize,
                 compact: compact, showRating: true),
             height:

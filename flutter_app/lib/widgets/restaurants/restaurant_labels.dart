@@ -18,13 +18,13 @@ const _tagStyles = <String, (IconData, Color)>{
   'ice_cream': (Icons.icecream, Color(0xFFE0609F)),
   'food_truck': (Icons.local_shipping, Color(0xFFB4457E)),
   'bar': (Icons.local_bar, Color(0xFF7E3F8F)),
-  'caterer': (Icons.delivery_dining, Color(0xFFA9739E)),
+  'caterer': (Icons.soup_kitchen, Color(0xFFA9739E)),
   // Shop
   'grocery': (Icons.local_grocery_store, Color(0xFF00838F)),
   // Sleep
   'hotel': (Icons.hotel, Color(0xFF1F4E79)),
-  'guesthouse': (Icons.cottage, Color(0xFF2E86C1)),
-  'hostel': (Icons.backpack, Color(0xFF4FA3D9)),
+  'guesthouse': (Icons.hotel, Color(0xFF2E86C1)),
+  'hostel': (Icons.hotel, Color(0xFF4FA3D9)),
 };
 
 IconData restaurantTagIcon(String tag) =>

@@ -24,11 +24,18 @@ class InfoBox extends StatelessWidget {
   /// wrapping circle.
   final IconData? icon;
 
+  /// Text, icon and border color; yellow by default (e.g. [kSemanticError]
+  /// for something to watch out for).
+  final Color color;
+  final Color backgroundColor;
+
   const InfoBox({
     required this.text,
     this.symbol = 'i',
     this.iconAsset,
     this.icon,
+    this.color = kAccentYellow,
+    this.backgroundColor = kSecondaryTag,
     super.key,
   });
 
@@ -38,10 +45,10 @@ class InfoBox extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(45.w),
       decoration: ShapeDecoration(
-        color: kSecondaryTag,
+        color: backgroundColor,
         shape: squircleBorder(
           radius: 48.r,
-          side: const BorderSide(color: kAccentYellow),
+          side: BorderSide(color: color),
         ),
       ),
       child: Row(
@@ -53,27 +60,27 @@ class InfoBox extends StatelessWidget {
               style: TextStyle(
                 fontSize: 42.sp,
                 fontWeight: FontWeight.w500,
-                color: kAccentYellow,
+                color: color,
               ),
             ),
           ),
           SizedBox(width: 30.w),
           if (icon != null)
-            Icon(icon, color: kAccentYellow, size: 56.sp)
+            Icon(icon, color: color, size: 56.sp)
           else if (iconAsset != null)
             Image.asset(
               iconAsset!,
               width: 56.w,
               height: 56.w,
-              color: kAccentYellow,
+              color: color,
               colorBlendMode: BlendMode.srcIn,
             )
           else
             Container(
               width: 56.w,
               height: 56.w,
-              decoration: const BoxDecoration(
-                color: kAccentYellow,
+              decoration: BoxDecoration(
+                color: color,
                 shape: BoxShape.circle,
               ),
               child: Center(

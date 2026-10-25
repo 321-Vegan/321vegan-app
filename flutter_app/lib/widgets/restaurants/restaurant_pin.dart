@@ -11,7 +11,7 @@ import 'restaurant_labels.dart';
 /// icon in the tag color (up to [_maxIcons], then a "+"), so it widens with
 /// several tags. Struck through in red when closed for good,
 /// and faded while the user's own restaurant is pending. With [showRating],
-/// the average of its reviews in stars above it.
+/// the average of its reviews above it ("★ 4,3").
 class RestaurantPin extends StatelessWidget {
   final Restaurant restaurant;
 
@@ -23,7 +23,7 @@ class RestaurantPin extends StatelessWidget {
   /// For when the map is zoomed out and wide pins would crowd it.
   final bool compact;
 
-  /// Stars above the pin, filled to the reviews average. The room is kept
+  /// The reviews average above the pin ("★ 4,3"). The room is kept
   /// without reviews, so every marker has the same anchor.
   final bool showRating;
 
@@ -45,14 +45,15 @@ class RestaurantPin extends StatelessWidget {
   // 20 px icons on a 40 px pin, the same weight as the shop pins
   static const _iconRatio = 0.5;
   static const _multipleTagsIcon = Icons.category;
-  static const _starRatio = 0.24;
-  static const _ratingPadding = 2.0;
+  // "★ 4,3" badge: 11 px text on a 34 px pin
+  static const _ratingFontRatio = 0.32;
+  static const _ratingPadding = 4.0;
   static const _ratingGap = 2.0;
 
+  /// Enough for a star and "4,3".
   static double _ratingWidth(double size) =>
-      5 * size * _starRatio + 2 * _ratingPadding;
-  static double _ratingHeight(double size) =>
-      size * _starRatio + 2 * _ratingPadding;
+      size * _ratingFontRatio * 3.4 + 2 * _ratingPadding;
+  static double _ratingHeight(double size) => size * _ratingFontRatio * 1.3 + 2;
 
   /// Tags without any: a caterer when there is no storefront.
   static List<String> _tags(Restaurant restaurant) => restaurant.tags.isNotEmpty
@@ -189,7 +190,8 @@ class RestaurantPin extends StatelessWidget {
                   height: _ratingHeight(size),
                   child: restaurant.reviewCount > 0 && rating != null
                       ? Container(
-                          padding: const EdgeInsets.all(_ratingPadding),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: _ratingPadding),
                           decoration: ShapeDecoration(
                             color: Colors.white,
                             shape:
@@ -203,8 +205,26 @@ class RestaurantPin extends StatelessWidget {
                                 ),
                             ],
                           ),
-                          child: StarRating(
-                              value: rating, size: size * _starRatio),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.star_rounded,
+                                  size: size * _ratingFontRatio * 1.1,
+                                  color: kAccentYellow),
+                              const SizedBox(width: 1),
+                              Text(
+                                formatRatingAverage(rating),
+                                // Sized to fit the marker, like the icons
+                                textScaler: TextScaler.noScaling,
+                                style: TextStyle(
+                                  fontSize: size * _ratingFontRatio,
+                                  fontWeight: FontWeight.w700,
+                                  color: kTextPrimary,
+                                  height: 1,
+                                ),
+                              ),
+                            ],
+                          ),
                         )
                       : null,
                 ),

@@ -1099,7 +1099,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                           _gap(),
                           AppTextField(
                             controller: _instagram,
-                            hintText: 'Instagram (@compte)',
+                            hintText: 'Instagram (ex. @govegan)',
                             enabled: !_isSubmitting,
                           ),
                         ],

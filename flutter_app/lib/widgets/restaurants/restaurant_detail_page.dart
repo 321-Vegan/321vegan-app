@@ -556,18 +556,20 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         if (surcharge != null)
           Padding(
             padding: EdgeInsets.only(top: 36.h),
-            child: Row(
-              children: [
-                Icon(Icons.local_cafe_outlined,
-                    size: 52.sp,
-                    color: (r.plantMilkSurcharge ?? 0) > 0
-                        ? kAccentYellow
-                        : kSemanticSuccess),
-                SizedBox(width: 18.w),
-                Expanded(
-                    child: Text(surcharge, style: AppTextStyles.bodyMedium15)),
-              ],
-            ),
+            // Red when plant milk costs more, so it can't be missed
+            child: (r.plantMilkSurcharge ?? 0) > 0
+                ? InfoBox(
+                    text: surcharge,
+                    icon: Icons.local_cafe_outlined,
+                    color: kSemanticError,
+                    backgroundColor: kSemanticError.withValues(alpha: 0.08),
+                  )
+                : InfoBox(
+                    text: surcharge,
+                    icon: Icons.local_cafe_outlined,
+                    color: kSemanticSuccess,
+                    backgroundColor: kPrimaryTag,
+                  ),
           ),
         if (r.description != null)
           _section(
@@ -1027,110 +1029,133 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         ? [r.address, r.city].whereType<String>().join(', ')
         : r.city ?? '';
 
+    // Name and vegan status beside the buttons, then address and opening
+    // with the kinds of place on their right, in the room the buttons
+    // leave free
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 12.h),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(
-                      child: Text(r.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.baloo26),
-                    ),
-                    if (reviewCount > 0 && ratingAvg != null) ...[
-                      SizedBox(width: 18.w),
-                      Icon(Icons.star, size: 48.sp, color: kAccentYellow),
-                      SizedBox(width: 6.w),
-                      Text(
-                        formatRatingAverage(ratingAvg),
-                        style: TextStyle(
-                          fontSize: 44.sp,
-                          fontWeight: FontWeight.w600,
-                          color: kAccentYellow,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(r.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.baloo26),
                         ),
-                      ),
-                      SizedBox(width: 6.w),
-                      Text('(${formatRatingCount(reviewCount)})',
-                          style: TextStyle(
-                              fontSize: 40.sp, color: Colors.grey[500])),
+                        if (reviewCount > 0 && ratingAvg != null) ...[
+                          SizedBox(width: 18.w),
+                          Icon(Icons.star, size: 48.sp, color: kAccentYellow),
+                          SizedBox(width: 6.w),
+                          Text(
+                            formatRatingAverage(ratingAvg),
+                            style: TextStyle(
+                              fontSize: 44.sp,
+                              fontWeight: FontWeight.w600,
+                              color: kAccentYellow,
+                            ),
+                          ),
+                          SizedBox(width: 6.w),
+                          Text('(${formatRatingCount(reviewCount)})',
+                              style: TextStyle(
+                                  fontSize: 40.sp, color: Colors.grey[500])),
+                        ],
+                      ],
+                    ),
+                    // Vegan status right under the name, apart from the kinds
+                    // of place
+                    SizedBox(height: 9.h),
+                    VeganStatusChip(isFullyVegan: r.isFullyVegan),
+                  ],
+                ),
+              ),
+              if (_isLoggedIn) ...[
+                SizedBox(width: 24.w),
+                Semantics(
+                  button: true,
+                  label: _isSaved ? 'Retirer des sauvegardés' : 'Sauvegarder',
+                  child: SquareIconButton(
+                    onTap: _toggleSaved,
+                    size: 102.w,
+                    radius: 30.r,
+                    backgroundColor: Colors.white,
+                    shadows: const [],
+                    child: Icon(
+                      _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 54.sp,
+                    ),
+                  ),
+                ),
+              ],
+              if (r.hasStorefront) ...[
+                SizedBox(width: 24.w),
+                SquareIconButton(
+                  onTap: _openItinerary,
+                  size: 102.w,
+                  radius: 30.r,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  shadows: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                  child: Icon(Icons.map, color: Colors.white, size: 54.sp),
+                ),
+              ],
+              if (_isLoggedIn && r.validated) _buildSuggestMenu(),
+            ],
+          ),
+          SizedBox(height: 9.h),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (location.isNotEmpty)
+                      Text(location,
+                          style: AppTextStyles.bodyMedium15
+                              .copyWith(color: Colors.grey[600])),
+                    SizedBox(height: 6.h),
+                    OpeningStatusLine(restaurant: r),
+                    if (!r.validated) ...[
+                      SizedBox(height: 12.h),
+                      Text('En attente de validation',
+                          style: AppTextStyles.bodyMedium13
+                              .copyWith(color: kAccentYellow)),
                     ],
                   ],
                 ),
-                // Vegan status right under the name, apart from the kinds
-                // of place
-                SizedBox(height: 9.h),
-                VeganStatusChip(isFullyVegan: r.isFullyVegan),
-                if (location.isNotEmpty) ...[
-                  SizedBox(height: 9.h),
-                  Text(location,
-                      style: AppTextStyles.bodyMedium15
-                          .copyWith(color: Colors.grey[600])),
-                ],
-                SizedBox(height: 6.h),
-                OpeningStatusLine(restaurant: r),
-                if (r.tags.isNotEmpty) ...[
-                  SizedBox(height: 18.h),
-                  Wrap(
+              ),
+              if (r.tags.isNotEmpty) ...[
+                SizedBox(width: 24.w),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 0.4.sw),
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
                     spacing: 12.w,
                     runSpacing: 12.h,
                     children: [
                       for (final tag in r.tags) RestaurantTagChip(tag: tag),
                     ],
                   ),
-                ],
-                if (!r.validated) ...[
-                  SizedBox(height: 12.h),
-                  Text('En attente de validation',
-                      style: AppTextStyles.bodyMedium13
-                          .copyWith(color: kAccentYellow)),
-                ],
+                ),
               ],
-            ),
+            ],
           ),
-          if (_isLoggedIn) ...[
-            SizedBox(width: 24.w),
-            Semantics(
-              button: true,
-              label: _isSaved ? 'Retirer des sauvegardés' : 'Sauvegarder',
-              child: SquareIconButton(
-                onTap: _toggleSaved,
-                size: 102.w,
-                radius: 30.r,
-                backgroundColor: Colors.white,
-                shadows: const [],
-                child: Icon(
-                  _isSaved ? Icons.bookmark : Icons.bookmark_border,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 54.sp,
-                ),
-              ),
-            ),
-          ],
-          if (r.hasStorefront) ...[
-            SizedBox(width: 24.w),
-            SquareIconButton(
-              onTap: _openItinerary,
-              size: 102.w,
-              radius: 30.r,
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              shadows: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-              child: Icon(Icons.map, color: Colors.white, size: 54.sp),
-            ),
-          ],
-          if (_isLoggedIn && r.validated) _buildSuggestMenu(),
         ],
       ),
     );
