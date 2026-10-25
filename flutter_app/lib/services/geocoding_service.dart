@@ -2,7 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 /// A geocoded place returned by Nominatim (OpenStreetMap). The address parts
-/// are only filled when asked for (`addressDetails`).
+/// are only filled when asked for (`addressDetails`). When the result is a
+/// place itself (a restaurant, a café...), [name], [osmClass]/[osmType]
+/// (e.g. amenity/restaurant) and its OSM [tags] (opening_hours, phone,
+/// diet:vegan...) describe it.
 class PlaceResult {
   final String displayName;
   final double latitude;
@@ -13,6 +16,11 @@ class PlaceResult {
   final String? city;
   final String? country;
 
+  final String? name;
+  final String? osmClass;
+  final String? osmType;
+  final Map<String, String> tags;
+
   PlaceResult({
     required this.displayName,
     required this.latitude,
@@ -20,6 +28,10 @@ class PlaceResult {
     this.street,
     this.city,
     this.country,
+    this.name,
+    this.osmClass,
+    this.osmType,
+    this.tags = const {},
   });
 
   factory PlaceResult.fromJson(Map<String, dynamic> json) {
@@ -49,6 +61,16 @@ class PlaceResult {
       street: street,
       city: city,
       country: country,
+      name: (json['name'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['name'] as String).trim(),
+      osmClass: json['class'] as String?,
+      osmType: json['type'] as String?,
+      tags: {
+        for (final entry
+            in (json['extratags'] as Map<String, dynamic>? ?? {}).entries)
+          if (entry.value is String) entry.key: entry.value as String,
+      },
     );
   }
 }
@@ -65,6 +87,7 @@ class GeocodingService {
   static Future<List<PlaceResult>> search(
     String query, {
     bool addressDetails = false,
+    bool extraTags = false,
   }) async {
     final trimmed = query.trim();
     if (trimmed.length < 3) return [];
@@ -75,6 +98,7 @@ class GeocodingService {
         'format': 'json',
         'limit': '5',
         'addressdetails': addressDetails ? '1' : '0',
+        if (extraTags) 'extratags': '1',
       });
 
       final response = await http.get(url, headers: _headers);

@@ -20,6 +20,7 @@ import '../shared/app_text_field.dart';
 import '../shared/form_error_banner.dart';
 import '../shared/info_box.dart';
 import '../shared/picked_photos_row.dart';
+import '../../helpers/osm_place_info.dart';
 import 'opening_hours_editor.dart';
 import 'pin_picker_page.dart';
 
@@ -94,6 +95,10 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
   /// edited, it's geocoded again on submit (unless the pin was placed).
   String? _geocodedAddress;
   List<PlaceResult> _suggestions = [];
+
+  /// What was prefilled from the OpenStreetMap place picked, to tell the
+  /// user to check it.
+  String? _osmNotice;
   Timer? _debounce;
 
   /// Set while fields are filled from a geocoding result, so it doesn't
@@ -196,8 +201,8 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
     }
     final query = _addressQuery;
     _debounce = Timer(const Duration(milliseconds: 800), () async {
-      final results =
-          await GeocodingService.search(query, addressDetails: true);
+      final results = await GeocodingService.search(query,
+          addressDetails: true, extraTags: true);
       if (mounted && query == _addressQuery) {
         setState(() => _suggestions = results);
       }
@@ -221,7 +226,51 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       _position = LatLng(place.latitude, place.longitude);
       _positionFromPin = false;
       _suggestions = [];
+      _prefillFromOsm(OsmPlaceInfo.from(place));
     });
+  }
+
+  /// Fills the fields still empty with what OpenStreetMap knows about the
+  /// place picked (never what the user already entered).
+  void _prefillFromOsm(OsmPlaceInfo? info) {
+    if (info == null) return;
+    final filled = <String>[];
+    void text(TextEditingController controller, String? value, String label) {
+      if (value == null || controller.text.trim().isNotEmpty) return;
+      controller.text = value;
+      filled.add(label);
+    }
+
+    text(_name, info.name, 'nom');
+    if (_tags.isEmpty && info.tags.isNotEmpty) {
+      _tags.addAll(info.tags);
+      filled.add('type');
+    }
+    if (_veganStatus == null && info.veganStatus != null) {
+      _veganStatus = info.veganStatus;
+      filled.add('statut végane');
+    }
+    if (_serviceOptions.isEmpty && info.serviceOptions.isNotEmpty) {
+      _serviceOptions.addAll(info.serviceOptions);
+      filled.add('sur place / à emporter / livraison');
+    }
+    final hours = info.openingHours;
+    if (_hours.isEmpty && hours != null) {
+      _hours = hours;
+      _hoursUnknown = false;
+      filled.add('horaires');
+    }
+    // Same characters as the phone field accepts
+    text(_phone, info.phone?.replaceAll(RegExp(r'[^0-9+ .()-]'), ''),
+        'téléphone');
+    text(_website, info.website, 'site');
+    text(_facebook, info.facebook, 'Facebook');
+    text(_instagram, info.instagram, 'Instagram');
+
+    _osmNotice = filled.isEmpty
+        ? null
+        : 'Pré-rempli depuis OpenStreetMap (${filled.join(', ')}) : '
+            'vérifiez ces infos.';
   }
 
   /// Places the restaurant with the pin, then fills the address from it.
@@ -666,18 +715,34 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       child: Column(
         children: [
           for (final place in _suggestions)
-            ListTile(
-              dense: true,
-              leading: Icon(Icons.location_on_outlined,
-                  color: Theme.of(context).colorScheme.primary),
-              title: Text(
-                place.displayName,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodyRegular13,
-              ),
-              onTap: () => _selectSuggestion(place),
-            ),
+            Builder(builder: (context) {
+              // A place (restaurant, café...) rather than an address
+              final isPlace =
+                  OsmPlaceInfo.from(place) != null && place.name != null;
+              return ListTile(
+                dense: true,
+                leading: Icon(
+                    isPlace ? Icons.storefront : Icons.location_on_outlined,
+                    color: Theme.of(context).colorScheme.primary),
+                title: isPlace
+                    ? Text(place.name!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodyBold13)
+                    : Text(place.displayName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodyRegular13),
+                subtitle: isPlace
+                    ? Text(place.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodyRegular13
+                            .copyWith(color: Colors.grey[600]))
+                    : null,
+                onTap: () => _selectSuggestion(place),
+              );
+            }),
         ],
       ),
     );
@@ -780,7 +845,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                         AppTextField(
                           controller: _address,
                           hintText: _withStorefront
-                              ? 'Adresse (ex : 12 rue de la Paix, Lyon)'
+                              ? 'Adresse ou nom du lieu (ex : Le Kitchen, Lyon)'
                               : 'Adresse (non publiée)',
                           textCapitalization: TextCapitalization.sentences,
                           enabled: !_isSubmitting,
@@ -806,6 +871,10 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                         if (_withStorefront) ...[
                           _gap(),
                           _buildPositionRow(),
+                          if (_osmNotice != null) ...[
+                            SizedBox(height: 12.h),
+                            InfoBox(text: _osmNotice!),
+                          ],
                         ],
                         _gap(),
                         AppTextField(

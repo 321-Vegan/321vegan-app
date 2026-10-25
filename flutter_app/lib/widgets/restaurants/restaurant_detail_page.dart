@@ -21,6 +21,7 @@ import 'package:vegan_app/widgets/reviews/review_card.dart';
 import 'package:vegan_app/widgets/reviews/review_form_sheet.dart';
 import 'package:vegan_app/widgets/reviews/reviews_empty_state.dart';
 import 'package:vegan_app/widgets/reviews/star_rating.dart';
+import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
@@ -28,26 +29,38 @@ import 'package:vegan_app/widgets/shared/photo_source_sheet.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 import 'package:vegan_app/widgets/shared/tag_chip.dart';
 
-/// Inline confirmation/error — a SnackBar would render behind this modal
-/// sheet.
+/// Inline confirmation/error, shown next to what it is about.
 typedef _Feedback = ({String text, Color color});
 
-class RestaurantDetailSheet extends StatefulWidget {
-  /// The map pin; the full restaurant is loaded when the sheet opens.
+/// Page of a restaurant: header, then infos, photos and reviews tabs.
+class RestaurantDetailPage extends StatefulWidget {
+  /// The map pin; the full restaurant is loaded when the page opens.
   final Restaurant restaurant;
 
-  const RestaurantDetailSheet({super.key, required this.restaurant});
+  const RestaurantDetailPage({super.key, required this.restaurant});
+
+  /// Pushes the page; completes when it is closed.
+  static Future<void> open(BuildContext context, Restaurant restaurant) {
+    return Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => RestaurantDetailPage(restaurant: restaurant),
+    ));
+  }
 
   @override
-  State<RestaurantDetailSheet> createState() => _RestaurantDetailSheetState();
+  State<RestaurantDetailPage> createState() => _RestaurantDetailPageState();
 }
 
-class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
+class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     with SingleTickerProviderStateMixin {
   static const int _maxPhotosPerKind = 10;
   static const int _maxPhotosPerReview = 5;
 
   late Restaurant _restaurant = widget.restaurant;
+
+  /// Map pins don't carry it: known once the full restaurant is loaded,
+  /// unless the user toggled it first.
+  late bool _isSaved = widget.restaurant.isSaved;
+  bool _savedTouched = false;
 
   // Photos tab state
   bool _isUploadingPhotos = false;
@@ -71,11 +84,6 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
   String get _reviewDraftKey => 'restaurant:${widget.restaurant.id}';
 
   late final TabController _tabController;
-  final DraggableScrollableController _sheetController =
-      DraggableScrollableController();
-
-  static const double _minSheetSize = 0.3;
-  static const double _maxSheetSize = 0.85;
 
   bool get _isLoggedIn => AuthService.isLoggedIn;
 
@@ -93,21 +101,17 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
   @override
   void dispose() {
     _tabController.dispose();
-    _sheetController.dispose();
     super.dispose();
-  }
-
-  void _onHandleDragUpdate(DragUpdateDetails details) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final newSize = _sheetController.size - details.delta.dy / screenHeight;
-    _sheetController.jumpTo(newSize.clamp(_minSheetSize, _maxSheetSize));
   }
 
   Future<void> _loadRestaurant() async {
     final restaurant =
         await RestaurantApiService.getRestaurant(widget.restaurant.id);
     if (restaurant != null && mounted) {
-      setState(() => _restaurant = restaurant);
+      setState(() {
+        _restaurant = restaurant;
+        if (!_savedTouched) _isSaved = restaurant.isSaved;
+      });
     }
   }
 
@@ -131,17 +135,63 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
     }
   }
 
+  /// Optimistic: flips right away, back on failure.
+  Future<void> _toggleSaved() async {
+    final saved = !_isSaved;
+    setState(() {
+      _isSaved = saved;
+      _savedTouched = true;
+    });
+    final ok =
+        await RestaurantApiService.setRestaurantSaved(_restaurant.id, saved);
+    if (!mounted) return;
+    if (!ok) setState(() => _isSaved = !saved);
+    // Replaces the previous one when toggled several times in a row
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(!ok
+            ? 'Impossible de modifier les lieux sauvegardés, réessayez.'
+            : saved
+                ? 'Lieu sauvegardé'
+                : 'Sauvegarde retirée'),
+        backgroundColor: ok ? kSemanticSuccess : kSemanticError,
+      ));
+  }
+
   void _openItinerary() => _launch(Uri.parse(
         'https://www.google.com/maps/dir/?api=1'
         '&destination=${_restaurant.latitude},${_restaurant.longitude}',
       ));
 
-  /// A full URL, a bare domain, or a handle ("@resto") on [site].
+  /// A full URL, a URL without scheme ("instagram.com/resto", or the
+  /// website itself when [site] is the value), or a handle on [site] —
+  /// which may hold dots ("@le.resto"), so a dot alone doesn't make a URL.
   static Uri _socialUrl(String value, String site) {
     final trimmed = value.trim();
     if (trimmed.startsWith('http')) return Uri.parse(trimmed);
-    if (trimmed.contains('.')) return Uri.parse('https://$trimmed');
+    if (trimmed.contains('/') || trimmed.contains(site)) {
+      return Uri.parse('https://$trimmed');
+    }
     return Uri.parse('https://$site/${trimmed.replaceFirst('@', '')}');
+  }
+
+  /// "@compte" from a handle or a profile URL, or [fallback] when the URL
+  /// carries no readable name (e.g. facebook.com/profile.php?id=…).
+  static String _socialHandle(String value, String site, String fallback) {
+    var segments = _socialUrl(value, site)
+        .pathSegments
+        .where((s) => s.isNotEmpty)
+        .toList();
+    // facebook.com/p/Nom-123…/ and facebook.com/pages/Nom/123…
+    if (segments.length > 1 && const ['p', 'pages'].contains(segments.first)) {
+      segments = segments.sublist(1);
+    }
+    if (segments.isEmpty || segments.first.contains('.php')) return fallback;
+    final handle = segments.first
+        .replaceFirst('@', '')
+        .replaceFirst(RegExp(r'-\d{6,}$'), '');
+    return '@$handle';
   }
 
   // ── Photos ────────────────────────────────────────────────────────────────
@@ -266,10 +316,12 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
 
   Future<void> _showReviewDialog({RestaurantReview? existing}) async {
     final draft = ReviewDrafts.get(_reviewDraftKey);
-    final Map<String, int?> initialCriteria = draft?.criteria ??
-        existing?.criteria ??
-        // A fully vegan place has the whole menu to choose from
-        {if (_restaurant.isFullyVegan) 'rating_choice': 5};
+    final Map<String, int?> initialCriteria = {
+      ...?(draft?.criteria ?? existing?.criteria),
+      // A fully vegan place has the whole menu to choose from: always 5,
+      // not up to the user
+      if (_restaurant.isFullyVegan) 'rating_choice': 5,
+    };
     final entry = await showReviewFormSheet(
       context,
       title: existing == null ? 'Laisser un avis' : 'Modifier votre avis',
@@ -278,6 +330,7 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
       initialComment: draft != null ? draft.comment : existing?.comment,
       criteria: [for (final c in RestaurantCriterion.all) (c.field, c.label)],
       initialCriteria: initialCriteria,
+      lockedCriteria: {if (_restaurant.isFullyVegan) 'rating_choice'},
       maxPhotos: _maxPhotosPerReview - (existing?.photos.length ?? 0),
       initialPhotos: draft?.photos ?? const [],
       commentHint: 'Plats, accueil, options véganes...',
@@ -429,7 +482,7 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
     );
   }
 
-  Widget _buildInfosTab(ScrollController scrollController) {
+  Widget _buildInfosTab() {
     final r = _restaurant;
     final closure = closureText(r, DateTime.now());
     final surcharge = plantMilkSurchargeText(r.plantMilkSurcharge);
@@ -441,15 +494,18 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
         _contactRow(
             Icons.language, r.website!, _socialUrl(r.website!, r.website!)),
       if (r.facebook != null)
-        _contactRow(Icons.facebook, 'Facebook',
+        _contactRow(
+            Icons.facebook,
+            _socialHandle(r.facebook!, 'facebook.com', 'Facebook'),
             _socialUrl(r.facebook!, 'facebook.com')),
       if (r.instagram != null)
-        _contactRow(Icons.camera_alt_outlined, 'Instagram',
+        _contactRow(
+            Icons.camera_alt_outlined,
+            _socialHandle(r.instagram!, 'instagram.com', 'Instagram'),
             _socialUrl(r.instagram!, 'instagram.com')),
     ];
 
     return ListView(
-      controller: scrollController,
       padding: EdgeInsets.fromLTRB(
           48.w, 24.h, 48.w, 64.h + MediaQuery.of(context).padding.bottom),
       children: [
@@ -601,10 +657,9 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
     );
   }
 
-  Widget _buildPhotosTab(ScrollController scrollController) {
+  Widget _buildPhotosTab() {
     final feedback = _photoFeedback;
     return ListView(
-      controller: scrollController,
       padding: EdgeInsets.fromLTRB(
           48.w, 24.h, 48.w, 64.h + MediaQuery.of(context).padding.bottom),
       children: [
@@ -799,14 +854,13 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
     );
   }
 
-  Widget _buildReviewsTab(ScrollController scrollController) {
+  Widget _buildReviewsTab() {
     if (_isLoadingReviews) {
       return const Center(child: CircularProgressIndicator());
     }
     final summary = _summary;
 
     return ListView(
-      controller: scrollController,
       padding: EdgeInsets.fromLTRB(
           48.w, 36.h, 48.w, 24.h + MediaQuery.of(context).padding.bottom),
       children: [
@@ -868,7 +922,7 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
   // ── Main build ────────────────────────────────────────────────────────────
 
   /// The featured photo across the top, from the map pin so it shows as
-  /// soon as the sheet opens. Tapping it opens the gallery there.
+  /// soon as the page opens. Tapping it opens the gallery there.
   Widget _buildFeaturedPhoto() {
     final featured =
         _restaurant.featuredPhoto ?? widget.restaurant.featuredPhoto;
@@ -1009,23 +1063,28 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
                     ],
                   ],
                 ),
+                // Vegan status right under the name, apart from the kinds
+                // of place
+                SizedBox(height: 9.h),
+                VeganStatusChip(isFullyVegan: r.isFullyVegan),
                 if (location.isNotEmpty) ...[
-                  SizedBox(height: 3.h),
+                  SizedBox(height: 9.h),
                   Text(location,
                       style: AppTextStyles.bodyMedium15
                           .copyWith(color: Colors.grey[600])),
                 ],
                 SizedBox(height: 6.h),
                 OpeningStatusLine(restaurant: r),
-                SizedBox(height: 18.h),
-                Wrap(
-                  spacing: 12.w,
-                  runSpacing: 12.h,
-                  children: [
-                    VeganStatusChip(isFullyVegan: r.isFullyVegan),
-                    for (final tag in r.tags) RestaurantTagChip(tag: tag),
-                  ],
-                ),
+                if (r.tags.isNotEmpty) ...[
+                  SizedBox(height: 18.h),
+                  Wrap(
+                    spacing: 12.w,
+                    runSpacing: 12.h,
+                    children: [
+                      for (final tag in r.tags) RestaurantTagChip(tag: tag),
+                    ],
+                  ),
+                ],
                 if (!r.validated) ...[
                   SizedBox(height: 12.h),
                   Text('En attente de validation',
@@ -1035,6 +1094,25 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
               ],
             ),
           ),
+          if (_isLoggedIn) ...[
+            SizedBox(width: 24.w),
+            Semantics(
+              button: true,
+              label: _isSaved ? 'Retirer des sauvegardés' : 'Sauvegarder',
+              child: SquareIconButton(
+                onTap: _toggleSaved,
+                size: 102.w,
+                radius: 30.r,
+                backgroundColor: Colors.white,
+                shadows: const [],
+                child: Icon(
+                  _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 54.sp,
+                ),
+              ),
+            ),
+          ],
           if (r.hasStorefront) ...[
             SizedBox(width: 24.w),
             SquareIconButton(
@@ -1062,31 +1140,19 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
   Widget build(BuildContext context) {
     final reviewCount = _summary?.reviewCount ?? _restaurant.reviewCount;
 
-    return DraggableScrollableSheet(
-      controller: _sheetController,
-      initialChildSize: 0.75,
-      minChildSize: _minSheetSize,
-      maxChildSize: _maxSheetSize,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: ShapeDecoration(
-            color: Colors.white,
-            shape: squircleBorderOnly(topLeft: 72.r, topRight: 72.r),
-          ),
-          clipBehavior: Clip.antiAlias,
+    return AppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          foregroundColor: kTextPrimary,
+        ),
+        body: SafeArea(
+          top: false,
           child: Column(
             children: [
-              // Draggable handle that resizes the sheet.
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onVerticalDragUpdate: _onHandleDragUpdate,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  child: Icon(Icons.keyboard_arrow_up,
-                      size: 60.sp, color: Colors.grey[500]),
-                ),
-              ),
               _buildFeaturedPhoto(),
               _buildHeader(),
               if (_suggestionFeedback != null)
@@ -1110,16 +1176,16 @@ class _RestaurantDetailSheetState extends State<RestaurantDetailSheet>
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildInfosTab(scrollController),
-                    _buildPhotosTab(scrollController),
-                    _buildReviewsTab(scrollController),
+                    _buildInfosTab(),
+                    _buildPhotosTab(),
+                    _buildReviewsTab(),
                   ],
                 ),
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

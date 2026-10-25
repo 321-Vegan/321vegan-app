@@ -46,7 +46,8 @@ class ReviewDrafts {
 /// entry, or null if dismissed. Sending is left to the caller so the same
 /// form serves shop, product and restaurant reviews.
 ///
-/// [criteria] adds optional detailed ratings as (field, label) pairs, and
+/// [criteria] adds optional detailed ratings as (field, label) pairs (the
+/// [lockedCriteria] fields keep their initial value, greyed out), and
 /// [maxPhotos] a photo picker (restaurant reviews).
 Future<ReviewFormResult?> showReviewFormSheet(
   BuildContext context, {
@@ -57,6 +58,7 @@ Future<ReviewFormResult?> showReviewFormSheet(
   String? moderationNotice,
   List<(String, String)> criteria = const [],
   Map<String, int?> initialCriteria = const {},
+  Set<String> lockedCriteria = const {},
   int maxPhotos = 0,
   List<File> initialPhotos = const [],
   String commentHint = 'Goût, texture, rapport qualité/prix...',
@@ -73,6 +75,7 @@ Future<ReviewFormResult?> showReviewFormSheet(
       moderationNotice: moderationNotice,
       criteria: criteria,
       initialCriteria: initialCriteria,
+      lockedCriteria: lockedCriteria,
       maxPhotos: maxPhotos,
       initialPhotos: initialPhotos,
       commentHint: commentHint,
@@ -88,6 +91,7 @@ class _ReviewFormSheet extends StatefulWidget {
   final String? moderationNotice;
   final List<(String, String)> criteria;
   final Map<String, int?> initialCriteria;
+  final Set<String> lockedCriteria;
   final int maxPhotos;
   final List<File> initialPhotos;
   final String commentHint;
@@ -100,6 +104,7 @@ class _ReviewFormSheet extends StatefulWidget {
     this.moderationNotice,
     required this.criteria,
     required this.initialCriteria,
+    required this.lockedCriteria,
     required this.maxPhotos,
     required this.initialPhotos,
     required this.commentHint,
@@ -115,8 +120,9 @@ class _ReviewFormSheetState extends State<_ReviewFormSheet> {
   late int? _rating = widget.initialRating;
   late final Map<String, int?> _criteria = {...widget.initialCriteria};
   late List<File> _photos = [...widget.initialPhotos];
-  late bool _criteriaExpanded =
-      widget.initialCriteria.values.any((v) => v != null);
+  // Locked values were not entered by the user: no reason to unfold
+  late bool _criteriaExpanded = widget.initialCriteria.entries
+      .any((e) => e.value != null && !widget.lockedCriteria.contains(e.key));
 
   @override
   void dispose() {
@@ -160,33 +166,42 @@ class _ReviewFormSheetState extends State<_ReviewFormSheet> {
         ),
         if (_criteriaExpanded)
           for (final (field, label) in widget.criteria)
-            Padding(
-              padding: EdgeInsets.only(top: 24.h),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(label, style: AppTextStyles.bodyRegular15),
-                  ),
-                  // Tapping the current value again clears it
-                  for (var star = 1; star <= 5; star++)
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => setState(() => _criteria[field] =
-                          _criteria[field] == star ? null : star),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 6.w),
-                        child: Icon(
-                          (_criteria[field] ?? 0) >= star
-                              ? Icons.star_rounded
-                              : Icons.star_outline_rounded,
-                          size: 72.sp,
-                          color: kAccentYellow,
-                        ),
+            Builder(builder: (context) {
+              final locked = widget.lockedCriteria.contains(field);
+              return Padding(
+                padding: EdgeInsets.only(top: 24.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: AppTextStyles.bodyRegular15
+                            .copyWith(color: locked ? Colors.grey[500] : null),
                       ),
                     ),
-                ],
-              ),
-            ),
+                    // Tapping the current value again clears it
+                    for (var star = 1; star <= 5; star++)
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: locked
+                            ? null
+                            : () => setState(() => _criteria[field] =
+                                _criteria[field] == star ? null : star),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w),
+                          child: Icon(
+                            (_criteria[field] ?? 0) >= star
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            size: 72.sp,
+                            color: locked ? Colors.grey[400] : kAccentYellow,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
       ],
     );
   }

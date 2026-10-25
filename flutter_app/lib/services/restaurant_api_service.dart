@@ -79,6 +79,34 @@ class RestaurantApiService {
     return [];
   }
 
+  /// Restaurants whose name contains [query], for the map search: open ones
+  /// first, then names starting with it, then the closest to the given
+  /// point (map center). Null on failure.
+  static Future<List<Restaurant>?> searchRestaurants(
+    String query, {
+    double? latitude,
+    double? longitude,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        '/restaurants/search-name',
+        queryParameters: {
+          'q': query.trim(),
+          if (latitude != null) 'latitude': latitude,
+          if (longitude != null) 'longitude': longitude,
+        },
+        options: _auth,
+      );
+      if (_isSuccess(response)) {
+        return (response.data as List<dynamic>)
+            .map((e) => Restaurant.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// Restaurants (validated or pending) close to a point, closest first, to
   /// spot a duplicate before creating one. Null on failure.
   static Future<List<Restaurant>?> getNearbyRestaurants({
@@ -192,6 +220,48 @@ class RestaurantApiService {
       }
     } catch (_) {}
     return null;
+  }
+
+  // ── Saved ────────────────────────────────────────────────────────────────
+
+  /// Restaurants saved by the user, last saved first. Null on failure.
+  static Future<({List<Restaurant> items, int pages})?> getSavedRestaurants({
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        '/restaurants/saved',
+        queryParameters: {'page': page, 'page_size': pageSize},
+        options: _auth,
+      );
+      if (_isSuccess(response)) {
+        final data = response.data as Map<String, dynamic>;
+        return (
+          items: (data['items'] as List<dynamic>)
+              .map((e) => Restaurant.fromJson(e as Map<String, dynamic>))
+              .toList(),
+          pages: data['pages'] as int,
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Saves the restaurant for the user, or removes it from the saved ones
+  /// when [saved] is false. False on failure.
+  static Future<bool> setRestaurantSaved(int restaurantId, bool saved) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = saved
+          ? await dio.put('/restaurants/$restaurantId/saved', options: _auth)
+          : await dio.delete('/restaurants/$restaurantId/saved',
+              options: _auth);
+      return _isSuccess(response);
+    } catch (_) {
+      return false;
+    }
   }
 
   // ── Reviews ──────────────────────────────────────────────────────────────

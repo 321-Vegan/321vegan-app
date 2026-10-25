@@ -1,10 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/tag_chip.dart';
+
+/// Icon and color of each kind of place (map pins), by tag. Shown on white,
+/// over a green or orange pin. By family, as on OpenStreetMap: warm tones
+/// to eat or drink (browns, golds, pinks and purples — never the red or
+/// orange of the pins), teal to shop, blues to sleep.
+const _tagStyles = <String, (IconData, Color)>{
+  // Eat / drink
+  'restaurant': (Icons.restaurant, Color(0xFF6D4C41)),
+  'cafe': (Icons.local_cafe, Color(0xFF9C6B4E)),
+  'bakery': (Icons.bakery_dining, Color(0xFFC49A2C)),
+  'fast_food': (Icons.fastfood, Color(0xFF9A7B0F)),
+  'ice_cream': (Icons.icecream, Color(0xFFE0609F)),
+  'food_truck': (Icons.local_shipping, Color(0xFFB4457E)),
+  'bar': (Icons.local_bar, Color(0xFF7E3F8F)),
+  'caterer': (Icons.delivery_dining, Color(0xFFA9739E)),
+  // Shop
+  'grocery': (Icons.local_grocery_store, Color(0xFF00838F)),
+  // Sleep
+  'hotel': (Icons.hotel, Color(0xFF1F4E79)),
+  'guesthouse': (Icons.cottage, Color(0xFF2E86C1)),
+  'hostel': (Icons.backpack, Color(0xFF4FA3D9)),
+};
+
+IconData restaurantTagIcon(String tag) =>
+    (_tagStyles[tag] ?? _tagStyles['restaurant']!).$1;
+
+Color restaurantTagColor(String tag) =>
+    (_tagStyles[tag] ?? _tagStyles['restaurant']!).$2;
 
 /// "+0,50 €" style amount.
 String _euros(double value) =>
@@ -102,7 +129,8 @@ class OpeningStatusLine extends StatelessWidget {
   }
 }
 
-/// Grey tag of a kind of place ("Café", "Traiteur"...).
+/// Tag of a kind of place ("Café", "Traiteur"...), with its map pin icon
+/// and color.
 class RestaurantTagChip extends StatelessWidget {
   final String tag;
 
@@ -110,16 +138,10 @@ class RestaurantTagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-      decoration: ShapeDecoration(
-        color: Colors.grey[100],
-        shape: const StadiumBorder(),
-      ),
-      child: Text(
-        RestaurantTags.label(tag),
-        style: AppTextStyles.bodyMedium13.copyWith(color: Colors.grey[700]),
-      ),
+    return TagChip(
+      label: RestaurantTags.label(tag),
+      icon: restaurantTagIcon(tag),
+      color: restaurantTagColor(tag),
     );
   }
 }

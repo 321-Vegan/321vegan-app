@@ -1,5 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
@@ -10,10 +8,10 @@ import 'package:vegan_app/models/restaurants/restaurant_suggestion.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/restaurant_api_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
-import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
-import 'package:vegan_app/widgets/restaurants/restaurant_detail_sheet.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_detail_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_labels.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_list_card.dart';
 import 'package:vegan_app/widgets/reviews/product_ratings_sheet.dart';
 import 'package:vegan_app/widgets/reviews/rating_status_chip.dart';
 import 'package:vegan_app/widgets/reviews/review_card.dart';
@@ -100,7 +98,7 @@ Widget _itemHeader(String title, String? subtitle) {
   );
 }
 
-/// Opens a restaurant's sheet from its id (the lists only carry part of
+/// Opens a restaurant's page from its id (the lists only carry part of
 /// it), then [onClosed] (e.g. to reload a review edited there).
 Future<void> _openRestaurant(
   BuildContext context,
@@ -116,13 +114,7 @@ Future<void> _openRestaurant(
     ));
     return;
   }
-  await showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    builder: (_) => RestaurantDetailSheet(restaurant: restaurant),
-  );
+  await RestaurantDetailPage.open(context, restaurant);
   onClosed();
 }
 
@@ -216,74 +208,26 @@ class _RestaurantsTab extends StatelessWidget {
       emptySubtitle:
           'Ajoutez un restaurant depuis la carte (couche Restos, bouton +) pour le retrouver ici.',
       errorTitle: 'Impossible de charger vos restaurants',
-      itemBuilder: (context, restaurant, reload) => GestureDetector(
+      itemBuilder: (context, restaurant, reload) => RestaurantListCard(
+        restaurant: restaurant,
         onTap: () => _openRestaurant(context, restaurant.id, reload),
-        child: AppCard(
-          radius: 36.r,
-          padding: EdgeInsets.all(30.w),
-          child: Row(
-            children: [
-              ClipSmoothRect(
-                radius: squircleRadius(24.r),
-                child: restaurant.featuredPhoto != null
-                    ? CachedNetworkImage(
-                        imageUrl: restaurant.featuredPhoto!.url,
-                        width: 165.w,
-                        height: 165.w,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => _placeholder(),
-                      )
-                    : _placeholder(),
-              ),
-              SizedBox(width: 30.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(restaurant.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.baloo17),
-                    if (restaurant.city != null)
-                      Text(restaurant.city!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.bodyLight15),
-                    SizedBox(height: 12.h),
-                    Wrap(
-                      spacing: 12.w,
-                      runSpacing: 12.h,
-                      children: [
-                        restaurant.validated
-                            ? const TagChip(
-                                label: 'Validé',
-                                color: kSemanticSuccess,
-                                backgroundColor: kPrimaryTag,
-                              )
-                            : const TagChip(
-                                label: 'En attente',
-                                color: kAccentYellow,
-                                backgroundColor: kSecondaryTag,
-                              ),
-                        VeganStatusChip(isFullyVegan: restaurant.isFullyVegan),
-                      ],
-                    ),
-                  ],
+        badges: [
+          restaurant.validated
+              ? const TagChip(
+                  label: 'Validé',
+                  color: kSemanticSuccess,
+                  backgroundColor: kPrimaryTag,
+                )
+              : const TagChip(
+                  label: 'En attente',
+                  color: kAccentYellow,
+                  backgroundColor: kSecondaryTag,
                 ),
-              ),
-            ],
-          ),
-        ),
+          VeganStatusChip(isFullyVegan: restaurant.isFullyVegan),
+        ],
       ),
     );
   }
-
-  static Widget _placeholder() => Container(
-        width: 165.w,
-        height: 165.w,
-        color: Colors.grey[100],
-        child: Icon(Icons.restaurant, color: Colors.grey[400]),
-      );
 }
 
 // ── Suggestions ─────────────────────────────────────────────────────────────

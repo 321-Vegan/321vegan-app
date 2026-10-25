@@ -13,6 +13,7 @@ class RestaurantTags {
     ('ice_cream', 'Glacier'),
     ('bar', 'Bar'),
     ('caterer', 'Traiteur'),
+    ('grocery', 'Épicerie'),
     ('hotel', 'Hôtel'),
     ('guesthouse', 'Chambre d\'hôtes'),
     ('hostel', 'Auberge de jeunesse'),
@@ -257,6 +258,9 @@ class Restaurant {
 
   /// Approved photo shown first on the restaurant page (also on map pins).
   final RestaurantPhoto? featuredPhoto;
+
+  /// Saved by the current user (full restaurant only, false on map pins).
+  final bool isSaved;
   final double? ratingAvg;
   final int reviewCount;
 
@@ -290,12 +294,15 @@ class Restaurant {
     this.validated = true,
     this.photos = const [],
     this.featuredPhoto,
+    this.isSaved = false,
     this.ratingAvg,
     this.reviewCount = 0,
   });
 
   bool get isFullyVegan => veganStatus == VeganStatus.fullyVegan;
   bool get isCaterer => tags.contains(RestaurantTags.caterer);
+  bool get isPermanentlyClosed =>
+      operatingStatus == OperatingStatus.permanentlyClosed;
 
   List<RestaurantPhoto> photosOfKind(String kind) =>
       photos.where((p) => p.kind == kind).toList();
@@ -341,6 +348,7 @@ class Restaurant {
       closureNote: json['closure_note'] as String?,
       isClosedNow: json['is_closed_now'] as bool? ?? false,
       validated: json['validated'] as bool? ?? true,
+      isSaved: json['is_saved'] as bool? ?? false,
       photos: (json['photos'] as List<dynamic>? ?? [])
           .map((e) => RestaurantPhoto.fromJson(e as Map<String, dynamic>))
           .toList(),

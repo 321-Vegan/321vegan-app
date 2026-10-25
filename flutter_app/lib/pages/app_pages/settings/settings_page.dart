@@ -39,6 +39,7 @@ import '../Scan/sent_products_page.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import '../Profile/error_reports_page.dart';
 import '../Profile/my_contributions_page.dart';
+import '../Profile/saved_restaurants_page.dart';
 import '../Profile/subscription_page.dart';
 
 /// Full-screen "Paramètres", reached from the Dashboard's gear icon.
@@ -583,6 +584,20 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           SizedBox(height: AppSpacing.section),
           SettingsSection(
+            title: 'Lieux',
+            children: [
+              SettingsRowTile(
+                label: 'Lieux sauvegardés',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const SavedRestaurantsPage()),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.section),
+          SettingsSection(
             title: 'Contributions',
             children: [
               SettingsRowTile(
@@ -646,7 +661,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SettingsRowTile(
                 label: 'Notez l\'application',
-                labelSuffix: Icon(Icons.star, size: 48.sp, color: kAccentYellow),
+                labelSuffix:
+                    Icon(Icons.star, size: 48.sp, color: kAccentYellow),
                 trailing: Icon(Icons.arrow_forward_ios,
                     size: 32.sp, color: Colors.grey[400]),
                 onTap: () => SocialFeedbackButtons.rateApp(context),

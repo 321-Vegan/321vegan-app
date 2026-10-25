@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/restaurants/restaurant.dart';
 import 'package:vegan_app/models/shops/shop.dart';
+import 'package:vegan_app/pages/app_pages/Profile/saved_restaurants_page.dart';
 import 'package:vegan_app/pages/app_pages/Profile/subscription_page.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
@@ -24,16 +25,23 @@ import 'package:vegan_app/widgets/map/create_shop_sheet.dart';
 import 'package:vegan_app/widgets/map/map_access_overlay.dart';
 import 'package:vegan_app/widgets/map/map_filter_page.dart';
 import 'package:vegan_app/widgets/map/map_search_bar.dart';
+import 'package:vegan_app/widgets/map/map_search_page.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
 import 'package:vegan_app/widgets/restaurants/create_restaurant_page.dart';
-import 'package:vegan_app/widgets/restaurants/restaurant_detail_sheet.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_detail_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_filter_sheet.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_pin.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
 /// Places shown on the map, one kind at a time.
 enum _MapLayer { shops, restaurants }
+
+const _compactPinsBelowZoom = 16.0;
+
+/// A bit smaller than the shop pins (40), to make room for the stars.
+const double _restaurantPinSize = 34;
 
 class MapPage extends StatefulWidget {
   final VoidCallback? onLoginSuccess;
@@ -46,8 +54,8 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   final MapController _mapController = MapController();
-  final GlobalKey<MapSearchBarState> _searchBarKey =
-      GlobalKey<MapSearchBarState>();
+  // Last result chosen in the search page, shown in the search bar
+  String _searchQuery = '';
   _MapLayer _layer = _MapLayer.shops;
   List<Shop> _shops = [];
   List<Restaurant> _restaurants = [];
@@ -348,10 +356,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
 
   void _onMapEvent(MapEvent event) {
-    // Dismiss the place-search dropdown as soon as the user moves the map.
-    if (event is MapEventMoveStart) {
-      _searchBarKey.currentState?.closeResults();
-    }
     if (event is MapEventMoveEnd) {
       // Only mark as not centered when the user manually moves the map
       if (event.source != MapEventSource.mapController && _isCentered) {
@@ -411,49 +415,28 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     );
   }
 
-  /// Filled green pin for a fully vegan place, outlined for vegan options,
-  /// grey while closed; a delivery icon for a caterer without storefront.
-  /// The user's own pending restaurants are faded.
-  Widget _buildRestaurantMarkerIcon(Restaurant restaurant) {
-    final color = restaurant.isClosedNow ? Colors.grey : kSemanticSuccess;
-    final filled = restaurant.isFullyVegan;
-    return Opacity(
-      opacity: restaurant.validated ? 1 : 0.6,
-      child: Container(
-        decoration: BoxDecoration(
-          color: filled ? color : Colors.white,
-          shape: BoxShape.circle,
-          border: Border.all(color: color, width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Icon(
-            restaurant.hasStorefront ? Icons.restaurant : Icons.delivery_dining,
-            color: filled ? Colors.white : color,
-            size: 20,
-          ),
-        ),
-      ),
-    );
-  }
-
   List<Marker> _buildMarkers() {
     if (_layer == _MapLayer.restaurants) {
+      // Zoomed out, one icon per pin: wide multi-tag pins crowd the map
+      final compact =
+          _mapReady && _mapController.camera.zoom < _compactPinsBelowZoom;
       return [
         for (final restaurant in _restaurants)
           Marker(
             point: LatLng(restaurant.latitude, restaurant.longitude),
-            width: 40,
-            height: 40,
+            // Widens with several tags; the reviews stars sit above
+            width: RestaurantPin.widthFor(restaurant, _restaurantPinSize,
+                compact: compact, showRating: true),
+            height:
+                RestaurantPin.heightFor(_restaurantPinSize, showRating: true),
             child: GestureDetector(
               onTap: () => _onRestaurantTap(restaurant),
-              child: _buildRestaurantMarkerIcon(restaurant),
+              child: RestaurantPin(
+                restaurant: restaurant,
+                size: _restaurantPinSize,
+                compact: compact,
+                showRating: true,
+              ),
             ),
           ),
       ];
@@ -473,13 +456,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
 
   Future<void> _onRestaurantTap(Restaurant restaurant) async {
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      builder: (_) => RestaurantDetailSheet(restaurant: restaurant),
-    );
+    await RestaurantDetailPage.open(context, restaurant);
     if (mounted) _trackMapAction();
   }
 
@@ -551,11 +528,52 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     _loadPlaces();
   }
 
-  void _onPlaceSelected(PlaceResult place) {
-    setState(() => _isCentered = false);
-    _mapController.move(LatLng(place.latitude, place.longitude), 14);
+  /// Full-page search: places, plus restaurants by name on the restaurants
+  /// layer. Flies the map to the chosen one (and opens a restaurant).
+  Future<void> _openSearch() async {
+    final result = await Navigator.of(context).push<Object>(
+      MaterialPageRoute(
+        builder: (_) => MapSearchPage(
+          initialQuery: _searchQuery,
+          includeRestaurants: _layer == _MapLayer.restaurants,
+          center: _mapController.camera.center,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (result is PlaceResult) {
+      setState(() {
+        _searchQuery = result.displayName;
+        _isCentered = false;
+      });
+      _mapController.move(LatLng(result.latitude, result.longitude), 14);
+    } else if (result is Restaurant) {
+      setState(() => _searchQuery = result.name);
+      _showRestaurant(result);
+      return;
+    } else {
+      return;
+    }
     _loadPlaces();
     _trackMapAction();
+  }
+
+  /// Saved places; the chosen one is shown on the map.
+  Future<void> _openSaved() async {
+    final restaurant = await Navigator.of(context).push<Restaurant>(
+      MaterialPageRoute(
+          builder: (_) => const SavedRestaurantsPage(pickOnTap: true)),
+    );
+    if (restaurant != null && mounted) _showRestaurant(restaurant);
+  }
+
+  /// Flies the map to [restaurant] on the restaurants layer and opens it.
+  void _showRestaurant(Restaurant restaurant) {
+    _switchLayer(_MapLayer.restaurants);
+    setState(() => _isCentered = false);
+    _mapController.move(LatLng(restaurant.latitude, restaurant.longitude), 17);
+    _loadPlaces();
+    _onRestaurantTap(restaurant);
   }
 
   void _recenterMap() {
@@ -665,7 +683,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               ),
               onMapEvent: _onMapEvent,
               onMapReady: _onMapReady,
-              onTap: (_, __) => _searchBarKey.currentState?.closeResults(),
             ),
             children: [
               TileLayer(
@@ -818,20 +835,36 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               ),
             ),
           ],
-          // Recenter button, alone in the bottom-right corner (Figma)
+          // Bottom-right corner: recenter, and the saved places under it
           if (!_isPicking)
             Positioned(
               right: 48.w,
               bottom: 100,
-              child: Builder(
-                builder: (context) {
-                  final canRecenter = _userLocation != null && !_isCentered;
-                  return SquareIconButton.action(
-                    icon: Icons.my_location,
-                    iconColor: canRecenter ? kTextPrimary : Colors.grey,
-                    onTap: canRecenter ? _recenterMap : null,
-                  );
-                },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Builder(
+                    builder: (context) {
+                      final canRecenter = _userLocation != null && !_isCentered;
+                      return SquareIconButton.action(
+                        icon: Icons.my_location,
+                        iconColor: canRecenter ? kTextPrimary : Colors.grey,
+                        onTap: canRecenter ? _recenterMap : null,
+                      );
+                    },
+                  ),
+                  if (AuthService.isLoggedIn) ...[
+                    SizedBox(height: 30.w),
+                    Semantics(
+                      button: true,
+                      label: 'Lieux sauvegardés',
+                      child: SquareIconButton.action(
+                        icon: Icons.bookmark_border,
+                        onTap: _openSaved,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           // Shops / restaurants switch, centered at the very bottom (the
@@ -843,21 +876,24 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               right: 0,
               child: Center(child: _buildLayerToggle()),
             ),
-          // Top row: place search bar (fly map to a city/address), product
-          // filter and create-shop buttons.
+          // Top row: search bar (opens the search page), filters and
+          // create-place buttons.
           if (!_isPicking && AuthService.isLoggedIn)
             Positioned(
               top: MediaQuery.of(context).padding.top + 24,
               left: 48.w,
               right: 48.w,
               child: Row(
-                // The search bar grows a results dropdown below itself; keep
-                // the buttons pinned to the first line.
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: MapSearchBar(
-                        key: _searchBarKey, onPlaceSelected: _onPlaceSelected),
+                      query: _searchQuery,
+                      hintText: _layer == _MapLayer.restaurants
+                          ? 'Rechercher un lieu, une adresse...'
+                          : 'Rechercher l\'endroit...',
+                      onTap: _openSearch,
+                      onClear: () => setState(() => _searchQuery = ''),
+                    ),
                   ),
                   SizedBox(width: 30.w),
                   // Active filters: yellow icon + count badge (Figma)

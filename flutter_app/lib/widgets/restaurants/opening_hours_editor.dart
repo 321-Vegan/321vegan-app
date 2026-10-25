@@ -6,7 +6,7 @@ import '../../themes/app_text_styles.dart';
 
 /// Week schedule input: a row per day with its slots (tap one to remove
 /// it), a "+" to add one, e.g. 12:00–14:30 then 19:00–23:00, and a menu to
-/// copy the schedule of another day. A slot closing before it opens ends
+/// add the slots of another day. A slot closing before it opens ends
 /// after midnight.
 class OpeningHoursEditor extends StatelessWidget {
   final List<OpeningSlot> slots;
@@ -70,36 +70,41 @@ class OpeningHoursEditor extends StatelessWidget {
     ));
   }
 
-  /// The other days' schedules [day] can copy, as (source day, schedule
-  /// text): each different schedule once, closed days and [day]'s own
-  /// schedule left out.
-  List<(int, String)> _copySources(int day) {
-    String scheduleOf(int d) {
-      final daySlots = slots.where((s) => s.day == d).toList()
+  List<OpeningSlot> _slotsOf(int day) =>
+      slots.where((s) => s.day == day).toList()
         ..sort((a, b) => a.openMinutes.compareTo(b.openMinutes));
-      return daySlots.map((s) => s.label).join(', ');
-    }
 
-    final own = scheduleOf(day);
+  /// The other days' schedules [day] can copy, as (source day, schedule
+  /// text): each different schedule once, left out when closed or when
+  /// [day] already has all its slots.
+  List<(int, String)> _copySources(int day) {
+    final own = {for (final slot in _slotsOf(day)) slot.label};
     final seen = <String>{};
     return [
       for (var offset = 1; offset < 7; offset++)
-        if (scheduleOf((day + offset) % 7) case final schedule
-            when schedule.isNotEmpty && schedule != own && seen.add(schedule))
-          ((day + offset) % 7, schedule),
+        if (_slotsOf((day + offset) % 7) case final sourceSlots
+            when sourceSlots.any((s) => !own.contains(s.label)) &&
+                seen.add(sourceSlots.map((s) => s.label).join(', ')))
+          (
+            (day + offset) % 7,
+            sourceSlots.map((s) => s.label).join(', '),
+          ),
     ];
   }
 
-  /// Replaces [day]'s slots by those of [source].
+  /// Adds [source]'s slots to [day]'s, but those it already has.
   void _copyFrom(BuildContext context, int day, int source) {
+    final own = {for (final slot in _slotsOf(day)) slot.label};
     final updated = [
-      for (final slot in slots)
-        if (slot.day != day) slot,
-      for (final slot in slots)
-        if (slot.day == source) slot.copyWith(day: day),
+      ...slots,
+      for (final slot in _slotsOf(source))
+        if (!own.contains(slot.label)) slot.copyWith(day: day),
     ];
     if (OpeningSlot.anyOverlap(updated)) {
-      _warn(context, 'Ces horaires chevauchent ceux d\'un jour voisin.');
+      _warn(
+          context,
+          'Ces horaires chevauchent les créneaux de ce jour '
+          'ou d\'un jour voisin.');
       return;
     }
     onChanged(updated);
@@ -114,8 +119,7 @@ class OpeningHoursEditor extends StatelessWidget {
       children: [
         for (var day = 0; day < 7; day++)
           Builder(builder: (context) {
-            final daySlots = slots.where((s) => s.day == day).toList()
-              ..sort((a, b) => a.openMinutes.compareTo(b.openMinutes));
+            final daySlots = _slotsOf(day);
             return Padding(
               padding: EdgeInsets.symmetric(vertical: 8.h),
               child: Row(
