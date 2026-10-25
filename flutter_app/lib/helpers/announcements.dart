@@ -47,10 +47,34 @@ List<Announcement> appAnnouncements({MyHomePageState? home}) => [
           'Ajoutez un commentaire si vous le souhaitez',
           'Consultez les avis des autres utilisateur·ices',
         ],
-        note: 'Scannez un produit ou ouvrez-le depuis le Vegandex ou l\'historuqe pour le '
+        note:
+            'Scannez un produit ou ouvrez-le depuis le Vegandex ou l\'historuqe pour le '
             'noter. Retrouvez toutes vos notes dans Paramètres > Notes.',
         primaryLabel: 'Scanner',
         onPrimary: home?.goToScanTab,
+      ),
+      Announcement(
+        id: 'map_places',
+        badge: 'Nouveau',
+        title: 'Les lieux véganes sont sur la carte !',
+        message: 'Restaurants, cafés, boulangeries, glaciers… trouvez où '
+            'manger végane près de chez vous ou en voyage.',
+        image: 'lib/assets/images/characters/avocado.webp',
+        features: const [
+          'Lieux 100 % véganes et lieux avec options véganes bien identifiés',
+          'Notes, avis et photos de la communauté',
+          'Sauvegardez vos lieux préférés et partagez-les',
+        ],
+        note: 'Sur la carte, passez sur « Lieux » en bas de l\'écran. Un lieu '
+            'manque ? Ajoutez-le avec le bouton +.',
+        primaryLabel: 'Voir les lieux',
+        onPrimary: home == null
+            ? null
+            : () async {
+                // Opens the map on the places layer
+                await PreferencesHelper.setLastMapLayerPref('restaurants');
+                home.goToMapTab();
+              },
       ),
     ];
 

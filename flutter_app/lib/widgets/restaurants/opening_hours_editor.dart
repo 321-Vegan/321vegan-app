@@ -117,11 +117,13 @@ class OpeningHoursEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        for (var day = 0; day < 7; day++)
+        for (var day = 0; day < 7; day++) ...[
+          // A line between days, so several slots read as one day's
+          if (day > 0) const Divider(height: 1, color: kBorderDefault),
           Builder(builder: (context) {
             final daySlots = _slotsOf(day);
             return Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.h),
+              padding: EdgeInsets.symmetric(vertical: 18.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -178,6 +180,7 @@ class OpeningHoursEditor extends StatelessWidget {
               ),
             );
           }),
+        ],
       ],
     );
   }

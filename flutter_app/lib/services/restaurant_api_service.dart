@@ -169,9 +169,44 @@ class RestaurantApiService {
     return (restaurant: null, error: null);
   }
 
+  /// Why a photo upload failed, in words for the user.
+  static String _photoErrorMessage(Object error) {
+    if (error is! DioException) return 'Erreur inattendue.';
+    switch (error.type) {
+      case DioExceptionType.connectionError:
+        return 'Pas de connexion internet.';
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Connexion trop lente, l\'envoi n\'a pas abouti.';
+      default:
+        break;
+    }
+    final status = error.response?.statusCode;
+    // Refused by the web server in front of the API (its limit is lower
+    // than the API's 5 MB)
+    if (status == 413) return 'Photo trop lourde pour le serveur.';
+    final detail = _errorMessage(error) ?? '';
+    if (detail.contains('format')) {
+      return 'Format non pris en charge (JPG, PNG ou WebP).';
+    }
+    if (detail.contains('too large')) {
+      return 'Photo trop lourde (5 Mo maximum).';
+    }
+    if (detail.contains('more than')) {
+      return 'Ce lieu a déjà le nombre maximum de photos de ce type.';
+    }
+    return status != null
+        ? 'Erreur du serveur ($status).'
+        : 'Erreur inattendue.';
+  }
+
   /// Adds a place or menu photo ([RestaurantPhoto.kindPlace] /
-  /// [RestaurantPhoto.kindMenu]), pending until moderated.
-  static Future<bool> uploadRestaurantPhoto({
+  /// [RestaurantPhoto.kindMenu]), pending until moderated. On success,
+  /// [photoId] is the new photo's; on failure, [error] says why, in words
+  /// for the user.
+  static Future<({bool ok, String? error, int? photoId})>
+      uploadRestaurantPhoto({
     required int restaurantId,
     required String kind,
     required File photo,
@@ -189,6 +224,36 @@ class RestaurantApiService {
         '/restaurants/$restaurantId/photos',
         data: formData,
         options: _auth.copyWith(contentType: 'multipart/form-data'),
+      );
+      if (_isSuccess(response)) {
+        final data = response.data;
+        return (
+          ok: true,
+          error: null,
+          photoId: data is Map ? data['id'] as int? : null,
+        );
+      }
+      return (
+        ok: false,
+        error: 'Erreur du serveur (${response.statusCode}).',
+        photoId: null,
+      );
+    } catch (e) {
+      return (ok: false, error: _photoErrorMessage(e), photoId: null);
+    }
+  }
+
+  /// Makes a photo the one shown first on the restaurant page (allowed to
+  /// the creator while the restaurant is pending). False on failure.
+  static Future<bool> featureRestaurantPhoto({
+    required int restaurantId,
+    required int photoId,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.patch(
+        '/restaurants/$restaurantId/photos/$photoId/featured',
+        options: _auth,
       );
       return _isSuccess(response);
     } catch (_) {
@@ -456,6 +521,7 @@ class RestaurantApiService {
     String kind = RestaurantSuggestion.kindEdit,
     Map<String, dynamic> changes = const {},
     List<int> removePhotoIds = const [],
+    int? featuredPhotoId,
     int? duplicateOfId,
     String? comment,
   }) async {
@@ -468,6 +534,7 @@ class RestaurantApiService {
           'kind': kind,
           if (changes.isNotEmpty) 'changes': changes,
           if (removePhotoIds.isNotEmpty) 'remove_photo_ids': removePhotoIds,
+          if (featuredPhotoId != null) 'featured_photo_id': featuredPhotoId,
           if (duplicateOfId != null) 'duplicate_of_id': duplicateOfId,
           if (comment != null && comment.isNotEmpty) 'comment': comment,
         },

@@ -243,13 +243,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
       _photoFeedback = null;
     });
     var failures = 0;
+    final reasons = <String>{};
     for (final file in files) {
-      final ok = await RestaurantApiService.uploadRestaurantPhoto(
+      final result = await RestaurantApiService.uploadRestaurantPhoto(
         restaurantId: _restaurant.id,
         kind: kind,
         photo: file,
       );
-      if (!ok) failures++;
+      if (!result.ok) {
+        failures++;
+        if (result.error != null) reasons.add(result.error!);
+      }
     }
     await _loadRestaurant();
     if (!mounted) return;
@@ -263,7 +267,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             )
           : (
               text: '$failures photo${failures > 1 ? 's' : ''} sur '
-                  '${files.length} n\'a pas pu être envoyée. Réessayez !',
+                  '${files.length} '
+                  '${failures > 1 ? 'n\'ont' : 'n\'a'} pas pu être '
+                  'envoyée${failures > 1 ? 's' : ''}'
+                  '${reasons.isEmpty ? '. Réessayez !' : ' : ${reasons.join(' ')}'}',
               color: kSemanticError,
             );
     });
@@ -982,42 +989,104 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     }
   }
 
-  /// "…" menu to propose a change, for a listed restaurant.
-  Widget _buildSuggestMenu() {
-    return PopupMenuButton<String>(
-      tooltip: 'Proposer une modification',
-      icon: Icon(Icons.more_horiz, size: 64.sp, color: kTextPrimary),
-      onSelected: _suggest,
-      itemBuilder: (_) => const [
-        PopupMenuItem(
-          value: 'edit',
-          child: ListTile(
-            leading: Icon(Icons.edit_outlined),
-            title: Text('Proposer une modification'),
+  /// Ways to propose a change, in a bottom sheet like the app's other
+  /// choices; runs the chosen one.
+  Future<void> _openSuggestSheet() async {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    Widget option(String value, IconData icon, String title, String detail,
+        BuildContext ctx) {
+      return InkWell(
+        onTap: () => Navigator.of(ctx).pop(value),
+        customBorder: squircleBorder(radius: 30.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
+          child: Row(
+            children: [
+              Container(
+                width: 110.w,
+                height: 110.w,
+                decoration: ShapeDecoration(
+                  color: primary.withValues(alpha: 0.1),
+                  shape: squircleBorder(radius: 30.r),
+                ),
+                child: Icon(icon, color: primary, size: 56.sp),
+              ),
+              SizedBox(width: 30.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: AppTextStyles.bodyBold15),
+                    Text(detail,
+                        style: AppTextStyles.bodyRegular13
+                            .copyWith(color: Colors.grey[600])),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: Colors.grey[400]),
+            ],
           ),
         ),
-        PopupMenuItem(
-          value: 'closure',
-          child: ListTile(
-            leading: Icon(Icons.event_busy_outlined),
-            title: Text('Signaler une fermeture'),
-          ),
+      );
+    }
+
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BottomSheetShell(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child:
+                  Text('Une info à corriger ?', style: AppTextStyles.baloo22),
+            ),
+            SizedBox(height: 6.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Text(
+                'Votre proposition sera vérifiée par l\'équipe.',
+                style: AppTextStyles.bodyRegular13
+                    .copyWith(color: Colors.grey[600]),
+              ),
+            ),
+            SizedBox(height: 24.h),
+            option('edit', Icons.edit_outlined, 'Proposer une modification',
+                'Horaires, contact, photos, infos…', ctx),
+            option('closure', Icons.event_busy_outlined,
+                'Signaler une fermeture', 'Temporaire ou définitive', ctx),
+            option(
+                'no_vegan_option',
+                Icons.no_food_outlined,
+                'Fin des options véganes',
+                'Plus rien de végane à la carte',
+                ctx),
+            option('duplicate', Icons.content_copy_outlined,
+                'C\'est un doublon', 'Ce lieu est déjà sur la carte', ctx),
+          ],
         ),
-        PopupMenuItem(
-          value: 'no_vegan_option',
-          child: ListTile(
-            leading: Icon(Icons.no_food_outlined),
-            title: Text('Fin des options véganes'),
-          ),
-        ),
-        PopupMenuItem(
-          value: 'duplicate',
-          child: ListTile(
-            leading: Icon(Icons.content_copy_outlined),
-            title: Text('C\'est un doublon'),
-          ),
-        ),
-      ],
+      ),
+    );
+    if (action != null && mounted) _suggest(action);
+  }
+
+  /// "…" button opening the ways to propose a change, for a listed
+  /// restaurant.
+  Widget _buildSuggestButton() {
+    return Semantics(
+      button: true,
+      label: 'Proposer une modification',
+      child: SquareIconButton(
+        onTap: _openSuggestSheet,
+        size: 102.w,
+        radius: 30.r,
+        backgroundColor: Colors.white,
+        shadows: const [],
+        child: Icon(Icons.more_horiz, size: 54.sp, color: kTextPrimary),
+      ),
     );
   }
 
@@ -1079,7 +1148,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             child: Icon(Icons.map, color: Colors.white, size: 54.sp),
           ),
         ],
-        if (_isLoggedIn && r.validated) _buildSuggestMenu(),
+        if (_isLoggedIn && r.validated) ...[
+          SizedBox(width: 24.w),
+          _buildSuggestButton(),
+        ],
       ];
 
   Widget _buildHeader() {
@@ -1136,11 +1208,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                 VeganStatusChip(isFullyVegan: r.isFullyVegan),
               ],
             );
-            // Square buttons and gaps, plus the "…" menu's 48 px
-            final buttonCount =
-                1 + (_isLoggedIn ? 1 : 0) + (r.hasStorefront ? 1 : 0);
-            final actionsWidth = buttonCount * (102.w + 24.w) +
-                (_isLoggedIn && r.validated ? kMinInteractiveDimension : 0);
+            // Square buttons and their gaps
+            final buttonCount = 1 +
+                (_isLoggedIn ? 1 : 0) +
+                (r.hasStorefront ? 1 : 0) +
+                (_isLoggedIn && r.validated ? 1 : 0);
+            final actionsWidth = buttonCount * (102.w + 24.w);
             final namePainter = TextPainter(
               text: TextSpan(text: r.name, style: AppTextStyles.baloo26),
               textScaler: MediaQuery.textScalerOf(context),

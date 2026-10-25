@@ -16,6 +16,7 @@ import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_background.dart';
 import '../shared/app_button.dart';
+import '../shared/app_dialog.dart';
 import '../shared/app_text_field.dart';
 import '../shared/form_error_banner.dart';
 import '../shared/info_box.dart';
@@ -23,15 +24,19 @@ import '../shared/picked_photos_row.dart';
 import '../../helpers/osm_place_info.dart';
 import 'opening_hours_editor.dart';
 import 'pin_picker_page.dart';
+import 'restaurant_detail_page.dart';
+import 'restaurant_labels.dart';
+import 'restaurant_pin.dart';
 
-enum _MilkPrice { unknown, same, plantCostsMore, cowCostsMore }
+// noHotDrinks is sent as unknown (null): the API has no value for it
+enum _MilkPrice { unknown, noHotDrinks, same, plantCostsMore, cowCostsMore }
 
 /// Full-screen form to submit a restaurant. Its position comes from the
 /// address (suggestions while typing), or from a pin placed on the map.
 ///
 /// Pops `true` once the restaurant is created (even if some photos failed
-/// to upload and the user gave up retrying), or the existing [Restaurant]
-/// the user picked when warned about a duplicate.
+/// to upload and the user gave up retrying). When the user finds it was
+/// already referenced, pops its position ([LatLng]) for the map to show it.
 ///
 /// With [CreateRestaurantPage.suggest], the same form prefilled with a
 /// validated restaurant proposes a change of it instead: only the changed
@@ -83,6 +88,13 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
   List<File> _menuPhotos = [];
   List<File> _placePhotos = [];
 
+  /// Main photo of the place, chosen among [_placePhotos]: the first one
+  /// unless the user picked another.
+  File? _chosenMainPhoto;
+  File? get _mainPhoto => _placePhotos.contains(_chosenMainPhoto)
+      ? _chosenMainPhoto
+      : _placePhotos.firstOrNull;
+
   bool _isSubmitting = false;
   String? _progress;
   String? _error;
@@ -99,6 +111,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
   /// What was prefilled from the OpenStreetMap place picked, to tell the
   /// user to check it.
   String? _osmNotice;
+
+  /// Position already checked for restaurants referenced there (creation
+  /// only), so sending doesn't ask again.
+  LatLng? _nearbyPosition;
+  int _nearbyRequestId = 0;
   Timer? _debounce;
 
   /// Set while fields are filled from a geocoding result, so it doesn't
@@ -110,6 +127,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
   Map<String, dynamic> _originalPayload = {};
   bool _positionChanged = false;
   final Set<int> _photosToRemove = {};
+
+  /// Photo proposed to show first instead of the current one (suggestion).
+  int? _proposedFeaturedId;
+  int? get _currentFeaturedId => widget.original?.featuredPhoto?.id;
+  int? get _featuredId => _proposedFeaturedId ?? _currentFeaturedId;
 
   bool get _isCaterer => _tags.contains(RestaurantTags.caterer);
 
@@ -228,6 +250,25 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       _suggestions = [];
       _prefillFromOsm(OsmPlaceInfo.from(place));
     });
+    _checkNearby(LatLng(place.latitude, place.longitude));
+  }
+
+  /// Warns right away when restaurants are already referenced there,
+  /// rather than only when sending.
+  Future<void> _checkNearby(LatLng position) async {
+    if (_isSuggestion) return;
+    final requestId = ++_nearbyRequestId;
+    final nearby = await RestaurantApiService.getNearbyRestaurants(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
+    // A newer address was picked meanwhile
+    if (!mounted || requestId != _nearbyRequestId) return;
+    // Failed check: the one at sending still runs
+    _nearbyPosition = nearby == null ? null : position;
+    if (nearby != null && nearby.isNotEmpty) {
+      await _askDuplicate(nearby, position);
+    }
   }
 
   /// Fills the fields still empty with what OpenStreetMap knows about the
@@ -289,6 +330,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       _positionChanged = true;
       _suggestions = [];
     });
+    _checkNearby(picked);
     final place =
         await GeocodingService.reverse(picked.latitude, picked.longitude);
     if (place != null && mounted) setState(() => _fillAddress(place));
@@ -329,7 +371,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
   double? get _plantMilkSurcharge => !_asksMilkPrice
       ? null
       : switch (_milkPrice) {
-          _MilkPrice.unknown => null,
+          _MilkPrice.unknown || _MilkPrice.noHotDrinks => null,
           _MilkPrice.same => 0,
           _MilkPrice.plantCostsMore => _surchargeAmount(),
           _MilkPrice.cowCostsMore => -(_surchargeAmount() ?? 0),
@@ -382,7 +424,9 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
         if (jsonEncode(entry.value) != jsonEncode(_originalPayload[entry.key]))
           entry.key: entry.value,
     };
-    if (changes.isEmpty && _photosToRemove.isEmpty) {
+    final featuredChanged = _proposedFeaturedId != null &&
+        _proposedFeaturedId != _currentFeaturedId;
+    if (changes.isEmpty && _photosToRemove.isEmpty && !featuredChanged) {
       setState(() => _error = 'Vous n\'avez rien modifié.');
       return;
     }
@@ -397,6 +441,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       restaurantId: original.id,
       changes: changes,
       removePhotoIds: _photosToRemove.toList(),
+      featuredPhotoId: featuredChanged ? _proposedFeaturedId : null,
       comment: _text(_comment),
     );
     if (!mounted) return;
@@ -438,55 +483,88 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
         : LatLng(places.first.latitude, places.first.longitude);
   }
 
-  /// Restaurants already referenced right there: the user may open one
-  /// instead (the page then pops it). True to go on creating.
+  /// Restaurants already referenced right there, checked when sending:
+  /// true to go on creating.
   Future<bool> _confirmNoDuplicate(LatLng position) async {
     final nearby = await RestaurantApiService.getNearbyRestaurants(
       latitude: position.latitude,
       longitude: position.longitude,
     );
     if (nearby == null || nearby.isEmpty || !mounted) return true;
+    return _askDuplicate(nearby, position);
+  }
 
-    final choice = await showDialog<Object>(
+  /// Shows the restaurants already referenced there; each opens over the
+  /// form (kept as is when coming back). True to go on creating; "it's the
+  /// same place" closes the form, popping [position] for the map to show
+  /// it. Dismissed counts as no (when sending).
+  Future<bool> _askDuplicate(List<Restaurant> nearby, LatLng position) async {
+    final goOn = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Déjà référencé ?'),
+      builder: (ctx) => AppDialog(
+        image: 'lib/assets/images/characters/cow-mby.webp',
+        title: 'Déjà sur la carte ?',
+        message: nearby.length > 1
+            ? 'Ces lieux sont déjà référencés à cette adresse. Touchez-en un '
+                'pour vérifier.'
+            : 'Ce lieu est déjà référencé à cette adresse. Touchez-le pour '
+                'vérifier.',
         content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Ces lieux sont tout près :'),
-            const SizedBox(height: 8),
             for (final restaurant in nearby.take(5))
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                leading: const Icon(Icons.restaurant),
-                title: Text(restaurant.name),
-                subtitle: restaurant.validated
-                    ? null
-                    : const Text('En attente de validation'),
-                onTap: () => Navigator.of(ctx).pop(restaurant),
+              Padding(
+                padding: EdgeInsets.only(bottom: 12.h),
+                child: InkWell(
+                  onTap: () => RestaurantDetailPage.open(ctx, restaurant),
+                  customBorder: squircleBorder(radius: 30.r),
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 30.w, vertical: 24.h),
+                    decoration: ShapeDecoration(
+                      shape: squircleBorder(
+                        radius: 30.r,
+                        side: const BorderSide(color: kBorderDefault),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        RestaurantPin(
+                            restaurant: restaurant, size: 28, shadow: false),
+                        SizedBox(width: 24.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(restaurant.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.bodyBold15),
+                              if (!restaurant.validated)
+                                Text('En attente de validation',
+                                    style: AppTextStyles.bodyRegular13
+                                        .copyWith(color: kAccentYellow)),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: Colors.grey[500]),
+                      ],
+                    ),
+                  ),
+                ),
               ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Créer quand même'),
-          ),
-        ],
+        primaryLabel: 'C\'est le même lieu',
+        onPrimary: () => Navigator.of(ctx).pop(false),
+        secondaryLabel: 'Non, c\'est un autre lieu',
+        onSecondary: () => Navigator.of(ctx).pop(true),
       ),
     );
-    if (choice is Restaurant && mounted) {
-      Navigator.of(context).pop(choice);
+    if (goOn == false && mounted) {
+      Navigator.of(context).pop(position);
       return false;
     }
-    return choice == true;
+    return goOn == true;
   }
 
   Future<void> _submit() async {
@@ -518,7 +596,8 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       });
       return;
     }
-    if (!await _confirmNoDuplicate(position)) {
+    // Asked again only when not already shown for this very position
+    if (position != _nearbyPosition && !await _confirmNoDuplicate(position)) {
       if (mounted) {
         setState(() {
           _isSubmitting = false;
@@ -545,29 +624,46 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       return;
     }
 
-    await _uploadPhotos(restaurant.id, [
-      for (final photo in _menuPhotos) (RestaurantPhoto.kindMenu, photo),
-      for (final photo in _placePhotos) (RestaurantPhoto.kindPlace, photo),
-    ]);
+    await _uploadPhotos(
+      restaurant.id,
+      [
+        for (final photo in _menuPhotos) (RestaurantPhoto.kindMenu, photo),
+        for (final photo in _placePhotos) (RestaurantPhoto.kindPlace, photo),
+      ],
+      mainPhoto: _mainPhoto,
+    );
   }
 
-  /// Uploads the photos one by one; on failure, offers to retry the failed
-  /// ones. The restaurant exists either way, so the page then closes.
-  Future<void> _uploadPhotos(
-      int restaurantId, List<(String, File)> photos) async {
+  /// Uploads the photos one by one, then makes [mainPhoto] the one shown
+  /// first; on failure, offers to retry the failed ones. The restaurant
+  /// exists either way, so the page then closes.
+  Future<void> _uploadPhotos(int restaurantId, List<(String, File)> photos,
+      {File? mainPhoto}) async {
     final failed = <(String, File)>[];
+    final reasons = <String>{};
+    int? mainPhotoId;
     for (var i = 0; i < photos.length; i++) {
       if (mounted) {
         setState(
             () => _progress = 'Envoi des photos ${i + 1}/${photos.length}…');
       }
       final (kind, file) = photos[i];
-      final ok = await RestaurantApiService.uploadRestaurantPhoto(
+      final result = await RestaurantApiService.uploadRestaurantPhoto(
         restaurantId: restaurantId,
         kind: kind,
         photo: file,
       );
-      if (!ok) failed.add(photos[i]);
+      if (!result.ok) {
+        failed.add(photos[i]);
+        if (result.error != null) reasons.add(result.error!);
+      } else if (file == mainPhoto) {
+        mainPhotoId = result.photoId;
+      }
+    }
+    // Best effort: by default the first place photo is the main one anyway
+    if (mainPhotoId != null) {
+      await RestaurantApiService.featureRestaurantPhoto(
+          restaurantId: restaurantId, photoId: mainPhotoId);
     }
     if (!mounted) return;
 
@@ -575,26 +671,28 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
       final retry = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Photos non envoyées'),
-          content: Text(
-            'Le restaurant est bien enregistré, mais ${failed.length} '
-            'photo${failed.length > 1 ? 's' : ''} n\'a pas pu être envoyée.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Terminer'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Réessayer'),
-            ),
-          ],
+        builder: (ctx) => AppDialog(
+          image: 'lib/assets/images/characters/cow-not.webp',
+          title: 'Photos non envoyées',
+          message: 'Le restaurant est bien enregistré, mais ${failed.length} '
+              'photo${failed.length > 1 ? 's n\'ont' : ' n\'a'} pas pu être '
+              'envoyée${failed.length > 1 ? 's' : ''}.',
+          content: reasons.isEmpty
+              ? null
+              : InfoBox(
+                  text: reasons.join('\n'),
+                  symbol: '!',
+                  color: kSemanticError,
+                  backgroundColor: kSemanticError.withValues(alpha: 0.08),
+                ),
+          primaryLabel: 'Réessayer',
+          onPrimary: () => Navigator.of(ctx).pop(true),
+          secondaryLabel: 'Terminer sans ces photos',
+          onSecondary: () => Navigator.of(ctx).pop(false),
         ),
       );
       if (retry == true && mounted) {
-        return _uploadPhotos(restaurantId, failed);
+        return _uploadPhotos(restaurantId, failed, mainPhoto: mainPhoto);
       }
     }
     if (mounted) Navigator.of(context).pop(true);
@@ -622,7 +720,9 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
     );
   }
 
-  Widget _choiceChip(String label, bool selected, VoidCallback onTap) {
+  /// [icon] (in [iconColor]) before the label, e.g. a kind of place's.
+  Widget _choiceChip(String label, bool selected, VoidCallback onTap,
+      {IconData? icon, Color? iconColor}) {
     final primary = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: _isSubmitting ? null : onTap,
@@ -639,10 +739,19 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
             ),
           ),
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.bodyMedium13
-              .copyWith(color: selected ? primary : kTextPrimary),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 42.sp, color: iconColor),
+              SizedBox(width: 12.w),
+            ],
+            Text(
+              label,
+              style: AppTextStyles.bodyMedium13
+                  .copyWith(color: selected ? primary : kTextPrimary),
+            ),
+          ],
         ),
       ),
     );
@@ -656,48 +765,157 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
           if (photo.reviewId == null && !photo.isPending) photo,
       ];
 
+  /// Tapping a photo marks it to remove (tap again to keep it); the removal
+  /// is sent with the suggestion, and applied once validated.
   Widget _buildRemovablePhotos() {
+    final size = 220.w;
+    final count = _photosToRemove.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 24.w,
+          runSpacing: 24.w,
+          children: [
+            for (final photo in _removablePhotos)
+              Builder(builder: (context) {
+                final marked = _photosToRemove.contains(photo.id);
+                return GestureDetector(
+                  onTap: _isSubmitting
+                      ? null
+                      : () => setState(() {
+                            if (marked) {
+                              _photosToRemove.remove(photo.id);
+                            } else {
+                              _photosToRemove.add(photo.id);
+                              // A removed photo can't be shown first
+                              if (_proposedFeaturedId == photo.id) {
+                                _proposedFeaturedId = null;
+                              }
+                            }
+                          }),
+                  child: Container(
+                    width: size,
+                    height: size,
+                    foregroundDecoration: ShapeDecoration(
+                      shape: squircleBorder(
+                        radius: 30.r,
+                        side: marked
+                            ? const BorderSide(color: kSemanticError, width: 3)
+                            : BorderSide.none,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        ClipSmoothRect(
+                          radius: squircleRadius(30.r),
+                          child: Opacity(
+                            opacity: marked ? 0.4 : 1,
+                            child: CachedNetworkImage(
+                              imageUrl: photo.url,
+                              width: size,
+                              height: size,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => Container(
+                                width: size,
+                                height: size,
+                                color: Colors.grey[200],
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (marked)
+                          Positioned.fill(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.delete_outline,
+                                    size: 72.sp, color: kSemanticError),
+                                Text('À retirer',
+                                    style: AppTextStyles.bodyBold13
+                                        .copyWith(color: kSemanticError)),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
+        if (count > 0) ...[
+          SizedBox(height: 18.h),
+          Text(
+            '$count photo${count > 1 ? 's' : ''} '
+            '${count > 1 ? 'seront retirées' : 'sera retirée'} après '
+            'validation de votre proposition. Touchez une photo à nouveau '
+            'pour la garder.',
+            style: AppTextStyles.bodyRegular13.copyWith(color: kSemanticError),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// The approved photos to choose the one shown first among (those marked
+  /// to remove left out); tapping one proposes it.
+  Widget _buildFeaturedPicker() {
     final size = 220.w;
     return Wrap(
       spacing: 24.w,
       runSpacing: 24.w,
       children: [
         for (final photo in _removablePhotos)
-          GestureDetector(
-            onTap: _isSubmitting
-                ? null
-                : () => setState(() => _photosToRemove.contains(photo.id)
-                    ? _photosToRemove.remove(photo.id)
-                    : _photosToRemove.add(photo.id)),
-            child: Stack(
-              children: [
-                ClipSmoothRect(
-                  radius: squircleRadius(30.r),
-                  child: Opacity(
-                    opacity: _photosToRemove.contains(photo.id) ? 0.4 : 1,
-                    child: CachedNetworkImage(
-                      imageUrl: photo.url,
-                      width: size,
-                      height: size,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => Container(
+          if (!_photosToRemove.contains(photo.id))
+            GestureDetector(
+              onTap: _isSubmitting
+                  ? null
+                  : () => setState(() => _proposedFeaturedId = photo.id),
+              child: Stack(
+                children: [
+                  Container(
+                    foregroundDecoration: photo.id == _featuredId
+                        ? ShapeDecoration(
+                            shape: squircleBorder(
+                              radius: 30.r,
+                              side: const BorderSide(
+                                  color: kAccentYellow, width: 3),
+                            ),
+                          )
+                        : null,
+                    child: ClipSmoothRect(
+                      radius: squircleRadius(30.r),
+                      child: CachedNetworkImage(
+                        imageUrl: photo.url,
                         width: size,
                         height: size,
-                        color: Colors.grey[200],
+                        fit: BoxFit.cover,
+                        errorWidget: (_, __, ___) => Container(
+                          width: size,
+                          height: size,
+                          color: Colors.grey[200],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                if (_photosToRemove.contains(photo.id))
-                  Positioned.fill(
-                    child: Center(
-                      child: Icon(Icons.delete_outline,
-                          size: 80.sp, color: kSemanticError),
+                  if (photo.id == _featuredId)
+                    Positioned(
+                      left: 6,
+                      bottom: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: kAccentYellow,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.star_rounded,
+                            color: Colors.white, size: 16),
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
       ],
     );
   }
@@ -899,6 +1117,8 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                                 () => setState(() => _tags.contains(value)
                                     ? _tags.remove(value)
                                     : _tags.add(value)),
+                                icon: restaurantTagIcon(value),
+                                iconColor: restaurantTagColor(value),
                               ),
                           ],
                         ),
@@ -1035,6 +1255,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                               children: [
                                 for (final (price, label) in const [
                                   (_MilkPrice.unknown, 'Je ne sais pas'),
+                                  (_MilkPrice.noHotDrinks, 'Pas concerné'),
                                   (_MilkPrice.same, 'Même prix'),
                                   (
                                     _MilkPrice.plantCostsMore,
@@ -1045,8 +1266,27 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                                     'Végétal moins cher'
                                   ),
                                 ])
-                                  _choiceChip(label, _milkPrice == price,
-                                      () => setState(() => _milkPrice = price)),
+                                  _choiceChip(
+                                    label,
+                                    _milkPrice == price,
+                                    () => setState(() => _milkPrice = price),
+                                    // Plant milk price compared to cow's
+                                    icon: switch (price) {
+                                      _MilkPrice.same => Icons.drag_handle,
+                                      _MilkPrice.plantCostsMore =>
+                                        Icons.trending_up,
+                                      _MilkPrice.cowCostsMore =>
+                                        Icons.trending_down,
+                                      _ => null,
+                                    },
+                                    iconColor: switch (price) {
+                                      _MilkPrice.plantCostsMore =>
+                                        kSemanticError,
+                                      _MilkPrice.cowCostsMore =>
+                                        kSemanticSuccess,
+                                      _ => Colors.grey[600],
+                                    },
+                                  ),
                               ],
                             ),
                             if (_milkPrice == _MilkPrice.plantCostsMore ||
@@ -1109,9 +1349,18 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                           _section(
                             'Photos à retirer',
                             subtitle: 'Touchez les photos qui ne sont plus à '
-                                'jour (ancien menu...). Pour en ajouter, '
-                                'passez par l\'onglet Photos.',
+                                'jour (ancien menu...) pour les marquer. '
+                                'Elles seront retirées à l\'envoi, après '
+                                'validation. Pour en ajouter, passez par '
+                                'l\'onglet Photos.',
                             [_buildRemovablePhotos()],
+                          ),
+                        if (_removablePhotos.length > 1)
+                          _section(
+                            'Photo principale',
+                            subtitle: 'Celle affichée en haut de la fiche '
+                                '(★). Touchez-en une autre pour la proposer.',
+                            [_buildFeaturedPicker()],
                           ),
                         _section('Commentaire', subtitle: 'Facultatif', [
                           AppTextField(
@@ -1141,14 +1390,26 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage> {
                             ),
                           ],
                         ),
-                        _section('Photos du lieu', subtitle: 'Facultatif', [
-                          PickedPhotosRow(
-                            photos: _placePhotos,
-                            max: _maxPhotosPerKind,
-                            enabled: !_isSubmitting,
-                            onChanged: (p) => setState(() => _placePhotos = p),
-                          ),
-                        ]),
+                        _section(
+                          'Photos du lieu',
+                          subtitle: _placePhotos.length > 1
+                              ? 'Facultatif. Touchez une photo pour en faire '
+                                  'la photo principale (★).'
+                              : 'Facultatif. La première sera la photo '
+                                  'principale.',
+                          [
+                            PickedPhotosRow(
+                              photos: _placePhotos,
+                              max: _maxPhotosPerKind,
+                              enabled: !_isSubmitting,
+                              onChanged: (p) =>
+                                  setState(() => _placePhotos = p),
+                              featured: _mainPhoto,
+                              onFeaturedChanged: (photo) =>
+                                  setState(() => _chosenMainPhoto = photo),
+                            ),
+                          ],
+                        ),
                       ],
                     ],
                   ),

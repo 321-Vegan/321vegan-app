@@ -512,15 +512,18 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       ),
     );
     if (!mounted) return;
-    // The user chose an existing restaurant over creating a duplicate
-    if (result is Restaurant) {
-      _onRestaurantTap(result);
+    // Already referenced: show where, among the places pins
+    if (result is LatLng) {
+      _switchLayer(_MapLayer.restaurants);
+      setState(() => _isCentered = false);
+      _mapController.move(result, 18);
+      _loadPlaces();
       return;
     }
     if (result != true) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Merci ! Le restaurant sera visible par tous après '
+        content: Text('Merci ! Le restaurant sera visible après '
             'validation.'),
         backgroundColor: kSemanticSuccess,
       ),
@@ -835,7 +838,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               ),
             ),
           ],
-          // Bottom-right corner: recenter, and the saved places under it
+          // Bottom-right corner: recenter, and the saved places under it (places
+          // layer)
           if (!_isPicking)
             Positioned(
               right: 48.w,
@@ -853,7 +857,9 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                       );
                     },
                   ),
-                  if (AuthService.isLoggedIn) ...[
+                  // Saved places are restaurants: on their layer only
+                  if (AuthService.isLoggedIn &&
+                      _layer == _MapLayer.restaurants) ...[
                     SizedBox(height: 30.w),
                     Semantics(
                       button: true,

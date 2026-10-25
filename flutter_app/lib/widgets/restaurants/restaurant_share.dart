@@ -6,8 +6,8 @@ import '../../services/restaurant_api_service.dart';
 import '../reviews/star_rating.dart';
 
 /// Opens the system share sheet with the restaurant in a few lines: name,
-/// kinds of place and vegan status, reviews average, address, a map link and
-/// the app. [context] is the tapped button's, for the iPad popover.
+/// kinds of place and vegan status, reviews average, address and the app.
+/// [context] is the tapped button's, for the iPad popover.
 ///
 /// The full restaurant doesn't carry its reviews stats: pass the [summary]
 /// when already loaded, otherwise it is fetched (shared without the rating
@@ -36,16 +36,11 @@ Future<void> shareRestaurant(
   final location = r.hasStorefront
       ? [r.address, r.city].whereType<String>().join(', ')
       : r.city ?? '';
-  final mapUrl = Uri.https('www.google.com', '/maps/search/', {
-    'api': '1',
-    'query': '${r.latitude},${r.longitude}',
-  });
 
   final text = [
     '${r.name} ($details)',
     if (rating != null) rating,
     if (location.isNotEmpty) location,
-    if (r.hasStorefront) mapUrl.toString(),
     '',
     'Trouvé sur l\'application 321 Vegan : https://321vegan.fr',
   ].join('\n');

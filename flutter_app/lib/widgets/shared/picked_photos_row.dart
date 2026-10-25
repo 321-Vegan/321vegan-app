@@ -8,11 +8,16 @@ import 'photo_source_sheet.dart';
 
 /// Thumbnails of the photos picked for an upload, each with a remove
 /// button, followed by an "add" tile while fewer than [max] are picked.
+///
+/// With [onFeaturedChanged], tapping a photo makes it the [featured] one
+/// (outlined, with a star), e.g. the main photo of a place.
 class PickedPhotosRow extends StatelessWidget {
   final List<File> photos;
   final ValueChanged<List<File>> onChanged;
   final int max;
   final bool enabled;
+  final File? featured;
+  final ValueChanged<File>? onFeaturedChanged;
 
   const PickedPhotosRow({
     super.key,
@@ -20,6 +25,8 @@ class PickedPhotosRow extends StatelessWidget {
     required this.onChanged,
     required this.max,
     this.enabled = true,
+    this.featured,
+    this.onFeaturedChanged,
   });
 
   Future<void> _add(BuildContext context) async {
@@ -37,18 +44,47 @@ class PickedPhotosRow extends StatelessWidget {
         for (final photo in photos)
           Stack(
             children: [
-              ClipSmoothRect(
-                radius: squircleRadius(30.r),
-                child: Image.file(photo,
-                    width: size, height: size, fit: BoxFit.cover),
+              GestureDetector(
+                onTap: enabled && onFeaturedChanged != null
+                    ? () => onFeaturedChanged!(photo)
+                    : null,
+                child: Container(
+                  foregroundDecoration: photo == featured
+                      ? ShapeDecoration(
+                          shape: squircleBorder(
+                            radius: 30.r,
+                            side: const BorderSide(
+                                color: kAccentYellow, width: 3),
+                          ),
+                        )
+                      : null,
+                  child: ClipSmoothRect(
+                    radius: squircleRadius(30.r),
+                    child: Image.file(photo,
+                        width: size, height: size, fit: BoxFit.cover),
+                  ),
+                ),
               ),
+              if (photo == featured)
+                Positioned(
+                  left: 6,
+                  bottom: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: const BoxDecoration(
+                      color: kAccentYellow,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.star_rounded,
+                        color: Colors.white, size: 16),
+                  ),
+                ),
               if (enabled)
                 Positioned(
                   top: 6,
                   right: 6,
                   child: GestureDetector(
-                    onTap: () =>
-                        onChanged([...photos]..remove(photo)),
+                    onTap: () => onChanged([...photos]..remove(photo)),
                     child: Container(
                       padding: const EdgeInsets.all(3),
                       decoration: const BoxDecoration(

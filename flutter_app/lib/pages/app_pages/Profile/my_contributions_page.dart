@@ -16,6 +16,7 @@ import 'package:vegan_app/widgets/reviews/product_ratings_sheet.dart';
 import 'package:vegan_app/widgets/reviews/rating_status_chip.dart';
 import 'package:vegan_app/widgets/reviews/review_card.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
+import 'package:vegan_app/widgets/shared/app_dialog.dart';
 import 'package:vegan_app/widgets/shared/app_card.dart';
 import 'package:vegan_app/widgets/shared/paginated_list_view.dart';
 import 'package:vegan_app/widgets/shared/tag_chip.dart';
@@ -259,6 +260,7 @@ const _fieldLabels = {
   'closed_until': 'fermeture',
   'closure_note': 'fermeture',
   'remove_photo_ids': 'photos',
+  'featured_photo_id': 'photo principale',
 };
 
 class _SuggestionsTab extends StatelessWidget {
@@ -293,18 +295,16 @@ class _SuggestionCard extends StatelessWidget {
   Future<void> _withdraw(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Retirer la proposition ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Retirer'),
-          ),
-        ],
+      builder: (ctx) => AppDialog(
+        image: 'lib/assets/images/characters/cow-mby.webp',
+        title: 'Retirer la proposition ?',
+        message: 'Elle ne sera pas vérifiée par l\'équipe. Vous pourrez en '
+            'faire une nouvelle depuis la fiche du lieu.',
+        primaryLabel: 'Retirer',
+        primaryColor: kSemanticError,
+        onPrimary: () => Navigator.of(ctx).pop(true),
+        secondaryLabel: 'Annuler',
+        onSecondary: () => Navigator.of(ctx).pop(false),
       ),
     );
     if (confirmed != true) return;
