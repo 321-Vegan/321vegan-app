@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vegan_app/models/restaurants/restaurant.dart';
 import 'package:vegan_app/models/restaurants/restaurant_review.dart';
@@ -79,9 +80,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   RestaurantReview? _myReview;
   bool _isSendingReview = false;
   _Feedback? _reviewFeedback;
-
-  /// Shown under the header once a suggestion was sent.
-  _Feedback? _suggestionFeedback;
 
   /// Key of this restaurant's unsent entry in [ReviewDrafts].
   String get _reviewDraftKey => 'restaurant:${widget.restaurant.id}';
@@ -659,6 +657,18 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
               'Description',
               Text(r.description!,
                   style: AppTextStyles.bodyRegular15.copyWith(height: 1.3))),
+        if (r.hasGlutenFreeOptions)
+          Padding(
+            padding: EdgeInsets.only(top: 36.h),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: TagChip(
+                label: 'Options sans gluten',
+                icon: FontAwesomeIcons.wheatAwn,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
         _section(
           r.hasStorefront ? 'Horaires' : 'Horaires de commande',
           Column(
@@ -825,7 +835,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   /// Detailed ratings and photos under a review's comment.
   Widget? _reviewFooter(RestaurantReview review) {
     final rated = RestaurantCriterion.all
-        .where((c) => _showsCriterion(c) && review.criteria.containsKey(c.field))
+        .where(
+            (c) => _showsCriterion(c) && review.criteria.containsKey(c.field))
         .toList();
     final priceRange = review.priceRange;
     if (rated.isEmpty && priceRange == null && review.photos.isEmpty) {
@@ -1081,10 +1092,13 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     };
     final sent = await report;
     if (sent == true && mounted) {
-      setState(() => _suggestionFeedback = (
-            text: 'Merci ! Votre proposition sera vérifiée par l\'équipe.',
-            color: kSemanticSuccess,
-          ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Merci ! Votre proposition sera vérifiée par '
+              'l\'équipe.'),
+          backgroundColor: kSemanticSuccess,
+        ),
+      );
     }
   }
 
@@ -1259,7 +1273,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   void _showPriceRanges(RestaurantReviewSummary summary) {
     final counts = summary.priceRangeDistribution;
     final total = counts.values.fold(0, (sum, count) => sum + count);
-    final most = counts.values.fold(0, (max, count) => count > max ? count : max);
+    final most =
+        counts.values.fold(0, (max, count) => count > max ? count : max);
     final primary = Theme.of(context).colorScheme.primary;
     showModalBottomSheet(
       context: context,
@@ -1481,15 +1496,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             children: [
               _buildFeaturedPhoto(),
               _buildHeader(),
-              if (_suggestionFeedback != null)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(48.w, 0, 48.w, 12.h),
-                  child: Text(
-                    _suggestionFeedback!.text,
-                    style: AppTextStyles.bodyMedium13
-                        .copyWith(color: _suggestionFeedback!.color),
-                  ),
-                ),
               TabBar(
                 controller: _tabController,
                 tabs: [

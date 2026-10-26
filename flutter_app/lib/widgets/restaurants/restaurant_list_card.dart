@@ -12,14 +12,16 @@ import '../shared/app_card.dart';
 class RestaurantListCard extends StatelessWidget {
   final Restaurant restaurant;
   final List<Widget> badges;
-  final VoidCallback onTap;
+
+  /// Null when there is nothing to open (e.g. a restaurant refused).
+  final VoidCallback? onTap;
   final Widget? footer;
 
   const RestaurantListCard({
     super.key,
     required this.restaurant,
     required this.badges,
-    required this.onTap,
+    this.onTap,
     this.footer,
   });
 

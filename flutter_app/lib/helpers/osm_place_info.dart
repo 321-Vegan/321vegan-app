@@ -8,6 +8,9 @@ class OsmPlaceInfo {
   final String? name;
   final Set<String> tags;
   final String? veganStatus;
+
+  /// True when OSM says gluten free food is served (diet:gluten_free).
+  final bool glutenFree;
   final Set<String> serviceOptions;
   final List<OpeningSlot>? openingHours;
   final String? phone;
@@ -20,6 +23,7 @@ class OsmPlaceInfo {
     this.name,
     this.tags = const {},
     this.veganStatus,
+    this.glutenFree = false,
     this.serviceOptions = const {},
     this.openingHours,
     this.phone,
@@ -80,6 +84,8 @@ class OsmPlaceInfo {
         'yes' || 'limited' => VeganStatus.veganOptions,
         _ => null,
       },
+      glutenFree: const {'yes', 'only', 'limited'}
+          .contains(osm['diet:gluten_free']),
       serviceOptions: {
         if (takeaway != 'only' &&
             (osm['indoor_seating'] == 'yes' || osm['outdoor_seating'] == 'yes'))

@@ -152,6 +152,35 @@ void main() {
       expect(restaurant.openingStateAt(monday(13)), isNull);
       expect(restaurant.closedUntil, DateTime(2026, 11, 15));
     });
+
+    test('refused by the team, with the reason', () {
+      final restaurant = Restaurant.fromJson({
+        'id': 1,
+        'name': 'Le Végé',
+        'latitude': 45.75,
+        'longitude': 4.83,
+        'vegan_status': 'VEGAN_OPTIONS',
+        'validated': false,
+        'is_rejected': true,
+        'rejection_reason': 'Aucune option végane sur le menu',
+      });
+
+      expect(restaurant.isRejected, isTrue);
+      expect(restaurant.rejectionReason, 'Aucune option végane sur le menu');
+    });
+
+    test('not refused when the API does not say', () {
+      final restaurant = Restaurant.fromJson({
+        'id': 1,
+        'name': 'Le Végé',
+        'latitude': 45.75,
+        'longitude': 4.83,
+        'vegan_status': 'FULLY_VEGAN',
+      });
+
+      expect(restaurant.isRejected, isFalse);
+      expect(restaurant.rejectionReason, isNull);
+    });
   });
 
   group('RestaurantReview.fromJson', () {

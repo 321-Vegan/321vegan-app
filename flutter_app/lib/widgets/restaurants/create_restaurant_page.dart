@@ -89,6 +89,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   final Set<String> _serviceOptions = {};
   String? _veganStatus;
   bool _hasStorefront = true;
+  bool _hasGlutenFreeOptions = false;
   List<OpeningSlot> _hours = [];
   bool _hoursUnknown = false;
   _MilkPrice _milkPrice = _MilkPrice.unknown;
@@ -153,7 +154,10 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   /// saving removes it.
   bool _draftFromAutosave = false;
 
-  bool get _isCaterer => _tags.contains(RestaurantTags.caterer);
+  /// A caterer and nothing else: the only kind of place that may have no
+  /// storefront (a restaurant or a shop that also caters has one).
+  bool get _isCaterer =>
+      _tags.length == 1 && _tags.contains(RestaurantTags.caterer);
 
   /// A grocery and nothing else: no menu to show (link or photos), as
   /// [Restaurant.hasNoMenu].
@@ -218,6 +222,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
         'service_options': _serviceOptions.toList(),
         'vegan_status': _veganStatus,
         'has_storefront': _hasStorefront,
+        'gluten_free': _hasGlutenFreeOptions,
         'hours': _hours.map((s) => s.toJson()).toList(),
         'hours_unknown': _hoursUnknown,
         'milk_price': _milkPrice.name,
@@ -251,6 +256,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
         .addAll((f['service_options'] as List?)?.cast<String>() ?? []);
     _veganStatus = f['vegan_status'] as String?;
     _hasStorefront = f['has_storefront'] as bool? ?? true;
+    _hasGlutenFreeOptions = f['gluten_free'] as bool? ?? false;
     _hours = [
       for (final slot in (f['hours'] as List?) ?? [])
         OpeningSlot.fromJson((slot as Map).cast<String, dynamic>()),
@@ -357,6 +363,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     _serviceOptions.addAll(r.serviceOptions);
     _veganStatus = r.veganStatus;
     _hasStorefront = r.hasStorefront;
+    _hasGlutenFreeOptions = r.hasGlutenFreeOptions;
     _hours = [...r.openingHours];
     _hoursUnknown = r.openingHours.isEmpty;
     final surcharge = r.plantMilkSurcharge;
@@ -487,6 +494,10 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       _veganStatus = info.veganStatus;
       filled.add('statut végane');
     }
+    if (!_hasGlutenFreeOptions && info.glutenFree) {
+      _hasGlutenFreeOptions = true;
+      filled.add('sans gluten');
+    }
     if (_serviceOptions.isEmpty && info.serviceOptions.isNotEmpty) {
       _serviceOptions.addAll(info.serviceOptions);
       filled.add('sur place / à emporter / livraison');
@@ -597,6 +608,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
         'vegan_options_details': _veganStatus == VeganStatus.veganOptions
             ? _text(_veganOptions)
             : null,
+        'has_gluten_free_options': _hasGlutenFreeOptions,
         'tags': _tags.toList(),
         // In the usual order; no dine-in without storefront
         'service_options': [
@@ -1449,6 +1461,25 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               maxLength: 2000,
                               validator: _required,
                               enabled: !_isSubmitting,
+                            ),
+                          ],
+                          if (_veganStatus != null) ...[
+                            _gap(),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              value: _hasGlutenFreeOptions,
+                              onChanged: _isSubmitting
+                                  ? null
+                                  : (v) => setState(
+                                      () => _hasGlutenFreeOptions = v),
+                              title: Text('Options sans gluten',
+                                  style: AppTextStyles.bodyMedium15),
+                              subtitle: Text(
+                                'Au moins une option végane est aussi sans '
+                                'gluten.',
+                                style: AppTextStyles.bodyRegular13
+                                    .copyWith(color: Colors.grey[600]),
+                              ),
                             ),
                           ],
                           if (!_hasNoMenu) ...[

@@ -242,7 +242,14 @@ class _RestaurantsTabState extends State<_RestaurantsTab> {
     );
     if (!mounted) return;
     await _loadDrafts();
-    if (created == true) setState(() => _listVersion++);
+    if (created != true || !mounted) return;
+    setState(() => _listVersion++);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Merci ! Le lieu sera visible après validation.'),
+        backgroundColor: kSemanticSuccess,
+      ),
+    );
   }
 
   Future<void> _deleteDraft(RestaurantDraft draft) async {
@@ -283,21 +290,32 @@ class _RestaurantsTabState extends State<_RestaurantsTab> {
       errorTitle: 'Impossible de charger vos restaurants',
       itemBuilder: (context, restaurant, reload) => RestaurantListCard(
         restaurant: restaurant,
-        onTap: () => _openRestaurant(context, restaurant.id, reload),
+        // A refused restaurant is no longer available to open
+        onTap: restaurant.isRejected
+            ? null
+            : () => _openRestaurant(context, restaurant.id, reload),
         badges: [
-          restaurant.validated
-              ? const TagChip(
-                  label: 'Validé',
-                  color: kSemanticSuccess,
-                  backgroundColor: kPrimaryTag,
-                )
-              : const TagChip(
-                  label: 'En attente',
-                  color: kAccentYellow,
-                  backgroundColor: kSecondaryTag,
-                ),
+          if (restaurant.isRejected)
+            const TagChip(label: 'Refusé', color: kSemanticError)
+          else if (restaurant.validated)
+            const TagChip(
+              label: 'Validé',
+              color: kSemanticSuccess,
+              backgroundColor: kPrimaryTag,
+            )
+          else
+            const TagChip(
+              label: 'En attente',
+              color: kAccentYellow,
+              backgroundColor: kSecondaryTag,
+            ),
           VeganStatusChip(isFullyVegan: restaurant.isFullyVegan),
         ],
+        footer: restaurant.rejectionReason == null
+            ? null
+            : Text('Motif : ${restaurant.rejectionReason}',
+                style: AppTextStyles.bodyRegular13
+                    .copyWith(color: kSemanticError)),
       ),
     );
   }
@@ -316,6 +334,7 @@ const _fieldLabels = {
   'description': 'description',
   'vegan_status': 'statut végane',
   'vegan_options_details': 'options véganes',
+  'has_gluten_free_options': 'sans gluten',
   'tags': 'type',
   'service_options': 'possibilités',
   'plant_milk_surcharge': 'lait végétal',

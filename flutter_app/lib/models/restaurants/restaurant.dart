@@ -236,6 +236,9 @@ class Restaurant {
   final String? description;
   final String veganStatus;
   final String? veganOptionsDetails;
+
+  /// At least one vegan option is also gluten free.
+  final bool hasGlutenFreeOptions;
   final List<String> tags;
 
   /// [RestaurantServiceOptions] values; empty when unknown.
@@ -262,6 +265,10 @@ class Restaurant {
   final String? closureNote;
   final bool isClosedNow;
   final bool validated;
+
+  /// Refused by the team (only in the creator's list), with the reason.
+  final bool isRejected;
+  final String? rejectionReason;
   final List<RestaurantPhoto> photos;
 
   /// Approved photo shown first on the restaurant page (also on map pins).
@@ -283,6 +290,7 @@ class Restaurant {
     this.description,
     required this.veganStatus,
     this.veganOptionsDetails,
+    this.hasGlutenFreeOptions = false,
     this.tags = const [],
     this.serviceOptions = const [],
     this.plantMilkSurcharge,
@@ -302,6 +310,8 @@ class Restaurant {
     this.closureNote,
     this.isClosedNow = false,
     this.validated = true,
+    this.isRejected = false,
+    this.rejectionReason,
     this.photos = const [],
     this.featuredPhoto,
     this.isSaved = false,
@@ -341,6 +351,7 @@ class Restaurant {
       description: json['description'] as String?,
       veganStatus: json['vegan_status'] as String? ?? VeganStatus.veganOptions,
       veganOptionsDetails: json['vegan_options_details'] as String?,
+      hasGlutenFreeOptions: json['has_gluten_free_options'] as bool? ?? false,
       tags: (json['tags'] as List<dynamic>? ?? []).cast<String>(),
       serviceOptions:
           (json['service_options'] as List<dynamic>? ?? []).cast<String>(),
@@ -364,6 +375,8 @@ class Restaurant {
       closureNote: json['closure_note'] as String?,
       isClosedNow: json['is_closed_now'] as bool? ?? false,
       validated: json['validated'] as bool? ?? true,
+      isRejected: json['is_rejected'] as bool? ?? false,
+      rejectionReason: json['rejection_reason'] as String?,
       isSaved: json['is_saved'] as bool? ?? false,
       photos: (json['photos'] as List<dynamic>? ?? [])
           .map((e) => RestaurantPhoto.fromJson(e as Map<String, dynamic>))
