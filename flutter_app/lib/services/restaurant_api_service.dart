@@ -2,12 +2,14 @@ import 'dart:io' show File;
 import 'package:dio/dio.dart';
 import '../models/restaurants/restaurant.dart';
 import '../models/restaurants/restaurant_review.dart';
+import '../models/restaurants/restaurant_selection.dart';
 import '../models/restaurants/restaurant_suggestion.dart';
 import 'auth_service.dart';
 import 'dio_client.dart';
 
-/// Restaurants and their reviews (/restaurants, /restaurant-reviews). Every
-/// route needs the user's token, like the shops.
+/// Restaurants, their reviews and the selections (/restaurants,
+/// /restaurant-reviews, /restaurant-selections). Every route needs the
+/// user's token, like the shops.
 class RestaurantApiService {
   RestaurantApiService._();
 
@@ -79,13 +81,16 @@ class RestaurantApiService {
     return [];
   }
 
-  /// Restaurants whose name contains [query], for the map search: open ones
-  /// first, then names starting with it, then the closest to the given
-  /// point (map center). Null on failure.
+  /// Restaurants whose name (or city, with [includeCity]) contains [query],
+  /// for the map search: open ones first, then name matches, names starting
+  /// with it, then the closest to the given point (map center). At most
+  /// [limit] (up to 50). Null on failure.
   static Future<List<Restaurant>?> searchRestaurants(
     String query, {
     double? latitude,
     double? longitude,
+    bool includeCity = false,
+    int limit = 10,
   }) async {
     try {
       final dio = await DioClient.getDio();
@@ -95,6 +100,8 @@ class RestaurantApiService {
           'q': query.trim(),
           if (latitude != null) 'latitude': latitude,
           if (longitude != null) 'longitude': longitude,
+          if (includeCity) 'include_city': true,
+          'limit': limit,
         },
         options: _auth,
       );
@@ -329,6 +336,234 @@ class RestaurantApiService {
     }
   }
 
+  // ── Selections ───────────────────────────────────────────────────────────
+
+  static Future<({List<RestaurantSelection> items, int pages})?>
+      _getSelections(String path, int page, int pageSize) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        path,
+        queryParameters: {'page': page, 'page_size': pageSize},
+        options: _auth,
+      );
+      if (_isSuccess(response)) {
+        final data = response.data as Map<String, dynamic>;
+        return (
+          items: (data['items'] as List<dynamic>)
+              .map((e) =>
+                  RestaurantSelection.fromJson(e as Map<String, dynamic>))
+              .toList(),
+          pages: data['pages'] as int,
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// The user's selections, last updated first. Null on failure.
+  static Future<({List<RestaurantSelection> items, int pages})?>
+      getMySelections({int page = 1, int pageSize = 50}) =>
+          _getSelections('/restaurant-selections/mine', page, pageSize);
+
+  /// The selections sent to the user that they still have: pending ones
+  /// first, then the accepted ones. Null on failure.
+  static Future<({List<RestaurantSelection> items, int pages})?>
+      getReceivedSelections({int page = 1, int pageSize = 100}) =>
+          _getSelections('/restaurant-selections/received', page, pageSize);
+
+  /// Pending selections the user hasn't seen yet. Null on failure.
+  static Future<int?> getUnreadSelectionCount() async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+          '/restaurant-selections/received/unread-count',
+          options: _auth);
+      if (_isSuccess(response)) {
+        return (response.data as Map<String, dynamic>)['count'] as int;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Marks every selection sent to the user as seen. False on failure.
+  static Future<bool> markReceivedSelectionsSeen() async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.put('/restaurant-selections/received/seen',
+          options: _auth);
+      return _isSuccess(response);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// A selection with its restaurants, for its owner or a user it was sent
+  /// to. Null on failure (or no longer available).
+  static Future<RestaurantSelection?> getSelection(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response =
+          await dio.get('/restaurant-selections/$id', options: _auth);
+      if (_isSuccess(response)) {
+        return RestaurantSelection.fromJson(
+            response.data as Map<String, dynamic>);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static List<Map<String, dynamic>> _itemsJson(
+          List<RestaurantSelectionItem> items) =>
+      [
+        for (final item in items)
+          {
+            'restaurant_id': item.restaurant.id,
+            if (item.note != null && item.note!.trim().isNotEmpty)
+              'note': item.note!.trim(),
+          },
+      ];
+
+  /// Creates a selection with [items] in their order. On refusal, [error]
+  /// carries the API's reason when there is one.
+  static Future<({RestaurantSelection? selection, String? error})>
+      createSelection({
+    required String title,
+    String? description,
+    List<RestaurantSelectionItem> items = const [],
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.post(
+        '/restaurant-selections/',
+        data: {
+          'title': title,
+          'description': description,
+          'items': _itemsJson(items),
+        },
+        options: _auth,
+      );
+      if (_isSuccess(response)) {
+        return (
+          selection: RestaurantSelection.fromJson(
+              response.data as Map<String, dynamic>),
+          error: null,
+        );
+      }
+    } catch (e) {
+      return (selection: null, error: _errorMessage(e));
+    }
+    return (selection: null, error: null);
+  }
+
+  /// Replaces the title, description and restaurants (order and notes) of
+  /// a selection. On refusal, [error] carries the API's reason.
+  static Future<({RestaurantSelection? selection, String? error})>
+      updateSelection({
+    required int id,
+    required String title,
+    String? description,
+    required List<RestaurantSelectionItem> items,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.put(
+        '/restaurant-selections/$id',
+        data: {
+          'title': title,
+          'description': description,
+          'items': _itemsJson(items),
+        },
+        options: _auth,
+      );
+      if (_isSuccess(response)) {
+        return (
+          selection: RestaurantSelection.fromJson(
+              response.data as Map<String, dynamic>),
+          error: null,
+        );
+      }
+    } catch (e) {
+      return (selection: null, error: _errorMessage(e));
+    }
+    return (selection: null, error: null);
+  }
+
+  static Future<bool> deleteSelection(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response =
+          await dio.delete('/restaurant-selections/$id', options: _auth);
+      return _isSuccess(response);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Adds the restaurant at the end of the selection, or removes it when
+  /// [inSelection] is false. False on failure.
+  static Future<bool> setRestaurantInSelection({
+    required int selectionId,
+    required int restaurantId,
+    required bool inSelection,
+  }) async {
+    final path = '/restaurant-selections/$selectionId/restaurants/$restaurantId';
+    try {
+      final dio = await DioClient.getDio();
+      final response = inSelection
+          ? await dio.put(path, options: _auth)
+          : await dio.delete(path, options: _auth);
+      return _isSuccess(response);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Sends the selection to the user with this email. The API answers the
+  /// same whether the email has an account or not. On refusal, [error]
+  /// carries the API's reason when there is one.
+  static Future<({bool ok, String? error})> sendSelection({
+    required int id,
+    required String email,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.post(
+        '/restaurant-selections/$id/send',
+        data: {'email': email.trim()},
+        options: _auth,
+      );
+      return (ok: _isSuccess(response), error: null);
+    } catch (e) {
+      return (ok: false, error: _errorMessage(e));
+    }
+  }
+
+  /// Accepts a selection sent to the user. False on failure.
+  static Future<bool> acceptSelection(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response =
+          await dio.put('/restaurant-selections/$id/accept', options: _auth);
+      return _isSuccess(response);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Refuses a selection sent to the user, or removes it once accepted. It
+  /// won't come back if sent again. False on failure.
+  static Future<bool> removeReceivedSelection(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.delete('/restaurant-selections/$id/received',
+          options: _auth);
+      return _isSuccess(response);
+    } catch (_) {
+      return false;
+    }
+  }
+
   // ── Reviews ──────────────────────────────────────────────────────────────
 
   static Future<RestaurantReviewSummary?> getReviewSummary(
@@ -551,11 +786,18 @@ class RestaurantApiService {
     int page = 1,
     int pageSize = 20,
   }) async {
+    final userId = AuthService.currentUser?.id;
+    if (userId == null) return null;
     try {
       final dio = await DioClient.getDio();
       final response = await dio.get(
         '/restaurant-suggestions/search',
-        queryParameters: {'page': page, 'page_size': pageSize},
+        // The API returns everyone's to moderators
+        queryParameters: {
+          'user_id': userId,
+          'page': page,
+          'page_size': pageSize,
+        },
         options: _auth,
       );
       if (_isSuccess(response)) {

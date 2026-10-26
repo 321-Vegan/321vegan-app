@@ -18,22 +18,31 @@ class NotificationsSheet extends StatelessWidget {
   /// Null hides the error reports row (logged out).
   final int? unreadErrorResponses;
 
+  /// Restaurant selections sent to the user, not seen yet; the row only
+  /// shows when there are some.
+  final int unreadSelections;
+
   final void Function(Announcement announcement) onOpenAnnouncement;
   final VoidCallback onOpenErrorReports;
+  final VoidCallback onOpenSelections;
 
   const NotificationsSheet({
     super.key,
     required this.announcements,
     required this.unseenAnnouncementIds,
     required this.unreadErrorResponses,
+    this.unreadSelections = 0,
     required this.onOpenAnnouncement,
     required this.onOpenErrorReports,
+    required this.onOpenSelections,
   });
 
   @override
   Widget build(BuildContext context) {
     final unreadErrors = unreadErrorResponses;
-    final isEmpty = announcements.isEmpty && unreadErrors == null;
+    final isEmpty = announcements.isEmpty &&
+        unreadErrors == null &&
+        unreadSelections == 0;
 
     return BottomSheetShell(
       // The shell gives its child unbounded height: cap it below the screen
@@ -60,6 +69,22 @@ class NotificationsSheet extends StatelessWidget {
                           .copyWith(color: Colors.grey[600]),
                     ),
                   ),
+                ),
+              if (unreadSelections > 0)
+                _NotificationTile(
+                  leading: _IconBadge(
+                    icon: Icons.collections_bookmark,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  title: 'Sélections de lieux reçues',
+                  subtitle: unreadSelections == 1
+                      ? 'On vous a envoyé 1 sélection'
+                      : 'On vous a envoyé $unreadSelections sélections',
+                  unread: true,
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    onOpenSelections();
+                  },
                 ),
               if (unreadErrors != null)
                 _NotificationTile(

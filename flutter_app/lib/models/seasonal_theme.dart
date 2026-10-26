@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../themes/app_snack_bar_theme.dart';
 import '../themes/default_theme.dart';
 
 enum Season {
@@ -143,6 +144,7 @@ class SeasonalTheme extends ThemeExtension<SeasonalTheme> {
       // App-wide default body font. Explicit fontFamily: 'Baloo' on a
       // TextStyle (used for prominent numbers/counters) overrides this.
       fontFamily: 'Karla',
+      snackBarTheme: appSnackBarTheme,
       extensions: [this],
     );
   }

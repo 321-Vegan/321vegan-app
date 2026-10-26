@@ -319,6 +319,7 @@ const _fieldLabels = {
   'tags': 'type',
   'service_options': 'possibilités',
   'plant_milk_surcharge': 'lait végétal',
+  'serves_hot_drinks': 'lait végétal',
   'has_storefront': 'boutique',
   'service_area': 'zone servie',
   'opening_hours': 'horaires',

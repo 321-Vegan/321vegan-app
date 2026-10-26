@@ -29,7 +29,7 @@ import 'restaurant_detail_page.dart';
 import 'restaurant_labels.dart';
 import 'restaurant_pin.dart';
 
-// noHotDrinks is sent as unknown (null): the API has no value for it
+// noHotDrinks is sent as serves_hot_drinks false, without surcharge
 enum _MilkPrice { unknown, noHotDrinks, same, plantCostsMore, cowCostsMore }
 
 /// Full-screen form to submit a restaurant. Its position comes from the
@@ -361,6 +361,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     _hoursUnknown = r.openingHours.isEmpty;
     final surcharge = r.plantMilkSurcharge;
     _milkPrice = switch (surcharge) {
+      null when r.servesHotDrinks == false => _MilkPrice.noHotDrinks,
       null => _MilkPrice.unknown,
       0 => _MilkPrice.same,
       > 0 => _MilkPrice.plantCostsMore,
@@ -573,6 +574,16 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
           _MilkPrice.cowCostsMore => -(_surchargeAmount() ?? 0),
         };
 
+  /// Known only when the milk price question was answered (a known price
+  /// means hot drinks, as the API assumes).
+  bool? get _servesHotDrinks => !_asksMilkPrice
+      ? null
+      : switch (_milkPrice) {
+          _MilkPrice.unknown => null,
+          _MilkPrice.noHotDrinks => false,
+          _ => true,
+        };
+
   /// The restaurant as the API expects it, from the form.
   Map<String, dynamic> _payload(LatLng position) => {
         'name': _name.text.trim(),
@@ -595,6 +606,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
               value,
         ],
         'plant_milk_surcharge': _plantMilkSurcharge,
+        'serves_hot_drinks': _servesHotDrinks,
         'has_storefront': _withStorefront,
         'service_area': _withStorefront ? null : _text(_serviceArea),
         'opening_hours': _hoursUnknown || _hours.isEmpty

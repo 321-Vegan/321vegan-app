@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../helpers/announcements.dart';
 import 'auth_service.dart';
 import 'error_report_badge_service.dart';
+import 'selection_badge_service.dart';
 
 /// A single in-app notification counter contributing to the profile badge.
 class ProfileNotificationSource {
@@ -36,6 +37,11 @@ class ProfileNotificationService {
     ProfileNotificationSource(
       count: ErrorReportBadgeService.unreadCount,
       refresh: ErrorReportBadgeService.refreshUnreadCount,
+    ),
+    // Restaurant selections sent to the user, not seen yet.
+    ProfileNotificationSource(
+      count: SelectionBadgeService.unreadCount,
+      refresh: SelectionBadgeService.refreshUnreadCount,
     ),
     // App news (AnnouncementCenter) the user hasn't opened yet.
     ProfileNotificationSource(

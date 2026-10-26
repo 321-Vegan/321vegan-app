@@ -48,7 +48,7 @@ List<Announcement> appAnnouncements({MyHomePageState? home}) => [
           'Consultez les avis des autres utilisateur·ices',
         ],
         note:
-            'Scannez un produit ou ouvrez-le depuis le Vegandex ou l\'historuqe pour le '
+            'Scannez un produit ou ouvrez-le depuis le Vegandex ou l\'historique pour le '
             'noter. Retrouvez toutes vos notes dans Paramètres > Notes.',
         primaryLabel: 'Scanner',
         onPrimary: home?.goToScanTab,

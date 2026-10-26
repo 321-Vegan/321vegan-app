@@ -19,6 +19,7 @@ import 'services/anniversary_service.dart';
 import 'services/products_of_interest_cache.dart';
 import 'services/subscription_service.dart';
 import 'helpers/theme_helper.dart';
+import 'themes/app_snack_bar_theme.dart';
 
 /// Global navigator key for showing dialogs from notification handlers
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -119,6 +120,7 @@ class MyAppState extends State<MyApp> {
     colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF15866E)),
     useMaterial3: true,
     fontFamily: 'Karla',
+    snackBarTheme: appSnackBarTheme,
   );
 
   late final Upgrader _upgrader;

@@ -241,6 +241,10 @@ class Restaurant {
   /// [RestaurantServiceOptions] values; empty when unknown.
   final List<String> serviceOptions;
   final double? plantMilkSurcharge;
+
+  /// False: no hot drinks, so no plant milk surcharge to know; null when
+  /// unknown.
+  final bool? servesHotDrinks;
   final bool hasStorefront;
   final String? serviceArea;
   final List<OpeningSlot> openingHours;
@@ -282,6 +286,7 @@ class Restaurant {
     this.tags = const [],
     this.serviceOptions = const [],
     this.plantMilkSurcharge,
+    this.servesHotDrinks,
     this.hasStorefront = true,
     this.serviceArea,
     this.openingHours = const [],
@@ -340,6 +345,7 @@ class Restaurant {
       serviceOptions:
           (json['service_options'] as List<dynamic>? ?? []).cast<String>(),
       plantMilkSurcharge: (json['plant_milk_surcharge'] as num?)?.toDouble(),
+      servesHotDrinks: json['serves_hot_drinks'] as bool?,
       hasStorefront: json['has_storefront'] as bool? ?? true,
       serviceArea: json['service_area'] as String?,
       openingHours: (json['opening_hours'] as List<dynamic>? ?? [])

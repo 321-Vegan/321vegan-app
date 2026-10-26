@@ -10,6 +10,7 @@ import '../../../services/auth_service.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
 import '../../../services/error_report_badge_service.dart';
+import '../../../services/selection_badge_service.dart';
 import '../../../widgets/auth/change_email_modal.dart';
 import '../../../widgets/auth/change_password_modal.dart';
 import '../../../widgets/auth/change_username_modal.dart';
@@ -88,6 +89,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _loadUser(),
       _loadPreferences(),
       _loadErrorReports(),
+      if (AuthService.isLoggedIn) SelectionBadgeService.refreshUnreadCount(),
     ]);
     if (mounted) setState(() => _isLoading = false);
   }
@@ -586,12 +588,29 @@ class _SettingsPageState extends State<SettingsPage> {
           SettingsSection(
             title: 'Lieux',
             children: [
-              SettingsRowTile(
-                label: 'Lieux sauvegardés',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const SavedRestaurantsPage()),
+              // Badge: selections sent to the user, not seen yet
+              ValueListenableBuilder<int>(
+                valueListenable: SelectionBadgeService.unreadCount,
+                builder: (context, unreadSelections, _) => SettingsRowTile(
+                  label: 'Lieux sauvegardés',
+                  trailing: unreadSelections > 0
+                      ? Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.w, vertical: 4.h),
+                          decoration: const BoxDecoration(
+                              color: Colors.red, shape: BoxShape.circle),
+                          child: Text(
+                            '$unreadSelections',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 24.sp),
+                          ),
+                        )
+                      : null,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const SavedRestaurantsPage()),
+                  ),
                 ),
               ),
             ],

@@ -16,6 +16,7 @@ import 'package:vegan_app/widgets/restaurants/create_restaurant_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_labels.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_report_sheets.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_share.dart';
+import 'package:vegan_app/widgets/restaurants/selection_sheets.dart';
 import 'package:vegan_app/widgets/reviews/rating_status_chip.dart';
 import 'package:vegan_app/widgets/reviews/rating_summary.dart';
 import 'package:vegan_app/widgets/reviews/review_card.dart';
@@ -27,6 +28,7 @@ import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 import 'package:vegan_app/widgets/shared/photo_source_sheet.dart';
+import 'package:vegan_app/widgets/shared/sheet_option_tile.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 import 'package:vegan_app/widgets/shared/tag_chip.dart';
 
@@ -147,17 +149,69 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         await RestaurantApiService.setRestaurantSaved(_restaurant.id, saved);
     if (!mounted) return;
     if (!ok) setState(() => _isSaved = !saved);
+    final color = ok ? kSemanticSuccess : kSemanticError;
     // Replaces the previous one when toggled several times in a row
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
+      // Floating squircle look from the app's snackBarTheme; tighter right
+      // padding for the button
       ..showSnackBar(SnackBar(
-        content: Text(!ok
-            ? 'Impossible de modifier les lieux sauvegardés, réessayez.'
-            : saved
-                ? 'Lieu sauvegardé'
-                : 'Sauvegarde retirée'),
-        backgroundColor: ok ? kSemanticSuccess : kSemanticError,
+        padding: EdgeInsets.fromLTRB(42.w, 18.h, 18.w, 18.h),
+        backgroundColor: color,
+        // Leaves time to reach the button
+        duration: Duration(seconds: ok && saved ? 4 : 2),
+        content: Row(
+          children: [
+            Icon(
+              !ok
+                  ? Icons.error_outline
+                  : saved
+                      ? Icons.bookmark
+                      : Icons.bookmark_border,
+              color: Colors.white,
+              size: 54.sp,
+            ),
+            SizedBox(width: 24.w),
+            Expanded(
+              child: Text(
+                !ok
+                    ? 'Impossible de modifier les lieux sauvegardés, réessayez.'
+                    : saved
+                        ? 'Lieu sauvegardé'
+                        : 'Sauvegarde retirée',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodyBold15.copyWith(color: Colors.white),
+              ),
+            ),
+            if (ok && saved) ...[
+              SizedBox(width: 18.w),
+              Material(
+                color: Colors.white,
+                shape: const StadiumBorder(),
+                child: InkWell(
+                  customBorder: const StadiumBorder(),
+                  onTap: _openAddToSelection,
+                  child: Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 33.w, vertical: 21.h),
+                    child: Text(
+                      'Ajouter à une sélection',
+                      style: AppTextStyles.bodyBold13.copyWith(color: color),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ));
+  }
+
+  /// Also on a long press on the save button.
+  void _openAddToSelection() {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    showAddToSelectionSheet(context, _restaurant);
   }
 
   void _openItinerary() => _launch(Uri.parse(
@@ -715,9 +769,16 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   // ── Reviews tab ───────────────────────────────────────────────────────────
 
+  /// The vegan choice of a fully vegan place is always 5 (set by the form):
+  /// not worth showing.
+  bool _showsCriterion(RestaurantCriterion criterion) =>
+      !(_restaurant.isFullyVegan && criterion.key == 'choice');
+
   Widget _buildCriteriaSummary(RestaurantReviewSummary summary) {
     final rated = RestaurantCriterion.all
-        .where((c) => (summary.criteria[c.key]?.ratingCount ?? 0) > 0)
+        .where((c) =>
+            _showsCriterion(c) &&
+            (summary.criteria[c.key]?.ratingCount ?? 0) > 0)
         .toList();
     if (rated.isEmpty) return const SizedBox.shrink();
     return Padding(
@@ -758,7 +819,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   /// Detailed ratings and photos under a review's comment.
   Widget? _reviewFooter(RestaurantReview review) {
     final rated = RestaurantCriterion.all
-        .where((c) => review.criteria.containsKey(c.field))
+        .where((c) => _showsCriterion(c) && review.criteria.containsKey(c.field))
         .toList();
     if (rated.isEmpty && review.photos.isEmpty) return null;
     return Column(
@@ -1009,42 +1070,13 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   /// Ways to propose a change, in a bottom sheet like the app's other
   /// choices; runs the chosen one.
   Future<void> _openSuggestSheet() async {
-    final primary = Theme.of(context).colorScheme.primary;
-
     Widget option(String value, IconData icon, String title, String detail,
         BuildContext ctx) {
-      return InkWell(
+      return SheetOptionTile(
+        icon: icon,
+        title: title,
+        detail: detail,
         onTap: () => Navigator.of(ctx).pop(value),
-        customBorder: squircleBorder(radius: 30.r),
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
-          child: Row(
-            children: [
-              Container(
-                width: 110.w,
-                height: 110.w,
-                decoration: ShapeDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  shape: squircleBorder(radius: 30.r),
-                ),
-                child: Icon(icon, color: primary, size: 56.sp),
-              ),
-              SizedBox(width: 30.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: AppTextStyles.bodyBold15),
-                    Text(detail,
-                        style: AppTextStyles.bodyRegular13
-                            .copyWith(color: Colors.grey[600])),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
-            ],
-          ),
-        ),
       );
     }
 
@@ -1114,16 +1146,20 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
           Semantics(
             button: true,
             label: _isSaved ? 'Retirer des sauvegardés' : 'Sauvegarder',
-            child: SquareIconButton(
-              onTap: _toggleSaved,
-              size: 102.w,
-              radius: 30.r,
-              backgroundColor: Colors.white,
-              shadows: const [],
-              child: Icon(
-                _isSaved ? Icons.bookmark : Icons.bookmark_border,
-                color: Theme.of(context).colorScheme.primary,
-                size: 54.sp,
+            onLongPressHint: 'Ajouter à une sélection',
+            child: GestureDetector(
+              onLongPress: _openAddToSelection,
+              child: SquareIconButton(
+                onTap: _toggleSaved,
+                size: 102.w,
+                radius: 30.r,
+                backgroundColor: Colors.white,
+                shadows: const [],
+                child: Icon(
+                  _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 54.sp,
+                ),
               ),
             ),
           ),

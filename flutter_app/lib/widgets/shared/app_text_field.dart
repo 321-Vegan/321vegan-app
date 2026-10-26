@@ -42,6 +42,10 @@ class AppTextField extends StatefulWidget {
 
   final String? labelText;
 
+  /// Shows "12 / 100" under the field, right-aligned (red at the limit).
+  /// Needs [maxLength].
+  final bool showCounter;
+
   const AppTextField({
     super.key,
     required this.controller,
@@ -60,6 +64,7 @@ class AppTextField extends StatefulWidget {
     this.suffixIcon,
     this.validator,
     this.labelText,
+    this.showCounter = false,
   });
 
   @override
@@ -165,6 +170,24 @@ class _AppTextFieldState extends State<AppTextField> {
                 ),
               ),
             ],
+            // Rebuilt on each keystroke by field.didChange
+            if (widget.showCounter && widget.maxLength != null)
+              Padding(
+                padding: EdgeInsets.only(top: 8.h, right: 12.w),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${widget.controller.text.characters.length} / '
+                    '${widget.maxLength}',
+                    style: AppTextStyles.bodyRegular13.copyWith(
+                      color: widget.controller.text.characters.length >=
+                              widget.maxLength!
+                          ? kSemanticError
+                          : Colors.grey[500],
+                    ),
+                  ),
+                ),
+              ),
           ],
         );
       },
