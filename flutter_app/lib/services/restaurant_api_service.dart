@@ -54,6 +54,7 @@ class RestaurantApiService {
     Set<String> serviceOptions = const {},
     bool fullyVeganOnly = false,
     bool noPlantMilkSurcharge = false,
+    bool glutenFreeOptions = false,
   }) async {
     try {
       final dio = await DioClient.getDio();
@@ -69,6 +70,7 @@ class RestaurantApiService {
             'service_options': serviceOptions.join(','),
           if (fullyVeganOnly) 'vegan_status': VeganStatus.fullyVegan,
           if (noPlantMilkSurcharge) 'plant_milk_surcharge__le': 0,
+          if (glutenFreeOptions) 'has_gluten_free_options': true,
         },
         options: _auth,
       );

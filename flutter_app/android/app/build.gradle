@@ -22,9 +22,9 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
-def flutterVersionCode = "172"
+def flutterVersionCode = "173"
 
-def flutterVersionName = "6.0.3"
+def flutterVersionName = "6.0.4"
 
 
 android {

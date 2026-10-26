@@ -137,7 +137,9 @@ class _SubscriptionGoalWidgetState extends State<SubscriptionGoalWidget>
           ),
           SizedBox(height: 5.h),
           Text(
-            '$count/$goal soutiens pour être à temps plein sur l\'app',
+            count >= goal
+                ? 'Merci ! Grâce à vos $count soutiens, je passe à temps plein sur l\'app. La suite arrive bientôt 💚'
+                : '$count/$goal soutiens pour être à temps plein sur l\'app',
             style: TextStyle(
               fontSize: 34.sp,
               color: Colors.white.withValues(alpha: 0.8),

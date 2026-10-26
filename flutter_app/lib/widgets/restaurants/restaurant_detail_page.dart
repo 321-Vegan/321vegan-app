@@ -212,9 +212,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     showAddToSelectionSheet(context, _restaurant);
   }
 
-  void _openItinerary() => _launch(Uri.parse(
+  /// To the food truck's stop of the day, else to the restaurant (its
+  /// first stop).
+  void _openItinerary() {
+    final stop = _restaurant.todayStop(DateTime.now());
+    _openItineraryTo(stop?.latitude ?? _restaurant.latitude,
+        stop?.longitude ?? _restaurant.longitude);
+  }
+
+  void _openItineraryTo(double latitude, double longitude) => _launch(Uri.parse(
         'https://www.google.com/maps/dir/?api=1'
-        '&destination=${_restaurant.latitude},${_restaurant.longitude}',
+        '&destination=$latitude,$longitude',
       ));
 
   /// A full URL, a URL without scheme ("instagram.com/resto", or the
@@ -535,6 +543,75 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     );
   }
 
+  /// A food truck's stop: its name and address, its days and hours there,
+  /// and a button for the way there.
+  Widget _buildStop(RestaurantStop stop, {required bool isToday}) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final where = [stop.address, stop.city]
+        .whereType<String>()
+        .where((part) => part != stop.title)
+        .join(', ');
+    String slotsOf(int day) =>
+        (stop.openingHours.where((s) => s.day == day).toList()
+              ..sort((a, b) => a.openMinutes.compareTo(b.openMinutes)))
+            .map((s) => s.label)
+            .join(', ');
+    final days = {for (final s in stop.openingHours) s.day}.toList()..sort();
+    final today = DateTime.now().weekday - 1;
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 14.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                        child:
+                            Text(stop.title, style: AppTextStyles.bodyBold15)),
+                    if (isToday) ...[
+                      SizedBox(width: 12.w),
+                      TagChip(label: 'Aujourd\'hui', color: primary),
+                    ],
+                  ],
+                ),
+                if (where.isNotEmpty)
+                  Text(where,
+                      style: AppTextStyles.bodyRegular13
+                          .copyWith(color: Colors.grey[600])),
+                SizedBox(height: 6.h),
+                if (days.isEmpty)
+                  Text('Jours variables',
+                      style: AppTextStyles.bodyRegular15
+                          .copyWith(color: Colors.grey[500]))
+                else
+                  for (final day in days)
+                    Text(
+                      '${dayName(day, capitalize: true)} · ${slotsOf(day)}',
+                      style: day == today
+                          ? AppTextStyles.bodyBold15
+                          : AppTextStyles.bodyRegular15,
+                    ),
+                if (stop.note != null)
+                  Text(stop.note!,
+                      style: AppTextStyles.bodyRegular13
+                          .copyWith(color: Colors.grey[600])),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.directions_outlined, color: primary),
+            tooltip: 'Itinéraire',
+            onPressed: () => _openItineraryTo(stop.latitude, stop.longitude),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _contactRow(IconData icon, String label, Uri url) {
     return InkWell(
       onTap: () => _launch(url),
@@ -670,11 +747,20 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             ),
           ),
         _section(
-          r.hasStorefront ? 'Horaires' : 'Horaires de commande',
+          r.stops.isNotEmpty
+              ? 'Où trouver le food truck ?'
+              : r.hasStorefront
+                  ? 'Horaires'
+                  : 'Horaires de commande',
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildOpeningHours(),
+              if (r.stops.isEmpty)
+                _buildOpeningHours()
+              else
+                for (final stop in r.stops)
+                  _buildStop(stop,
+                      isToday: stop == r.todayStop(DateTime.now())),
               if (r.openingHoursNote != null) ...[
                 SizedBox(height: 12.h),
                 Text(r.openingHoursNote!,
@@ -1344,9 +1430,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     final summary = _summary;
     final reviewCount = summary?.reviewCount ?? r.reviewCount;
     final ratingAvg = summary?.ratingAvg ?? r.ratingAvg;
-    final location = r.hasStorefront
-        ? [r.address, r.city].whereType<String>().join(', ')
-        : r.city ?? '';
+    final todayStop = r.todayStop(DateTime.now());
+    final location = r.stops.length > 1
+        ? todayStop != null
+            ? 'Aujourd\'hui : ${[
+                todayStop.title,
+                todayStop.city
+              ].whereType<String>().toSet().join(', ')}'
+            : '${r.stops.length} emplacements'
+        : r.hasStorefront
+            ? [r.address, r.city].whereType<String>().join(', ')
+            : r.city ?? '';
 
     // Name and vegan status beside the buttons, then address and opening
     // with the kinds of place on their right, in the room the buttons

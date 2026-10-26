@@ -122,6 +122,11 @@ class _MapSearchPageState extends State<MapSearchPage> {
     });
   }
 
+  /// Lowercased, with any apostrophe as ' (iOS types ’), as the API
+  /// search; the same length, so indexes still match [text].
+  static String _comparable(String text) =>
+      text.toLowerCase().replaceAll(RegExp('[\u2019\u2018\u02bc`\u00b4]'), "'");
+
   /// Splits [text] into plain/highlighted spans around the first
   /// case-insensitive match of the query, so the typed portion stands out
   /// (e.g. "Mar" in "Marseille").
@@ -130,7 +135,7 @@ class _MapSearchPageState extends State<MapSearchPage> {
         .merge(AppTextStyles.bodyBold15.copyWith(color: kAccentYellow));
     final query = _controller.text.trim();
     final matchIndex =
-        query.isEmpty ? -1 : text.toLowerCase().indexOf(query.toLowerCase());
+        query.isEmpty ? -1 : _comparable(text).indexOf(_comparable(query));
     if (matchIndex == -1) return [TextSpan(text: text, style: baseStyle)];
 
     final matchEnd = matchIndex + query.length;

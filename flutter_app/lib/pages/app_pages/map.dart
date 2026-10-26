@@ -274,6 +274,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
         serviceOptions: filters.serviceOptions,
         fullyVeganOnly: filters.fullyVeganOnly,
         noPlantMilkSurcharge: filters.noPlantMilkSurcharge,
+        glutenFreeOptions: filters.glutenFreeOptions,
       );
       if (!mounted || loadId != _loadId) return;
       final now = DateTime.now();
@@ -422,25 +423,28 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       // Zoomed out, one icon per pin: wide multi-tag pins crowd the map
       final compact =
           _mapReady && _mapController.camera.zoom < _compactPinsBelowZoom;
+      final now = DateTime.now();
       return [
         for (final restaurant in _restaurants)
-          Marker(
-            point: LatLng(restaurant.latitude, restaurant.longitude),
-            // Widens with several tags; the reviews average sits above
-            width: RestaurantPin.widthFor(restaurant, _restaurantPinSize,
-                compact: compact, showRating: true),
-            height:
-                RestaurantPin.heightFor(_restaurantPinSize, showRating: true),
-            child: GestureDetector(
-              onTap: () => _onRestaurantTap(restaurant),
-              child: RestaurantPin(
-                restaurant: restaurant,
-                size: _restaurantPinSize,
-                compact: compact,
-                showRating: true,
+          for (final (point, dimmed) in _pinPoints(restaurant, now))
+            Marker(
+              point: point,
+              // Widens with several tags; the reviews average sits above
+              width: RestaurantPin.widthFor(restaurant, _restaurantPinSize,
+                  compact: compact, showRating: true),
+              height:
+                  RestaurantPin.heightFor(_restaurantPinSize, showRating: true),
+              child: GestureDetector(
+                onTap: () => _onRestaurantTap(restaurant),
+                child: RestaurantPin(
+                  restaurant: restaurant,
+                  size: _restaurantPinSize,
+                  compact: compact,
+                  showRating: true,
+                  dimmed: dimmed,
+                ),
               ),
             ),
-          ),
       ];
     }
     return [
@@ -454,6 +458,23 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             child: _buildMarkerIcon(shop),
           ),
         ),
+    ];
+  }
+
+  /// Where to pin [restaurant]: its position, or each stop of a food truck,
+  /// faded unless it goes there today (so when its days there vary too).
+  /// With the "open now" filter, only the stop it is at right now.
+  List<(LatLng, bool)> _pinPoints(Restaurant restaurant, DateTime now) {
+    if (restaurant.stops.isEmpty) {
+      return [(LatLng(restaurant.latitude, restaurant.longitude), false)];
+    }
+    final today = now.weekday - 1;
+    return [
+      for (final stop in restaurant.stops)
+        if (OpeningState.of(stop.openingHours, now)?.isOpen == true)
+          (LatLng(stop.latitude, stop.longitude), false)
+        else if (!_restaurantFilters.openNow)
+          (LatLng(stop.latitude, stop.longitude), !stop.isOnDay(today)),
     ];
   }
 

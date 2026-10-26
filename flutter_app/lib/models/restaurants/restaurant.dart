@@ -20,6 +20,7 @@ class RestaurantTags {
   ];
 
   static const caterer = 'caterer';
+  static const foodTruck = 'food_truck';
   static const grocery = 'grocery';
 
   /// Accommodations are listed for their restaurant or breakfast.
@@ -183,6 +184,68 @@ class OpeningState {
   }
 }
 
+/// A place a food truck goes back to every week, with its own opening hours
+/// there (empty when its days there vary, told in [note]).
+class RestaurantStop {
+  final String? label;
+  final String? address;
+  final String? city;
+  final double latitude;
+  final double longitude;
+  final List<OpeningSlot> openingHours;
+
+  /// When it comes, without fixed days ("un samedi sur deux"), or a detail.
+  final String? note;
+
+  const RestaurantStop({
+    this.label,
+    this.address,
+    this.city,
+    required this.latitude,
+    required this.longitude,
+    this.openingHours = const [],
+    this.note,
+  });
+
+  /// The label, else the address, else the city.
+  String get title => label ?? address ?? city ?? 'Emplacement';
+
+  /// "Mardi, jeudi", in week order; null when its days vary.
+  String? get daysLabel {
+    final days = {for (final s in openingHours) s.day}.toList()..sort();
+    return days.isEmpty
+        ? null
+        : [
+            for (final (i, day) in days.indexed)
+              dayName(day, capitalize: i == 0)
+          ].join(', ');
+  }
+
+  bool isOnDay(int day) => openingHours.any((s) => s.day == day);
+
+  factory RestaurantStop.fromJson(Map<String, dynamic> json) => RestaurantStop(
+        label: json['label'] as String?,
+        address: json['address'] as String?,
+        city: json['city'] as String?,
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+        openingHours: (json['opening_hours'] as List<dynamic>? ?? [])
+            .map((e) => OpeningSlot.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        note: json['note'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'label': label,
+        'address': address,
+        'city': city,
+        'latitude': latitude,
+        'longitude': longitude,
+        'opening_hours': openingHours.map((s) => s.toJson()).toList(),
+        'note': note,
+      };
+}
+
 /// Place or menu photo, or a review photo, stored in the S3 bucket.
 class RestaurantPhoto {
   static const kindPlace = 'PLACE';
@@ -252,6 +315,11 @@ class Restaurant {
   final String? serviceArea;
   final List<OpeningSlot> openingHours;
   final String? openingHoursNote;
+
+  /// Food trucks only: their weekly places, the first one being
+  /// [latitude]/[longitude]. Empty for a single place. [openingHours] holds
+  /// the slots of all of them.
+  final List<RestaurantStop> stops;
   final String? phone;
   final String? website;
   final String? facebook;
@@ -299,6 +367,7 @@ class Restaurant {
     this.serviceArea,
     this.openingHours = const [],
     this.openingHoursNote,
+    this.stops = const [],
     this.phone,
     this.website,
     this.facebook,
@@ -321,6 +390,7 @@ class Restaurant {
 
   bool get isFullyVegan => veganStatus == VeganStatus.fullyVegan;
   bool get isCaterer => tags.contains(RestaurantTags.caterer);
+  bool get isFoodTruck => tags.contains(RestaurantTags.foodTruck);
 
   /// A grocery and nothing else: no menu (link or photos).
   bool get hasNoMenu =>
@@ -335,6 +405,27 @@ class Restaurant {
   /// period (see [isClosedNow]).
   OpeningState? openingStateAt(DateTime now) =>
       isClosedNow ? null : OpeningState.of(openingHours, now);
+
+  /// The food truck's stop of the day: where it is now, else where it goes
+  /// later today. Null without stops, or when it goes nowhere today.
+  RestaurantStop? todayStop(DateTime now) {
+    final today = now.weekday - 1;
+    final minutes = now.hour * 60 + now.minute;
+    RestaurantStop? later;
+    int? laterOpen;
+    for (final stop in stops) {
+      if (OpeningState.of(stop.openingHours, now)?.isOpen == true) return stop;
+      for (final slot in stop.openingHours) {
+        if (slot.day == today &&
+            slot.openMinutes > minutes &&
+            (laterOpen == null || slot.openMinutes < laterOpen)) {
+          later = stop;
+          laterOpen = slot.openMinutes;
+        }
+      }
+    }
+    return later;
+  }
 
   static DateTime? _date(dynamic value) =>
       value is String ? DateTime.tryParse(value) : null;
@@ -363,6 +454,9 @@ class Restaurant {
           .map((e) => OpeningSlot.fromJson(e as Map<String, dynamic>))
           .toList(),
       openingHoursNote: json['opening_hours_note'] as String?,
+      stops: (json['stops'] as List<dynamic>? ?? [])
+          .map((e) => RestaurantStop.fromJson(e as Map<String, dynamic>))
+          .toList(),
       phone: json['phone'] as String?,
       website: json['website'] as String?,
       facebook: json['facebook'] as String?,

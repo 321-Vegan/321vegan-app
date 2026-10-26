@@ -16,6 +16,7 @@ class RestaurantMapFilters {
   final bool fullyVeganOnly;
   final bool openNow;
   final bool noPlantMilkSurcharge;
+  final bool glutenFreeOptions;
 
   const RestaurantMapFilters({
     this.tags = const {},
@@ -23,6 +24,7 @@ class RestaurantMapFilters {
     this.fullyVeganOnly = false,
     this.openNow = false,
     this.noPlantMilkSurcharge = false,
+    this.glutenFreeOptions = false,
   });
 
   /// Number of active filters, for the filter button's badge.
@@ -31,11 +33,14 @@ class RestaurantMapFilters {
       serviceOptions.length +
       (fullyVeganOnly ? 1 : 0) +
       (openNow ? 1 : 0) +
-      (noPlantMilkSurcharge ? 1 : 0);
+      (noPlantMilkSurcharge ? 1 : 0) +
+      (glutenFreeOptions ? 1 : 0);
 
   /// Whether [restaurant] passes the app-side filters.
+  /// [glutenFreeOptions] is also checked here, in case the API predates it.
   bool keeps(Restaurant restaurant, DateTime now) =>
-      !openNow || restaurant.openingStateAt(now)?.isOpen == true;
+      (!openNow || restaurant.openingStateAt(now)?.isOpen == true) &&
+      (!glutenFreeOptions || restaurant.hasGlutenFreeOptions);
 }
 
 /// Bottom sheet to edit the restaurant filters; resolves with the new ones,
@@ -67,6 +72,7 @@ class _RestaurantFilterSheetState extends State<_RestaurantFilterSheet> {
   late bool _fullyVeganOnly = widget.current.fullyVeganOnly;
   late bool _openNow = widget.current.openNow;
   late bool _noSurcharge = widget.current.noPlantMilkSurcharge;
+  late bool _glutenFree = widget.current.glutenFreeOptions;
 
   /// Toggles [value] in [values] (the tags or the service options), with
   /// [icon] (in [iconColor]) before the label, as in the creation form.
@@ -130,6 +136,8 @@ class _RestaurantFilterSheetState extends State<_RestaurantFilterSheet> {
                   (v) => setState(() => _openNow = v)),
               _switch('Sans supplément lait végétal', _noSurcharge,
                   (v) => setState(() => _noSurcharge = v)),
+              _switch('Options sans gluten', _glutenFree,
+                  (v) => setState(() => _glutenFree = v)),
               SizedBox(height: 24.h),
               Text('Sur place, à emporter, livraison',
                   style: AppTextStyles.bodyBold15),
@@ -180,6 +188,7 @@ class _RestaurantFilterSheetState extends State<_RestaurantFilterSheet> {
                           fullyVeganOnly: _fullyVeganOnly,
                           openNow: _openNow,
                           noPlantMilkSurcharge: _noSurcharge,
+                          glutenFreeOptions: _glutenFree,
                         ),
                       ),
                     ),

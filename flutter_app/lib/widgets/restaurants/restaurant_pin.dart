@@ -10,8 +10,8 @@ import 'restaurant_labels.dart';
 /// vegan options, grey while closed. Holds one white squircle per tag with its
 /// icon in the tag color (up to [_maxIcons], then a "+"), so it widens with
 /// several tags. Struck through in red when closed for good,
-/// and faded while the user's own restaurant is pending. With [showRating],
-/// the average of its reviews above it ("★ 4,3").
+/// and faded while the user's own restaurant is pending, or with [dimmed].
+/// With [showRating], the average of its reviews above it ("★ 4,3").
 class RestaurantPin extends StatelessWidget {
   final Restaurant restaurant;
 
@@ -27,6 +27,9 @@ class RestaurantPin extends StatelessWidget {
   /// without reviews, so every marker has the same anchor.
   final bool showRating;
 
+  /// Faded, e.g. a food truck's stop where it isn't today.
+  final bool dimmed;
+
   const RestaurantPin({
     super.key,
     required this.restaurant,
@@ -34,6 +37,7 @@ class RestaurantPin extends StatelessWidget {
     this.shadow = true,
     this.compact = false,
     this.showRating = false,
+    this.dimmed = false,
   });
 
   static const _maxIcons = 3;
@@ -180,7 +184,7 @@ class RestaurantPin extends StatelessWidget {
 
     final rating = restaurant.ratingAvg;
     return Opacity(
-      opacity: restaurant.validated ? 1 : 0.6,
+      opacity: (restaurant.validated ? 1 : 0.6) * (dimmed ? 0.5 : 1),
       child: !showRating
           ? pin
           : Column(

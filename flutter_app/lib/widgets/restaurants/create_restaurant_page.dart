@@ -17,6 +17,7 @@ import '../../themes/app_text_styles.dart';
 import '../shared/app_background.dart';
 import '../shared/app_button.dart';
 import '../shared/app_dialog.dart';
+import '../shared/animated_reveal.dart';
 import '../shared/app_text_field.dart';
 import '../shared/form_error_banner.dart';
 import '../shared/info_box.dart';
@@ -28,6 +29,7 @@ import 'pin_picker_page.dart';
 import 'restaurant_detail_page.dart';
 import 'restaurant_labels.dart';
 import 'restaurant_pin.dart';
+import 'stop_editor_page.dart';
 
 // noHotDrinks is sent as serves_hot_drinks false, without surcharge
 enum _MilkPrice { unknown, noHotDrinks, same, plantCostsMore, cowCostsMore }
@@ -92,6 +94,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   bool _hasGlutenFreeOptions = false;
   List<OpeningSlot> _hours = [];
   bool _hoursUnknown = false;
+
+  /// A food truck changing place with the days: its [_stops] replace the
+  /// address and the hours.
+  bool _hasStops = false;
+  List<RestaurantStop> _stops = [];
   _MilkPrice _milkPrice = _MilkPrice.unknown;
   List<File> _menuPhotos = [];
   List<File> _placePhotos = [];
@@ -167,6 +174,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   /// No cow milk in a fully vegan place: the surcharge question is moot.
   bool get _asksMilkPrice => _veganStatus != VeganStatus.fullyVegan;
   bool get _withStorefront => !_isCaterer || _hasStorefront;
+  bool get _isFoodTruck => _tags.contains(RestaurantTags.foodTruck);
+  bool get _withStops => _isFoodTruck && _hasStops && _withStorefront;
+
+  /// As many as the API takes.
+  static const int _maxStops = 14;
 
   @override
   void initState() {
@@ -225,6 +237,8 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
         'gluten_free': _hasGlutenFreeOptions,
         'hours': _hours.map((s) => s.toJson()).toList(),
         'hours_unknown': _hoursUnknown,
+        'has_stops': _hasStops,
+        'stops': _stops.map((s) => s.toJson()).toList(),
         'milk_price': _milkPrice.name,
         if (_position != null) ...{
           'latitude': _position!.latitude,
@@ -262,6 +276,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
         OpeningSlot.fromJson((slot as Map).cast<String, dynamic>()),
     ];
     _hoursUnknown = f['hours_unknown'] as bool? ?? false;
+    _hasStops = f['has_stops'] as bool? ?? false;
+    _stops = [
+      for (final stop in (f['stops'] as List?) ?? [])
+        RestaurantStop.fromJson((stop as Map).cast<String, dynamic>()),
+    ];
     _milkPrice =
         _MilkPrice.values.asNameMap()[f['milk_price']] ?? _MilkPrice.unknown;
     final lat = (f['latitude'] as num?)?.toDouble();
@@ -366,6 +385,8 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     _hasGlutenFreeOptions = r.hasGlutenFreeOptions;
     _hours = [...r.openingHours];
     _hoursUnknown = r.openingHours.isEmpty;
+    _hasStops = r.stops.isNotEmpty;
+    _stops = [...r.stops];
     final surcharge = r.plantMilkSurcharge;
     _milkPrice = switch (surcharge) {
       null when r.servesHotDrinks == false => _MilkPrice.noHotDrinks,
@@ -555,6 +576,9 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   String? _check() {
     if (_tags.isEmpty) return 'Choisissez au moins un type de lieu.';
     if (_veganStatus == null) return 'Indiquez si le lieu est 100 % végane.';
+    if (_withStops && _stops.isEmpty) {
+      return 'Ajoutez au moins un emplacement du food truck.';
+    }
     if (!_withStorefront &&
         [_phone, _website, _facebook, _instagram]
             .every((c) => _text(c) == null)) {
@@ -595,42 +619,59 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
           _ => true,
         };
 
-  /// The restaurant as the API expects it, from the form.
-  Map<String, dynamic> _payload(LatLng position) => {
-        'name': _name.text.trim(),
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'address': _text(_address),
-        'city': _text(_city),
-        'country': _text(_country),
-        'description': _text(_description),
-        'vegan_status': _veganStatus,
-        'vegan_options_details': _veganStatus == VeganStatus.veganOptions
-            ? _text(_veganOptions)
-            : null,
-        'has_gluten_free_options': _hasGlutenFreeOptions,
-        'tags': _tags.toList(),
-        // In the usual order; no dine-in without storefront
-        'service_options': [
-          for (final (value, _) in RestaurantServiceOptions.all)
-            if (_serviceOptions.contains(value) &&
-                (_withStorefront || value != RestaurantServiceOptions.dineIn))
-              value,
-        ],
-        'plant_milk_surcharge': _plantMilkSurcharge,
-        'serves_hot_drinks': _servesHotDrinks,
-        'has_storefront': _withStorefront,
-        'service_area': _withStorefront ? null : _text(_serviceArea),
-        'opening_hours': _hoursUnknown || _hours.isEmpty
-            ? null
-            : _hours.map((s) => s.toJson()).toList(),
-        'opening_hours_note': _text(_hoursNote),
-        'phone': _text(_phone),
-        'website': _text(_website),
-        'facebook': _text(_facebook),
-        'instagram': _text(_instagram),
-        'menu_url': _hasNoMenu ? null : _text(_menuUrl),
-      };
+  /// The slots of all the stops, in week order.
+  List<OpeningSlot> get _stopSlots => [
+        for (final stop in _stops) ...stop.openingHours
+      ]..sort((a, b) => (a.day * 24 * 60 + a.openMinutes)
+          .compareTo(b.day * 24 * 60 + b.openMinutes));
+
+  /// The restaurant as the API expects it, from the form. With stops, the
+  /// first one is the position and the hours are all of theirs, as the API
+  /// sets them anyway.
+  Map<String, dynamic> _payload(LatLng position) {
+    final firstStop = _withStops ? _stops.firstOrNull : null;
+    final stopSlots = _stopSlots;
+    return {
+      'name': _name.text.trim(),
+      'latitude': firstStop?.latitude ?? position.latitude,
+      'longitude': firstStop?.longitude ?? position.longitude,
+      'address': firstStop != null ? firstStop.address : _text(_address),
+      'city': firstStop != null ? firstStop.city ?? _text(_city) : _text(_city),
+      'country': _text(_country),
+      'description': _text(_description),
+      'vegan_status': _veganStatus,
+      'vegan_options_details': _veganStatus == VeganStatus.veganOptions
+          ? _text(_veganOptions)
+          : null,
+      'has_gluten_free_options': _hasGlutenFreeOptions,
+      'tags': _tags.toList(),
+      // In the usual order; no dine-in without storefront
+      'service_options': [
+        for (final (value, _) in RestaurantServiceOptions.all)
+          if (_serviceOptions.contains(value) &&
+              (_withStorefront || value != RestaurantServiceOptions.dineIn))
+            value,
+      ],
+      'plant_milk_surcharge': _plantMilkSurcharge,
+      'serves_hot_drinks': _servesHotDrinks,
+      'has_storefront': _withStorefront,
+      'service_area': _withStorefront ? null : _text(_serviceArea),
+      'opening_hours': _withStops
+          ? stopSlots.isEmpty
+              ? null
+              : stopSlots.map((s) => s.toJson()).toList()
+          : _hoursUnknown || _hours.isEmpty
+              ? null
+              : _hours.map((s) => s.toJson()).toList(),
+      'opening_hours_note': _text(_hoursNote),
+      'stops': _withStops ? _stops.map((s) => s.toJson()).toList() : null,
+      'phone': _text(_phone),
+      'website': _text(_website),
+      'facebook': _text(_facebook),
+      'instagram': _text(_instagram),
+      'menu_url': _hasNoMenu ? null : _text(_menuUrl),
+    };
+  }
 
   /// Sends the fields that differ from the prefilled form, and the photos
   /// to remove, as a suggestion.
@@ -682,6 +723,10 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   /// storefront the pin goes to the city center, never to the caterer's own
   /// address.
   Future<LatLng?> _resolvePosition() async {
+    final firstStop = _withStops ? _stops.firstOrNull : null;
+    if (firstStop != null) {
+      return LatLng(firstStop.latitude, firstStop.longitude);
+    }
     if (!_withStorefront) {
       final query =
           [_text(_city), _text(_country)].whereType<String>().join(', ');
@@ -1238,6 +1283,93 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     );
   }
 
+  /// Adds a stop, or changes the one at [index].
+  Future<void> _editStop([int? index]) async {
+    FocusScope.of(context).unfocus();
+    final last = _stops.lastOrNull;
+    final stop = await Navigator.of(context).push<RestaurantStop>(
+      MaterialPageRoute(
+        builder: (_) => StopEditorPage(
+          stop: index == null ? null : _stops[index],
+          otherSlots: [
+            for (final (i, other) in _stops.indexed)
+              if (i != index) ...other.openingHours,
+          ],
+          mapCenter: last != null
+              ? LatLng(last.latitude, last.longitude)
+              : _position ?? widget.mapCenter,
+        ),
+      ),
+    );
+    if (stop == null || !mounted) return;
+    setState(() => _stops = index == null
+        ? [..._stops, stop]
+        : [for (final (i, s) in _stops.indexed) i == index ? stop : s]);
+    // The first stop is the truck's position, checked as an address would be
+    if (index == null && _stops.length == 1) {
+      _checkNearby(LatLng(stop.latitude, stop.longitude));
+    }
+  }
+
+  /// A stop of the food truck: tap to change it.
+  Widget _buildStopCard(int index) {
+    final stop = _stops[index];
+    final where = [stop.address, stop.city]
+        .whereType<String>()
+        .where((part) => part != stop.title)
+        .join(', ');
+    return Padding(
+      padding: EdgeInsets.only(bottom: 18.h),
+      child: InkWell(
+        onTap: _isSubmitting ? null : () => _editStop(index),
+        customBorder: squircleBorder(radius: 30.r),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(30.w, 24.h, 6.w, 24.h),
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: squircleBorder(
+              radius: 30.r,
+              side: const BorderSide(color: kBorderDefault),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.location_on,
+                  size: 52.sp, color: Theme.of(context).colorScheme.primary),
+              SizedBox(width: 18.w),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(stop.title, style: AppTextStyles.bodyBold15),
+                    if (where.isNotEmpty)
+                      Text(where,
+                          style: AppTextStyles.bodyRegular13
+                              .copyWith(color: Colors.grey[600])),
+                    Text(
+                        [stop.daysLabel ?? 'Jours variables', stop.note]
+                            .whereType<String>()
+                            .join(' · '),
+                        style: AppTextStyles.bodyRegular13
+                            .copyWith(color: Colors.grey[700])),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: 'Retirer l\'emplacement',
+                onPressed: _isSubmitting
+                    ? null
+                    : () =>
+                        setState(() => _stops = [..._stops]..removeAt(index)),
+                icon: Icon(Icons.delete_outline, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Same rule as the API: 6 to 20 digits, optional leading "+".
   String? _phoneValidator(String? value) {
     final phone = value?.trim() ?? '';
@@ -1310,26 +1442,36 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             validator: _required,
                             enabled: !_isSubmitting,
                           ),
-                          _gap(),
-                          AppTextField(
-                            controller: _address,
-                            hintText: _withStorefront
-                                ? 'Adresse ou nom du lieu (ex : Le Kitchen, Lyon)'
-                                : 'Adresse (non publiée)',
-                            textCapitalization: TextCapitalization.sentences,
-                            enabled: !_isSubmitting,
-                            suffixIcon:
-                                Icon(Icons.search, color: Colors.grey[500]),
-                          ),
-                          if (_suggestions.isNotEmpty) _buildSuggestions(),
-                          _gap(),
-                          AppTextField(
-                            controller: _city,
-                            hintText: 'Ville',
-                            isRequired: !_withStorefront,
-                            textCapitalization: TextCapitalization.words,
-                            validator: _withStorefront ? null : _required,
-                            enabled: !_isSubmitting,
+                          AnimatedReveal(
+                            visible: !_withStops,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _gap(),
+                                AppTextField(
+                                  controller: _address,
+                                  hintText: _withStorefront
+                                      ? 'Adresse ou nom du lieu (ex : Le Kitchen, Lyon)'
+                                      : 'Adresse (non publiée)',
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  enabled: !_isSubmitting,
+                                  suffixIcon: Icon(Icons.search,
+                                      color: Colors.grey[500]),
+                                ),
+                                if (_suggestions.isNotEmpty)
+                                  _buildSuggestions(),
+                                _gap(),
+                                AppTextField(
+                                  controller: _city,
+                                  hintText: 'Ville',
+                                  isRequired: !_withStorefront,
+                                  textCapitalization: TextCapitalization.words,
+                                  validator: _withStorefront ? null : _required,
+                                  enabled: !_isSubmitting,
+                                ),
+                              ],
+                            ),
                           ),
                           _gap(),
                           AppTextField(
@@ -1338,14 +1480,20 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             textCapitalization: TextCapitalization.words,
                             enabled: !_isSubmitting,
                           ),
-                          if (_withStorefront) ...[
-                            _gap(),
-                            _buildPositionRow(),
-                            if (_osmNotice != null) ...[
-                              SizedBox(height: 12.h),
-                              InfoBox(text: _osmNotice!),
-                            ],
-                          ],
+                          AnimatedReveal(
+                            visible: _withStorefront && !_withStops,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _gap(),
+                                _buildPositionRow(),
+                                if (_osmNotice != null) ...[
+                                  SizedBox(height: 12.h),
+                                  InfoBox(text: _osmNotice!),
+                                ],
+                              ],
+                            ),
+                          ),
                           _gap(),
                           AppTextField(
                             controller: _description,
@@ -1374,34 +1522,104 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                 ),
                             ],
                           ),
-                          if (_isCaterer) ...[
-                            _gap(),
-                            SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              value: !_hasStorefront,
-                              onChanged: _isSubmitting
-                                  ? null
-                                  : (v) => setState(() => _hasStorefront = !v),
-                              title: Text('Sans boutique',
-                                  style: AppTextStyles.bodyMedium15),
-                              subtitle: Text(
-                                'Livraison ou événements uniquement : le pin sera '
-                                'placé au centre de la ville, l\'adresse ne sera '
-                                'pas publiée.',
-                                style: AppTextStyles.bodyRegular13
-                                    .copyWith(color: Colors.grey[600]),
-                              ),
+                          AnimatedReveal(
+                            visible: _isFoodTruck && _withStorefront,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _gap(),
+                                SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  value: _hasStops,
+                                  onChanged: _isSubmitting
+                                      ? null
+                                      : (v) => setState(() => _hasStops = v),
+                                  title: Text('Change de lieu selon les jours',
+                                      style: AppTextStyles.bodyMedium15),
+                                  subtitle: Text(
+                                    'Ajoutez chaque emplacement où il s\'installe, '
+                                    'avec ses jours et horaires.',
+                                    style: AppTextStyles.bodyRegular13
+                                        .copyWith(color: Colors.grey[600]),
+                                  ),
+                                ),
+                                AnimatedReveal(
+                                  visible: _withStops,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      SizedBox(height: 12.h),
+                                      Text(
+                                          'Le premier est sa position principale.',
+                                          style: AppTextStyles.bodyRegular13
+                                              .copyWith(
+                                                  color: Colors.grey[600])),
+                                      SizedBox(height: 18.h),
+                                      for (var i = 0; i < _stops.length; i++)
+                                        _buildStopCard(i),
+                                      if (_stops.length < _maxStops)
+                                        Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: TextButton.icon(
+                                            onPressed: _isSubmitting
+                                                ? null
+                                                : () => _editStop(),
+                                            icon: const Icon(Icons
+                                                .add_location_alt_outlined),
+                                            label: const Text(
+                                                'Ajouter un emplacement'),
+                                          ),
+                                        ),
+                                      _gap(),
+                                      AppTextField(
+                                        controller: _hoursNote,
+                                        hintText: 'Précision sur les horaires',
+                                        enabled: !_isSubmitting,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                            if (!_hasStorefront)
-                              AppTextField(
-                                controller: _serviceArea,
-                                hintText:
-                                    'Zone servie (ex : Lyon et 30 km autour)',
-                                isRequired: true,
-                                validator: _required,
-                                enabled: !_isSubmitting,
-                              ),
-                          ],
+                          ),
+                          AnimatedReveal(
+                            visible: _isCaterer,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _gap(),
+                                SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  value: !_hasStorefront,
+                                  onChanged: _isSubmitting
+                                      ? null
+                                      : (v) =>
+                                          setState(() => _hasStorefront = !v),
+                                  title: Text('Sans boutique',
+                                      style: AppTextStyles.bodyMedium15),
+                                  subtitle: Text(
+                                    'Livraison ou événements uniquement : le pin sera '
+                                    'placé au centre de la ville, l\'adresse ne sera '
+                                    'pas publiée.',
+                                    style: AppTextStyles.bodyRegular13
+                                        .copyWith(color: Colors.grey[600]),
+                                  ),
+                                ),
+                                AnimatedReveal(
+                                  visible: !_hasStorefront,
+                                  child: AppTextField(
+                                    controller: _serviceArea,
+                                    hintText:
+                                        'Zone servie (ex : Lyon et 30 km autour)',
+                                    isRequired: true,
+                                    validator: _required,
+                                    enabled: !_isSubmitting,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ]),
                         _section(
                           'Sur place, à emporter, livraison ?',
@@ -1447,89 +1665,121 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               ),
                             ],
                           ),
-                          if (_veganStatus == VeganStatus.veganOptions) ...[
-                            _gap(),
-                            AppTextField(
-                              controller: _veganOptions,
-                              hintText:
-                                  'Quelles options, et comment elles sont '
-                                  'signalées sur la carte',
-                              isRequired: true,
-                              textCapitalization: TextCapitalization.sentences,
-                              minLines: 2,
-                              maxLines: 5,
-                              maxLength: 2000,
-                              validator: _required,
-                              enabled: !_isSubmitting,
+                          AnimatedReveal(
+                            visible: _veganStatus == VeganStatus.veganOptions,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _gap(),
+                                AppTextField(
+                                  controller: _veganOptions,
+                                  hintText:
+                                      'Quelles options, et comment elles sont '
+                                      'signalées sur la carte',
+                                  isRequired: true,
+                                  textCapitalization:
+                                      TextCapitalization.sentences,
+                                  minLines: 2,
+                                  maxLines: 5,
+                                  maxLength: 2000,
+                                  validator: _required,
+                                  enabled: !_isSubmitting,
+                                ),
+                              ],
                             ),
-                          ],
-                          if (_veganStatus != null) ...[
-                            _gap(),
-                            SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              value: _hasGlutenFreeOptions,
-                              onChanged: _isSubmitting
-                                  ? null
-                                  : (v) => setState(
-                                      () => _hasGlutenFreeOptions = v),
-                              title: Text('Options sans gluten',
-                                  style: AppTextStyles.bodyMedium15),
-                              subtitle: Text(
-                                'Au moins une option végane est aussi sans '
-                                'gluten.',
-                                style: AppTextStyles.bodyRegular13
-                                    .copyWith(color: Colors.grey[600]),
-                              ),
+                          ),
+                          AnimatedReveal(
+                            visible: _veganStatus != null,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _gap(),
+                                SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  value: _hasGlutenFreeOptions,
+                                  onChanged: _isSubmitting
+                                      ? null
+                                      : (v) => setState(
+                                          () => _hasGlutenFreeOptions = v),
+                                  title: Text('Options sans gluten',
+                                      style: AppTextStyles.bodyMedium15),
+                                  subtitle: Text(
+                                    'Au moins une option végane est aussi sans '
+                                    'gluten.',
+                                    style: AppTextStyles.bodyRegular13
+                                        .copyWith(color: Colors.grey[600]),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                          if (!_hasNoMenu) ...[
-                            _gap(),
-                            AppTextField(
-                              controller: _menuUrl,
-                              hintText:
-                                  'Lien vers le menu en ligne (facultatif)',
-                              keyboardType: TextInputType.url,
-                              enabled: !_isSubmitting,
+                          ),
+                          AnimatedReveal(
+                            visible: !_hasNoMenu,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _gap(),
+                                AppTextField(
+                                  controller: _menuUrl,
+                                  hintText:
+                                      'Lien vers le menu en ligne (facultatif)',
+                                  keyboardType: TextInputType.url,
+                                  enabled: !_isSubmitting,
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ]),
-                        _section(
-                          _withStorefront ? 'Horaires' : 'Horaires de commande',
-                          subtitle: RestaurantTags.accommodations
-                                  .any(_tags.contains)
-                              ? 'Pour un hébergement : les horaires du restaurant, '
-                                  'ou à défaut du petit-déjeuner.'
-                              : null,
-                          [
-                            CheckboxListTile(
-                              contentPadding: EdgeInsets.zero,
-                              value: _hoursUnknown,
-                              onChanged: _isSubmitting
-                                  ? null
-                                  : (v) => setState(
-                                      () => _hoursUnknown = v ?? false),
-                              title: Text('Je ne connais pas les horaires',
-                                  style: AppTextStyles.bodyRegular15),
-                            ),
-                            if (!_hoursUnknown) ...[
-                              OpeningHoursEditor(
-                                slots: _hours,
-                                enabled: !_isSubmitting,
-                                onChanged: (slots) =>
-                                    setState(() => _hours = slots),
+                        AnimatedReveal(
+                          visible: !_withStops,
+                          child: _section(
+                            _withStorefront
+                                ? 'Horaires'
+                                : 'Horaires de commande',
+                            subtitle: RestaurantTags.accommodations
+                                    .any(_tags.contains)
+                                ? 'Pour un hébergement : les horaires du restaurant, '
+                                    'ou à défaut du petit-déjeuner.'
+                                : null,
+                            [
+                              CheckboxListTile(
+                                contentPadding: EdgeInsets.zero,
+                                value: _hoursUnknown,
+                                onChanged: _isSubmitting
+                                    ? null
+                                    : (v) => setState(
+                                        () => _hoursUnknown = v ?? false),
+                                title: Text('Je ne connais pas les horaires',
+                                    style: AppTextStyles.bodyRegular15),
                               ),
-                              _gap(),
-                              AppTextField(
-                                controller: _hoursNote,
-                                hintText:
-                                    'Précision (ex : fermé les jours fériés)',
-                                enabled: !_isSubmitting,
+                              AnimatedReveal(
+                                visible: !_hoursUnknown,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    OpeningHoursEditor(
+                                      slots: _hours,
+                                      enabled: !_isSubmitting,
+                                      onChanged: (slots) =>
+                                          setState(() => _hours = slots),
+                                    ),
+                                    _gap(),
+                                    AppTextField(
+                                      controller: _hoursNote,
+                                      hintText:
+                                          'Précision (ex : fermé les jours fériés)',
+                                      enabled: !_isSubmitting,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
-                          ],
+                          ),
                         ),
-                        if (_asksMilkPrice)
-                          _section(
+                        AnimatedReveal(
+                          visible: _asksMilkPrice,
+                          child: _section(
                             'Supplément lait végétal',
                             subtitle:
                                 'Pour les boissons chaudes, s\'il y en a.',
@@ -1574,22 +1824,31 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                     ),
                                 ],
                               ),
-                              if (_milkPrice == _MilkPrice.plantCostsMore ||
-                                  _milkPrice == _MilkPrice.cowCostsMore) ...[
-                                _gap(),
-                                AppTextField(
-                                  controller: _surcharge,
-                                  hintText:
-                                      'Différence de prix en € (ex : 0,50)',
-                                  isRequired: true,
-                                  keyboardType:
-                                      const TextInputType.numberWithOptions(
-                                          decimal: true),
-                                  enabled: !_isSubmitting,
+                              AnimatedReveal(
+                                visible:
+                                    _milkPrice == _MilkPrice.plantCostsMore ||
+                                        _milkPrice == _MilkPrice.cowCostsMore,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    _gap(),
+                                    AppTextField(
+                                      controller: _surcharge,
+                                      hintText:
+                                          'Différence de prix en € (ex : 0,50)',
+                                      isRequired: true,
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                              decimal: true),
+                                      enabled: !_isSubmitting,
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ],
                           ),
+                        ),
                         _section(
                           'Contact',
                           isRequired: !_withStorefront,

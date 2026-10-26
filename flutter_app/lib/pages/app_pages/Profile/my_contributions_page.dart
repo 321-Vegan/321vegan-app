@@ -343,6 +343,7 @@ const _fieldLabels = {
   'service_area': 'zone servie',
   'opening_hours': 'horaires',
   'opening_hours_note': 'horaires',
+  'stops': 'emplacements',
   'phone': 'téléphone',
   'website': 'site',
   'facebook': 'Facebook',
