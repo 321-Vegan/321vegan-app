@@ -96,6 +96,9 @@ class MyHomePageState extends State<MyHomePage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       B12ReminderService.checkAndRescheduleIfNeeded();
+      // Selections sent, signalement answers... while the app was in the
+      // background (it can stay there for days)
+      ProfileNotificationService.refreshAll();
     }
   }
 

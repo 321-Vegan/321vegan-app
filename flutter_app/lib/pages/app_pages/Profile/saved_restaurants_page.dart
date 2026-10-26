@@ -168,7 +168,10 @@ class _SelectionsTabState extends State<_SelectionsTab>
         _received = results[1]!.items;
       }
     });
-    if (!_hasError) SelectionBadgeService.markAllSeen();
+    // From the list, not the badge: it may be stale (sent since its refresh)
+    if (!_hasError && _received!.any((s) => !s.isSeen)) {
+      SelectionBadgeService.markAllSeen();
+    }
   }
 
   void _snack(String text, {bool error = false}) {

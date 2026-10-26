@@ -17,7 +17,6 @@ class SelectionBadgeService {
 
   /// The user opened their received selections.
   static Future<void> markAllSeen() async {
-    if (unreadCount.value == 0) return;
     if (await RestaurantApiService.markReceivedSelectionsSeen()) {
       unreadCount.value = 0;
     }

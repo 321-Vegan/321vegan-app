@@ -16,7 +16,7 @@ class ProfileNotificationSource {
   /// service updates it whenever the count changes (fetch, mark-as-seen…).
   final ValueNotifier<int> count;
 
-  /// Re-query the source (called on app start and after login).
+  /// Re-query the source (called on app start and resume, and after login).
   final Future<void> Function() refresh;
 
   /// Skipped by [ProfileNotificationService.refreshAll] when logged out.
