@@ -24,6 +24,10 @@ class AppButton extends StatelessWidget {
   /// set — plain black glyph, tinted like [icon] at render time.
   final String? iconAsset;
 
+  /// Widget shown after the label (e.g. a [PremiumBadge] on a premium-only
+  /// action).
+  final Widget? trailing;
+
   /// Swaps the label (and icon) for a spinner and disables taps — the
   /// button keeps its size and colors so it doesn't jump while a request
   /// is in flight.
@@ -44,6 +48,7 @@ class AppButton extends StatelessWidget {
     this.borderColor,
     this.icon,
     this.iconAsset,
+    this.trailing,
     this.isLoading = false,
     this.compact = false,
   });
@@ -101,6 +106,10 @@ class AppButton extends StatelessWidget {
                   label,
                   style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
                 ),
+                if (trailing != null) ...[
+                  const SizedBox(width: 8),
+                  trailing!,
+                ],
               ],
               ),
             ),

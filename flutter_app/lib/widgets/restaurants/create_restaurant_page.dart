@@ -916,13 +916,25 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
 
   // ── Build helpers ─────────────────────────────────────────────────────────
 
-  Widget _section(String title, List<Widget> children, {String? subtitle}) {
+  /// [isRequired] adds a red asterisk after [title].
+  Widget _section(String title, List<Widget> children,
+      {String? subtitle, bool isRequired = false}) {
     return Padding(
       padding: EdgeInsets.only(top: AppSpacing.section),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title, style: AppTextStyles.baloo22),
+          Text.rich(
+            TextSpan(children: [
+              TextSpan(text: title),
+              if (isRequired)
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: kSemanticError),
+                ),
+            ]),
+            style: AppTextStyles.baloo22,
+          ),
           if (subtitle != null) ...[
             SizedBox(height: 6.h),
             Text(subtitle,
@@ -1281,6 +1293,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                           AppTextField(
                             controller: _name,
                             hintText: 'Nom',
+                            isRequired: true,
                             textCapitalization: TextCapitalization.words,
                             validator: _required,
                             enabled: !_isSubmitting,
@@ -1301,6 +1314,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                           AppTextField(
                             controller: _city,
                             hintText: 'Ville',
+                            isRequired: !_withStorefront,
                             textCapitalization: TextCapitalization.words,
                             validator: _withStorefront ? null : _required,
                             enabled: !_isSubmitting,
@@ -1331,7 +1345,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             enabled: !_isSubmitting,
                           ),
                         ]),
-                        _section('Type de lieu', [
+                        _section('Type de lieu', isRequired: true, [
                           Wrap(
                             spacing: 18.w,
                             runSpacing: 18.h,
@@ -1371,6 +1385,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                 controller: _serviceArea,
                                 hintText:
                                     'Zone servie (ex : Lyon et 30 km autour)',
+                                isRequired: true,
                                 validator: _required,
                                 enabled: !_isSubmitting,
                               ),
@@ -1401,7 +1416,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             ),
                           ],
                         ),
-                        _section('Végane ?', [
+                        _section('Végane ?', isRequired: true, [
                           Wrap(
                             spacing: 18.w,
                             runSpacing: 18.h,
@@ -1427,11 +1442,22 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               hintText:
                                   'Quelles options, et comment elles sont '
                                   'signalées sur la carte',
+                              isRequired: true,
                               textCapitalization: TextCapitalization.sentences,
                               minLines: 2,
                               maxLines: 5,
                               maxLength: 2000,
                               validator: _required,
+                              enabled: !_isSubmitting,
+                            ),
+                          ],
+                          if (!_hasNoMenu) ...[
+                            _gap(),
+                            AppTextField(
+                              controller: _menuUrl,
+                              hintText:
+                                  'Lien vers le menu en ligne (facultatif)',
+                              keyboardType: TextInputType.url,
                               enabled: !_isSubmitting,
                             ),
                           ],
@@ -1524,6 +1550,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                   controller: _surcharge,
                                   hintText:
                                       'Différence de prix en € (ex : 0,50)',
+                                  isRequired: true,
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
                                           decimal: true),
@@ -1534,6 +1561,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                           ),
                         _section(
                           'Contact',
+                          isRequired: !_withStorefront,
                           subtitle: _withStorefront
                               ? 'Facultatif'
                               : 'Au moins un moyen de commander',
@@ -1571,16 +1599,6 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               hintText: 'Instagram (ex. @govegan)',
                               enabled: !_isSubmitting,
                             ),
-                            if (!_hasNoMenu) ...[
-                              _gap(),
-                              AppTextField(
-                                controller: _menuUrl,
-                                hintText:
-                                    'Lien vers le menu en ligne (facultatif)',
-                                keyboardType: TextInputType.url,
-                                enabled: !_isSubmitting,
-                              ),
-                            ],
                           ],
                         ),
                         if (_isSuggestion) ...[

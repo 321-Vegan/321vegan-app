@@ -402,6 +402,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
       ],
       initialCriteria: initialCriteria,
       lockedCriteria: {if (_restaurant.isFullyVegan) 'rating_choice'},
+      // No price per person in a grocery
+      priceRanges: _restaurant.hasNoMenu ? const [] : RestaurantPriceRanges.all,
+      initialPriceRange:
+          draft != null ? draft.priceRange : existing?.priceRange,
       maxPhotos: _maxPhotosPerReview - (existing?.photos.length ?? 0),
       initialPhotos: draft?.photos ?? const [],
       commentHint: 'Plats, accueil, options véganes...',
@@ -420,12 +424,14 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             restaurantId: _restaurant.id,
             rating: entry.rating,
             criteria: entry.criteria,
+            priceRange: entry.priceRange,
             comment: entry.comment,
           )
         : await RestaurantApiService.updateReview(
             reviewId: existing.id,
             rating: entry.rating,
             criteria: entry.criteria,
+            priceRange: entry.priceRange,
             comment: entry.comment,
           );
     if (!mounted) return;
@@ -821,11 +827,14 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     final rated = RestaurantCriterion.all
         .where((c) => _showsCriterion(c) && review.criteria.containsKey(c.field))
         .toList();
-    if (rated.isEmpty && review.photos.isEmpty) return null;
+    final priceRange = review.priceRange;
+    if (rated.isEmpty && priceRange == null && review.photos.isEmpty) {
+      return null;
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (rated.isNotEmpty)
+        if (rated.isNotEmpty || priceRange != null)
           Wrap(
             spacing: 24.w,
             runSpacing: 8.h,
@@ -841,6 +850,18 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                     text: '★ ${review.criteria[c.field]}',
                     style:
                         AppTextStyles.bodyBold13.copyWith(color: kAccentYellow),
+                  ),
+                ])),
+              if (priceRange != null)
+                Text.rich(TextSpan(children: [
+                  TextSpan(
+                    text: 'Prix ',
+                    style: AppTextStyles.bodyRegular13
+                        .copyWith(color: Colors.grey[600]),
+                  ),
+                  TextSpan(
+                    text: RestaurantPriceRanges.label(priceRange),
+                    style: AppTextStyles.bodyBold13,
                   ),
                 ])),
             ],
@@ -1207,6 +1228,102 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         ],
       ];
 
+  /// The price per person most chosen in the reviews, beside the rating;
+  /// tapping it shows all the answers.
+  Widget _buildPriceRange(RestaurantReviewSummary summary) {
+    final style = TextStyle(fontSize: 40.sp, color: Colors.grey[600]);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => _showPriceRanges(summary),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('  ·  ', style: style),
+          Flexible(
+            child: Text(
+              RestaurantPriceRanges.label(summary.priceRange!),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style.copyWith(
+                  fontWeight: FontWeight.w600, color: kTextPrimary),
+            ),
+          ),
+          SizedBox(width: 6.w),
+          Icon(Icons.info_outline, size: 40.sp, color: Colors.grey[500]),
+        ],
+      ),
+    );
+  }
+
+  /// How many reviews chose each price per person.
+  void _showPriceRanges(RestaurantReviewSummary summary) {
+    final counts = summary.priceRangeDistribution;
+    final total = counts.values.fold(0, (sum, count) => sum + count);
+    final most = counts.values.fold(0, (max, count) => count > max ? count : max);
+    final primary = Theme.of(context).colorScheme.primary;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BottomSheetShell(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Prix par personne', style: AppTextStyles.baloo22),
+            SizedBox(height: 12.h),
+            Text(
+              total == 1 ? 'D\'après 1 avis' : 'D\'après $total avis',
+              style:
+                  AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[600]),
+            ),
+            SizedBox(height: 36.h),
+            for (final (value, label) in RestaurantPriceRanges.all)
+              Builder(builder: (context) {
+                final count = counts[value] ?? 0;
+                final isMostChosen = value == summary.priceRange;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 24.h),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 270.w,
+                        child: Text(
+                          label,
+                          style: isMostChosen
+                              ? AppTextStyles.bodyBold15
+                              : AppTextStyles.bodyRegular15,
+                        ),
+                      ),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: LinearProgressIndicator(
+                            value: most == 0 ? 0 : count / most,
+                            minHeight: 24.h,
+                            color: isMostChosen ? primary : Colors.grey[400],
+                            backgroundColor: Colors.grey[100],
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 90.w,
+                        child: Text(
+                          '$count',
+                          textAlign: TextAlign.end,
+                          style: AppTextStyles.bodyRegular13
+                              .copyWith(color: Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     final r = _restaurant;
     final summary = _summary;
@@ -1252,6 +1369,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                       Text('(${formatRatingCount(reviewCount)})',
                           style: TextStyle(
                               fontSize: 40.sp, color: Colors.grey[500])),
+                      if (summary?.priceRange != null)
+                        Flexible(child: _buildPriceRange(summary!)),
                     ],
                   ),
                 ],

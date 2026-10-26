@@ -56,8 +56,8 @@ Future<bool> confirmSelectionAction(
 
 // ── Send ─────────────────────────────────────────────────────────────────────
 
-/// Sends [selection] to someone by email. Completes with the email once
-/// sent, null when closed.
+/// Sends [selection] to someone, by friend code or by email. Completes with
+/// the confirmation to show once sent, null when closed.
 Future<String?> showSendSelectionSheet(
         BuildContext context, RestaurantSelection selection) =>
     _showSheet<String>(context, _SendSelectionSheet(selection: selection));
@@ -74,26 +74,41 @@ class _SendSelectionSheet extends StatefulWidget {
 class _SendSelectionSheetState extends State<_SendSelectionSheet> {
   static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
-  final _email = TextEditingController();
+  final _input = TextEditingController();
+  bool _byCode = true;
   bool _isSending = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _email.addListener(() => setState(() {}));
+    _input.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
-    _email.dispose();
+    _input.dispose();
     super.dispose();
   }
 
+  void _setMode(bool byCode) {
+    if (byCode == _byCode) return;
+    setState(() {
+      _byCode = byCode;
+      _error = null;
+      _input.clear();
+    });
+  }
+
   /// The API's refusal, in words for the user.
-  static String _errorText(String? detail) {
+  String _errorText(String? detail, bool notFound) {
+    if (notFound) return 'Aucun compte n\'a ce code ami. Vérifiez-le !';
     final d = detail ?? '';
-    if (d.contains('yourself')) return 'C\'est votre propre adresse !';
+    if (d.contains('yourself')) {
+      return _byCode
+          ? 'C\'est votre propre code ami !'
+          : 'C\'est votre propre adresse !';
+    }
     if (d.contains('per day')) {
       return 'Vous avez envoyé beaucoup de sélections aujourd\'hui, '
           'réessayez demain.';
@@ -106,27 +121,67 @@ class _SendSelectionSheetState extends State<_SendSelectionSheet> {
   }
 
   Future<void> _send() async {
-    final email = _email.text.trim();
+    final value = _input.text.trim();
     setState(() {
       _isSending = true;
       _error = null;
     });
     final result = await RestaurantApiService.sendSelection(
-        id: widget.selection.id, email: email);
+      id: widget.selection.id,
+      email: _byCode ? null : value,
+      friendCode: _byCode ? value : null,
+    );
     if (!mounted) return;
     if (result.ok) {
-      Navigator.of(context).pop(email);
+      Navigator.of(context).pop(_byCode
+          ? 'Sélection envoyée à ${result.recipientNickname ?? value} !'
+          : 'C\'est parti ! Si $value a un compte 321 Vegan, la sélection '
+              'l\'attend.');
       return;
     }
     setState(() {
       _isSending = false;
-      _error = _errorText(result.error);
+      _error = _errorText(result.error, result.notFound);
     });
+  }
+
+  /// "Code ami" / "E-mail" switch.
+  Widget _modeButton(String label, IconData icon, bool byCode) {
+    final selected = _byCode == byCode;
+    final primary = Theme.of(context).colorScheme.primary;
+    return Expanded(
+      child: Material(
+        color: selected ? primary : Colors.white,
+        shape: squircleBorder(
+          radius: 30.r,
+          side: BorderSide(color: selected ? primary : kBorderDefault),
+        ),
+        child: InkWell(
+          customBorder: squircleBorder(radius: 30.r),
+          onTap: _isSending ? null : () => _setMode(byCode),
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 24.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon,
+                    size: 48.sp, color: selected ? Colors.white : kTextPrimary),
+                SizedBox(width: 12.w),
+                Text(label,
+                    style: AppTextStyles.bodyBold13.copyWith(
+                        color: selected ? Colors.white : kTextPrimary)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final canSend = _emailPattern.hasMatch(_email.text.trim());
+    final value = _input.text.trim();
+    final canSend = _byCode ? value.length >= 4 : _emailPattern.hasMatch(value);
     return Padding(
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -138,19 +193,45 @@ class _SendSelectionSheetState extends State<_SendSelectionSheet> {
                 style: AppTextStyles.baloo22),
             SizedBox(height: 12.h),
             Text(
-              'Saisissez l\'adresse e-mail du compte 321 Vegan de la personne. '
-              'Elle pourra accepter la sélection pour la retrouver avec ses '
-              'lieux sauvegardés.',
+              'La personne pourra accepter la sélection pour la retrouver '
+              'avec ses lieux sauvegardés.',
               style:
                   AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[600]),
             ),
             SizedBox(height: 36.h),
-            AppTextField(
-              controller: _email,
-              hintText: 'adresse@exemple.fr',
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
-              enabled: !_isSending,
+            Row(
+              children: [
+                _modeButton('Code ami', Icons.tag_rounded, true),
+                SizedBox(width: 24.w),
+                _modeButton('E-mail', Icons.alternate_email_rounded, false),
+              ],
+            ),
+            SizedBox(height: 24.h),
+            if (_byCode)
+              AppTextField(
+                key: const ValueKey('friend_code'),
+                controller: _input,
+                hintText: 'Son code ami, ex : K7P2XM',
+                textCapitalization: TextCapitalization.characters,
+                maxLength: 32,
+                enabled: !_isSending,
+              )
+            else
+              AppTextField(
+                key: const ValueKey('email'),
+                controller: _input,
+                hintText: 'Adresse e-mail de son compte',
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                enabled: !_isSending,
+              ),
+            SizedBox(height: 12.h),
+            Text(
+              _byCode
+                  ? 'Son code ami est dans ses réglages, section Compte.'
+                  : 'L\'adresse du compte 321 Vegan de la personne.',
+              style:
+                  AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[600]),
             ),
             if (_error != null) ...[
               SizedBox(height: 24.h),

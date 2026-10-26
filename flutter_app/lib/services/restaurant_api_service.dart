@@ -519,23 +519,47 @@ class RestaurantApiService {
     }
   }
 
-  /// Sends the selection to the user with this email. The API answers the
-  /// same whether the email has an account or not. On refusal, [error]
-  /// carries the API's reason when there is one.
-  static Future<({bool ok, String? error})> sendSelection({
+  /// Sends the selection to a user, by [email] or by [friendCode]. By
+  /// email, the API answers the same whether it has an account or not; by
+  /// friend code, [recipientNickname] tells who received it, and an
+  /// unknown code is a failure with [notFound]. On refusal, [error] carries
+  /// the API's reason when there is one.
+  static Future<
+      ({
+        bool ok,
+        String? recipientNickname,
+        bool notFound,
+        String? error
+      })> sendSelection({
     required int id,
-    required String email,
+    String? email,
+    String? friendCode,
   }) async {
     try {
       final dio = await DioClient.getDio();
       final response = await dio.post(
         '/restaurant-selections/$id/send',
-        data: {'email': email.trim()},
+        data: {
+          if (email != null) 'email': email.trim(),
+          if (friendCode != null) 'friend_code': friendCode.trim(),
+        },
         options: _auth,
       );
-      return (ok: _isSuccess(response), error: null);
+      final data = response.data;
+      return (
+        ok: _isSuccess(response),
+        recipientNickname:
+            data is Map ? data['recipient_nickname'] as String? : null,
+        notFound: false,
+        error: null,
+      );
     } catch (e) {
-      return (ok: false, error: _errorMessage(e));
+      return (
+        ok: false,
+        recipientNickname: null,
+        notFound: e is DioException && e.response?.statusCode == 404,
+        error: _errorMessage(e),
+      );
     }
   }
 
@@ -657,11 +681,13 @@ class RestaurantApiService {
     return paginated.items.isNotEmpty ? paginated.items.first : null;
   }
 
-  /// Creates the user's review ([criteria] by [RestaurantCriterion.field]).
+  /// Creates the user's review ([criteria] by [RestaurantCriterion.field],
+  /// [priceRange] a [RestaurantPriceRanges] value).
   static Future<RestaurantReview?> postReview({
     required int restaurantId,
     required int rating,
     Map<String, int?> criteria = const {},
+    String? priceRange,
     String? comment,
   }) async {
     try {
@@ -672,6 +698,7 @@ class RestaurantApiService {
           'restaurant_id': restaurantId,
           'rating': rating,
           ...criteria,
+          if (priceRange != null) 'price_range': priceRange,
           if (comment != null && comment.isNotEmpty) 'comment': comment,
         },
         options: _auth,
@@ -683,18 +710,24 @@ class RestaurantApiService {
     return null;
   }
 
-  /// Updates the user's review; a null criterion clears it.
+  /// Updates the user's review; a null criterion or [priceRange] clears it.
   static Future<RestaurantReview?> updateReview({
     required int reviewId,
     required int rating,
     Map<String, int?> criteria = const {},
+    String? priceRange,
     String? comment,
   }) async {
     try {
       final dio = await DioClient.getDio();
       final response = await dio.put(
         '/restaurant-reviews/$reviewId',
-        data: {'rating': rating, ...criteria, 'comment': comment},
+        data: {
+          'rating': rating,
+          ...criteria,
+          'price_range': priceRange,
+          'comment': comment,
+        },
         options: _auth,
       );
       if (_isSuccess(response)) {

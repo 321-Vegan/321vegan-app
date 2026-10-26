@@ -79,8 +79,7 @@ class SelectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = selection;
-    final subtitle =
-        s.isOwner ? s.countLabel : 'De ${s.ownerNickname} · ${s.countLabel}';
+    final subtitle = s.subtitle;
     final showAnswer = s.isPending && onAccept != null && onRefuse != null;
 
     return GestureDetector(

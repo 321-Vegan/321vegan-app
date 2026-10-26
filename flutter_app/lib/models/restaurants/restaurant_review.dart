@@ -22,6 +22,23 @@ class RestaurantCriterion {
   ];
 }
 
+/// Price per person in a review, mirrors the API price ranges, cheapest
+/// first.
+class RestaurantPriceRanges {
+  RestaurantPriceRanges._();
+
+  static const all = [
+    ('UNDER_10', '< 10 €'),
+    ('FROM_10_TO_20', '10 – 20 €'),
+    ('FROM_20_TO_30', '20 – 30 €'),
+    ('FROM_30_TO_50', '30 – 50 €'),
+    ('OVER_50', '> 50 €'),
+  ];
+
+  static String label(String value) =>
+      all.firstWhere((r) => r.$1 == value, orElse: () => (value, value)).$2;
+}
+
 class RestaurantCriterionSummary {
   final double? ratingAvg;
   final int ratingCount;
@@ -41,11 +58,20 @@ class RestaurantReviewSummary {
   /// By [RestaurantCriterion.key].
   final Map<String, RestaurantCriterionSummary> criteria;
 
+  /// Price per person most chosen in the reviews ([RestaurantPriceRanges]
+  /// value), null when no review gave one.
+  final String? priceRange;
+
+  /// Number of reviews per price range.
+  final Map<String, int> priceRangeDistribution;
+
   const RestaurantReviewSummary({
     required this.reviewCount,
     required this.ratingAvg,
     this.distribution = const {},
     this.criteria = const {},
+    this.priceRange,
+    this.priceRangeDistribution = const {},
   });
 
   factory RestaurantReviewSummary.fromJson(Map<String, dynamic> json) {
@@ -65,6 +91,12 @@ class RestaurantReviewSummary {
             ratingAvg: (entry.value['rating_avg'] as num?)?.toDouble(),
             ratingCount: entry.value['rating_count'] as int? ?? 0,
           ),
+      },
+      priceRange: json['price_range'] as String?,
+      priceRangeDistribution: {
+        for (final entry
+            in (json['price_range_distribution'] as Map? ?? const {}).entries)
+          '${entry.key}': (entry.value as num).toInt(),
       },
     );
   }
@@ -86,6 +118,9 @@ class RestaurantReview {
 
   /// Detailed ratings by [RestaurantCriterion.field], when given.
   final Map<String, int> criteria;
+
+  /// Price per person ([RestaurantPriceRanges] value), when given.
+  final String? priceRange;
   final String? comment;
   final ReviewStatus status;
   final List<RestaurantPhoto> photos;
@@ -101,6 +136,7 @@ class RestaurantReview {
     this.userIsPremium = false,
     required this.rating,
     this.criteria = const {},
+    this.priceRange,
     this.comment,
     required this.status,
     this.photos = const [],
@@ -123,6 +159,7 @@ class RestaurantReview {
           if (json[criterion.field] case final int value)
             criterion.field: value,
       },
+      priceRange: json['price_range'] as String?,
       comment: json['comment'] as String?,
       status: ReviewStatus.fromApi(json['status'] as String?),
       photos: (json['photos'] as List<dynamic>? ?? [])

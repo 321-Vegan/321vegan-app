@@ -561,6 +561,40 @@ class AuthService {
     }
   }
 
+  // Choose the user's friend code (PUT /me/friend-code, premium only). The
+  // error is in words for the user.
+  static Future<AuthResult<User>> updateFriendCode(String friendCode) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.put(
+        '/me/friend-code',
+        data: {'friend_code': friendCode},
+        options: Options(
+          headers: {'Authorization': 'Bearer $_accessToken'},
+        ),
+      );
+      if (response.statusCode == 200) {
+        _currentUser = User.fromJson(response.data);
+        return AuthResult.success(_currentUser!);
+      }
+      return AuthResult.error('Impossible de changer le code ami');
+    } on DioException catch (e) {
+      final detail = e.response?.data is Map
+          ? '${(e.response!.data as Map)['detail']}'
+          : '';
+      return AuthResult.error(switch (e.response?.statusCode) {
+        409 => 'Ce code ami est déjà pris.',
+        403 => 'Le code ami personnalisé est réservé aux membres premium.',
+        422 when detail.contains('reserved') => 'Ce code ami est réservé.',
+        422 => 'De 4 à 16 lettres, chiffres ou « _ ».',
+        _ => 'Impossible de changer le code ami, réessayez.',
+      });
+    } catch (e) {
+      debugPrint('❌ Unexpected friend code error: $e');
+      return AuthResult.error('Impossible de contacter le serveur');
+    }
+  }
+
   // Request an email change. The backend stores the new email as pending and
   // sends a confirmation link to the new address; the email only changes once
   // the user confirms via that link (handled on the web app).

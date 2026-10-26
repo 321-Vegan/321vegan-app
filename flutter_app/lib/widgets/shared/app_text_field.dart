@@ -42,6 +42,9 @@ class AppTextField extends StatefulWidget {
 
   final String? labelText;
 
+  /// Appends a red asterisk to [hintText].
+  final bool isRequired;
+
   /// Shows "12 / 100" under the field, right-aligned (red at the limit).
   /// Needs [maxLength].
   final bool showCounter;
@@ -64,6 +67,7 @@ class AppTextField extends StatefulWidget {
     this.suffixIcon,
     this.validator,
     this.labelText,
+    this.isRequired = false,
     this.showCounter = false,
   });
 
@@ -93,6 +97,9 @@ class _AppTextFieldState extends State<AppTextField> {
     _focusNode.dispose();
     super.dispose();
   }
+
+  TextStyle get _hintStyle =>
+      AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]);
 
   @override
   Widget build(BuildContext context) {
@@ -146,13 +153,26 @@ class _AppTextFieldState extends State<AppTextField> {
                   floatingLabelBehavior: widget.labelText != null
                       ? FloatingLabelBehavior.always
                       : FloatingLabelBehavior.auto,
-                  labelStyle:
-                      AppTextStyles.bodyMedium11.copyWith(color: Colors.grey[500]),
-                  floatingLabelStyle:
-                      AppTextStyles.bodyMedium11.copyWith(color: Colors.grey[500]),
-                  hintText: widget.hintText,
-                  hintStyle:
-                      AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]),
+                  labelStyle: AppTextStyles.bodyMedium11
+                      .copyWith(color: Colors.grey[500]),
+                  floatingLabelStyle: AppTextStyles.bodyMedium11
+                      .copyWith(color: Colors.grey[500]),
+                  // hint and hintText are exclusive: the rich one for the star
+                  // (hintStyle isn't applied to it, hence the explicit style)
+                  hintText: widget.isRequired ? null : widget.hintText,
+                  hint: widget.isRequired && widget.hintText != null
+                      ? Text.rich(
+                          TextSpan(children: [
+                            TextSpan(text: widget.hintText),
+                            const TextSpan(
+                              text: ' *',
+                              style: TextStyle(color: kSemanticError),
+                            ),
+                          ]),
+                          style: _hintStyle,
+                        )
+                      : null,
+                  hintStyle: _hintStyle,
                   suffixIcon: widget.suffixIcon,
                   border: InputBorder.none,
                   contentPadding:

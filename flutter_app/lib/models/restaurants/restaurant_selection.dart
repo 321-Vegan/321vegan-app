@@ -48,6 +48,10 @@ class RestaurantSelection {
 
   /// Sent to the user: false until they opened their received selections.
   final bool isSeen;
+
+  /// The owner's: how many users accepted it (have it with their saved
+  /// places); null for a recipient.
+  final int? acceptedCount;
   final List<RestaurantSelectionItem> items;
 
   const RestaurantSelection({
@@ -60,6 +64,7 @@ class RestaurantSelection {
     this.coverPhotos = const [],
     this.shareStatus,
     this.isSeen = true,
+    this.acceptedCount,
     this.items = const [],
   });
 
@@ -71,6 +76,17 @@ class RestaurantSelection {
         1 => '1 lieu',
         final n => '$n lieux',
       };
+
+  /// Under the title: who made it for a recipient, how many people have it
+  /// for the owner. "De Camille · 3 lieux", "3 lieux · 2 personnes l'ont".
+  String get subtitle {
+    if (!isOwner) return 'De $ownerNickname · $countLabel';
+    return switch (acceptedCount ?? 0) {
+      0 => countLabel,
+      1 => '$countLabel · 1 personne l\'a',
+      final n => '$countLabel · $n personnes l\'ont',
+    };
+  }
 
   factory RestaurantSelection.fromJson(Map<String, dynamic> json) =>
       RestaurantSelection(
@@ -86,6 +102,7 @@ class RestaurantSelection {
             .toList(),
         shareStatus: json['share_status'] as String?,
         isSeen: json['is_seen'] as bool? ?? true,
+        acceptedCount: json['accepted_count'] as int?,
         items: (json['items'] as List<dynamic>? ?? [])
             .map((e) =>
                 RestaurantSelectionItem.fromJson(e as Map<String, dynamic>))

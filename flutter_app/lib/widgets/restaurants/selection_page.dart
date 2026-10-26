@@ -127,11 +127,8 @@ class _SelectionPageState extends State<SelectionPage> {
           error: true);
       return;
     }
-    final email = await showSendSelectionSheet(context, _selection);
-    if (email != null && mounted) {
-      _snack('C\'est parti ! Si $email a un compte 321 Vegan, la sélection '
-          'l\'attend.');
-    }
+    final confirmation = await showSendSelectionSheet(context, _selection);
+    if (confirmation != null && mounted) _snack(confirmation);
   }
 
   Future<void> _delete() async {
@@ -303,9 +300,7 @@ class _SelectionPageState extends State<SelectionPage> {
                   Text(s.title, style: AppTextStyles.baloo26),
                   SizedBox(height: 6.h),
                   Text(
-                    s.isOwner
-                        ? s.countLabel
-                        : 'De ${s.ownerNickname} · ${s.countLabel}',
+                    s.subtitle,
                     style: AppTextStyles.bodyLight15,
                   ),
                 ],

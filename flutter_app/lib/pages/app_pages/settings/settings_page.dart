@@ -13,7 +13,7 @@ import '../../../services/error_report_badge_service.dart';
 import '../../../services/selection_badge_service.dart';
 import '../../../widgets/auth/change_email_modal.dart';
 import '../../../widgets/auth/change_password_modal.dart';
-import '../../../widgets/auth/change_username_modal.dart';
+import '../../../widgets/auth/profile_sheet.dart';
 import '../../../widgets/settings/settings_row_tile.dart';
 import '../../../widgets/settings/settings_section.dart';
 import '../../../themes/app_colors.dart';
@@ -246,16 +246,11 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _openChangeUsernameModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ChangeUsernameModal(
-        currentNickname: _user?.nickname ?? 'Utilisateur·ice',
-        onUsernameChanged: _loadUser,
-      ),
-    );
+  Future<void> _openProfileSheet() async {
+    final user = _user;
+    if (user == null) return;
+    final updated = await showProfileSheet(context, user);
+    if (updated != null && mounted) setState(() => _user = updated);
   }
 
   void _openChangeEmailModal() {
@@ -486,7 +481,10 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsRowTile(
                 label: 'Pseudo',
                 value: _user?.nickname ?? '',
-                onTap: _openChangeUsernameModal,
+                secondaryValue: _user?.friendCode != null
+                    ? 'Code ami ${_user!.friendCode}'
+                    : null,
+                onTap: _openProfileSheet,
               ),
               SettingsRowTile(
                 label: 'Végane depuis',
