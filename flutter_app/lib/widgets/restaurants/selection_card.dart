@@ -59,6 +59,38 @@ class SelectionCover extends StatelessWidget {
   }
 }
 
+/// [RestaurantSelection.subtitle], then for the owner a paper plane with how
+/// many people accepted it (when some did).
+class SelectionSubtitle extends StatelessWidget {
+  final RestaurantSelection selection;
+  final int? maxLines;
+
+  const SelectionSubtitle({super.key, required this.selection, this.maxLines});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AppTextStyles.bodyLight15;
+    final accepted = selection.isOwner ? selection.acceptedCount ?? 0 : 0;
+    return Text.rich(
+      TextSpan(children: [
+        TextSpan(text: selection.subtitle),
+        if (accepted > 0) ...[
+          const TextSpan(text: '  ·  '),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: Icon(Icons.send_rounded,
+                size: style.fontSize, color: style.color),
+          ),
+          TextSpan(text: ' $accepted'),
+        ],
+      ]),
+      maxLines: maxLines,
+      overflow: maxLines == null ? null : TextOverflow.ellipsis,
+      style: style,
+    );
+  }
+}
+
 /// Selection in a list: cover, title, who made it and how many places.
 /// A selection sent to the user and not answered yet gets the accept and
 /// refuse buttons.
@@ -79,7 +111,6 @@ class SelectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = selection;
-    final subtitle = s.subtitle;
     final showAnswer = s.isPending && onAccept != null && onRefuse != null;
 
     return GestureDetector(
@@ -103,10 +134,7 @@ class SelectionCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.baloo17),
-                      Text(subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.bodyLight15),
+                      SelectionSubtitle(selection: s, maxLines: 1),
                       if (s.isPending) ...[
                         SizedBox(height: 12.h),
                         TagChip(

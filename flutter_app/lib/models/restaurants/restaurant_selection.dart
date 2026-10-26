@@ -77,16 +77,10 @@ class RestaurantSelection {
         final n => '$n lieux',
       };
 
-  /// Under the title: who made it for a recipient, how many people have it
-  /// for the owner. "De Camille · 3 lieux", "3 lieux · 2 personnes l'ont".
-  String get subtitle {
-    if (!isOwner) return 'De $ownerNickname · $countLabel';
-    return switch (acceptedCount ?? 0) {
-      0 => countLabel,
-      1 => '$countLabel · 1 personne l\'a',
-      final n => '$countLabel · $n personnes l\'ont',
-    };
-  }
+  /// Under the title: who made it for a recipient. "De Camille · 3 lieux",
+  /// "3 lieux" (the owner's [acceptedCount] is shown beside, as an icon).
+  String get subtitle =>
+      isOwner ? countLabel : 'De $ownerNickname · $countLabel';
 
   factory RestaurantSelection.fromJson(Map<String, dynamic> json) =>
       RestaurantSelection(

@@ -16,6 +16,7 @@ import '../shared/tag_chip.dart';
 import 'restaurant_detail_page.dart';
 import 'restaurant_labels.dart';
 import 'restaurant_list_card.dart';
+import 'selection_card.dart';
 import 'selection_editor_page.dart';
 import 'selection_map_page.dart';
 import 'selection_sheets.dart';
@@ -299,10 +300,7 @@ class _SelectionPageState extends State<SelectionPage> {
                 children: [
                   Text(s.title, style: AppTextStyles.baloo26),
                   SizedBox(height: 6.h),
-                  Text(
-                    s.subtitle,
-                    style: AppTextStyles.bodyLight15,
-                  ),
+                  SelectionSubtitle(selection: s),
                 ],
               ),
             ),
