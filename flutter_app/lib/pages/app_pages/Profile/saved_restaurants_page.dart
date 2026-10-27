@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/restaurants/restaurant.dart';
 import 'package:vegan_app/models/restaurants/restaurant_selection.dart';
 import 'package:vegan_app/services/restaurant_api_service.dart';
@@ -9,7 +10,9 @@ import 'package:vegan_app/themes/app_spacing.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_detail_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_labels.dart';
+import 'package:vegan_app/widgets/restaurants/public_selections_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_list_card.dart';
+import 'package:vegan_app/widgets/restaurants/saved_places_welcome_modal.dart';
 import 'package:vegan_app/widgets/restaurants/selection_card.dart';
 import 'package:vegan_app/widgets/restaurants/selection_editor_page.dart';
 import 'package:vegan_app/widgets/restaurants/selection_page.dart';
@@ -17,34 +20,144 @@ import 'package:vegan_app/widgets/restaurants/selection_sheets.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/empty_state_view.dart';
+import 'package:vegan_app/widgets/shared/icon_snack_bar.dart';
 import 'package:vegan_app/widgets/shared/paginated_list_view.dart';
 import 'package:vegan_app/widgets/shared/tag_chip.dart';
 
 /// Places the user saved from their page, last saved first, and the
-/// selections: their own and the ones sent to them. Pushed from Settings
-/// or the bell, or from the map with [pickOnTap].
-class SavedRestaurantsPage extends StatelessWidget {
-  /// Tapping a saved place pops with it (the map flies there) instead of
-  /// opening its page. The places of a selection always open their page,
-  /// so going back returns to the selection.
-  final bool pickOnTap;
+/// selections: their own and the ones sent to them. Pushed from Settings,
+/// the bell or the map. A place opens its page over the list, so going
+/// back returns to it. Opens on the tab last seen.
+class SavedRestaurantsPage extends StatefulWidget {
+  /// Called with a saved place as its page opens (e.g. the map moves to it
+  /// behind, to be there once the list is left).
+  final ValueChanged<Restaurant>? onOpenRestaurant;
 
   /// Opens on the selections tab (e.g. from the bell). By default it does
-  /// when a selection sent to the user is unread.
+  /// when a selection sent to the user is unread, else on the tab last
+  /// seen.
   final bool? showSelections;
 
   const SavedRestaurantsPage({
     super.key,
-    this.pickOnTap = false,
+    this.onOpenRestaurant,
     this.showSelections,
   });
 
-  Future<void> _open(
-      BuildContext context, Restaurant restaurant, VoidCallback reload) async {
-    if (pickOnTap) {
-      Navigator.of(context).pop(restaurant);
+  @override
+  State<SavedRestaurantsPage> createState() => _SavedRestaurantsPageState();
+}
+
+const _placesTab = 'places';
+const _selectionsTab = 'selections';
+
+class _SavedRestaurantsPageState extends State<SavedRestaurantsPage>
+    with SingleTickerProviderStateMixin {
+  /// Created once the tab to open on is known.
+  TabController? _tabs;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTabs();
+    _showWelcomeOnFirstVisit();
+  }
+
+  /// The intro of the page's features, until closed with its last button.
+  Future<void> _showWelcomeOnFirstVisit() async {
+    if (await PreferencesHelper.getSavedPlacesWelcomeSeen() || !mounted) {
       return;
     }
+    // Wait a bit for the page to be fully displayed
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    final seen = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const SavedPlacesWelcomeModal(),
+    );
+    if (seen == true) await PreferencesHelper.setSavedPlacesWelcomeSeen();
+  }
+
+  @override
+  void dispose() {
+    _tabs?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initTabs() async {
+    final bool selectionsFirst;
+    if (widget.showSelections != null) {
+      selectionsFirst = widget.showSelections!;
+    } else if (SelectionBadgeService.unreadCount.value > 0) {
+      selectionsFirst = true;
+    } else {
+      selectionsFirst =
+          await PreferencesHelper.getLastSavedTabPref() == _selectionsTab;
+    }
+    if (!mounted) return;
+    final tabs = TabController(
+        length: 2, vsync: this, initialIndex: selectionsFirst ? 1 : 0);
+    tabs.addListener(() {
+      if (tabs.indexIsChanging) return;
+      PreferencesHelper.setLastSavedTabPref(
+          tabs.index == 1 ? _selectionsTab : _placesTab);
+    });
+    setState(() => _tabs = tabs);
+  }
+
+  /// Places removed from the saved ones from the list, hidden without
+  /// reloading it (so an undo puts them back in place).
+  final Set<int> _removedIds = {};
+
+  void _snack(SnackBar snackBar) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(snackBar);
+  }
+
+  /// Removed right away, with an undo in the snack bar.
+  Future<void> _unsave(Restaurant restaurant) async {
+    setState(() => _removedIds.add(restaurant.id));
+    final ok =
+        await RestaurantApiService.setRestaurantSaved(restaurant.id, false);
+    if (!mounted) return;
+    if (!ok) {
+      setState(() => _removedIds.remove(restaurant.id));
+      _snack(const SnackBar(
+        content: Text('Impossible de retirer ce lieu, réessayez.'),
+        backgroundColor: kSemanticError,
+      ));
+      return;
+    }
+    _snack(iconSnackBar(
+      icon: Icons.bookmark_border,
+      message: '« ${restaurant.name} » retiré de vos lieux',
+      color: kSemanticSuccess,
+      actionLabel: 'Annuler',
+      onAction: () => _undoUnsave(restaurant),
+    ));
+  }
+
+  Future<void> _undoUnsave(Restaurant restaurant) async {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    final ok =
+        await RestaurantApiService.setRestaurantSaved(restaurant.id, true);
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _removedIds.remove(restaurant.id));
+    } else {
+      _snack(const SnackBar(
+        content: Text('Impossible de remettre ce lieu, réessayez.'),
+        backgroundColor: kSemanticError,
+      ));
+    }
+  }
+
+  Future<void> _open(
+      BuildContext context, Restaurant restaurant, VoidCallback reload) async {
+    widget.onOpenRestaurant?.call(restaurant);
     await RestaurantDetailPage.open(context, restaurant);
     // It may have been removed from the saved ones on its page
     reload();
@@ -52,74 +165,95 @@ class SavedRestaurantsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectionsFirst =
-        showSelections ?? SelectionBadgeService.unreadCount.value > 0;
-    return DefaultTabController(
-      length: 2,
-      initialIndex: selectionsFirst ? 1 : 0,
-      child: AppBackground(
+    final tabs = _tabs;
+    final title = Text('Lieux sauvegardés', style: AppTextStyles.baloo22);
+    if (tabs == null) {
+      // The time to read the tab last seen
+      return AppBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: Text('Lieux sauvegardés', style: AppTextStyles.baloo22),
+            title: title,
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
             foregroundColor: kTextPrimary,
-            bottom: TabBar(
-              tabs: [
-                const Tab(text: 'Lieux'),
-                Tab(
-                  child: ValueListenableBuilder<int>(
-                    valueListenable: SelectionBadgeService.unreadCount,
-                    builder: (_, unread, __) => Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Text('Sélections'),
-                        if (unread > 0) ...[
-                          SizedBox(width: 12.w),
-                          Container(
-                            width: 24.w,
-                            height: 24.w,
-                            decoration: const BoxDecoration(
-                                color: Colors.red, shape: BoxShape.circle),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
-          body: SafeArea(
-            top: false,
-            child: TabBarView(
-              children: [
-                PaginatedListView<Restaurant>(
-                  loadPage: (page) =>
-                      RestaurantApiService.getSavedRestaurants(page: page),
-                  emptyTitle: 'Aucun lieu sauvegardé',
-                  emptySubtitle: 'Sauvegardez un lieu depuis sa fiche sur la '
-                      'carte pour le retrouver ici.',
-                  errorTitle: 'Impossible de charger vos lieux sauvegardés',
-                  itemBuilder: (context, restaurant, reload) =>
-                      RestaurantListCard(
-                    restaurant: restaurant,
-                    onTap: () => _open(context, restaurant, reload),
-                    badges: [
-                      if (restaurant.isPermanentlyClosed)
-                        const TagChip(
-                          label: 'Fermé définitivement',
-                          color: kSemanticError,
+        ),
+      );
+    }
+    return AppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: title,
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: kTextPrimary,
+          bottom: TabBar(
+            controller: tabs,
+            tabs: [
+              const Tab(text: 'Lieux'),
+              Tab(
+                child: ValueListenableBuilder<int>(
+                  valueListenable: SelectionBadgeService.unreadCount,
+                  builder: (_, unread, __) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Sélections'),
+                      if (unread > 0) ...[
+                        SizedBox(width: 12.w),
+                        Container(
+                          width: 24.w,
+                          height: 24.w,
+                          decoration: const BoxDecoration(
+                              color: Colors.red, shape: BoxShape.circle),
                         ),
-                      VeganStatusChip(isFullyVegan: restaurant.isFullyVegan),
+                      ],
                     ],
                   ),
                 ),
-                const _SelectionsTab(),
-              ],
-            ),
+              ),
+            ],
+          ),
+        ),
+        body: SafeArea(
+          top: false,
+          child: TabBarView(
+            controller: tabs,
+            children: [
+              PaginatedListView<Restaurant>(
+                loadPage: (page) =>
+                    RestaurantApiService.getSavedRestaurants(page: page),
+                emptyTitle: 'Aucun lieu sauvegardé',
+                emptySubtitle: 'Sauvegardez un lieu depuis sa fiche sur la '
+                    'carte pour le retrouver ici.',
+                errorTitle: 'Impossible de charger vos lieux sauvegardés',
+                isVisible: (restaurant) =>
+                    !_removedIds.contains(restaurant.id),
+                itemBuilder: (context, restaurant, reload) =>
+                    RestaurantListCard(
+                  restaurant: restaurant,
+                  onTap: () => _open(context, restaurant, reload),
+                  trailing: IconButton(
+                    tooltip: 'Retirer de vos lieux',
+                    icon: Icon(Icons.bookmark,
+                        color: Theme.of(context).colorScheme.primary),
+                    onPressed: () => _unsave(restaurant),
+                  ),
+                  badges: [
+                    if (restaurant.isPermanentlyClosed)
+                      const TagChip(
+                        label: 'Fermé définitivement',
+                        color: kSemanticError,
+                      ),
+                    VeganStatusChip(isFullyVegan: restaurant.isFullyVegan),
+                  ],
+                ),
+              ),
+              const _SelectionsTab(),
+            ],
           ),
         ),
       ),
@@ -187,6 +321,13 @@ class _SelectionsTabState extends State<_SelectionsTab>
     await SelectionPage.open(context, selection);
     if (!mounted) return;
     // It may have been edited, accepted, removed...
+    _load();
+  }
+
+  Future<void> _discover() async {
+    await PublicSelectionsPage.open(context);
+    if (!mounted) return;
+    // Some may have been added to the user's places
     _load();
   }
 
@@ -295,10 +436,16 @@ class _SelectionsTabState extends State<_SelectionsTab>
               backgroundColor: Theme.of(context).colorScheme.primary,
               onPressed: _create,
             ),
+            AppButton(
+              label: 'Coups de 🤍 de la communauté',
+              icon: Icons.search,
+              backgroundColor: kAccentYellow,
+              onPressed: _discover,
+            ),
           ]),
           if (accepted.isNotEmpty)
             ..._section(
-                'Recommandées pour vous', [for (final s in accepted) _card(s)]),
+                'Sélections sauvegardées', [for (final s in accepted) _card(s)]),
         ],
       ),
     );

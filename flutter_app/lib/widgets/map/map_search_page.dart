@@ -8,6 +8,7 @@ import '../../models/restaurants/restaurant.dart';
 import '../../services/geocoding_service.dart';
 import '../../services/restaurant_api_service.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../restaurants/restaurant_pin.dart';
 import '../shared/app_background.dart';
@@ -290,12 +291,21 @@ class _MapSearchPageState extends State<MapSearchPage> {
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: Text('Rechercher', style: AppTextStyles.baloo22),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: kTextPrimary,
+        ),
         body: SafeArea(
+          top: false,
           bottom: false,
           child: Column(
             children: [
               Padding(
-                padding: EdgeInsets.fromLTRB(48.w, 24.h, 48.w, 12.h),
+                padding: EdgeInsets.fromLTRB(AppSpacing.pageHorizontal, 12.h,
+                    AppSpacing.pageHorizontal, 12.h),
                 child: SearchField(
                   controller: _controller,
                   hintText: widget.includeRestaurants
@@ -305,11 +315,6 @@ class _MapSearchPageState extends State<MapSearchPage> {
                   textInputAction: TextInputAction.search,
                   onChanged: _onChanged,
                   onSubmitted: _search,
-                  leading: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Icon(Icons.arrow_back,
-                        size: 60.sp, color: Colors.grey[600]),
-                  ),
                   trailing: _isSearching
                       ? Padding(
                           padding: EdgeInsets.all(42.w),

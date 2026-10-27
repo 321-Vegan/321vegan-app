@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/restaurants/restaurant.dart';
@@ -9,8 +11,6 @@ import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_background.dart';
 import '../shared/app_button.dart';
-import '../shared/bottom_sheet_shell.dart';
-import '../shared/sheet_option_tile.dart';
 import '../shared/empty_state_view.dart';
 import '../shared/tag_chip.dart';
 import 'restaurant_detail_page.dart';
@@ -24,7 +24,8 @@ import 'selection_sheets.dart';
 /// Page of a selection: its places in order, with their notes, each
 /// opening its page over the selection (even from the map, so going back
 /// returns to the selection). Its owner can edit, send or delete it; a user
-/// it was sent to accepts or refuses it, or removes it once accepted.
+/// it was sent to accepts or refuses it, or removes it once accepted; any
+/// user can add a public one to their places.
 class SelectionPage extends StatefulWidget {
   /// From a list: shown while the full selection loads.
   final RestaurantSelection selection;
@@ -136,7 +137,9 @@ class _SelectionPageState extends State<SelectionPage> {
     final confirmed = await confirmSelectionAction(
       context,
       title: 'Supprimer la sélection ?',
-      message: 'Les personnes à qui vous l\'avez envoyée ne la verront plus.',
+      message: _selection.isPublic
+          ? 'Les personnes qui l\'ont ajoutée à leurs lieux ne la verront plus.'
+          : 'Les personnes à qui vous l\'avez envoyée ne la verront plus.',
       confirmLabel: 'Supprimer',
     );
     if (!confirmed || !mounted) return;
@@ -149,8 +152,9 @@ class _SelectionPageState extends State<SelectionPage> {
     Navigator.of(context).pop();
   }
 
-  // ── Recipient ──────────────────────────────────────────────────────────────
+  // ── Recipient, or any user for a public one ───────────────────────────────
 
+  /// Accepts it, or takes a public one.
   Future<void> _accept() async {
     setState(() => _isAnswering = true);
     final ok = await RestaurantApiService.acceptSelection(_selection.id);
@@ -164,15 +168,20 @@ class _SelectionPageState extends State<SelectionPage> {
     _load();
   }
 
-  /// Refuses it, or removes it once accepted; the page closes.
+  /// Refuses it, or unsubscribes once accepted. The page closes, except
+  /// for a public one: the user can subscribe again from it.
   Future<void> _remove() async {
     final pending = _selection.isPending;
+    final isPublic = _selection.isPublic;
     final confirmed = await confirmSelectionAction(
       context,
-      title: pending ? 'Refuser la sélection ?' : 'Retirer la sélection ?',
-      message: 'Elle ne réapparaîtra pas, même si ${_selection.ownerNickname} '
-          'vous l\'envoie à nouveau.',
-      confirmLabel: pending ? 'Refuser' : 'Retirer',
+      title: pending ? 'Refuser la sélection ?' : 'Se désabonner ?',
+      message: isPublic
+          ? 'Elle disparaîtra de vos lieux sauvegardés. Vous pourrez vous '
+              'y abonner à nouveau depuis les sélections publiques.'
+          : 'Elle ne réapparaîtra pas, même si ${_selection.ownerNickname} '
+              'vous l\'envoie à nouveau.',
+      confirmLabel: pending ? 'Refuser' : 'Se désabonner',
     );
     if (!confirmed || !mounted) return;
     setState(() => _isAnswering = true);
@@ -184,54 +193,12 @@ class _SelectionPageState extends State<SelectionPage> {
       _snack('La modification a échoué, réessayez.', error: true);
       return;
     }
+    if (isPublic && !pending) {
+      _snack('Vous êtes désabonné·e de cette sélection');
+      _load();
+      return;
+    }
     Navigator.of(context).pop();
-  }
-
-  /// What a recipient can do with an accepted selection, in a bottom sheet
-  /// like the "…" of a restaurant page. The owner's actions are on the page.
-  Future<void> _openActionsSheet() async {
-    final remove = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => BottomSheetShell(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Text(_selection.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.baloo22),
-            ),
-            SizedBox(height: 24.h),
-            SheetOptionTile(
-              icon: Icons.bookmark_remove_outlined,
-              title: 'Retirer',
-              detail: 'Elle disparaîtra de vos lieux sauvegardés',
-              color: kSemanticError,
-              onTap: () => Navigator.of(ctx).pop(true),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (remove == true && mounted) _remove();
-  }
-
-  List<Widget> _buildActions() {
-    final s = _selection;
-    // The owner's actions are on the page; a pending selection is answered
-    // with the buttons at the bottom
-    if (!_isLoaded || s.isOwner || s.isPending) return [];
-    return [
-      IconButton(
-        tooltip: 'Plus d\'options',
-        icon: const Icon(Icons.more_horiz),
-        onPressed: _openActionsSheet,
-      ),
-    ];
   }
 
   /// Edit and send, under the description.
@@ -243,9 +210,7 @@ class _SelectionPageState extends State<SelectionPage> {
           child: AppButton(
             label: 'Modifier',
             icon: Icons.edit_outlined,
-            backgroundColor: Colors.white,
-            foregroundColor: primary,
-            borderColor: primary,
+            backgroundColor: kAccentYellow,
             compact: true,
             onPressed: _edit,
           ),
@@ -290,6 +255,20 @@ class _SelectionPageState extends State<SelectionPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (s.coverUrl != null) ...[
+          ClipSmoothRect(
+            radius: squircleRadius(36.r),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: CachedNetworkImage(
+                imageUrl: s.coverUrl!,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => Container(color: Colors.grey[100]),
+              ),
+            ),
+          ),
+          SizedBox(height: 30.h),
+        ],
         // Map button beside the title, as on a restaurant page
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,6 +336,14 @@ class _SelectionPageState extends State<SelectionPage> {
           Text(
             '${s.ownerNickname} vous recommande ces lieux. Acceptez la '
             'sélection pour la retrouver avec vos lieux sauvegardés.',
+            style:
+                AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[600]),
+          ),
+        ] else if (s.canTake) ...[
+          SizedBox(height: 24.h),
+          Text(
+            'Sélection publique de ${s.ownerNickname}. Ajoutez-la pour la '
+            'retrouver avec vos lieux sauvegardés.',
             style:
                 AppTextStyles.bodyRegular13.copyWith(color: Colors.grey[600]),
           ),
@@ -440,9 +427,42 @@ class _SelectionPageState extends State<SelectionPage> {
     );
   }
 
+  /// Unsubscribe from a selection accepted or subscribed to, at the bottom.
+  Widget _buildUnsubscribeButton() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.pageHorizontal, 12.h, AppSpacing.pageHorizontal, 24.h),
+      child: AppButton(
+        label: 'Se désabonner',
+        icon: Icons.bookmark_remove_outlined,
+        backgroundColor: kAccentYellow,
+        isLoading: _isAnswering,
+        onPressed: _remove,
+      ),
+    );
+  }
+
+  /// Add a public selection to the user's places, at the bottom.
+  Widget _buildTakeButton() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.pageHorizontal, 12.h, AppSpacing.pageHorizontal, 24.h),
+      child: AppButton(
+        label: 'M\'abonner à cette sélection',
+        icon: Icons.bookmark_add_outlined,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        isLoading: _isAnswering,
+        onPressed: _accept,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final answer = _isLoaded && _selection.isPending;
+    final take = _isLoaded && _selection.canTake;
+    final unsubscribe =
+        _isLoaded && _selection.isAccepted && !_selection.isOwner;
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -452,13 +472,14 @@ class _SelectionPageState extends State<SelectionPage> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           foregroundColor: kTextPrimary,
-          actions: _buildActions(),
         ),
         body: SafeArea(
           top: false,
           child: Column(
             children: [
               Expanded(child: _buildBody()),
+              if (take) _buildTakeButton(),
+              if (unsubscribe) _buildUnsubscribeButton(),
               if (answer)
                 Padding(
                   padding: EdgeInsets.fromLTRB(AppSpacing.pageHorizontal, 12.h,

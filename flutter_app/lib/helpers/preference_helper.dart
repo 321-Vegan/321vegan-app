@@ -127,6 +127,29 @@ class PreferencesHelper {
     return prefs.getString('last_map_layer');
   }
 
+  /// Tab of the saved places page ("places" or "selections"), restored on
+  /// the next visit.
+  static Future<void> setLastSavedTabPref(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_saved_tab', value);
+  }
+
+  static Future<String?> getLastSavedTabPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('last_saved_tab');
+  }
+
+  /// Whether the intro of the saved places page was closed for good.
+  static Future<void> setSavedPlacesWelcomeSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('saved_places_welcome_seen', true);
+  }
+
+  static Future<bool> getSavedPlacesWelcomeSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('saved_places_welcome_seen') ?? false;
+  }
+
   static Future<void> setLastSearchCategoryPref(String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('last_search_category', value);

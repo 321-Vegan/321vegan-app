@@ -594,21 +594,35 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     _trackMapAction();
   }
 
-  /// Saved places; the chosen one is shown on the map.
+  /// Saved places. The places opened from there open over the list (going
+  /// back returns to it), while the map moves to them behind: once the
+  /// list is left, the map is on the last one.
   Future<void> _openSaved() async {
-    final restaurant = await Navigator.of(context).push<Restaurant>(
+    var opened = false;
+    await Navigator.of(context).push(
       MaterialPageRoute(
-          builder: (_) => const SavedRestaurantsPage(pickOnTap: true)),
+        builder: (_) => SavedRestaurantsPage(
+          onOpenRestaurant: (restaurant) {
+            opened = true;
+            if (mounted) _moveToRestaurant(restaurant);
+          },
+        ),
+      ),
     );
-    if (restaurant != null && mounted) _showRestaurant(restaurant);
+    if (opened && mounted) _trackMapAction();
   }
 
-  /// Flies the map to [restaurant] on the restaurants layer and opens it.
-  void _showRestaurant(Restaurant restaurant) {
+  /// Moves the map to [restaurant], on the restaurants layer.
+  void _moveToRestaurant(Restaurant restaurant) {
     _switchLayer(_MapLayer.restaurants);
     setState(() => _isCentered = false);
     _mapController.move(LatLng(restaurant.latitude, restaurant.longitude), 17);
     _loadPlaces();
+  }
+
+  /// Flies the map to [restaurant] on the restaurants layer and opens it.
+  void _showRestaurant(Restaurant restaurant) {
+    _moveToRestaurant(restaurant);
     _onRestaurantTap(restaurant);
   }
 

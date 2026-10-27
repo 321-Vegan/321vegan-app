@@ -21,6 +21,10 @@ class PaginatedListView<T> extends StatefulWidget {
   final String errorTitle;
   final Widget? header;
 
+  /// Leaves out the loaded items it returns false for (e.g. removed by the
+  /// user meanwhile), without reloading the list.
+  final bool Function(T item)? isVisible;
+
   const PaginatedListView({
     super.key,
     required this.loadPage,
@@ -29,6 +33,7 @@ class PaginatedListView<T> extends StatefulWidget {
     required this.emptySubtitle,
     required this.errorTitle,
     this.header,
+    this.isVisible,
   });
 
   @override
@@ -123,7 +128,9 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>>
       );
     }
     final header = widget.header;
-    if (_items.isEmpty) {
+    final isVisible = widget.isVisible;
+    final items = isVisible == null ? _items : _items.where(isVisible).toList();
+    if (items.isEmpty) {
       final empty = EmptyStateView(
         title: widget.emptyTitle,
         subtitle: widget.emptySubtitle,
@@ -143,18 +150,18 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>>
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.fromLTRB(
             AppSpacing.pageHorizontal, 24.h, AppSpacing.pageHorizontal, 32.h),
-        itemCount: offset + _items.length + (_isLoadingMore ? 1 : 0),
+        itemCount: offset + items.length + (_isLoadingMore ? 1 : 0),
         separatorBuilder: (_, __) => SizedBox(height: AppSpacing.item),
         itemBuilder: (context, position) {
           if (position < offset) return header!;
           final index = position - offset;
-          if (index >= _items.length) {
+          if (index >= items.length) {
             return const Padding(
               padding: EdgeInsets.all(16.0),
               child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
             );
           }
-          return widget.itemBuilder(context, _items[index], _reload);
+          return widget.itemBuilder(context, items[index], _reload);
         },
       ),
     );

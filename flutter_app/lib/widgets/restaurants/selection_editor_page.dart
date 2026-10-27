@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show File;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
@@ -17,17 +18,21 @@ import '../shared/app_button.dart';
 import '../shared/app_dialog.dart';
 import '../shared/app_text_field.dart';
 import '../shared/form_error_banner.dart';
+import '../shared/photo_picker_box.dart';
+import '../shared/photo_source_sheet.dart';
 import '../shared/search_field.dart';
+import '../settings/settings_toggle_tile.dart';
 import 'selection_sheets.dart';
 
 /// Where the autosave of an existing selection stands.
 enum _SaveStatus { saved, pending, saving, failed, missingTitle }
 
 /// Creates a selection, or edits [selection] (loaded with its items): title,
-/// description, and the places in their order, each with an optional note.
-/// A new selection is created with a button; an existing one is saved
-/// automatically as it changes. Pops with the saved selection (null when
-/// nothing was saved).
+/// description, cover image, whether it is public, and the places in their
+/// order, each with an optional note. A new selection is created with a
+/// button; an existing one is saved automatically as it changes (the cover
+/// and the publication right away). Pops with the saved selection (null
+/// when nothing was saved).
 class SelectionEditorPage extends StatefulWidget {
   final RestaurantSelection? selection;
 
@@ -70,6 +75,17 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
   // Creation (new selection)
   bool _isSaving = false;
   String? _error;
+
+  /// Listed for everyone; for good once saved.
+  late bool _isPublic = widget.selection?.isPublic ?? false;
+  bool _isPublishing = false;
+
+  /// Cover of a new selection, sent once it is created.
+  File? _newCover;
+
+  /// Cover of an existing selection, sent as soon as picked.
+  late String? _coverUrl = widget.selection?.coverUrl;
+  bool _isCoverBusy = false;
 
   // Autosave (existing selection)
   _SaveStatus _status = _SaveStatus.saved;
@@ -254,7 +270,134 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
     _onItemsChanged();
   }
 
-  /// Creates the new selection.
+  void _snack(String text, {bool error = false}) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(text),
+        backgroundColor: error ? kSemanticError : kSemanticSuccess,
+      ));
+  }
+
+  // ── Cover ────────────────────────────────────────────────────────────────
+
+  Future<void> _pickCover() async {
+    final files = await pickPhotos(context);
+    if (files.isEmpty || !mounted) return;
+    if (_isNew) {
+      setState(() => _newCover = files.first);
+      return;
+    }
+    setState(() => _isCoverBusy = true);
+    final result = await RestaurantApiService.uploadSelectionCover(
+        id: widget.selection!.id, image: files.first);
+    if (!mounted) return;
+    setState(() {
+      _isCoverBusy = false;
+      if (result.selection != null) {
+        _saved = result.selection;
+        _coverUrl = result.selection!.coverUrl;
+      }
+    });
+    if (result.selection == null) {
+      _snack(result.error ?? 'L\'envoi de l\'image a échoué.', error: true);
+    }
+  }
+
+  Future<void> _removeCover() async {
+    if (_isNew) {
+      setState(() => _newCover = null);
+      return;
+    }
+    setState(() => _isCoverBusy = true);
+    final id = widget.selection!.id;
+    final ok = await RestaurantApiService.removeSelectionCover(id);
+    // Popped with the selection as it is now
+    final updated = ok ? await RestaurantApiService.getSelection(id) : null;
+    if (!mounted) return;
+    setState(() {
+      _isCoverBusy = false;
+      if (ok) {
+        _coverUrl = null;
+        _saved = updated ?? _saved;
+      }
+    });
+    if (!ok) _snack('Impossible de retirer l\'image, réessayez.', error: true);
+  }
+
+  // ── Publication ──────────────────────────────────────────────────────────
+
+  /// Making it public asks first, as it is for good; a public selection
+  /// can't go back.
+  Future<void> _setPublic(bool value) async {
+    if (!value) {
+      if (_isNew) {
+        setState(() => _isPublic = false);
+      } else {
+        _snack('Une sélection publique le reste.', error: true);
+      }
+      return;
+    }
+    if (_items.isEmpty) {
+      _snack('Ajoutez au moins un lieu pour la rendre publique.', error: true);
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AppDialog(
+        image: 'lib/assets/images/characters/cow-mby.webp',
+        title: 'Rendre la sélection publique ?',
+        message: 'Tout le monde pourra la voir, avec votre pseudo, et '
+            'l\'ajouter à ses lieux. Ce choix est définitif.',
+        primaryLabel: 'Rendre publique',
+        onPrimary: () => Navigator.of(ctx).pop(true),
+        secondaryLabel: 'Annuler',
+        onSecondary: () => Navigator.of(ctx).pop(false),
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    if (_isNew) {
+      setState(() => _isPublic = true);
+      return;
+    }
+    if (_title.text.trim().isEmpty) {
+      _snack('Une sélection a besoin d\'un titre.', error: true);
+      return;
+    }
+    // Saved with the form as it is, so the places are there
+    _saveTimer?.cancel();
+    while (_saving != null) {
+      await _saving;
+    }
+    if (!mounted) return;
+    setState(() => _isPublishing = true);
+    final snapshot = _snapshot();
+    final description = _description.text.trim();
+    final result = await RestaurantApiService.updateSelection(
+      id: widget.selection!.id,
+      title: _title.text.trim(),
+      description: description.isEmpty ? null : description,
+      items: [..._items],
+      makePublic: true,
+    );
+    if (!mounted) return;
+    setState(() {
+      _isPublishing = false;
+      if (result.selection != null) {
+        _isPublic = true;
+        _saved = result.selection;
+        _savedSnapshot = snapshot;
+      }
+    });
+    if (result.selection == null) {
+      _snack('La publication a échoué, réessayez.', error: true);
+      return;
+    }
+    _scheduleSave(Duration.zero);
+    _snack('Sélection publique');
+  }
+
+  /// Creates the new selection, then sends its cover.
   Future<void> _create() async {
     final description = _description.text.trim();
     setState(() {
@@ -265,10 +408,25 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
       title: _title.text.trim(),
       description: description.isEmpty ? null : description,
       items: _items,
+      isPublic: _isPublic,
     );
     if (!mounted) return;
-    if (result.selection != null) {
-      Navigator.of(context).pop(result.selection);
+    var created = result.selection;
+    if (created != null) {
+      if (_newCover != null) {
+        final upload = await RestaurantApiService.uploadSelectionCover(
+            id: created.id, image: _newCover!);
+        if (!mounted) return;
+        if (upload.selection != null) {
+          created = upload.selection;
+        } else {
+          _snack(
+              'Sélection créée, mais l\'image n\'a pas pu être envoyée : '
+              'ajoutez-la en la modifiant.',
+              error: true);
+        }
+      }
+      Navigator.of(context).pop(created);
       return;
     }
     setState(() {
@@ -307,6 +465,21 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
           showCounter: true,
           enabled: !_isSaving,
         ),
+        SizedBox(height: 36.h),
+        Text('Image de couverture (facultatif)',
+            style: AppTextStyles.bodyBold15),
+        SizedBox(height: 12.h),
+        _buildCover(),
+        SizedBox(height: 36.h),
+        SettingsToggleTile(
+          title: _isPublishing ? 'Publication…' : 'Publique',
+          subtitle: _isPublic && !_isNew
+              ? 'Visible de tous, qui peuvent l\'ajouter à leurs lieux. '
+                  'C\'est définitif.'
+              : 'Tout le monde pourra la voir et l\'ajouter à ses lieux.',
+          value: _isPublic,
+          onChanged: _isSaving || _isPublishing ? (_) {} : _setPublic,
+        ),
         SizedBox(height: AppSpacing.section),
         Row(
           children: [
@@ -322,6 +495,95 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
         ),
         SizedBox(height: 24.h),
       ],
+    );
+  }
+
+  /// The chosen image with change and remove buttons over it, or the
+  /// dashed box of the other photo forms (the photos of the places show
+  /// otherwise).
+  Widget _buildCover() {
+    final busy = _isSaving || _isCoverBusy;
+    final Widget? image = _newCover != null
+        ? Image.file(_newCover!, fit: BoxFit.cover)
+        : _coverUrl != null
+            ? CachedNetworkImage(
+                imageUrl: _coverUrl!,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => Container(color: Colors.grey[100]),
+              )
+            : null;
+    if (image == null && !_isCoverBusy) {
+      return PhotoPickerBox(
+        photo: null,
+        onPickPhoto: _pickCover,
+        onRemovePhoto: _removeCover,
+        isLoading: busy,
+        label: 'Ajouter une image de couverture',
+      );
+    }
+    return ClipSmoothRect(
+      radius: squircleRadius(40.r),
+      child: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            image ?? Container(color: Colors.grey[100]),
+            if (_isCoverBusy)
+              Container(
+                color: Colors.black26,
+                child: const Center(child: CircularProgressIndicator()),
+              )
+            else
+              Positioned(
+                top: 24.w,
+                right: 24.w,
+                child: Row(
+                  children: [
+                    _coverAction(
+                      icon: Icons.edit_outlined,
+                      tooltip: 'Changer l\'image',
+                      color: kTextPrimary,
+                      onTap: busy ? null : _pickCover,
+                    ),
+                    SizedBox(width: 18.w),
+                    _coverAction(
+                      icon: Icons.close,
+                      tooltip: 'Retirer l\'image',
+                      color: kSemanticError,
+                      onTap: busy ? null : _removeCover,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Round white button over the cover image.
+  Widget _coverAction({
+    required IconData icon,
+    required String tooltip,
+    required Color color,
+    required VoidCallback? onTap,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding: EdgeInsets.all(18.w),
+            child: Icon(icon, size: 54.sp, color: color),
+          ),
+        ),
+      ),
     );
   }
 
@@ -442,9 +704,7 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
                       AppButton(
                         label: 'Ajouter des lieux',
                         icon: Icons.add,
-                        backgroundColor: Colors.white,
-                        foregroundColor: Theme.of(context).colorScheme.primary,
-                        borderColor: Theme.of(context).colorScheme.primary,
+                        backgroundColor: kAccentYellow,
                         onPressed: canAdd && !_isSaving ? _addPlaces : null,
                       ),
                       if (!canAdd) ...[

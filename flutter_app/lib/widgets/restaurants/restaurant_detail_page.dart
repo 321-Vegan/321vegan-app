@@ -27,6 +27,7 @@ import 'package:vegan_app/widgets/reviews/star_rating.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
+import 'package:vegan_app/widgets/shared/icon_snack_bar.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 import 'package:vegan_app/widgets/shared/photo_source_sheet.dart';
 import 'package:vegan_app/widgets/shared/sheet_option_tile.dart';
@@ -151,58 +152,22 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     // Replaces the previous one when toggled several times in a row
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      // Floating squircle look from the app's snackBarTheme; tighter right
-      // padding for the button
-      ..showSnackBar(SnackBar(
-        padding: EdgeInsets.fromLTRB(42.w, 18.h, 18.w, 18.h),
-        backgroundColor: color,
+      ..showSnackBar(iconSnackBar(
+        icon: !ok
+            ? Icons.error_outline
+            : saved
+                ? Icons.bookmark
+                : Icons.bookmark_border,
+        message: !ok
+            ? 'Impossible de modifier les lieux sauvegardés, réessayez.'
+            : saved
+                ? 'Lieu sauvegardé'
+                : 'Sauvegarde retirée',
+        color: color,
         // Leaves time to reach the button
         duration: Duration(seconds: ok && saved ? 4 : 2),
-        content: Row(
-          children: [
-            Icon(
-              !ok
-                  ? Icons.error_outline
-                  : saved
-                      ? Icons.bookmark
-                      : Icons.bookmark_border,
-              color: Colors.white,
-              size: 54.sp,
-            ),
-            SizedBox(width: 24.w),
-            Expanded(
-              child: Text(
-                !ok
-                    ? 'Impossible de modifier les lieux sauvegardés, réessayez.'
-                    : saved
-                        ? 'Lieu sauvegardé'
-                        : 'Sauvegarde retirée',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyles.bodyBold15.copyWith(color: Colors.white),
-              ),
-            ),
-            if (ok && saved) ...[
-              SizedBox(width: 18.w),
-              Material(
-                color: Colors.white,
-                shape: const StadiumBorder(),
-                child: InkWell(
-                  customBorder: const StadiumBorder(),
-                  onTap: _openAddToSelection,
-                  child: Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 33.w, vertical: 21.h),
-                    child: Text(
-                      'Ajouter à une sélection',
-                      style: AppTextStyles.bodyBold13.copyWith(color: color),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+        actionLabel: ok && saved ? 'Ajouter à une sélection' : null,
+        onAction: _openAddToSelection,
       ));
   }
 

@@ -341,12 +341,13 @@ class RestaurantApiService {
   // ── Selections ───────────────────────────────────────────────────────────
 
   static Future<({List<RestaurantSelection> items, int pages})?>
-      _getSelections(String path, int page, int pageSize) async {
+      _getSelections(String path, int page, int pageSize,
+          [Map<String, dynamic> query = const {}]) async {
     try {
       final dio = await DioClient.getDio();
       final response = await dio.get(
         path,
-        queryParameters: {'page': page, 'page_size': pageSize},
+        queryParameters: {'page': page, 'page_size': pageSize, ...query},
         options: _auth,
       );
       if (_isSuccess(response)) {
@@ -374,6 +375,22 @@ class RestaurantApiService {
       getReceivedSelections({int page = 1, int pageSize = 100}) =>
           _getSelections('/restaurant-selections/received', page, pageSize);
 
+  /// The public selections having a place, that the user can take:
+  /// [SelectionSort.recent] (last published first) or
+  /// [SelectionSort.popular] (most taken first), those whose title contains
+  /// [search] when given. Null on failure.
+  static Future<({List<RestaurantSelection> items, int pages})?>
+      getPublicSelections({
+    String sort = SelectionSort.recent,
+    String search = '',
+    int page = 1,
+    int pageSize = 20,
+  }) =>
+          _getSelections('/restaurant-selections/public', page, pageSize, {
+            'sort': sort,
+            if (search.isNotEmpty) 'search': search,
+          });
+
   /// Pending selections the user hasn't seen yet. Null on failure.
   static Future<int?> getUnreadSelectionCount() async {
     try {
@@ -400,8 +417,8 @@ class RestaurantApiService {
     }
   }
 
-  /// A selection with its restaurants, for its owner or a user it was sent
-  /// to. Null on failure (or no longer available).
+  /// A selection with its restaurants, for its owner, a user it was sent
+  /// to, or anyone when public. Null on failure (or no longer available).
   static Future<RestaurantSelection?> getSelection(int id) async {
     try {
       final dio = await DioClient.getDio();
@@ -426,13 +443,15 @@ class RestaurantApiService {
           },
       ];
 
-  /// Creates a selection with [items] in their order. On refusal, [error]
-  /// carries the API's reason when there is one.
+  /// Creates a selection with [items] in their order, public for good
+  /// with [isPublic]. On refusal, [error] carries the API's reason when
+  /// there is one.
   static Future<({RestaurantSelection? selection, String? error})>
       createSelection({
     required String title,
     String? description,
     List<RestaurantSelectionItem> items = const [],
+    bool isPublic = false,
   }) async {
     try {
       final dio = await DioClient.getDio();
@@ -442,6 +461,7 @@ class RestaurantApiService {
           'title': title,
           'description': description,
           'items': _itemsJson(items),
+          'is_public': isPublic,
         },
         options: _auth,
       );
@@ -459,13 +479,15 @@ class RestaurantApiService {
   }
 
   /// Replaces the title, description and restaurants (order and notes) of
-  /// a selection. On refusal, [error] carries the API's reason.
+  /// a selection; [makePublic] publishes it, for good. On refusal, [error]
+  /// carries the API's reason.
   static Future<({RestaurantSelection? selection, String? error})>
       updateSelection({
     required int id,
     required String title,
     String? description,
     required List<RestaurantSelectionItem> items,
+    bool makePublic = false,
   }) async {
     try {
       final dio = await DioClient.getDio();
@@ -475,6 +497,7 @@ class RestaurantApiService {
           'title': title,
           'description': description,
           'items': _itemsJson(items),
+          if (makePublic) 'is_public': true,
         },
         options: _auth,
       );
@@ -489,6 +512,52 @@ class RestaurantApiService {
       return (selection: null, error: _errorMessage(e));
     }
     return (selection: null, error: null);
+  }
+
+  /// Sets the cover image of the user's selection, replacing the previous
+  /// one. On failure, [error] says why, in words for the user.
+  static Future<({RestaurantSelection? selection, String? error})>
+      uploadSelectionCover({required int id, required File image}) async {
+    try {
+      final dio = await DioClient.getDio();
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+      });
+      final response = await dio.put(
+        '/restaurant-selections/$id/cover',
+        data: formData,
+        options: _auth.copyWith(contentType: 'multipart/form-data'),
+      );
+      if (_isSuccess(response)) {
+        return (
+          selection: RestaurantSelection.fromJson(
+              response.data as Map<String, dynamic>),
+          error: null,
+        );
+      }
+      return (
+        selection: null,
+        error: 'Erreur du serveur (${response.statusCode}).',
+      );
+    } catch (e) {
+      return (selection: null, error: _photoErrorMessage(e));
+    }
+  }
+
+  /// Removes the cover image of the user's selection: the photos of its
+  /// places show instead. False on failure.
+  static Future<bool> removeSelectionCover(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response =
+          await dio.delete('/restaurant-selections/$id/cover', options: _auth);
+      return _isSuccess(response);
+    } catch (_) {
+      return false;
+    }
   }
 
   static Future<bool> deleteSelection(int id) async {
@@ -565,7 +634,8 @@ class RestaurantApiService {
     }
   }
 
-  /// Accepts a selection sent to the user. False on failure.
+  /// Accepts a selection sent to the user, or takes a public one: it shows
+  /// with their saved places. False on failure.
   static Future<bool> acceptSelection(int id) async {
     try {
       final dio = await DioClient.getDio();

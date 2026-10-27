@@ -10,8 +10,9 @@ import '../shared/app_button.dart';
 import '../shared/app_card.dart';
 import '../shared/tag_chip.dart';
 
-/// Cover of a selection: the featured photos of its first restaurants, as
-/// a 2×2 mosaic when there are 4, else the first one.
+/// Cover of a selection: the image chosen by its owner, else the featured
+/// photos of its first restaurants, as a 2×2 mosaic when there are 4, else
+/// the first one.
 class SelectionCover extends StatelessWidget {
   final RestaurantSelection selection;
   final double size;
@@ -39,7 +40,9 @@ class SelectionCover extends StatelessWidget {
   Widget build(BuildContext context) {
     final photos = selection.coverPhotos;
     final Widget content;
-    if (photos.length >= 4) {
+    if (selection.coverUrl != null) {
+      content = _photo(selection.coverUrl!, size);
+    } else if (photos.length >= 4) {
       final side = (size - 3.w) / 2;
       content = SizedBox(
         width: size,
@@ -59,27 +62,48 @@ class SelectionCover extends StatelessWidget {
   }
 }
 
-/// [RestaurantSelection.subtitle], then for the owner a paper plane with how
-/// many people accepted it (when some did).
+/// A globe for a public selection, [RestaurantSelection.subtitle], then how
+/// many people have it (when some do): for the owner a paper plane, for a
+/// public one a bookmark, shown to everyone.
 class SelectionSubtitle extends StatelessWidget {
   final RestaurantSelection selection;
   final int? maxLines;
 
-  const SelectionSubtitle({super.key, required this.selection, this.maxLines});
+  /// Who made it, even when it is the user's.
+  final bool showOwner;
+
+  const SelectionSubtitle({
+    super.key,
+    required this.selection,
+    this.maxLines,
+    this.showOwner = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final style = AppTextStyles.bodyLight15;
-    final accepted = selection.isOwner ? selection.acceptedCount ?? 0 : 0;
+    final showCount = selection.isOwner || selection.isPublic;
+    final accepted = showCount ? selection.acceptedCount ?? 0 : 0;
+    Widget icon(IconData data) =>
+        Icon(data, size: style.fontSize, color: style.color);
     return Text.rich(
       TextSpan(children: [
-        TextSpan(text: selection.subtitle),
+        if (selection.isPublic) ...[
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            child: icon(Icons.public),
+          ),
+          const TextSpan(text: ' '),
+        ],
+        TextSpan(
+            text: showOwner ? selection.subtitleWithOwner : selection.subtitle),
         if (accepted > 0) ...[
           const TextSpan(text: '  ·  '),
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: Icon(Icons.send_rounded,
-                size: style.fontSize, color: style.color),
+            child: icon(selection.isPublic
+                ? Icons.bookmark_rounded
+                : Icons.send_rounded),
           ),
           TextSpan(text: ' $accepted'),
         ],
@@ -100,12 +124,17 @@ class SelectionCard extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onRefuse;
 
+  /// Tells who made it, even the user, and when the user has it with
+  /// their places (e.g. among the public selections).
+  final bool showAdded;
+
   const SelectionCard({
     super.key,
     required this.selection,
     required this.onTap,
     this.onAccept,
     this.onRefuse,
+    this.showAdded = false,
   });
 
   @override
@@ -134,13 +163,22 @@ class SelectionCard extends StatelessWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.baloo17),
-                      SelectionSubtitle(selection: s, maxLines: 1),
+                      SelectionSubtitle(
+                          selection: s, maxLines: 1, showOwner: showAdded),
                       if (s.isPending) ...[
                         SizedBox(height: 12.h),
                         TagChip(
                           label: s.isSeen ? 'À accepter' : 'Nouvelle',
                           color: kVeganOptionsOrange,
                           icon: Icons.mark_email_unread_outlined,
+                        ),
+                      ] else if (showAdded && s.isAccepted) ...[
+                        SizedBox(height: 12.h),
+                        const TagChip(
+                          label: 'Déjà sauvegardé',
+                          color: kSemanticSuccess,
+                          backgroundColor: kPrimaryTag,
+                          icon: Icons.bookmark_rounded,
                         ),
                       ],
                     ],

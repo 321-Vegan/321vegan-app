@@ -8,7 +8,8 @@ import '../../themes/app_text_styles.dart';
 import '../shared/app_card.dart';
 
 /// Restaurant in a list: featured photo, name, city and [badges] (status
-/// chips...), then the optional [footer] across the card (e.g. a note).
+/// chips...), an optional [trailing] action, then the optional [footer]
+/// across the card (e.g. a note).
 class RestaurantListCard extends StatelessWidget {
   final Restaurant restaurant;
   final List<Widget> badges;
@@ -17,12 +18,16 @@ class RestaurantListCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Widget? footer;
 
+  /// At the end of the row, e.g. a button acting on the restaurant.
+  final Widget? trailing;
+
   const RestaurantListCard({
     super.key,
     required this.restaurant,
     required this.badges,
     this.onTap,
     this.footer,
+    this.trailing,
   });
 
   static Widget _placeholder() => Container(
@@ -67,6 +72,10 @@ class RestaurantListCard extends StatelessWidget {
             ],
           ),
         ),
+        if (trailing != null) ...[
+          SizedBox(width: 12.w),
+          trailing!,
+        ],
       ],
     );
     return GestureDetector(

@@ -1,3 +1,4 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'restaurant.dart';
 
 /// Status of a selection sent to the user, mirrors the API share status.
@@ -6,6 +7,17 @@ class SelectionShareStatus {
 
   static const pending = 'PENDING';
   static const accepted = 'ACCEPTED';
+
+  /// A public selection the user took then removed.
+  static const declined = 'DECLINED';
+}
+
+/// Orders of the public selections, mirrors the API `sort` values.
+class SelectionSort {
+  SelectionSort._();
+
+  static const recent = 'recent';
+  static const popular = 'popular';
 }
 
 /// A restaurant of a selection, with why it is recommended.
@@ -28,14 +40,22 @@ class RestaurantSelectionItem {
 
 /// Restaurants a user recommends, in their order, with a title and a
 /// description; it can be sent to other users (by email), who accept it to
-/// see it with their saved places. Lists (GET /restaurant-selections/mine,
-/// /received) don't carry the [items], only the [restaurantIds].
+/// see it with their saved places. A public one is listed for everyone,
+/// who can take it without it being sent (for good: it can't be made
+/// private again). Lists (GET /restaurant-selections/mine, /received,
+/// /public) don't carry the [items], only the [restaurantIds].
 class RestaurantSelection {
   final int id;
   final String title;
   final String? description;
+  final int ownerId;
   final String ownerNickname;
   final bool isOwner;
+  final bool isPublic;
+  final DateTime? publishedAt;
+
+  /// Image chosen by the owner, shown instead of [coverPhotos].
+  final String? coverPath;
 
   /// The restaurants the user can see, in order.
   final List<int> restaurantIds;
@@ -43,14 +63,16 @@ class RestaurantSelection {
   /// Featured photos of the first restaurants having one (up to 4).
   final List<RestaurantPhoto> coverPhotos;
 
-  /// Sent to the user: [SelectionShareStatus] value; null for the owner.
+  /// Sent to the user, or a public one they took (or removed):
+  /// [SelectionShareStatus] value; null for the owner, or a public one the
+  /// user doesn't have.
   final String? shareStatus;
 
   /// Sent to the user: false until they opened their received selections.
   final bool isSeen;
 
-  /// The owner's: how many users accepted it (have it with their saved
-  /// places); null for a recipient.
+  /// The owner's, or anyone's for a public one: how many users accepted or
+  /// took it (have it with their saved places); null otherwise.
   final int? acceptedCount;
   final List<RestaurantSelectionItem> items;
 
@@ -58,8 +80,12 @@ class RestaurantSelection {
     required this.id,
     required this.title,
     this.description,
+    this.ownerId = 0,
     required this.ownerNickname,
     required this.isOwner,
+    this.isPublic = false,
+    this.publishedAt,
+    this.coverPath,
     this.restaurantIds = const [],
     this.coverPhotos = const [],
     this.shareStatus,
@@ -69,6 +95,16 @@ class RestaurantSelection {
   });
 
   bool get isPending => shareStatus == SelectionShareStatus.pending;
+
+  /// With the user's saved places: accepted, or taken when public.
+  bool get isAccepted => shareStatus == SelectionShareStatus.accepted;
+
+  /// A public selection of someone else the user can add to their places.
+  bool get canTake => isPublic && !isOwner && !isAccepted && !isPending;
+
+  String? get coverUrl => coverPath == null
+      ? null
+      : '${dotenv.env['S3_STORAGE_URL'] ?? ''}/$coverPath';
 
   /// "3 lieux"
   String get countLabel => switch (restaurantIds.length) {
@@ -82,13 +118,23 @@ class RestaurantSelection {
   String get subtitle =>
       isOwner ? countLabel : 'De $ownerNickname · $countLabel';
 
+  /// Who made it, even for the owner (e.g. among the public selections).
+  /// "De Camille · 3 lieux"
+  String get subtitleWithOwner => 'De $ownerNickname · $countLabel';
+
   factory RestaurantSelection.fromJson(Map<String, dynamic> json) =>
       RestaurantSelection(
         id: json['id'] as int,
         title: json['title'] as String? ?? '',
         description: json['description'] as String?,
+        ownerId: json['owner_id'] as int? ?? 0,
         ownerNickname: json['owner_nickname'] as String? ?? '',
         isOwner: json['is_owner'] as bool? ?? false,
+        isPublic: json['is_public'] as bool? ?? false,
+        publishedAt: json['published_at'] is String
+            ? DateTime.tryParse(json['published_at'] as String)
+            : null,
+        coverPath: json['cover_path'] as String?,
         restaurantIds:
             (json['restaurant_ids'] as List<dynamic>? ?? []).cast<int>(),
         coverPhotos: (json['cover_photos'] as List<dynamic>? ?? [])
