@@ -52,6 +52,42 @@ void main() {
       expect(selection.canTake, isFalse);
     });
 
+    test('items carry the author\'s rating when they reviewed the place', () {
+      final selection = RestaurantSelection.fromJson(_json({
+        'items': [
+          {
+            'restaurant': {
+              'id': 1,
+              'name': 'Vegorilla',
+              'latitude': 43.6,
+              'longitude': 3.88,
+              'vegan_status': 'FULLY_VEGAN',
+            },
+            'note': 'Les meilleurs burgers',
+            'author_rating': 5,
+            'author_review_id': 42,
+          },
+          {
+            'restaurant': {
+              'id': 2,
+              'name': 'KVB',
+              'latitude': 43.6,
+              'longitude': 3.88,
+              'vegan_status': 'FULLY_VEGAN',
+            },
+          },
+        ],
+      }));
+
+      expect(selection.items.first.authorRating, 5);
+      expect(selection.items.first.authorReviewId, 42);
+      final edited = selection.items.first.copyWith(note: 'Autre');
+      expect(edited.authorRating, 5);
+      expect(edited.authorReviewId, 42);
+      expect(selection.items.last.authorRating, isNull);
+      expect(selection.items.last.authorReviewId, isNull);
+    });
+
     test('a private selection is not taken, and has no cover', () {
       final selection = RestaurantSelection.fromJson(
           _json({'share_status': 'PENDING'}));

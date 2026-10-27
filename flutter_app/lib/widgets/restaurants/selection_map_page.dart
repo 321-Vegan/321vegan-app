@@ -163,7 +163,14 @@ class _SelectionMapPageState extends State<SelectionMapPage>
     final r = item.restaurant;
     return RestaurantListCard(
       restaurant: r,
-      onTap: () => RestaurantDetailPage.open(context, r),
+      onTap: () => RestaurantDetailPage.open(
+        context,
+        r,
+        selectionNote: item.note,
+        selectionNoteAuthor: widget.selection.isOwner
+            ? null
+            : widget.selection.ownerNickname,
+      ),
       badges: [
         if (r.isPermanentlyClosed)
           const TagChip(label: 'Fermé définitivement', color: kSemanticError)

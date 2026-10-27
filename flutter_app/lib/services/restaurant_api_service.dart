@@ -731,6 +731,18 @@ class RestaurantApiService {
     return null;
   }
 
+  /// A review by its id (approved, or the user's own). Null on failure.
+  static Future<RestaurantReview?> getReview(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get('/restaurant-reviews/$id', options: _auth);
+      if (_isSuccess(response)) {
+        return RestaurantReview.fromJson(response.data as Map<String, dynamic>);
+      }
+    } catch (_) {}
+    return null;
+  }
+
   /// The user's review of a restaurant (null if none or logged out).
   /// Failures are thrown, not turned into null: "couldn't load it" must not
   /// pass for "hasn't reviewed", which would offer a duplicate review.

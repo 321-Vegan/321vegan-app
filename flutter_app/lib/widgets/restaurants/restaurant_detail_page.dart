@@ -21,11 +21,13 @@ import 'package:vegan_app/widgets/restaurants/selection_sheets.dart';
 import 'package:vegan_app/widgets/reviews/rating_status_chip.dart';
 import 'package:vegan_app/widgets/reviews/rating_summary.dart';
 import 'package:vegan_app/widgets/reviews/review_card.dart';
+import 'package:vegan_app/widgets/reviews/restaurant_review_footer.dart';
 import 'package:vegan_app/widgets/reviews/review_form_sheet.dart';
 import 'package:vegan_app/widgets/reviews/reviews_empty_state.dart';
 import 'package:vegan_app/widgets/reviews/star_rating.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
+import 'package:vegan_app/widgets/shared/app_card.dart';
 import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 import 'package:vegan_app/widgets/shared/icon_snack_bar.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
@@ -42,12 +44,33 @@ class RestaurantDetailPage extends StatefulWidget {
   /// The map pin; the full restaurant is loaded when the page opens.
   final Restaurant restaurant;
 
-  const RestaurantDetailPage({super.key, required this.restaurant});
+  /// Opened from a selection: what its author wrote about the place, shown
+  /// at the top of the infos.
+  final String? selectionNote;
+
+  /// Who wrote [selectionNote]; null when it is the user.
+  final String? selectionNoteAuthor;
+
+  const RestaurantDetailPage({
+    super.key,
+    required this.restaurant,
+    this.selectionNote,
+    this.selectionNoteAuthor,
+  });
 
   /// Pushes the page; completes when it is closed.
-  static Future<void> open(BuildContext context, Restaurant restaurant) {
+  static Future<void> open(
+    BuildContext context,
+    Restaurant restaurant, {
+    String? selectionNote,
+    String? selectionNoteAuthor,
+  }) {
     return Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => RestaurantDetailPage(restaurant: restaurant),
+      builder: (_) => RestaurantDetailPage(
+        restaurant: restaurant,
+        selectionNote: selectionNote,
+        selectionNoteAuthor: selectionNoteAuthor,
+      ),
     ));
   }
 
@@ -599,6 +622,37 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     );
   }
 
+  /// What the author of the selection the page was opened from wrote.
+  Widget _buildSelectionNote(String note) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final author = widget.selectionNoteAuthor;
+    return AppCard(
+      radius: 36.r,
+      padding: EdgeInsets.all(30.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.format_quote_rounded, size: 54.sp, color: primary),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  author == null ? 'Votre mot' : 'Le mot de $author',
+                  style: AppTextStyles.bodyBold13.copyWith(color: primary),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(note,
+              style: AppTextStyles.bodyRegular15
+                  .copyWith(fontStyle: FontStyle.italic, height: 1.4)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfosTab() {
     final r = _restaurant;
     final closure = closureText(r, DateTime.now());
@@ -622,10 +676,16 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             _socialUrl(r.instagram!, 'instagram.com')),
     ];
 
+    final note = widget.selectionNote;
     return ListView(
       padding: EdgeInsets.fromLTRB(
           48.w, 24.h, 48.w, 64.h + MediaQuery.of(context).padding.bottom),
       children: [
+        if (note != null)
+          Padding(
+            padding: EdgeInsets.only(top: 24.h),
+            child: _buildSelectionNote(note),
+          ),
         if (closure != null)
           Padding(
             padding: EdgeInsets.only(top: 24.h),
@@ -884,65 +944,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   }
 
   /// Detailed ratings and photos under a review's comment.
-  Widget? _reviewFooter(RestaurantReview review) {
-    final rated = RestaurantCriterion.all
-        .where(
-            (c) => _showsCriterion(c) && review.criteria.containsKey(c.field))
-        .toList();
-    final priceRange = review.priceRange;
-    if (rated.isEmpty && priceRange == null && review.photos.isEmpty) {
-      return null;
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (rated.isNotEmpty || priceRange != null)
-          Wrap(
-            spacing: 24.w,
-            runSpacing: 8.h,
-            children: [
-              for (final c in rated)
-                Text.rich(TextSpan(children: [
-                  TextSpan(
-                    text: '${c.label} ',
-                    style: AppTextStyles.bodyRegular13
-                        .copyWith(color: Colors.grey[600]),
-                  ),
-                  TextSpan(
-                    text: '★ ${review.criteria[c.field]}',
-                    style:
-                        AppTextStyles.bodyBold13.copyWith(color: kAccentYellow),
-                  ),
-                ])),
-              if (priceRange != null)
-                Text.rich(TextSpan(children: [
-                  TextSpan(
-                    text: 'Prix ',
-                    style: AppTextStyles.bodyRegular13
-                        .copyWith(color: Colors.grey[600]),
-                  ),
-                  TextSpan(
-                    text: RestaurantPriceRanges.label(priceRange),
-                    style: AppTextStyles.bodyBold13,
-                  ),
-                ])),
-            ],
-          ),
-        if (review.photos.isNotEmpty) ...[
-          SizedBox(height: 16.h),
-          Wrap(
-            spacing: 12.w,
-            runSpacing: 12.w,
-            children: [
-              for (var i = 0; i < review.photos.length; i++)
-                _thumbnail(review.photos, i, 160.w),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
-
   Widget _buildMyReview() {
     final primary = Theme.of(context).colorScheme.primary;
     if (!_isLoggedIn) {
@@ -963,7 +964,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         date: mine.createdAt,
         highlighted: true,
         badge: RatingStatusChip(status: mine.status),
-        footer: _reviewFooter(mine),
+        footer: RestaurantReviewFooter.orNull(mine,
+            isFullyVegan: _restaurant.isFullyVegan),
         trailing: _isSendingReview
             ? SizedBox(
                 width: 48.sp,
@@ -1079,7 +1081,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                   rating: review.rating,
                   comment: review.comment,
                   date: review.createdAt,
-                  footer: _reviewFooter(review),
+                  footer: RestaurantReviewFooter.orNull(review,
+                      isFullyVegan: _restaurant.isFullyVegan),
                 ),
               ),
             SizedBox(height: 12.h),

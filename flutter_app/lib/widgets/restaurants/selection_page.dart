@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../models/restaurants/restaurant.dart';
 import '../../models/restaurants/restaurant_selection.dart';
 import '../../services/restaurant_api_service.dart';
 import '../../themes/app_colors.dart';
@@ -16,6 +15,7 @@ import '../shared/tag_chip.dart';
 import 'restaurant_detail_page.dart';
 import 'restaurant_labels.dart';
 import 'restaurant_list_card.dart';
+import 'selection_author_review.dart';
 import 'selection_card.dart';
 import 'selection_editor_page.dart';
 import 'selection_map_page.dart';
@@ -78,8 +78,15 @@ class _SelectionPageState extends State<SelectionPage> {
       ));
   }
 
-  Future<void> _openRestaurant(Restaurant restaurant) =>
-      RestaurantDetailPage.open(context, restaurant);
+  /// With what the author wrote about it, if anything.
+  Future<void> _openRestaurant(RestaurantSelectionItem item) =>
+      RestaurantDetailPage.open(
+        context,
+        item.restaurant,
+        selectionNote: item.note,
+        selectionNoteAuthor:
+            _selection.isOwner ? null : _selection.ownerNickname,
+      );
 
   // ── Owner ──────────────────────────────────────────────────────────────────
 
@@ -361,7 +368,7 @@ class _SelectionPageState extends State<SelectionPage> {
     final r = item.restaurant;
     return RestaurantListCard(
       restaurant: r,
-      onTap: () => _openRestaurant(r),
+      onTap: () => _openRestaurant(item),
       badges: [
         if (r.isPermanentlyClosed)
           const TagChip(label: 'Fermé définitivement', color: kSemanticError)
@@ -369,6 +376,19 @@ class _SelectionPageState extends State<SelectionPage> {
           const TagChip(
               label: 'En attente de validation', color: kVeganOptionsOrange),
         VeganStatusChip(isFullyVegan: r.isFullyVegan),
+        if (item.authorRating != null)
+          AuthorRatingPill(
+            rating: item.authorRating!,
+            onTap: item.authorReviewId == null
+                ? null
+                : () => showAuthorReviewSheet(
+                      context,
+                      reviewId: item.authorReviewId!,
+                      restaurant: r,
+                      authorNickname:
+                          _selection.isOwner ? null : _selection.ownerNickname,
+                    ),
+          ),
       ],
       footer: item.note == null
           ? null

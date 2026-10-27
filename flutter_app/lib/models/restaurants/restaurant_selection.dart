@@ -25,16 +25,31 @@ class RestaurantSelectionItem {
   final Restaurant restaurant;
   final String? note;
 
-  const RestaurantSelectionItem({required this.restaurant, this.note});
+  /// The selection author's review of it, if any: its rating (1-5), and
+  /// its id to load it whole.
+  final int? authorRating;
+  final int? authorReviewId;
 
-  RestaurantSelectionItem copyWith({String? note}) =>
-      RestaurantSelectionItem(restaurant: restaurant, note: note);
+  const RestaurantSelectionItem({
+    required this.restaurant,
+    this.note,
+    this.authorRating,
+    this.authorReviewId,
+  });
+
+  RestaurantSelectionItem copyWith({String? note}) => RestaurantSelectionItem(
+      restaurant: restaurant,
+      note: note,
+      authorRating: authorRating,
+      authorReviewId: authorReviewId);
 
   factory RestaurantSelectionItem.fromJson(Map<String, dynamic> json) =>
       RestaurantSelectionItem(
         restaurant:
             Restaurant.fromJson(json['restaurant'] as Map<String, dynamic>),
         note: json['note'] as String?,
+        authorRating: json['author_rating'] as int?,
+        authorReviewId: json['author_review_id'] as int?,
       );
 }
 
