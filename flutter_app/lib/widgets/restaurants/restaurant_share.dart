@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../models/restaurants/restaurant_review.dart';
+import '../../models/restaurants/restaurant_selection.dart';
+import '../../services/deep_link_service.dart';
 import '../../services/restaurant_api_service.dart';
 import '../reviews/star_rating.dart';
 
@@ -49,6 +51,29 @@ Future<void> shareRestaurant(
     text,
     subject: r.name,
     // Required for the iPad popover
+    sharePositionOrigin: origin,
+  );
+}
+
+/// Opens the system share sheet with a public selection and its link,
+/// which opens it in the app (or the site's page to install it).
+/// [context] is the tapped button's, for the iPad popover.
+Future<void> shareSelection(
+    BuildContext context, RestaurantSelection selection) async {
+  final box = context.findRenderObject() as RenderBox?;
+  final origin = box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+
+  final text = [
+    selection.title,
+    selection.subtitleWithOwner,
+    '',
+    'À découvrir sur l\'application 321 Vegan : '
+        '${DeepLinkService.selectionUrl(selection)}',
+  ].join('\n');
+
+  await Share.share(
+    text,
+    subject: selection.title,
     sharePositionOrigin: origin,
   );
 }

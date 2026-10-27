@@ -11,10 +11,12 @@ import '../../themes/app_text_styles.dart';
 import '../shared/app_background.dart';
 import '../shared/app_button.dart';
 import '../shared/empty_state_view.dart';
+import '../shared/square_icon_button.dart';
 import '../shared/tag_chip.dart';
 import 'restaurant_detail_page.dart';
 import 'restaurant_labels.dart';
 import 'restaurant_list_card.dart';
+import 'restaurant_share.dart';
 import 'selection_author_review.dart';
 import 'selection_card.dart';
 import 'selection_editor_page.dart';
@@ -276,7 +278,7 @@ class _SelectionPageState extends State<SelectionPage> {
           ),
           SizedBox(height: 30.h),
         ],
-        // Map button beside the title, as on a restaurant page
+        // Share and map buttons beside the title, as on a restaurant page
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -290,6 +292,30 @@ class _SelectionPageState extends State<SelectionPage> {
                 ],
               ),
             ),
+            // Only a public one: its link opens it for anyone. The owner
+            // copies it from the send sheet.
+            if (s.isPublic && !s.isOwner) ...[
+              SizedBox(width: 24.w),
+              Semantics(
+                button: true,
+                label: 'Partager',
+                child: Builder(
+                  // Its own context: the share popover points at the button
+                  builder: (buttonContext) => SquareIconButton(
+                    onTap: () => shareSelection(buttonContext, s),
+                    size: 102.w,
+                    radius: 30.r,
+                    backgroundColor: Colors.white,
+                    shadows: const [],
+                    child: Icon(
+                      Icons.send_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 54.sp,
+                    ),
+                  ),
+                ),
+              ),
+            ],
             if (s.items.isNotEmpty) ...[
               SizedBox(width: 24.w),
               // Height and corners of the square buttons of a restaurant page

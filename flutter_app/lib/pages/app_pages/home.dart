@@ -14,9 +14,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:vegan_app/services/anniversary_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/b12_reminder_service.dart';
+import 'package:vegan_app/services/deep_link_service.dart';
 import 'package:vegan_app/services/notification_service.dart';
 import 'package:vegan_app/services/profile_notification_service.dart';
 import 'package:vegan_app/widgets/homepage/anniversary_dialog.dart';
+import 'package:vegan_app/models/restaurants/restaurant_selection.dart';
+import 'package:vegan_app/widgets/auth/auth_bottom_sheet.dart';
+import 'package:vegan_app/widgets/restaurants/selection_page.dart';
 
 const int _dashboardTabIndex = 0;
 const int _scanTabIndex = 1;
@@ -40,6 +44,7 @@ class MyHomePageState extends State<MyHomePage>
   late ConfettiController _confettiController;
 
   bool _notificationForcedDashboard = false;
+  bool _openedFromLink = false;
 
   @override
   void initState() {
@@ -80,6 +85,11 @@ class MyHomePageState extends State<MyHomePage>
     // to jump to the Scan tab.
     NotificationService.navigateToScan.addListener(_onNavigateToScan);
 
+    // Link to a public selection opened → its page. Cold start (or link
+    // opened during the onboarding): it may already be set.
+    DeepLinkService.selectionId.addListener(_onSelectionLink);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onSelectionLink());
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _showAnnouncement());
   }
 
@@ -87,8 +97,8 @@ class MyHomePageState extends State<MyHomePage>
   /// has settled.
   Future<void> _showAnnouncement() async {
     await Future.delayed(const Duration(seconds: 1));
-    // Don't stack it on the anniversary popup
-    if (!mounted || _notificationForcedDashboard) return;
+    // Don't stack it on the anniversary popup or a selection opened by a link
+    if (!mounted || _notificationForcedDashboard || _openedFromLink) return;
     await AnnouncementCenter.showNext(context, home: this);
   }
 
@@ -159,6 +169,34 @@ class MyHomePageState extends State<MyHomePage>
     );
   }
 
+  /// Opens the selection of a link, over whatever is shown. The API needs an
+  /// account, even for a public one: logged out, it opens once logged in.
+  void _onSelectionLink() {
+    final id = DeepLinkService.selectionId.value;
+    if (id == null || !mounted) return;
+    DeepLinkService.selectionId.value = null;
+    _openedFromLink = true;
+
+    // The page loads it from its id (unavailable if it isn't public)
+    void open() {
+      if (!mounted) return;
+      SelectionPage.open(
+        context,
+        RestaurantSelection(
+            id: id, title: '', ownerNickname: '', isOwner: false),
+      );
+    }
+
+    if (AuthService.isLoggedIn) {
+      open();
+      return;
+    }
+    showAuthBottomSheet(context, onSuccess: () {
+      _onLoginSuccess();
+      open();
+    });
+  }
+
   void _onNavigateToScan() {
     if (NotificationService.navigateToScan.value && mounted) {
       NotificationService.navigateToScan.value = false;
@@ -202,6 +240,7 @@ class MyHomePageState extends State<MyHomePage>
     NotificationService.showAnniversary
         .removeListener(_onAnniversaryNotificationTap);
     NotificationService.navigateToScan.removeListener(_onNavigateToScan);
+    DeepLinkService.selectionId.removeListener(_onSelectionLink);
     WidgetsBinding.instance.removeObserver(this);
     _tabController.removeListener(_onTabIndexChanged);
     _tabController.dispose();

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../models/restaurants/restaurant_selection.dart';
+import '../../services/deep_link_service.dart';
 import '../../services/restaurant_api_service.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
@@ -11,6 +13,7 @@ import '../shared/app_dialog.dart';
 import '../shared/app_text_field.dart';
 import '../shared/bottom_sheet_shell.dart';
 import '../shared/form_error_banner.dart';
+import '../shared/sheet_option_tile.dart';
 import 'selection_card.dart';
 import 'selection_editor_page.dart';
 
@@ -145,6 +148,13 @@ class _SendSelectionSheetState extends State<_SendSelectionSheet> {
     });
   }
 
+  Future<void> _copyLink() async {
+    await Clipboard.setData(
+        ClipboardData(text: DeepLinkService.selectionUrl(widget.selection)));
+    if (!mounted) return;
+    Navigator.of(context).pop('Lien de partage copié');
+  }
+
   /// "Code ami" / "E-mail" switch.
   Widget _modeButton(String label, IconData icon, bool byCode) {
     final selected = _byCode == byCode;
@@ -245,6 +255,16 @@ class _SendSelectionSheetState extends State<_SendSelectionSheet> {
               isLoading: _isSending,
               onPressed: canSend ? _send : null,
             ),
+            // Only a public one: its link opens it for anyone
+            if (widget.selection.isPublic) ...[
+              SizedBox(height: 24.h),
+              SheetOptionTile(
+                icon: Icons.link_rounded,
+                title: 'Copier le lien de partage',
+                detail: 'Pour la partager où vous voulez',
+                onTap: _copyLink,
+              ),
+            ],
           ],
         ),
       ),

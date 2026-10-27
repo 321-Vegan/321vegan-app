@@ -47,7 +47,7 @@ class MapAccessOverlay extends StatelessWidget {
                       ),
                       SizedBox(height: 24.h),
                       Text(
-                        'Trouvez les produits vegan près de vous',
+                        'Trouvez les produits et lieux véganes près de vous',
                         style: TextStyle(
                           fontSize: 52.sp,
                           fontWeight: FontWeight.bold,
@@ -57,7 +57,7 @@ class MapAccessOverlay extends StatelessWidget {
                       ),
                       SizedBox(height: 12.h),
                       Text(
-                        'Créez un compte gratuit pour accéder à la carte et localiser les produits vegan autour de vous.',
+                        'Créez un compte gratuit pour accéder à la carte. C\'est gratuit !',
                         style: TextStyle(
                           fontSize: 40.sp,
                           color: Colors.grey[500],

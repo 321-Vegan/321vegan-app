@@ -98,14 +98,21 @@ class SelectionSubtitle extends StatelessWidget {
         TextSpan(
             text: showOwner ? selection.subtitleWithOwner : selection.subtitle),
         if (accepted > 0) ...[
-          const TextSpan(text: '  ·  '),
+          const TextSpan(text: '  '),
+          // One block: the line never breaks inside "· 🔖 3"
           WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            child: icon(selection.isPublic
-                ? Icons.bookmark_rounded
-                : Icons.send_rounded),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('·  ', style: style),
+                icon(selection.isPublic
+                    ? Icons.bookmark_rounded
+                    : Icons.send_rounded),
+                Text(' $accepted', style: style),
+              ],
+            ),
           ),
-          TextSpan(text: ' $accepted'),
         ],
       ]),
       maxLines: maxLines,

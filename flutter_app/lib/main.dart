@@ -14,6 +14,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/auth_service.dart';
 import 'services/b12_reminder_service.dart';
+import 'services/deep_link_service.dart';
 import 'services/notification_service.dart';
 import 'services/anniversary_service.dart';
 import 'services/products_of_interest_cache.dart';
@@ -37,6 +38,9 @@ void main() async {
   await AuthService.init();
 
   runApp(const MyApp());
+
+  // Doesn't wait: the link that launched the app comes through the stream
+  DeepLinkService.init();
 
   // Everything below touches the network or a native platform channel
   // (StoreKit/Play Billing, local notifications) and must never block the
