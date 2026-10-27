@@ -12,30 +12,6 @@ import 'package:vegan_app/widgets/shared/announcement_sheet.dart';
 /// tab; null where they're never pressed (e.g. marking all seen).
 List<Announcement> appAnnouncements({MyHomePageState? home}) => [
       Announcement(
-        id: 'map_open_to_all',
-        badge: 'Nouveau',
-        title: 'La carte est ouverte à toustes !',
-        message:
-            'Vous pouvez maintenant trouver tous les produits du vegandex autour de vous.',
-        image: 'lib/assets/themes/cards/poule-summer.webp',
-        mirrorImage: true,
-        features: const [
-          'Trouvez tous les produits en magasin',
-          'Filtrez par produit recherché',
-          'Ajoutez des magasins et donnez votre avis',
-        ],
-        note: 'Les produits de la carte sont ceux du Vegandex : '
-            'scannez-les en magasin pour aider les autres utilisateur·ices '
-            'à les trouver !',
-        primaryLabel: 'Voir la carte',
-        onPrimary: home?.goToMapTab,
-        // Unknown status (offline, slow backend) counts as no: better skip
-        // it once than show it to a subscriber.
-        shouldShow: () async =>
-            SubscriptionService.isEntitlementDetermined &&
-            !SubscriptionService.isSubscribed,
-      ),
-      Announcement(
         id: 'product_ratings',
         badge: 'Nouveau',
         title: 'Notez les produits !',

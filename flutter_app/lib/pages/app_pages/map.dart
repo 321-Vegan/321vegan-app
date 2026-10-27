@@ -27,6 +27,7 @@ import 'package:vegan_app/widgets/map/map_access_overlay.dart';
 import 'package:vegan_app/widgets/map/map_filter_page.dart';
 import 'package:vegan_app/widgets/map/map_search_bar.dart';
 import 'package:vegan_app/widgets/map/map_search_page.dart';
+import 'package:vegan_app/widgets/map/map_restaurant_list_page.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
 import 'package:vegan_app/widgets/restaurants/create_restaurant_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_detail_page.dart';
@@ -36,6 +37,7 @@ import 'package:vegan_app/widgets/restaurants/restaurant_pin.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
+import 'package:vegan_app/widgets/shared/attention_pulse.dart';
 
 /// Places shown on the map, one kind at a time.
 enum _MapLayer { shops, restaurants }
@@ -91,6 +93,15 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     _initTileCache();
     _restoreLayer();
     _initLocation();
+    _loadSavedButtonFound();
+  }
+
+  /// The saved places button pulses until tapped once.
+  bool _highlightSavedButton = false;
+
+  Future<void> _loadSavedButtonFound() async {
+    final found = await PreferencesHelper.getMapSavedButtonFound();
+    if (!found && mounted) setState(() => _highlightSavedButton = true);
   }
 
   /// Counts a meaningful map action for non-subscribers and, once enough
@@ -598,6 +609,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   /// back returns to it), while the map moves to them behind: once the
   /// list is left, the map is on the last one.
   Future<void> _openSaved() async {
+    if (_highlightSavedButton) {
+      setState(() => _highlightSavedButton = false);
+      PreferencesHelper.setMapSavedButtonFound();
+    }
     var opened = false;
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -610,6 +625,17 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       ),
     );
     if (opened && mounted) _trackMapAction();
+  }
+
+  /// The restaurants of the area shown (with the filters), as a list.
+  Future<void> _openList() async {
+    await MapRestaurantListPage.open(
+      context,
+      restaurants: _restaurants,
+      center: _mapController.camera.center,
+      userLocation: _userLocation,
+    );
+    if (mounted) _trackMapAction();
   }
 
   /// Moves the map to [restaurant], on the restaurants layer.
@@ -885,12 +911,12 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               ),
             ),
           ],
-          // Bottom-right corner: recenter, and the saved places under it (places
-          // layer)
+          // Bottom-right corner, level with the layer switch: recenter, then
+          // the saved places and the list (restaurants layer)
           if (!_isPicking)
             Positioned(
               right: 48.w,
-              bottom: 100,
+              bottom: 24,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -911,9 +937,23 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                     Semantics(
                       button: true,
                       label: 'Lieux sauvegardés',
+                      child: AttentionPulse(
+                        enabled: _highlightSavedButton,
+                        radius: 42.r,
+                        color: Theme.of(context).colorScheme.primary,
+                        child: SquareIconButton.action(
+                          icon: Icons.bookmark_border,
+                          onTap: _openSaved,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 30.w),
+                    Semantics(
+                      button: true,
+                      label: 'Liste des lieux de la zone',
                       child: SquareIconButton.action(
-                        icon: Icons.bookmark_border,
-                        onTap: _openSaved,
+                        icon: Icons.format_list_bulleted,
+                        onTap: _openList,
                       ),
                     ),
                   ],

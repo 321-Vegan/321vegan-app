@@ -139,6 +139,18 @@ class PreferencesHelper {
     return prefs.getString('last_saved_tab');
   }
 
+  /// Whether the saved places button of the map was tapped once (it pulses
+  /// until then).
+  static Future<void> setMapSavedButtonFound() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('map_saved_button_found', true);
+  }
+
+  static Future<bool> getMapSavedButtonFound() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('map_saved_button_found') ?? false;
+  }
+
   /// Whether the intro of the saved places page was closed for good.
   static Future<void> setSavedPlacesWelcomeSeen() async {
     final prefs = await SharedPreferences.getInstance();
