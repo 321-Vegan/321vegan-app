@@ -786,7 +786,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     return _section(
       title,
       photos.isEmpty
-          ? Text('Aucune photo pour le moment',
+          ? Text('Aucune photo pour le moment. Vous pouvez en ajouter pour nous aider !',
               style:
                   AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]))
           : LayoutBuilder(builder: (context, constraints) {
