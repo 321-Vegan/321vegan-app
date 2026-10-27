@@ -37,14 +37,16 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Links to a public selection (https://321vegan.fr/selection/42-…),
-                 handled by DeepLinkService instead of Flutter's own deep linking -->
+            <!-- Links to a public selection (https://321vegan.fr/selection/42-…)
+                 or a restaurant (https://321vegan.fr/restaurant/7-…), handled by
+                 DeepLinkService instead of Flutter's own deep linking -->
             <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="321vegan.fr" android:pathPrefix="/selection/" />
+                <data android:scheme="https" android:host="321vegan.fr" android:pathPrefix="/restaurant/" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

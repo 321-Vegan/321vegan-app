@@ -21,6 +21,9 @@ import 'package:vegan_app/widgets/homepage/anniversary_dialog.dart';
 import 'package:vegan_app/models/restaurants/restaurant_selection.dart';
 import 'package:vegan_app/widgets/auth/auth_bottom_sheet.dart';
 import 'package:vegan_app/widgets/restaurants/selection_page.dart';
+import 'package:vegan_app/services/restaurant_api_service.dart';
+import 'package:vegan_app/themes/app_colors.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_detail_page.dart';
 
 const int _dashboardTabIndex = 0;
 const int _scanTabIndex = 1;
@@ -87,8 +90,8 @@ class MyHomePageState extends State<MyHomePage>
 
     // Link to a public selection opened → its page. Cold start (or link
     // opened during the onboarding): it may already be set.
-    DeepLinkService.selectionId.addListener(_onSelectionLink);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onSelectionLink());
+    DeepLinkService.pending.addListener(_onDeepLink);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLink());
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _showAnnouncement());
   }
@@ -169,22 +172,28 @@ class MyHomePageState extends State<MyHomePage>
     );
   }
 
-  /// Opens the selection of a link, over whatever is shown. The API needs an
-  /// account, even for a public one: logged out, it opens once logged in.
-  void _onSelectionLink() {
-    final id = DeepLinkService.selectionId.value;
-    if (id == null || !mounted) return;
-    DeepLinkService.selectionId.value = null;
+  /// Opens the selection or restaurant of a link, over whatever is shown.
+  /// The API needs an account, even for a public one: logged out, it opens
+  /// once logged in.
+  void _onDeepLink() {
+    final link = DeepLinkService.pending.value;
+    if (link == null || !mounted) return;
+    DeepLinkService.pending.value = null;
     _openedFromLink = true;
 
-    // The page loads it from its id (unavailable if it isn't public)
     void open() {
       if (!mounted) return;
-      SelectionPage.open(
-        context,
-        RestaurantSelection(
-            id: id, title: '', ownerNickname: '', isOwner: false),
-      );
+      switch (link) {
+        // The page loads it from its id (unavailable if it isn't public)
+        case SelectionLink(:final id):
+          SelectionPage.open(
+            context,
+            RestaurantSelection(
+                id: id, title: '', ownerNickname: '', isOwner: false),
+          );
+        case RestaurantLink(:final id):
+          _openRestaurantLink(id);
+      }
     }
 
     if (AuthService.isLoggedIn) {
@@ -195,6 +204,20 @@ class MyHomePageState extends State<MyHomePage>
       _onLoginSuccess();
       open();
     });
+  }
+
+  /// Loads the restaurant of a link, then opens its page.
+  Future<void> _openRestaurantLink(int id) async {
+    final restaurant = await RestaurantApiService.getRestaurant(id);
+    if (!mounted) return;
+    if (restaurant == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Ce restaurant n\'est plus disponible.'),
+        backgroundColor: kSemanticError,
+      ));
+      return;
+    }
+    RestaurantDetailPage.open(context, restaurant);
   }
 
   void _onNavigateToScan() {
@@ -240,7 +263,7 @@ class MyHomePageState extends State<MyHomePage>
     NotificationService.showAnniversary
         .removeListener(_onAnniversaryNotificationTap);
     NotificationService.navigateToScan.removeListener(_onNavigateToScan);
-    DeepLinkService.selectionId.removeListener(_onSelectionLink);
+    DeepLinkService.pending.removeListener(_onDeepLink);
     WidgetsBinding.instance.removeObserver(this);
     _tabController.removeListener(_onTabIndexChanged);
     _tabController.dispose();

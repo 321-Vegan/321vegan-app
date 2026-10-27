@@ -8,7 +8,8 @@ import '../../services/restaurant_api_service.dart';
 import '../reviews/star_rating.dart';
 
 /// Opens the system share sheet with the restaurant in a few lines: name,
-/// kinds of place and vegan status, reviews average, address and the app.
+/// kinds of place and vegan status, reviews average, address and its link,
+/// which opens it in the app.
 /// [context] is the tapped button's, for the iPad popover.
 ///
 /// The full restaurant doesn't carry its reviews stats: pass the [summary]
@@ -44,7 +45,10 @@ Future<void> shareRestaurant(
     if (rating != null) rating,
     if (location.isNotEmpty) location,
     '',
-    'Trouvé sur l\'application 321 Vegan : https://321vegan.fr',
+    // Its link opens it in the app (or the site's page to install it); a
+    // pending one is only visible to its creator
+    'Trouvé sur l\'application 321 Vegan : '
+        '${r.validated ? DeepLinkService.restaurantUrl(r) : 'https://321vegan.fr'}',
   ].join('\n');
 
   await Share.share(
