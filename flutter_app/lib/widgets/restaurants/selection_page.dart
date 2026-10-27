@@ -278,19 +278,13 @@ class _SelectionPageState extends State<SelectionPage> {
           ),
           SizedBox(height: 30.h),
         ],
-        // Share and map buttons beside the title, as on a restaurant page
+        // Share and map buttons beside the title, as on a restaurant page;
+        // who made it under them, across the page
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(s.title, style: AppTextStyles.baloo26),
-                  SizedBox(height: 6.h),
-                  SelectionSubtitle(selection: s),
-                ],
-              ),
+              child: Text(s.title, style: AppTextStyles.baloo26),
             ),
             // Only a public one: its link opens it for anyone. The owner
             // copies it from the send sheet.
@@ -359,6 +353,8 @@ class _SelectionPageState extends State<SelectionPage> {
             ],
           ],
         ),
+        SizedBox(height: 6.h),
+        SelectionSubtitle(selection: s),
         if (s.description != null) ...[
           SizedBox(height: 24.h),
           Text(s.description!,

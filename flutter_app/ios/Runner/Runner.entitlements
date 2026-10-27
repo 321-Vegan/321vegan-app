@@ -5,6 +5,7 @@
 	<key>com.apple.developer.associated-domains</key>
 	<array>
 		<string>applinks:321vegan.fr</string>
+		<string>applinks:321vegan.fr?mode=developer</string>
 	</array>
 </dict>
 </plist>
