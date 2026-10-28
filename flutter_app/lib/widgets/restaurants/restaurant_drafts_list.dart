@@ -78,21 +78,15 @@ class RestaurantDraftCard extends StatelessWidget {
 /// Asks before deleting [draft] for good, then deletes it. True once done.
 Future<bool> confirmDeleteRestaurantDraft(
     BuildContext context, RestaurantDraft draft) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AppDialog(
-      image: 'lib/assets/images/characters/cow-mby.webp',
-      title: 'Supprimer le brouillon ?',
-      message: '« ${draft.name ?? 'Lieu sans nom'} » et ses photos seront '
-          'effacés de ce téléphone.',
-      primaryLabel: 'Supprimer',
-      primaryColor: kSemanticError,
-      onPrimary: () => Navigator.of(ctx).pop(true),
-      secondaryLabel: 'Annuler',
-      onSecondary: () => Navigator.of(ctx).pop(false),
-    ),
+  final confirmed = await AppDialog.confirm(
+    context,
+    title: 'Supprimer le brouillon ?',
+    message: '« ${draft.name ?? 'Lieu sans nom'} » et ses photos seront '
+        'effacés de ce téléphone.',
+    confirmLabel: 'Supprimer',
+    destructive: true,
   );
-  if (confirmed != true) return false;
+  if (!confirmed) return false;
   await RestaurantDrafts.delete(draft.id);
   return true;
 }

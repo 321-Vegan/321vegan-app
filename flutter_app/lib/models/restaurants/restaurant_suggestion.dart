@@ -64,20 +64,3 @@ class RestaurantSuggestion {
     );
   }
 }
-
-class RestaurantSuggestionPaginated {
-  final List<RestaurantSuggestion> items;
-  final int pages;
-
-  const RestaurantSuggestionPaginated(
-      {required this.items, required this.pages});
-
-  factory RestaurantSuggestionPaginated.fromJson(Map<String, dynamic> json) {
-    return RestaurantSuggestionPaginated(
-      items: (json['items'] as List<dynamic>)
-          .map((e) => RestaurantSuggestion.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      pages: json['pages'] as int,
-    );
-  }
-}

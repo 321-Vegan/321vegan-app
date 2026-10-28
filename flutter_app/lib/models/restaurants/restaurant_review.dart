@@ -171,25 +171,3 @@ class RestaurantReview {
     );
   }
 }
-
-class RestaurantReviewPaginated {
-  final List<RestaurantReview> items;
-  final int total;
-  final int pages;
-
-  const RestaurantReviewPaginated({
-    required this.items,
-    required this.total,
-    required this.pages,
-  });
-
-  factory RestaurantReviewPaginated.fromJson(Map<String, dynamic> json) {
-    return RestaurantReviewPaginated(
-      items: (json['items'] as List<dynamic>)
-          .map((e) => RestaurantReview.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      total: json['total'] as int,
-      pages: json['pages'] as int,
-    );
-  }
-}

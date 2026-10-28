@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../themes/app_colors.dart';
-import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
 import '../shared/bottom_sheet_shell.dart';
+import '../shared/selectable_chip.dart';
 
 /// Slots entered in [showOpeningSlotSheet]: each service's opening and
 /// closing times ("HH:MM"), and the days (0 = monday) they apply to.
@@ -155,28 +155,9 @@ class _OpeningSlotSheetState extends State<_OpeningSlotSheet> {
     );
   }
 
-  Widget _chip(String label, bool selected, VoidCallback onTap) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 18.h),
-        decoration: ShapeDecoration(
-          color: selected ? primary.withValues(alpha: 0.08) : Colors.white,
-          shape: squircleBorder(
-            radius: 100.r,
-            side: BorderSide(
-              color: selected ? primary : kBorderDefault,
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-        ),
-        child: Text(label,
-            style: AppTextStyles.bodyMedium13
-                .copyWith(color: selected ? primary : kTextPrimary)),
-      ),
-    );
-  }
+  Widget _chip(String label, bool selected, VoidCallback onTap) =>
+      SelectableChip(
+          label: label, selected: selected, onTap: onTap, dense: true);
 
   @override
   Widget build(BuildContext context) {

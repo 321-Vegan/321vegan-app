@@ -241,7 +241,14 @@ class _SelectionMapPageState extends State<SelectionMapPage>
                 userAgentPackageName: 'fr.321vegan.app',
                 tileProvider: _tileProvider,
               ),
-              // Above the carousel, which covers the bottom of the map
+              MarkerLayer(markers: [
+                // The current pin drawn last, above the others
+                for (var i = 0; i < _items.length; i++)
+                  if (i != _current) _marker(i),
+                if (_items.isNotEmpty) _marker(_current),
+              ]),
+              // Above the carousel, which covers the bottom of the map, and
+              // the pins, which would hide it once opened
               Padding(
                 padding: EdgeInsets.only(bottom: overlay),
                 child: const RichAttributionWidget(
@@ -252,12 +259,6 @@ class _SelectionMapPageState extends State<SelectionMapPage>
                   ],
                 ),
               ),
-              MarkerLayer(markers: [
-                // The current pin drawn last, above the others
-                for (var i = 0; i < _items.length; i++)
-                  if (i != _current) _marker(i),
-                if (_items.isNotEmpty) _marker(_current),
-              ]),
             ],
           ),
           Positioned(

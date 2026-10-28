@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:vegan_app/helpers/external_links.dart';
 import 'package:vegan_app/models/restaurants/restaurant.dart';
 import 'package:vegan_app/models/restaurants/restaurant_review.dart';
 import 'package:vegan_app/services/auth_service.dart';
@@ -16,6 +16,7 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/restaurants/photo_viewer_page.dart';
 import 'package:vegan_app/widgets/restaurants/create_restaurant_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_labels.dart';
+import 'package:vegan_app/widgets/restaurants/restaurant_photo_thumbnail.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_report_sheets.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_share.dart';
 import 'package:vegan_app/widgets/restaurants/selection_sheets.dart';
@@ -147,20 +148,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     if (mounted) setState(() => _summary = summary);
   }
 
-  // ── Links ─────────────────────────────────────────────────────────────────
-
-  Future<void> _launch(Uri url) async {
-    final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
-    if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Impossible d\'ouvrir le lien.',
-              style: TextStyle(fontSize: 44.sp)),
-        ),
-      );
-    }
-  }
-
   /// Optimistic: flips right away, back on failure.
   Future<void> _toggleSaved() async {
     final saved = !_isSaved;
@@ -205,14 +192,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   /// first stop).
   void _openItinerary() {
     final stop = _restaurant.todayStop(DateTime.now());
-    _openItineraryTo(stop?.latitude ?? _restaurant.latitude,
+    openItinerary(context, stop?.latitude ?? _restaurant.latitude,
         stop?.longitude ?? _restaurant.longitude);
   }
-
-  void _openItineraryTo(double latitude, double longitude) => _launch(Uri.parse(
-        'https://www.google.com/maps/dir/?api=1'
-        '&destination=$latitude,$longitude',
-      ));
 
   /// A full URL, a URL without scheme ("instagram.com/resto", or the
   /// website itself when [site] is the value), or a handle on [site] —
@@ -352,7 +334,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         }),
     ]);
 
-    final paginated = results[0] as RestaurantReviewPaginated?;
+    final paginated = results[0] as Paged<RestaurantReview>?;
     final myReview = _isLoggedIn ? results[1] as RestaurantReview? : null;
 
     if (!mounted) return;
@@ -594,7 +576,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
           IconButton(
             icon: Icon(Icons.directions_outlined, color: primary),
             tooltip: 'Itinéraire',
-            onPressed: () => _openItineraryTo(stop.latitude, stop.longitude),
+            onPressed: () =>
+                openItinerary(context, stop.latitude, stop.longitude),
           ),
         ],
       ),
@@ -603,7 +586,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   Widget _contactRow(IconData icon, String label, Uri url) {
     return InkWell(
-      onTap: () => _launch(url),
+      onTap: () => openExternalUrl(context, url),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 14.h),
         child: Row(
@@ -804,45 +787,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   // ── Photos tab ────────────────────────────────────────────────────────────
 
-  Widget _thumbnail(List<RestaurantPhoto> gallery, int index, double size) {
-    final photo = gallery[index];
-    return GestureDetector(
-      onTap: () => PhotoViewerPage.open(context, gallery, index),
-      child: Stack(
-        children: [
-          ClipSmoothRect(
-            radius: squircleRadius(24.r),
-            child: CachedNetworkImage(
-              imageUrl: photo.url,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              placeholder: (_, __) => Container(color: Colors.grey[200]),
-              errorWidget: (_, __, ___) => Container(
-                color: Colors.grey[200],
-                child: Icon(Icons.image, color: Colors.grey[400]),
-              ),
-            ),
-          ),
-          if (photo.isPending)
-            Positioned(
-              left: 6,
-              bottom: 6,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                decoration: ShapeDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  shape: const StadiumBorder(),
-                ),
-                child: Text('En attente',
-                    style: TextStyle(fontSize: 30.sp, color: Colors.white)),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Widget _photoGrid(String title, List<RestaurantPhoto> photos) {
     return _section(
       title,
@@ -858,7 +802,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                 runSpacing: 18.w,
                 children: [
                   for (var i = 0; i < photos.length; i++)
-                    _thumbnail(photos, i, size),
+                    RestaurantPhotoThumbnail(
+                        photos: photos, index: i, size: size),
                 ],
               );
             }),

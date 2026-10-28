@@ -664,6 +664,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     }
   }
 
+  /// Height of [_buildLayerToggle]: its padding, its segments' and their
+  /// 48.sp icon (the label is shorter).
+  double get _layerToggleHeight => 2 * 9.w + 2 * 21.h + 48.sp;
+
   Widget _buildLayerToggle() {
     final primary = Theme.of(context).colorScheme.primary;
 
@@ -768,13 +772,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                 userAgentPackageName: 'fr.321vegan.app',
                 tileProvider: _tileProvider,
               ),
-              const RichAttributionWidget(
-                showFlutterMapAttribution: false,
-                alignment: AttributionAlignment.bottomLeft,
-                attributions: [
-                  TextSourceAttribution('OpenStreetMap contributors'),
-                ],
-              ),
               if (_userLocation != null)
                 AnimatedBuilder(
                   animation: _pulseAnimation,
@@ -824,6 +821,23 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                       ),
                     );
                   },
+                ),
+              ),
+              // Last layer, above the pins, and above the layer switch
+              // (drawn over the map) so it opens clear of it. It must stay
+              // in the map: it closes when the map moves.
+              Padding(
+                padding: EdgeInsets.only(
+                  bottom: !_isPicking && AuthService.isLoggedIn
+                      ? 24 + _layerToggleHeight + 12.h
+                      : 0,
+                ),
+                child: const RichAttributionWidget(
+                  showFlutterMapAttribution: false,
+                  alignment: AttributionAlignment.bottomLeft,
+                  attributions: [
+                    TextSourceAttribution('OpenStreetMap contributors'),
+                  ],
                 ),
               ),
             ],

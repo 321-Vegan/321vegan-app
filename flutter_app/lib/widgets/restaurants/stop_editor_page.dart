@@ -13,6 +13,7 @@ import '../shared/app_background.dart';
 import '../shared/app_button.dart';
 import '../shared/app_text_field.dart';
 import '../shared/form_error_banner.dart';
+import '../shared/form_section.dart';
 import 'opening_hours_editor.dart';
 import 'pin_picker_page.dart';
 
@@ -198,25 +199,8 @@ class _StopEditorPageState extends State<StopEditorPage> {
     ));
   }
 
-  Widget _section(String title, List<Widget> children, {String? subtitle}) {
-    return Padding(
-      padding: EdgeInsets.only(top: AppSpacing.section),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(title, style: AppTextStyles.baloo22),
-          if (subtitle != null) ...[
-            SizedBox(height: 6.h),
-            Text(subtitle,
-                style: AppTextStyles.bodyRegular13
-                    .copyWith(color: Colors.grey[600])),
-          ],
-          SizedBox(height: 24.h),
-          ...children,
-        ],
-      ),
-    );
-  }
+  Widget _section(String title, List<Widget> children, {String? subtitle}) =>
+      FormSection(title: title, subtitle: subtitle, children: children);
 
   Widget _gap() => SizedBox(height: 24.h);
 

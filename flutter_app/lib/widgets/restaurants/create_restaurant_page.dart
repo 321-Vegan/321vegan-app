@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show File;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,8 +19,11 @@ import '../shared/app_dialog.dart';
 import '../shared/animated_reveal.dart';
 import '../shared/app_text_field.dart';
 import '../shared/form_error_banner.dart';
+import '../shared/form_section.dart';
 import '../shared/info_box.dart';
+import '../shared/photo_tile.dart';
 import '../shared/picked_photos_row.dart';
+import '../shared/selectable_chip.dart';
 import '../../helpers/osm_place_info.dart';
 import '../../helpers/restaurant_drafts.dart';
 import 'opening_hours_editor.dart';
@@ -973,74 +975,25 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
 
   // ── Build helpers ─────────────────────────────────────────────────────────
 
-  /// [isRequired] adds a red asterisk after [title].
   Widget _section(String title, List<Widget> children,
-      {String? subtitle, bool isRequired = false}) {
-    return Padding(
-      padding: EdgeInsets.only(top: AppSpacing.section),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text.rich(
-            TextSpan(children: [
-              TextSpan(text: title),
-              if (isRequired)
-                const TextSpan(
-                  text: ' *',
-                  style: TextStyle(color: kSemanticError),
-                ),
-            ]),
-            style: AppTextStyles.baloo22,
-          ),
-          if (subtitle != null) ...[
-            SizedBox(height: 6.h),
-            Text(subtitle,
-                style: AppTextStyles.bodyRegular13
-                    .copyWith(color: Colors.grey[600])),
-          ],
-          SizedBox(height: 24.h),
-          ...children,
-        ],
-      ),
-    );
-  }
+          {String? subtitle, bool isRequired = false}) =>
+      FormSection(
+        title: title,
+        subtitle: subtitle,
+        isRequired: isRequired,
+        children: children,
+      );
 
-  /// [icon] (in [iconColor]) before the label, e.g. a kind of place's.
+  /// Locked while sending.
   Widget _choiceChip(String label, bool selected, VoidCallback onTap,
-      {IconData? icon, Color? iconColor}) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return GestureDetector(
-      onTap: _isSubmitting ? null : onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 24.h),
-        decoration: ShapeDecoration(
-          color: selected ? primary.withValues(alpha: 0.08) : Colors.white,
-          shape: squircleBorder(
-            radius: 100.r,
-            side: BorderSide(
-              color: selected ? primary : kBorderDefault,
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 42.sp, color: iconColor),
-              SizedBox(width: 12.w),
-            ],
-            Text(
-              label,
-              style: AppTextStyles.bodyMedium13
-                  .copyWith(color: selected ? primary : kTextPrimary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+          {IconData? icon, Color? iconColor}) =>
+      SelectableChip(
+        label: label,
+        selected: selected,
+        onTap: _isSubmitting ? null : onTap,
+        icon: icon,
+        iconColor: iconColor,
+      );
 
   Widget _gap() => SizedBox(height: 24.h);
 
@@ -1065,7 +1018,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
             for (final photo in _removablePhotos)
               Builder(builder: (context) {
                 final marked = _photosToRemove.contains(photo.id);
-                return GestureDetector(
+                return PhotoTile(
+                  image: CachedNetworkImageProvider(photo.url),
+                  size: size,
+                  outline: marked ? kSemanticError : null,
+                  opacity: marked ? 0.4 : 1,
                   onTap: _isSubmitting
                       ? null
                       : () => setState(() {
@@ -1079,52 +1036,21 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               }
                             }
                           }),
-                  child: Container(
-                    width: size,
-                    height: size,
-                    foregroundDecoration: ShapeDecoration(
-                      shape: squircleBorder(
-                        radius: 30.r,
-                        side: marked
-                            ? const BorderSide(color: kSemanticError, width: 3)
-                            : BorderSide.none,
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        ClipSmoothRect(
-                          radius: squircleRadius(30.r),
-                          child: Opacity(
-                            opacity: marked ? 0.4 : 1,
-                            child: CachedNetworkImage(
-                              imageUrl: photo.url,
-                              width: size,
-                              height: size,
-                              fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) => Container(
-                                width: size,
-                                height: size,
-                                color: Colors.grey[200],
-                              ),
-                            ),
-                          ),
+                  overlays: [
+                    if (marked)
+                      Positioned.fill(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.delete_outline,
+                                size: 72.sp, color: kSemanticError),
+                            Text('À retirer',
+                                style: AppTextStyles.bodyBold13
+                                    .copyWith(color: kSemanticError)),
+                          ],
                         ),
-                        if (marked)
-                          Positioned.fill(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.delete_outline,
-                                    size: 72.sp, color: kSemanticError),
-                                Text('À retirer',
-                                    style: AppTextStyles.bodyBold13
-                                        .copyWith(color: kSemanticError)),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                      ),
+                  ],
                 );
               }),
           ],
@@ -1153,53 +1079,13 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       children: [
         for (final photo in _removablePhotos)
           if (!_photosToRemove.contains(photo.id))
-            GestureDetector(
+            PhotoTile(
+              image: CachedNetworkImageProvider(photo.url),
+              size: size,
+              featured: photo.id == _featuredId,
               onTap: _isSubmitting
                   ? null
                   : () => setState(() => _proposedFeaturedId = photo.id),
-              child: Stack(
-                children: [
-                  Container(
-                    foregroundDecoration: photo.id == _featuredId
-                        ? ShapeDecoration(
-                            shape: squircleBorder(
-                              radius: 30.r,
-                              side: const BorderSide(
-                                  color: kAccentYellow, width: 3),
-                            ),
-                          )
-                        : null,
-                    child: ClipSmoothRect(
-                      radius: squircleRadius(30.r),
-                      child: CachedNetworkImage(
-                        imageUrl: photo.url,
-                        width: size,
-                        height: size,
-                        fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => Container(
-                          width: size,
-                          height: size,
-                          color: Colors.grey[200],
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (photo.id == _featuredId)
-                    Positioned(
-                      left: 6,
-                      bottom: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          color: kAccentYellow,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.star_rounded,
-                            color: Colors.white, size: 16),
-                      ),
-                    ),
-                ],
-              ),
             ),
       ],
     );

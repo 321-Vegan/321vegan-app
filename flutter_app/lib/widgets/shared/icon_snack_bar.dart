@@ -1,6 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
+
+/// Shows [text] in a green snack bar, or a red one with [error], in place
+/// of the one shown.
+void showResultSnackBar(BuildContext context, String text,
+    {bool error = false}) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(
+      content: Text(text),
+      backgroundColor: error ? kSemanticError : kSemanticSuccess,
+    ));
+}
 
 /// Snack bar with a white [icon] before the [message], and an optional
 /// white pill button ([actionLabel]) at the end, in the snack bar's [color].

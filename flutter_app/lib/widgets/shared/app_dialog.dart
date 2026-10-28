@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 import 'app_button.dart';
@@ -37,6 +38,31 @@ class AppDialog extends StatelessWidget {
     this.onSecondary,
     this.secondaryColor,
   });
+
+  /// Asks to confirm an action: [confirmLabel] (red when [destructive],
+  /// e.g. a deletion) or "Annuler". True if confirmed.
+  static Future<bool> confirm(
+    BuildContext context, {
+    required String title,
+    String? message,
+    required String confirmLabel,
+    bool destructive = false,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AppDialog(
+        image: 'lib/assets/images/characters/cow-mby.webp',
+        title: title,
+        message: message,
+        primaryLabel: confirmLabel,
+        primaryColor: destructive ? kSemanticError : null,
+        onPrimary: () => Navigator.of(ctx).pop(true),
+        secondaryLabel: 'Annuler',
+        onSecondary: () => Navigator.of(ctx).pop(false),
+      ),
+    );
+    return confirmed == true;
+  }
 
   @override
   Widget build(BuildContext context) {

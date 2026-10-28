@@ -9,7 +9,6 @@ import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
-import '../shared/app_dialog.dart';
 import '../shared/app_text_field.dart';
 import '../shared/bottom_sheet_shell.dart';
 import '../shared/form_error_banner.dart';
@@ -31,30 +30,6 @@ Future<T?> _showSheet<T>(BuildContext context, Widget sheet) {
     backgroundColor: Colors.transparent,
     builder: (_) => sheet,
   );
-}
-
-/// Asks to confirm a destructive action (delete, refuse...). True if
-/// confirmed.
-Future<bool> confirmSelectionAction(
-  BuildContext context, {
-  required String title,
-  required String message,
-  required String confirmLabel,
-}) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (dialogContext) => AppDialog(
-      image: 'lib/assets/images/characters/cow-mby.webp',
-      title: title,
-      message: message,
-      primaryLabel: confirmLabel,
-      primaryColor: kSemanticError,
-      onPrimary: () => Navigator.of(dialogContext).pop(true),
-      secondaryLabel: 'Annuler',
-      onSecondary: () => Navigator.of(dialogContext).pop(false),
-    ),
-  );
-  return confirmed == true;
 }
 
 // ── Send ─────────────────────────────────────────────────────────────────────

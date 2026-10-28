@@ -20,6 +20,7 @@ import '../shared/app_button.dart';
 import '../shared/app_dialog.dart';
 import '../shared/app_text_field.dart';
 import '../shared/form_error_banner.dart';
+import '../shared/icon_snack_bar.dart';
 import '../shared/photo_picker_box.dart';
 import '../shared/photo_source_sheet.dart';
 import '../shared/search_field.dart';
@@ -281,14 +282,8 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
     _onItemsChanged();
   }
 
-  void _snack(String text, {bool error = false}) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(text),
-        backgroundColor: error ? kSemanticError : kSemanticSuccess,
-      ));
-  }
+  void _snack(String text, {bool error = false}) =>
+      showResultSnackBar(context, text, error: error);
 
   // ── Cover ────────────────────────────────────────────────────────────────
 
@@ -403,20 +398,14 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
       _snack('Ajoutez au moins un lieu pour la rendre publique.', error: true);
       return;
     }
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AppDialog(
-        image: 'lib/assets/images/characters/cow-mby.webp',
-        title: 'Rendre la sélection publique ?',
-        message: 'Tout le monde pourra la voir, avec votre pseudo, et '
-            'l\'ajouter à ses lieux. Ce choix est définitif.',
-        primaryLabel: 'Rendre publique',
-        onPrimary: () => Navigator.of(ctx).pop(true),
-        secondaryLabel: 'Annuler',
-        onSecondary: () => Navigator.of(ctx).pop(false),
-      ),
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Rendre la sélection publique ?',
+      message: 'Tout le monde pourra la voir, avec votre pseudo, et '
+          'l\'ajouter à ses lieux. Ce choix est définitif.',
+      confirmLabel: 'Rendre publique',
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
     if (_isNew) {
       setState(() => _isPublic = true);
       return;

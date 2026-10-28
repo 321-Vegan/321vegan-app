@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../themes/app_colors.dart';
-import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
 import '../shared/bottom_sheet_shell.dart';
+import '../shared/selectable_chip.dart';
 import 'restaurant_labels.dart';
 
 /// Filters of the map's restaurant layer. [openNow] is applied app-side
@@ -78,36 +78,14 @@ class _RestaurantFilterSheetState extends State<_RestaurantFilterSheet> {
   /// [icon] (in [iconColor]) before the label, as in the creation form.
   Widget _tagChip(Set<String> values, String value, String label,
       {IconData? icon, Color? iconColor}) {
-    final primary = Theme.of(context).colorScheme.primary;
     final selected = values.contains(value);
-    return GestureDetector(
+    return SelectableChip(
+      label: label,
+      selected: selected,
       onTap: () =>
           setState(() => selected ? values.remove(value) : values.add(value)),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 36.w, vertical: 21.h),
-        decoration: ShapeDecoration(
-          color: selected ? primary.withValues(alpha: 0.08) : Colors.white,
-          shape: squircleBorder(
-            radius: 100.r,
-            side: BorderSide(
-              color: selected ? primary : kBorderDefault,
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: 42.sp, color: iconColor),
-              SizedBox(width: 12.w),
-            ],
-            Text(label,
-                style: AppTextStyles.bodyMedium13
-                    .copyWith(color: selected ? primary : kTextPrimary)),
-          ],
-        ),
-      ),
+      icon: icon,
+      iconColor: iconColor,
     );
   }
 

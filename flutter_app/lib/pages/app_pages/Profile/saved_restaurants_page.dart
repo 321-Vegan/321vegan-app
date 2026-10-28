@@ -16,9 +16,9 @@ import 'package:vegan_app/widgets/restaurants/saved_places_welcome_modal.dart';
 import 'package:vegan_app/widgets/restaurants/selection_card.dart';
 import 'package:vegan_app/widgets/restaurants/selection_editor_page.dart';
 import 'package:vegan_app/widgets/restaurants/selection_page.dart';
-import 'package:vegan_app/widgets/restaurants/selection_sheets.dart';
 import 'package:vegan_app/widgets/shared/app_background.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
+import 'package:vegan_app/widgets/shared/app_dialog.dart';
 import 'package:vegan_app/widgets/shared/empty_state_view.dart';
 import 'package:vegan_app/widgets/shared/icon_snack_bar.dart';
 import 'package:vegan_app/widgets/shared/paginated_list_view.dart';
@@ -230,8 +230,7 @@ class _SavedRestaurantsPageState extends State<SavedRestaurantsPage>
                 emptySubtitle: 'Sauvegardez un lieu depuis sa fiche sur la '
                     'carte pour le retrouver ici.',
                 errorTitle: 'Impossible de charger vos lieux sauvegardés',
-                isVisible: (restaurant) =>
-                    !_removedIds.contains(restaurant.id),
+                isVisible: (restaurant) => !_removedIds.contains(restaurant.id),
                 itemBuilder: (context, restaurant, reload) =>
                     RestaurantListCard(
                   restaurant: restaurant,
@@ -308,14 +307,8 @@ class _SelectionsTabState extends State<_SelectionsTab>
     }
   }
 
-  void _snack(String text, {bool error = false}) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(text),
-        backgroundColor: error ? kSemanticError : kSemanticSuccess,
-      ));
-  }
+  void _snack(String text, {bool error = false}) =>
+      showResultSnackBar(context, text, error: error);
 
   Future<void> _open(RestaurantSelection selection) async {
     await SelectionPage.open(context, selection);
@@ -352,12 +345,14 @@ class _SelectionsTabState extends State<_SelectionsTab>
   }
 
   Future<void> _refuse(RestaurantSelection selection) async {
-    final confirmed = await confirmSelectionAction(
+    final confirmed = await AppDialog.confirm(
       context,
       title: 'Refuser la sélection ?',
-      message: 'Elle n\'apparaîtra plus, il faudra que ${selection.ownerNickname} '
+      message:
+          'Elle n\'apparaîtra plus, il faudra que ${selection.ownerNickname} '
           'vous l\'envoie à nouveau.',
       confirmLabel: 'Refuser',
+      destructive: true,
     );
     if (!confirmed || !mounted) return;
     setState(() => _answering.add(selection.id));
@@ -444,8 +439,8 @@ class _SelectionsTabState extends State<_SelectionsTab>
             ),
           ]),
           if (accepted.isNotEmpty)
-            ..._section(
-                'Sélections sauvegardées', [for (final s in accepted) _card(s)]),
+            ..._section('Sélections sauvegardées',
+                [for (final s in accepted) _card(s)]),
         ],
       ),
     );

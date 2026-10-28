@@ -173,13 +173,8 @@ class _RestaurantReviewsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PaginatedListView<RestaurantReview>(
-      loadPage: (page) async {
-        final result = await RestaurantApiService.getMyReviews(
-            page: page, pageSize: _pageSize);
-        return result == null
-            ? null
-            : (items: result.items, pages: result.pages);
-      },
+      loadPage: (page) =>
+          RestaurantApiService.getMyReviews(page: page, pageSize: _pageSize),
       emptyTitle: 'Aucun avis',
       emptySubtitle:
           'Donnez votre avis sur un restaurant depuis la carte pour le retrouver ici.',
@@ -363,13 +358,8 @@ class _SuggestionsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PaginatedListView<RestaurantSuggestion>(
-      loadPage: (page) async {
-        final result = await RestaurantApiService.getMySuggestions(
-            page: page, pageSize: _pageSize);
-        return result == null
-            ? null
-            : (items: result.items, pages: result.pages);
-      },
+      loadPage: (page) => RestaurantApiService.getMySuggestions(
+          page: page, pageSize: _pageSize),
       emptyTitle: 'Aucune proposition',
       emptySubtitle: 'Depuis la fiche d\'un restaurant, menu « … », proposez '
           'une correction pour la retrouver ici.',
@@ -387,21 +377,15 @@ class _SuggestionCard extends StatelessWidget {
   const _SuggestionCard({required this.suggestion, required this.onWithdrawn});
 
   Future<void> _withdraw(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AppDialog(
-        image: 'lib/assets/images/characters/cow-mby.webp',
-        title: 'Retirer la proposition ?',
-        message: 'Elle ne sera pas vérifiée par l\'équipe. Vous pourrez en '
-            'faire une nouvelle depuis la fiche du lieu.',
-        primaryLabel: 'Retirer',
-        primaryColor: kSemanticError,
-        onPrimary: () => Navigator.of(ctx).pop(true),
-        secondaryLabel: 'Annuler',
-        onSecondary: () => Navigator.of(ctx).pop(false),
-      ),
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: 'Retirer la proposition ?',
+      message: 'Elle ne sera pas vérifiée par l\'équipe. Vous pourrez en '
+          'faire une nouvelle depuis la fiche du lieu.',
+      confirmLabel: 'Retirer',
+      destructive: true,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     final ok = await RestaurantApiService.withdrawSuggestion(suggestion.id);
     if (!context.mounted) return;
     if (ok) {

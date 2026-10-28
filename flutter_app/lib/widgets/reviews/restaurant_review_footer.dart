@@ -1,12 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/restaurants/restaurant_review.dart';
 import '../../themes/app_colors.dart';
-import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
-import '../restaurants/photo_viewer_page.dart';
+import '../restaurants/restaurant_photo_thumbnail.dart';
 
 /// Under a restaurant review's comment ([ReviewCard.footer]): the criteria
 /// rated and the price per person, then its photos (opening the viewer).
@@ -36,45 +33,6 @@ class RestaurantReviewFooter extends StatelessWidget {
 
   bool get _isEmpty =>
       _rated.isEmpty && review.priceRange == null && review.photos.isEmpty;
-
-  Widget _thumbnail(BuildContext context, int index, double size) {
-    final photo = review.photos[index];
-    return GestureDetector(
-      onTap: () => PhotoViewerPage.open(context, review.photos, index),
-      child: Stack(
-        children: [
-          ClipSmoothRect(
-            radius: squircleRadius(24.r),
-            child: CachedNetworkImage(
-              imageUrl: photo.url,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              placeholder: (_, __) => Container(color: Colors.grey[200]),
-              errorWidget: (_, __, ___) => Container(
-                color: Colors.grey[200],
-                child: Icon(Icons.image, color: Colors.grey[400]),
-              ),
-            ),
-          ),
-          if (photo.isPending)
-            Positioned(
-              left: 6,
-              bottom: 6,
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                decoration: ShapeDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  shape: const StadiumBorder(),
-                ),
-                child: Text('En attente',
-                    style: TextStyle(fontSize: 30.sp, color: Colors.white)),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +80,8 @@ class RestaurantReviewFooter extends StatelessWidget {
             runSpacing: 12.w,
             children: [
               for (var i = 0; i < review.photos.length; i++)
-                _thumbnail(context, i, 160.w),
+                RestaurantPhotoThumbnail(
+                    photos: review.photos, index: i, size: 160.w),
             ],
           ),
         ],

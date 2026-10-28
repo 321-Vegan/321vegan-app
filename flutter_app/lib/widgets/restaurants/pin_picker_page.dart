@@ -47,12 +47,19 @@ class _PinPickerPageState extends State<PinPickerPage> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'fr.321vegan.app',
               ),
-              const RichAttributionWidget(
-                showFlutterMapAttribution: false,
-                alignment: AttributionAlignment.bottomLeft,
-                attributions: [
-                  TextSourceAttribution('OpenStreetMap contributors')
-                ],
+              // Above the button (drawn over the map), which would hide it
+              // once opened: its offset, plus its height (AppButton's
+              // padding and icon). It must stay in the map: it closes when
+              // the map moves.
+              Padding(
+                padding: EdgeInsets.only(bottom: 48.h + 2 * 39.h + 20 + 12.h),
+                child: const RichAttributionWidget(
+                  showFlutterMapAttribution: false,
+                  alignment: AttributionAlignment.bottomLeft,
+                  attributions: [
+                    TextSourceAttribution('OpenStreetMap contributors'),
+                  ],
+                ),
               ),
             ],
           ),

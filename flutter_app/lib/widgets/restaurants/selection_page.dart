@@ -10,6 +10,8 @@ import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_background.dart';
 import '../shared/app_button.dart';
+import '../shared/app_dialog.dart';
+import '../shared/icon_snack_bar.dart';
 import '../shared/empty_state_view.dart';
 import '../shared/square_icon_button.dart';
 import '../shared/tag_chip.dart';
@@ -71,14 +73,8 @@ class _SelectionPageState extends State<SelectionPage> {
     });
   }
 
-  void _snack(String text, {bool error = false}) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(text),
-        backgroundColor: error ? kSemanticError : kSemanticSuccess,
-      ));
-  }
+  void _snack(String text, {bool error = false}) =>
+      showResultSnackBar(context, text, error: error);
 
   /// With what the author wrote about it, if anything.
   Future<void> _openRestaurant(RestaurantSelectionItem item) =>
@@ -116,13 +112,14 @@ class _SelectionPageState extends State<SelectionPage> {
   }
 
   Future<void> _delete() async {
-    final confirmed = await confirmSelectionAction(
+    final confirmed = await AppDialog.confirm(
       context,
       title: 'Supprimer la sélection ?',
       message: _selection.isPublic
           ? 'Les personnes qui l\'ont ajoutée à leurs lieux ne la verront plus.'
           : 'Les personnes à qui vous l\'avez envoyée ne la verront plus.',
       confirmLabel: 'Supprimer',
+      destructive: true,
     );
     if (!confirmed || !mounted) return;
     final ok = await RestaurantApiService.deleteSelection(_selection.id);
@@ -155,14 +152,15 @@ class _SelectionPageState extends State<SelectionPage> {
   Future<void> _remove() async {
     final pending = _selection.isPending;
     final isPublic = _selection.isPublic;
-    final confirmed = await confirmSelectionAction(
+    final confirmed = await AppDialog.confirm(
       context,
       title: pending ? 'Refuser la sélection ?' : 'Se désabonner ?',
       message: isPublic
           ? 'Elle disparaîtra de vos lieux sauvegardés. Vous pourrez vous '
               'y abonner à nouveau depuis les sélections publiques.'
-          : 'Elle ne n\'apparaîtra plus !',
+          : 'Elle n\'apparaîtra plus !',
       confirmLabel: pending ? 'Refuser' : 'Se désabonner',
+      destructive: true,
     );
     if (!confirmed || !mounted) return;
     setState(() => _isAnswering = true);

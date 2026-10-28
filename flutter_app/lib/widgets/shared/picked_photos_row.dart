@@ -1,10 +1,10 @@
 import 'dart:io' show File;
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import 'photo_source_sheet.dart';
+import 'photo_tile.dart';
 
 /// Thumbnails of the photos picked for an upload, each with a remove
 /// button, followed by an "add" tile while fewer than [max] are picked.
@@ -42,43 +42,14 @@ class PickedPhotosRow extends StatelessWidget {
       runSpacing: 24.w,
       children: [
         for (final photo in photos)
-          Stack(
-            children: [
-              GestureDetector(
-                onTap: enabled && onFeaturedChanged != null
-                    ? () => onFeaturedChanged!(photo)
-                    : null,
-                child: Container(
-                  foregroundDecoration: photo == featured
-                      ? ShapeDecoration(
-                          shape: squircleBorder(
-                            radius: 30.r,
-                            side: const BorderSide(
-                                color: kAccentYellow, width: 3),
-                          ),
-                        )
-                      : null,
-                  child: ClipSmoothRect(
-                    radius: squircleRadius(30.r),
-                    child: Image.file(photo,
-                        width: size, height: size, fit: BoxFit.cover),
-                  ),
-                ),
-              ),
-              if (photo == featured)
-                Positioned(
-                  left: 6,
-                  bottom: 6,
-                  child: Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: const BoxDecoration(
-                      color: kAccentYellow,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.star_rounded,
-                        color: Colors.white, size: 16),
-                  ),
-                ),
+          PhotoTile(
+            image: FileImage(photo),
+            size: size,
+            featured: photo == featured,
+            onTap: enabled && onFeaturedChanged != null
+                ? () => onFeaturedChanged!(photo)
+                : null,
+            overlays: [
               if (enabled)
                 Positioned(
                   top: 6,
