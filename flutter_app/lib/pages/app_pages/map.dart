@@ -10,7 +10,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
-import 'package:vegan_app/helpers/restaurant_drafts.dart';
 import 'package:vegan_app/models/restaurants/restaurant.dart';
 import 'package:vegan_app/models/shops/shop.dart';
 import 'package:vegan_app/pages/app_pages/Profile/saved_restaurants_page.dart';
@@ -31,7 +30,6 @@ import 'package:vegan_app/widgets/map/map_restaurant_list_page.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
 import 'package:vegan_app/widgets/restaurants/create_restaurant_page.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_detail_page.dart';
-import 'package:vegan_app/widgets/restaurants/restaurant_drafts_list.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_filter_sheet.dart';
 import 'package:vegan_app/widgets/restaurants/restaurant_pin.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
@@ -543,20 +541,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   /// Opens the creation form, after offering to go on with a draft saved
   /// on this device.
   Future<void> _createRestaurant() async {
-    RestaurantDraft? draft;
-    final drafts = await RestaurantDrafts.all();
-    if (!mounted) return;
-    if (drafts.isNotEmpty) {
-      final choice = await showRestaurantDraftPicker(context, drafts);
-      if (choice == null || !mounted) return;
-      draft = choice.draft;
-    }
-    final result = await Navigator.of(context).push<Object>(
-      MaterialPageRoute(
-        builder: (_) => CreateRestaurantPage(
-            mapCenter: _mapController.camera.center, draft: draft),
-      ),
-    );
+    final result = await CreateRestaurantPage.open(context,
+        mapCenter: _mapController.camera.center);
     if (!mounted) return;
     // Already referenced: show where, among the places pins
     if (result is LatLng) {

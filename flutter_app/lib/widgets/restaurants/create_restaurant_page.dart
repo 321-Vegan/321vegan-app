@@ -29,6 +29,7 @@ import '../../helpers/restaurant_drafts.dart';
 import 'opening_hours_editor.dart';
 import 'pin_picker_page.dart';
 import 'restaurant_detail_page.dart';
+import 'restaurant_drafts_list.dart';
 import 'restaurant_labels.dart';
 import 'restaurant_pin.dart';
 import 'stop_editor_page.dart';
@@ -63,6 +64,28 @@ class CreateRestaurantPage extends StatefulWidget {
       : original = restaurant,
         draft = null,
         mapCenter = LatLng(restaurant.latitude, restaurant.longitude);
+
+  /// Opens the creation form, first offering to go on with a saved draft
+  /// if there are any. Completes with what the form popped: `true` once
+  /// sent, the [LatLng] of a place already referenced there, null when
+  /// left.
+  static Future<Object?> open(BuildContext context,
+      {required LatLng mapCenter}) async {
+    RestaurantDraft? draft;
+    final drafts = await RestaurantDrafts.all();
+    if (!context.mounted) return null;
+    if (drafts.isNotEmpty) {
+      final choice = await showRestaurantDraftPicker(context, drafts);
+      if (choice == null || !context.mounted) return null;
+      draft = choice.draft;
+    }
+    return Navigator.of(context).push<Object>(
+      MaterialPageRoute(
+        builder: (_) =>
+            CreateRestaurantPage(mapCenter: mapCenter, draft: draft),
+      ),
+    );
+  }
 
   @override
   State<CreateRestaurantPage> createState() => _CreateRestaurantPageState();

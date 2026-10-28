@@ -7,6 +7,7 @@ import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../models/restaurants/restaurant_selection.dart';
@@ -25,6 +26,7 @@ import '../shared/photo_picker_box.dart';
 import '../shared/photo_source_sheet.dart';
 import '../shared/search_field.dart';
 import '../settings/settings_toggle_tile.dart';
+import 'create_restaurant_page.dart';
 import 'selection_sheets.dart';
 
 /// Where the autosave of an existing selection stands.
@@ -956,6 +958,46 @@ class _RestaurantPickerPageState extends State<_RestaurantPickerPage> {
     });
   }
 
+  /// The place searched isn't listed: the user adds it. Once sent, it can
+  /// only be picked after validation; when it was already referenced, those
+  /// places show to pick from.
+  Future<void> _createPlace() async {
+    final result = await CreateRestaurantPage.open(context,
+        // Where the pin picker starts without a position: France
+        mapCenter: const LatLng(46.2276, 2.2137));
+    if (!mounted) return;
+    if (result is LatLng) {
+      await _showReferenced(result);
+    } else if (result == true) {
+      showResultSnackBar(
+          context,
+          'Merci ! Vous pourrez ajouter le lieu à votre sélection une fois '
+          'validé.');
+    }
+  }
+
+  /// The places referenced at [position], the validated ones being the
+  /// only ones a selection takes.
+  Future<void> _showReferenced(LatLng position) async {
+    final nearby = await RestaurantApiService.getNearbyRestaurants(
+        latitude: position.latitude, longitude: position.longitude);
+    if (!mounted) return;
+    final validated = [...?nearby?.where((r) => r.validated)];
+    if (validated.isEmpty) {
+      showResultSnackBar(
+          context,
+          'Ce lieu attend encore sa validation : vous pourrez l\'ajouter '
+          'ensuite.');
+      return;
+    }
+    _debounce?.cancel();
+    setState(() {
+      _isSearching = false;
+      _hasError = false;
+      _results = validated;
+    });
+  }
+
   void _toggle(Restaurant restaurant) {
     setState(() {
       final index = _picked.indexWhere((r) => r.id == restaurant.id);
@@ -993,6 +1035,36 @@ class _RestaurantPickerPageState extends State<_RestaurantPickerPage> {
     );
   }
 
+  /// [text], and for a search that found nothing, the way to add the place.
+  Widget _buildEmpty(String text) {
+    // Scrolls when the keyboard leaves too little room
+    return Center(
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(text,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyRegular15
+                    .copyWith(color: Colors.grey[600])),
+            if (_isSearch && !_hasError) ...[
+              SizedBox(height: 48.h),
+              Text('Votre lieu préféré n\'est pas encore là ?',
+                  textAlign: TextAlign.center, style: AppTextStyles.bodyBold15),
+              SizedBox(height: 24.h),
+              AppButton(
+                label: 'Ajouter un lieu',
+                icon: Icons.add_location_alt_outlined,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                onPressed: _createPlace,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final list = _isSearch ? _results : _saved;
@@ -1012,7 +1084,7 @@ class _RestaurantPickerPageState extends State<_RestaurantPickerPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text('Ajouter des lieux', style: AppTextStyles.baloo22),
+          title: Text('Ajouter à ma sélection', style: AppTextStyles.baloo22),
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -1041,12 +1113,7 @@ class _RestaurantPickerPageState extends State<_RestaurantPickerPage> {
                   child: loading
                       ? const Center(child: CircularProgressIndicator())
                       : (list == null || list.isEmpty)
-                          ? Center(
-                              child: Text(emptyText,
-                                  textAlign: TextAlign.center,
-                                  style: AppTextStyles.bodyRegular15
-                                      .copyWith(color: Colors.grey[600])),
-                            )
+                          ? _buildEmpty(emptyText)
                           : ListView(
                               children: [for (final r in list) _row(r)],
                             ),
