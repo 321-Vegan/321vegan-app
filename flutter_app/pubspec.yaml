@@ -80,6 +80,7 @@ dependencies:
   vibration: ^3.2.0
   figma_squircle: ^0.6.3
   app_links: ^7.0.0
+  image_cropper: ^12.2.1
 
 dev_dependencies:
   flutter_test:

@@ -105,33 +105,6 @@ class _SelectionPageState extends State<SelectionPage> {
     }
   }
 
-  bool _isAddingPlaces = false;
-
-  /// Adds places at the end, straight from the picker.
-  Future<void> _addPlaces() async {
-    final picked = await pickSelectionRestaurants(context, _selection.items);
-    if (picked.isEmpty || !mounted) return;
-    setState(() => _isAddingPlaces = true);
-    final s = _selection;
-    final result = await RestaurantApiService.updateSelection(
-      id: s.id,
-      title: s.title,
-      description: s.description,
-      items: [
-        ...s.items,
-        for (final r in picked) RestaurantSelectionItem(restaurant: r),
-      ],
-    );
-    if (!mounted) return;
-    setState(() {
-      _isAddingPlaces = false;
-      if (result.selection != null) _selection = result.selection!;
-    });
-    if (result.selection == null) {
-      _snack('Impossible d\'ajouter les lieux, réessayez.', error: true);
-    }
-  }
-
   Future<void> _send() async {
     if (_selection.items.isEmpty) {
       _snack('Ajoutez au moins un lieu avant d\'envoyer la sélection.',
@@ -188,8 +161,7 @@ class _SelectionPageState extends State<SelectionPage> {
       message: isPublic
           ? 'Elle disparaîtra de vos lieux sauvegardés. Vous pourrez vous '
               'y abonner à nouveau depuis les sélections publiques.'
-          : 'Elle ne réapparaîtra pas, même si ${_selection.ownerNickname} '
-              'vous l\'envoie à nouveau.',
+          : 'Elle ne n\'apparaîtra plus !',
       confirmLabel: pending ? 'Refuser' : 'Se désabonner',
     );
     if (!confirmed || !mounted) return;
@@ -238,17 +210,9 @@ class _SelectionPageState extends State<SelectionPage> {
     );
   }
 
-  /// Add places and delete, after the places.
+  /// Delete, after the places (they are added from "Modifier").
   List<Widget> _buildOwnerFooter() {
     return [
-      if (_selection.items.length < kMaxSelectionRestaurants)
-        AppButton(
-          label: 'Ajouter des lieux',
-          icon: Icons.add,
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          isLoading: _isAddingPlaces,
-          onPressed: _addPlaces,
-        ),
       SizedBox(height: AppSpacing.section),
       // Same as "Supprimer mon compte" in the settings
       AppButton(
@@ -454,7 +418,7 @@ class _SelectionPageState extends State<SelectionPage> {
             EmptyStateView(
               title: 'Aucun lieu',
               subtitle: _selection.isOwner
-                  ? 'Ajoutez les lieux que vous voulez recommander.'
+                  ? 'Ajoutez les lieux que vous voulez recommander depuis « Modifier ».'
                   : 'Cette sélection est vide pour le moment.',
             ),
             SizedBox(height: AppSpacing.section),

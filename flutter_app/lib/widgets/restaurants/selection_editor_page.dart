@@ -6,6 +6,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../models/restaurants/restaurant_selection.dart';
 import '../../services/restaurant_api_service.dart';
@@ -86,6 +88,10 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
   /// Cover of an existing selection, sent as soon as picked.
   late String? _coverUrl = widget.selection?.coverUrl;
   bool _isCoverBusy = false;
+
+  /// Whole photo the cover was cropped from, when picked here: framed
+  /// again from it rather than from the cropped cover.
+  File? _coverOriginal;
 
   // Autosave (existing selection)
   _SaveStatus _status = _SaveStatus.saved;
@@ -197,10 +203,15 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
       // Changed while saving
       return _autosave();
     }
-    setState(() {
-      _status = _SaveStatus.saved;
-      _showSaved = true;
-    });
+    setState(() => _status = _SaveStatus.saved);
+    _flashSaved();
+  }
+
+  /// Shows "Enregistré" for a moment, after a save of the form or of the
+  /// cover (unless the form itself waits to be saved).
+  void _flashSaved() {
+    if (_status != _SaveStatus.saved) return;
+    setState(() => _showSaved = true);
     _hideSavedTimer?.cancel();
     _hideSavedTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) setState(() => _showSaved = false);
@@ -284,27 +295,73 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
   Future<void> _pickCover() async {
     final files = await pickPhotos(context);
     if (files.isEmpty || !mounted) return;
+    await _cropCover(files.first);
+  }
+
+  /// Frames the cover again: from the whole photo when it was picked here,
+  /// otherwise from the saved cover.
+  Future<void> _recropCover() async {
+    var source = _coverOriginal;
+    if (source == null) {
+      setState(() => _isCoverBusy = true);
+      source = await _downloadCover();
+      if (!mounted) return;
+      setState(() => _isCoverBusy = false);
+      if (source == null) {
+        _snack('Impossible de charger l\'image, réessayez.', error: true);
+        return;
+      }
+    }
+    await _cropCover(source);
+  }
+
+  /// The saved cover in a temporary file, for the crop screen.
+  Future<File?> _downloadCover() async {
+    try {
+      final response = await http.get(Uri.parse(_coverUrl!));
+      if (response.statusCode != 200) return null;
+      final dir = await getTemporaryDirectory();
+      return File('${dir.path}/selection_cover_${widget.selection!.id}')
+          .writeAsBytes(response.bodyBytes);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Frames [source] as the cover shows on the selection page, then uses
+  /// it as the cover.
+  Future<void> _cropCover(File source) async {
+    final cover = await cropPhoto(context, source,
+        ratioX: 16, ratioY: 9, title: 'Recadrer la couverture');
+    if (cover == null || !mounted) return;
     if (_isNew) {
-      setState(() => _newCover = files.first);
+      setState(() {
+        _newCover = cover;
+        _coverOriginal = source;
+      });
       return;
     }
     setState(() => _isCoverBusy = true);
     final result = await RestaurantApiService.uploadSelectionCover(
-        id: widget.selection!.id, image: files.first);
+        id: widget.selection!.id, image: cover);
     if (!mounted) return;
     setState(() {
       _isCoverBusy = false;
       if (result.selection != null) {
         _saved = result.selection;
         _coverUrl = result.selection!.coverUrl;
+        _coverOriginal = source;
       }
     });
     if (result.selection == null) {
       _snack(result.error ?? 'L\'envoi de l\'image a échoué.', error: true);
+    } else {
+      _flashSaved();
     }
   }
 
   Future<void> _removeCover() async {
+    _coverOriginal = null;
     if (_isNew) {
       setState(() => _newCover = null);
       return;
@@ -322,7 +379,11 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
         _saved = updated ?? _saved;
       }
     });
-    if (!ok) _snack('Impossible de retirer l\'image, réessayez.', error: true);
+    if (ok) {
+      _flashSaved();
+    } else {
+      _snack('Impossible de retirer l\'image, réessayez.', error: true);
+    }
   }
 
   // ── Publication ──────────────────────────────────────────────────────────
@@ -540,6 +601,13 @@ class _SelectionEditorPageState extends State<SelectionEditorPage> {
                 right: 24.w,
                 child: Row(
                   children: [
+                    _coverAction(
+                      icon: Icons.crop,
+                      tooltip: 'Recadrer l\'image',
+                      color: kTextPrimary,
+                      onTap: busy ? null : _recropCover,
+                    ),
+                    SizedBox(width: 18.w),
                     _coverAction(
                       icon: Icons.edit_outlined,
                       tooltip: 'Changer l\'image',

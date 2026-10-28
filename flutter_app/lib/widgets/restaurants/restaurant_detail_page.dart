@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -846,7 +847,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     return _section(
       title,
       photos.isEmpty
-          ? Text('Aucune photo pour le moment. Vous pouvez en ajouter pour nous aider !',
+          ? Text(
+              'Aucune photo pour le moment. Vous pouvez en ajouter pour nous aider !',
               style:
                   AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]))
           : LayoutBuilder(builder: (context, constraints) {
@@ -1095,38 +1097,114 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   // ── Main build ────────────────────────────────────────────────────────────
 
-  /// The featured photo across the top, from the map pin so it shows as
-  /// soon as the page opens. Tapping it opens the gallery there.
-  Widget _buildFeaturedPhoto() {
-    final featured =
-        _restaurant.featuredPhoto ?? widget.restaurant.featuredPhoto;
-    if (featured == null) return const SizedBox.shrink();
+  /// Shown across the top, from the map pin so it shows as soon as the
+  /// page opens.
+  RestaurantPhoto? get _featuredPhoto =>
+      _restaurant.featuredPhoto ?? widget.restaurant.featuredPhoto;
+
+  /// Light status bar icons over the photo; the nav bar keeps the app's
+  /// style (taken from the region at the bottom of the screen).
+  static const _overPhotoOverlayStyle = SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarBrightness: Brightness.dark, // iOS: light status bar text
+    statusBarIconBrightness: Brightness.light,
+    systemStatusBarContrastEnforced: false,
+  );
+
+  /// The featured photo edge to edge, up under the status bar, with the
+  /// back button over it. Tapping it opens the gallery there.
+  Widget _buildFeaturedPhoto(RestaurantPhoto featured) {
     final gallery = [
       ..._restaurant.photosOfKind(RestaurantPhoto.kindPlace),
       ..._restaurant.photosOfKind(RestaurantPhoto.kindMenu),
     ];
     final index = gallery.indexWhere((p) => p.id == featured.id);
-    return Padding(
-      padding: EdgeInsets.fromLTRB(48.w, 0, 48.w, 12.h),
-      child: GestureDetector(
-        onTap: () => index >= 0
-            ? PhotoViewerPage.open(context, gallery, index)
-            : PhotoViewerPage.open(context, [featured], 0),
-        child: ClipSmoothRect(
-          radius: squircleRadius(48.r),
-          child: CachedNetworkImage(
-            imageUrl: featured.url,
-            height: 480.h,
-            width: double.infinity,
-            fit: BoxFit.cover,
-            placeholder: (_, __) =>
-                Container(height: 480.h, color: Colors.grey[200]),
-            errorWidget: (_, __, ___) => Container(
-              height: 480.h,
-              color: Colors.grey[200],
-              child: Icon(Icons.image, color: Colors.grey[400]),
+    final topInset = MediaQuery.paddingOf(context).top;
+    final canPop = ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
+    final bottomCorner =
+        SmoothRadius(cornerRadius: 60.r, cornerSmoothing: kCornerSmoothing);
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: _overPhotoOverlayStyle,
+      child: SizedBox(
+        height: topInset + 660.h,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            GestureDetector(
+              onTap: () => index >= 0
+                  ? PhotoViewerPage.open(context, gallery, index)
+                  : PhotoViewerPage.open(context, [featured], 0),
+              child: ClipSmoothRect(
+                radius: SmoothBorderRadius.only(
+                  bottomLeft: bottomCorner,
+                  bottomRight: bottomCorner,
+                ),
+                child: CachedNetworkImage(
+                  imageUrl: featured.url,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) => Container(color: Colors.grey[200]),
+                  errorWidget: (_, __, ___) => Container(
+                    color: Colors.grey[200],
+                    child: Icon(Icons.image, color: Colors.grey[400]),
+                  ),
+                ),
+              ),
             ),
-          ),
+            // Keeps the status bar readable over any photo
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: topInset + 150.h,
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.35),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (canPop)
+              Positioned(
+                top: topInset + 18.h,
+                left: 48.w,
+                child: Semantics(
+                  button: true,
+                  label: MaterialLocalizations.of(context).backButtonTooltip,
+                  child: SquareIconButton(
+                    onTap: () => Navigator.of(context).maybePop(),
+                    size: 102.w,
+                    radius: 30.r,
+                    backgroundColor: Colors.white,
+                    shadows: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                    // The "new" iOS chevron is centred in its glyph, unlike
+                    // Icons.adaptive.arrow_back
+                    child: Icon(
+                        switch (Theme.of(context).platform) {
+                          TargetPlatform.iOS ||
+                          TargetPlatform.macOS =>
+                            Icons.arrow_back_ios_new,
+                          _ => Icons.arrow_back,
+                        },
+                        size: 54.sp,
+                        color: kTextPrimary),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -1542,21 +1620,28 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   @override
   Widget build(BuildContext context) {
     final reviewCount = _summary?.reviewCount ?? _restaurant.reviewCount;
+    final featured = _featuredPhoto;
 
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          foregroundColor: kTextPrimary,
-        ),
+        // With a photo, the back button is over it
+        appBar: featured != null
+            ? null
+            : AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                foregroundColor: kTextPrimary,
+              ),
         body: SafeArea(
           top: false,
           child: Column(
             children: [
-              _buildFeaturedPhoto(),
+              if (featured != null) ...[
+                _buildFeaturedPhoto(featured),
+                SizedBox(height: 18.h),
+              ],
               _buildHeader(),
               TabBar(
                 controller: _tabController,

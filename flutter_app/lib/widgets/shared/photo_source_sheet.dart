@@ -1,7 +1,9 @@
 import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
 import 'bottom_sheet_shell.dart';
 
@@ -61,5 +63,46 @@ Future<List<File>> pickPhotos(BuildContext context, {int max = 1}) async {
     return picked == null ? [] : [File(picked.path)];
   } catch (_) {
     return [];
+  }
+}
+
+/// Lets the user frame [photo] at [ratioX]:[ratioY] in the platform's crop
+/// screen. Null when cancelled or on cropper error.
+Future<File?> cropPhoto(
+  BuildContext context,
+  File photo, {
+  required double ratioX,
+  required double ratioY,
+  String title = 'Recadrer',
+}) async {
+  final primary = Theme.of(context).colorScheme.primary;
+  try {
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: photo.path,
+      aspectRatio: CropAspectRatio(ratioX: ratioX, ratioY: ratioY),
+      compressQuality: 85,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: title,
+          toolbarColor: Colors.white,
+          toolbarWidgetColor: kTextPrimary,
+          statusBarLight: true,
+          activeControlsWidgetColor: primary,
+          lockAspectRatio: true,
+          hideBottomControls: true,
+        ),
+        IOSUiSettings(
+          title: title,
+          doneButtonTitle: 'Valider',
+          cancelButtonTitle: 'Annuler',
+          aspectRatioLockEnabled: true,
+          resetAspectRatioEnabled: false,
+          aspectRatioPickerButtonHidden: true,
+        ),
+      ],
+    );
+    return cropped == null ? null : File(cropped.path);
+  } catch (_) {
+    return null;
   }
 }

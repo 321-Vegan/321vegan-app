@@ -355,7 +355,7 @@ class _SelectionsTabState extends State<_SelectionsTab>
     final confirmed = await confirmSelectionAction(
       context,
       title: 'Refuser la sélection ?',
-      message: 'Elle ne réapparaîtra pas, même si ${selection.ownerNickname} '
+      message: 'Elle n\'apparaîtra plus, il faudra que ${selection.ownerNickname} '
           'vous l\'envoie à nouveau.',
       confirmLabel: 'Refuser',
     );
