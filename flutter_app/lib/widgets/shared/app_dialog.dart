@@ -5,7 +5,7 @@ import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 import 'app_button.dart';
 
-/// The app's dialog look (as the update dialog): an illustration, a title,
+/// The app's dialog look: an illustration, a title,
 /// a message, optional [content], then a full-width primary button and a
 /// grey text link for the secondary choice — or a second button when
 /// [secondaryColor] is given (two real choices).

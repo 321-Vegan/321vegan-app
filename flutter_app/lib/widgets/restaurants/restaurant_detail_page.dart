@@ -60,7 +60,6 @@ class RestaurantDetailPage extends StatefulWidget {
     this.selectionNoteAuthor,
   });
 
-  /// Pushes the page; completes when it is closed.
   static Future<void> open(
     BuildContext context,
     Restaurant restaurant, {
@@ -1179,8 +1178,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     }
   }
 
-  /// Ways to propose a change, in a bottom sheet like the app's other
-  /// choices; runs the chosen one.
+  /// Ways to propose a change; runs the chosen one.
   Future<void> _openSuggestSheet() async {
     Widget option(String value, IconData icon, String title, String detail,
         BuildContext ctx) {
@@ -1433,9 +1431,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             ? [r.address, r.city].whereType<String>().join(', ')
             : r.city ?? '';
 
-    // Name and vegan status beside the buttons, then address and opening
-    // with the kinds of place on their right, in the room the buttons
-    // leave free
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 48.w, vertical: 12.h),
       child: Column(
@@ -1474,8 +1469,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                     ],
                   ),
                 ],
-                // Vegan status under the name and rating, apart from the
-                // kinds of place
                 SizedBox(height: 9.h),
                 VeganStatusChip(isFullyVegan: r.isFullyVegan),
               ],

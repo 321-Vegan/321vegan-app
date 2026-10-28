@@ -70,7 +70,6 @@ class _MapSearchPageState extends State<MapSearchPage> {
         ]);
   }
 
-  /// Remembers the choice, then pops it for the map.
   Future<void> _choose(Object result) async {
     await MapSearchHistory.add(result);
     if (mounted) Navigator.of(context).pop(result);

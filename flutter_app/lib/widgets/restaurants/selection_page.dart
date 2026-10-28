@@ -36,7 +36,6 @@ class SelectionPage extends StatefulWidget {
 
   const SelectionPage({super.key, required this.selection});
 
-  /// Completes when the page is closed.
   static Future<void> open(
       BuildContext context, RestaurantSelection selection) {
     return Navigator.of(context).push(MaterialPageRoute(
@@ -208,11 +207,9 @@ class _SelectionPageState extends State<SelectionPage> {
     );
   }
 
-  /// Delete, after the places (they are added from "Modifier").
   List<Widget> _buildOwnerFooter() {
     return [
       SizedBox(height: AppSpacing.section),
-      // Same as "Supprimer mon compte" in the settings
       AppButton(
         label: 'Supprimer la sélection',
         backgroundColor: kAccentYellow,
@@ -240,8 +237,6 @@ class _SelectionPageState extends State<SelectionPage> {
           ),
           SizedBox(height: 30.h),
         ],
-        // Share and map buttons beside the title, as on a restaurant page;
-        // who made it under them, across the page
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -274,7 +269,6 @@ class _SelectionPageState extends State<SelectionPage> {
             ],
             if (s.items.isNotEmpty) ...[
               SizedBox(width: 24.w),
-              // Height and corners of the square buttons of a restaurant page
               DecoratedBox(
                 decoration: ShapeDecoration(
                   shape: squircleBorder(radius: 30.r),
@@ -431,7 +425,6 @@ class _SelectionPageState extends State<SelectionPage> {
     );
   }
 
-  /// Unsubscribe from a selection accepted or subscribed to, at the bottom.
   Widget _buildUnsubscribeButton() {
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -446,7 +439,6 @@ class _SelectionPageState extends State<SelectionPage> {
     );
   }
 
-  /// Add a public selection to the user's places, at the bottom.
   Widget _buildTakeButton() {
     return Padding(
       padding: EdgeInsets.fromLTRB(

@@ -703,7 +703,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Same icons as the map pins
           segment(
             _MapLayer.shops,
             (color) => Image.asset(
@@ -913,8 +912,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               ),
             ),
           ],
-          // Bottom-right corner, level with the layer switch: recenter, then
-          // the saved places and the list (restaurants layer)
           if (!_isPicking)
             Positioned(
               right: 48.w,
@@ -971,8 +968,6 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               right: 0,
               child: Center(child: _buildLayerToggle()),
             ),
-          // Top row: search bar (opens the search page), filters and
-          // create-place buttons.
           if (!_isPicking && AuthService.isLoggedIn)
             Positioned(
               top: MediaQuery.of(context).padding.top + 24,

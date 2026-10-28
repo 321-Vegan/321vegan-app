@@ -37,9 +37,9 @@ const _steps = [
 ];
 
 /// First-visit intro sheet of the saved places page, in a few swipeable
-/// steps, shown once like [VegandexWelcomeModal]. Pops `true` when closed
-/// with "C'est parti !" on the last step so the caller can mark it as seen
-/// for good; swiping the sheet away leaves it to show again next time.
+/// steps, shown once. Pops `true` when closed with "C'est parti !" on the
+/// last step so the caller can mark it as seen for good; swiping the sheet
+/// away leaves it to show again next time.
 class SavedPlacesWelcomeModal extends StatefulWidget {
   const SavedPlacesWelcomeModal({super.key});
 

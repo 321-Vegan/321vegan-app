@@ -845,7 +845,6 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
               ),
           ],
         ),
-        // Leaving in orange, going on in green, as the app's other pairs
         primaryLabel: 'C\'est le même lieu',
         primaryColor: kAccentYellow,
         onPrimary: () => Navigator.of(ctx).pop(false),
@@ -1220,7 +1219,6 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     }
   }
 
-  /// A stop of the food truck: tap to change it.
   Widget _buildStopCard(int index) {
     final stop = _stops[index];
     final where = [stop.address, stop.city]

@@ -145,7 +145,7 @@ class _SelectionMapPageState extends State<SelectionMapPage>
     );
   }
 
-  /// With the author's rating above it, as the reviews average on the map.
+  /// With the author's rating above it.
   Marker _marker(int index) {
     final item = _items[index];
     final r = item.restaurant;
@@ -272,7 +272,6 @@ class _SelectionMapPageState extends State<SelectionMapPage>
               onPageChanged: _onPageChanged,
               itemBuilder: (_, index) => Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12.w),
-                // Fills the carousel height, its content centered
                 child: _buildCard(_items[index]),
               ),
             ),

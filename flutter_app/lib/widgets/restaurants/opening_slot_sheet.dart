@@ -15,10 +15,10 @@ typedef OpeningSlotEntry = ({
   Set<int> days,
 });
 
-/// Wheel pickers for a slot's opening and closing times, as the "Végane
-/// depuis" date picker. When adding ([allowOtherDays]), more services can
-/// be added (e.g. lunch then dinner) and they can go to several days at
-/// once; when changing a slot, there's just that one.
+/// Wheel pickers for a slot's opening and closing times. When adding
+/// ([allowOtherDays]), more services can be added (e.g. lunch then dinner)
+/// and they can go to several days at once; when changing a slot, there's
+/// just that one.
 Future<OpeningSlotEntry?> showOpeningSlotSheet(
   BuildContext context, {
   required int day,

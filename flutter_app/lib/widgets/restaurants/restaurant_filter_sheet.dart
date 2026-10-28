@@ -75,7 +75,7 @@ class _RestaurantFilterSheetState extends State<_RestaurantFilterSheet> {
   late bool _glutenFree = widget.current.glutenFreeOptions;
 
   /// Toggles [value] in [values] (the tags or the service options), with
-  /// [icon] (in [iconColor]) before the label, as in the creation form.
+  /// [icon] (in [iconColor]) before the label.
   Widget _tagChip(Set<String> values, String value, String label,
       {IconData? icon, Color? iconColor}) {
     final selected = values.contains(value);

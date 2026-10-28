@@ -47,7 +47,6 @@ List<Announcement> appAnnouncements({MyHomePageState? home}) => [
         onPrimary: home == null
             ? null
             : () async {
-                // Opens the map on the places layer
                 await PreferencesHelper.setLastMapLayerPref('restaurants');
                 home.goToMapTab();
               },

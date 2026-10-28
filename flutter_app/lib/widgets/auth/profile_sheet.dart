@@ -157,7 +157,6 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           SizedBox(height: 24.h),
           FormErrorBanner(message: _nicknameError!),
         ],
-        // Only once there's a change to save
         if (nickname.isNotEmpty && nickname != _nickname) ...[
           SizedBox(height: 24.h),
           AppButton(
