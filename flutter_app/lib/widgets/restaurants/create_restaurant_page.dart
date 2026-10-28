@@ -619,6 +619,37 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     return null;
   }
 
+  /// The text fields [_requiredFilled] reads, to grey the send button while
+  /// typing.
+  late final Listenable _requiredFields = Listenable.merge([
+    _name,
+    _address,
+    _city,
+    _country,
+    _serviceArea,
+    _veganOptions,
+    _surcharge,
+    _phone,
+    _website,
+    _facebook,
+    _instagram,
+  ]);
+
+  /// Whether every required field is filled; formats are checked when
+  /// sending.
+  bool get _requiredFilled =>
+      _text(_name) != null &&
+      _text(_country) != null &&
+      // The stops carry the address and city
+      (_withStops ||
+          (_text(_city) != null &&
+              (_withStorefront
+                  ? _text(_address) != null
+                  : _text(_serviceArea) != null))) &&
+      (_veganStatus != VeganStatus.veganOptions ||
+          _text(_veganOptions) != null) &&
+      _check() == null;
+
   double? _surchargeAmount() {
     final value = double.tryParse(_surcharge.text.trim().replaceAll(',', '.'));
     if (value == null || value <= 0 || value > 5) return null;
@@ -1336,9 +1367,16 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                           text: _isSuggestion
                               ? 'Corrigez ce qui a changé : la proposition sera '
                                   'vérifiée par l\'équipe avant d\'être appliquée.'
-                              : 'Seuls les lieux 100 % véganes ou avec au moins une '
-                                  'option végane bien identifiée sont référencés. '
-                                  'Le lieu sera visible pour tout le monde après validation.',
+                              : 'Seuls les lieux 100 % véganes ou proposant plusieurs '
+                                  'options véganes bien identifiées (notées vegan sur le '
+                                  'menu) sont référencés. Les grandes chaînes ne sont pas '
+                                  'acceptées. Le lieu sera visible pour tout le monde '
+                                  'après validation.',
+                          symbol: _isSuggestion ? 'i' : '!',
+                          color: _isSuggestion ? kAccentYellow : kSemanticError,
+                          backgroundColor: _isSuggestion
+                              ? kSecondaryTag
+                              : kSemanticError.withValues(alpha: 0.08),
                         ),
                         _section('Le lieu', [
                           AppTextField(
@@ -1360,8 +1398,10 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                   hintText: _withStorefront
                                       ? 'Adresse ou nom du lieu (ex : Le Kitchen, Lyon)'
                                       : 'Adresse (non publiée)',
+                                  isRequired: _withStorefront,
                                   textCapitalization:
                                       TextCapitalization.sentences,
+                                  validator: _withStorefront ? _required : null,
                                   enabled: !_isSubmitting,
                                   suffixIcon: Icon(Icons.search,
                                       color: Colors.grey[500]),
@@ -1372,9 +1412,9 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                 AppTextField(
                                   controller: _city,
                                   hintText: 'Ville',
-                                  isRequired: !_withStorefront,
+                                  isRequired: true,
                                   textCapitalization: TextCapitalization.words,
-                                  validator: _withStorefront ? null : _required,
+                                  validator: _required,
                                   enabled: !_isSubmitting,
                                 ),
                               ],
@@ -1384,7 +1424,9 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                           AppTextField(
                             controller: _country,
                             hintText: 'Pays',
+                            isRequired: true,
                             textCapitalization: TextCapitalization.words,
+                            validator: _required,
                             enabled: !_isSubmitting,
                           ),
                           AnimatedReveal(
@@ -1852,8 +1894,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             subtitle: _placePhotos.length > 1
                                 ? 'Facultatif. Touchez une photo pour en faire '
                                     'la photo principale (★).'
-                                : 'Facultatif. La première sera la photo '
-                                    'principale.',
+                                : 'Facultatif mais très recommandé (merci 💚)',
                             [
                               PickedPhotosRow(
                                 photos: _placePhotos,
@@ -1889,13 +1930,16 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                 .copyWith(color: Colors.grey[600])),
                         SizedBox(height: 12.h),
                       ],
-                      AppButton(
-                        label: _isSuggestion
-                            ? 'Envoyer la proposition'
-                            : 'Envoyer',
-                        backgroundColor: primary,
-                        isLoading: _isSubmitting,
-                        onPressed: _submit,
+                      ListenableBuilder(
+                        listenable: _requiredFields,
+                        builder: (context, _) => AppButton(
+                          label: _isSuggestion
+                              ? 'Envoyer la proposition'
+                              : 'Envoyer',
+                          backgroundColor: primary,
+                          isLoading: _isSubmitting,
+                          onPressed: _requiredFilled ? _submit : null,
+                        ),
                       ),
                     ],
                   ),
