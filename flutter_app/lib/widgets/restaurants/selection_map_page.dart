@@ -16,6 +16,7 @@ import 'restaurant_detail_page.dart';
 import 'restaurant_labels.dart';
 import 'restaurant_list_card.dart';
 import 'restaurant_pin.dart';
+import 'selection_author_review.dart';
 
 const double _pinSize = 34;
 
@@ -144,38 +145,58 @@ class _SelectionMapPageState extends State<SelectionMapPage>
     );
   }
 
+  /// With the author's rating above it, as the reviews average on the map.
   Marker _marker(int index) {
-    final r = _items[index].restaurant;
+    final item = _items[index];
+    final r = item.restaurant;
     final size = index == _current ? _pinSize * 1.25 : _pinSize;
     return Marker(
       point: _point(index),
-      width: RestaurantPin.widthFor(r, size),
-      height: RestaurantPin.heightFor(size),
+      width: RestaurantPin.widthFor(r, size, showRating: true),
+      height: RestaurantPin.heightFor(size, showRating: true),
       child: GestureDetector(
         onTap: () => _onPinTap(index),
-        child: RestaurantPin(restaurant: r, size: size),
+        child: RestaurantPin(
+          restaurant: r,
+          size: size,
+          showRating: true,
+          rating: item.authorRating?.toDouble(),
+        ),
       ),
     );
   }
 
-  /// Without the note, and a single chip, so every card has the same height.
+  /// Without the note, so every card has the same height; the author's
+  /// rating beside the status chip, opening their review.
   Widget _buildCard(RestaurantSelectionItem item) {
     final r = item.restaurant;
+    final author =
+        widget.selection.isOwner ? null : widget.selection.ownerNickname;
     return RestaurantListCard(
       restaurant: r,
       onTap: () => RestaurantDetailPage.open(
         context,
         r,
         selectionNote: item.note,
-        selectionNoteAuthor: widget.selection.isOwner
-            ? null
-            : widget.selection.ownerNickname,
+        selectionNoteAuthor: author,
       ),
       badges: [
         if (r.isPermanentlyClosed)
           const TagChip(label: 'Fermé définitivement', color: kSemanticError)
         else
           VeganStatusChip(isFullyVegan: r.isFullyVegan),
+        if (item.authorRating != null)
+          AuthorRatingPill(
+            rating: item.authorRating!,
+            onTap: item.authorReviewId == null
+                ? null
+                : () => showAuthorReviewSheet(
+                      context,
+                      reviewId: item.authorReviewId!,
+                      restaurant: r,
+                      authorNickname: author,
+                    ),
+          ),
       ],
     );
   }

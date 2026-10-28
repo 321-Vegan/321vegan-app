@@ -11,7 +11,7 @@ import 'restaurant_labels.dart';
 /// icon in the tag color (up to [_maxIcons], then a "+"), so it widens with
 /// several tags. Struck through in red when closed for good,
 /// and faded while the user's own restaurant is pending, or with [dimmed].
-/// With [showRating], the average of its reviews above it ("★ 4,3").
+/// With [showRating], [rating] above it ("★ 4,3").
 class RestaurantPin extends StatelessWidget {
   final Restaurant restaurant;
 
@@ -23,9 +23,13 @@ class RestaurantPin extends StatelessWidget {
   /// For when the map is zoomed out and wide pins would crowd it.
   final bool compact;
 
-  /// The reviews average above the pin ("★ 4,3"). The room is kept
-  /// without reviews, so every marker has the same anchor.
+  /// [rating] above the pin ("★ 4,3"). The room is kept without one, so
+  /// every marker has the same anchor.
   final bool showRating;
+
+  /// Shown with [showRating]: the reviews average on the map, the author's
+  /// rating on a selection's map. Nothing when null.
+  final double? rating;
 
   /// Faded, e.g. a food truck's stop where it isn't today.
   final bool dimmed;
@@ -37,6 +41,7 @@ class RestaurantPin extends StatelessWidget {
     this.shadow = true,
     this.compact = false,
     this.showRating = false,
+    this.rating,
     this.dimmed = false,
   });
 
@@ -182,7 +187,6 @@ class RestaurantPin extends StatelessWidget {
       ),
     );
 
-    final rating = restaurant.ratingAvg;
     return Opacity(
       opacity: (restaurant.validated ? 1 : 0.6) * (dimmed ? 0.5 : 1),
       child: !showRating
@@ -192,7 +196,7 @@ class RestaurantPin extends StatelessWidget {
               children: [
                 SizedBox(
                   height: _ratingHeight(size),
-                  child: restaurant.reviewCount > 0 && rating != null
+                  child: rating != null
                       ? Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: _ratingPadding),
@@ -217,7 +221,7 @@ class RestaurantPin extends StatelessWidget {
                                   color: kAccentYellow),
                               const SizedBox(width: 1),
                               Text(
-                                formatRatingAverage(rating),
+                                formatRatingAverage(rating!),
                                 // Sized to fit the marker, like the icons
                                 textScaler: TextScaler.noScaling,
                                 style: TextStyle(

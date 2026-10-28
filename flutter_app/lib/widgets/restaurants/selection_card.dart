@@ -179,6 +179,15 @@ class SelectionCard extends StatelessWidget {
                           color: kVeganOptionsOrange,
                           icon: Icons.mark_email_unread_outlined,
                         ),
+                      ] else if (showAdded && s.isOwner) ...[
+                        SizedBox(height: 12.h),
+                        // Filled, to stand out among the others' selections
+                        const TagChip(
+                          label: 'Ma sélection',
+                          color: Colors.white,
+                          backgroundColor: kAccentYellow,
+                          icon: Icons.person_rounded,
+                        ),
                       ] else if (showAdded && s.isAccepted) ...[
                         SizedBox(height: 12.h),
                         const TagChip(

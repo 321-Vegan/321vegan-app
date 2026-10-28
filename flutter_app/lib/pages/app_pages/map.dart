@@ -452,6 +452,8 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   size: _restaurantPinSize,
                   compact: compact,
                   showRating: true,
+                  rating:
+                      restaurant.reviewCount > 0 ? restaurant.ratingAvg : null,
                   dimmed: dimmed,
                 ),
               ),
