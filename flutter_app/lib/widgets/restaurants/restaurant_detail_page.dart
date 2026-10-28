@@ -86,6 +86,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   late Restaurant _restaurant = widget.restaurant;
 
+  /// Map pins don't carry the photos: whether there are none is known once
+  /// the full restaurant is loaded.
+  bool _isLoaded = false;
+
   /// Map pins don't carry it: known once the full restaurant is loaded,
   /// unless the user toggled it first.
   late bool _isSaved = widget.restaurant.isSaved;
@@ -136,6 +140,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     if (restaurant != null && mounted) {
       setState(() {
         _restaurant = restaurant;
+        _isLoaded = true;
         if (!_savedTouched) _isSaved = restaurant.isSaved;
       });
     }
@@ -241,6 +246,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Ajouter une photo', style: AppTextStyles.baloo22),
+                  SizedBox(height: 6.h),
+                  Text('Vos propres photos, pas de captures d\'écran.',
+                      style: AppTextStyles.bodyRegular13
+                          .copyWith(color: Colors.grey[600])),
                   SizedBox(height: 24.h),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -780,7 +789,31 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         ),
         if (contacts.isNotEmpty)
           _section('Contact', Column(children: contacts)),
+        if (_isLoaded && r.photos.isEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: AppSpacing.section),
+            child: _buildNoPhotoNote(),
+          ),
       ],
+    );
+  }
+
+  /// Asks for a first photo; adds it from the photos tab, where the sending
+  /// feedback shows.
+  Widget _buildNoPhotoNote() {
+    return InkWell(
+      onTap: _isUploadingPhotos
+          ? null
+          : () {
+              _tabController.animateTo(1);
+              _addPhotos();
+            },
+      customBorder: squircleBorder(radius: 48.r),
+      child: const InfoBox(
+        text: 'Il manque des photos. '
+            'Ajoutez-en une pour aider les autres !',
+        icon: Icons.add_a_photo_outlined,
+      ),
     );
   }
 

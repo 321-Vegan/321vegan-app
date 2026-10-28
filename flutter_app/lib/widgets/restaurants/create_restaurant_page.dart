@@ -202,6 +202,15 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   bool get _isFoodTruck => _tags.contains(RestaurantTags.foodTruck);
   bool get _withStops => _isFoodTruck && _hasStops && _withStorefront;
 
+  /// Always for a creation; for a suggestion, only without storefront (the
+  /// way to order), not to block one on a restaurant that has none.
+  bool get _contactRequired => !_isSuggestion || !_withStorefront;
+
+  /// For a creation, unless the stops carry them or it's a caterer (on
+  /// order, often without set hours). A suggestion may leave them unknown,
+  /// as the restaurant may have none.
+  bool get _hoursRequired => !_isSuggestion && !_withStops && !_isCaterer;
+
   /// As many as the API takes.
   static const int _maxStops = 14;
 
@@ -300,7 +309,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       for (final slot in (f['hours'] as List?) ?? [])
         OpeningSlot.fromJson((slot as Map).cast<String, dynamic>()),
     ];
-    _hoursUnknown = f['hours_unknown'] as bool? ?? false;
+    // hours_unknown left out: a creation can't skip the hours any more
     _hasStops = f['has_stops'] as bool? ?? false;
     _stops = [
       for (final stop in (f['stops'] as List?) ?? [])
@@ -604,11 +613,24 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     if (_withStops && _stops.isEmpty) {
       return 'Ajoutez au moins un emplacement du food truck.';
     }
-    if (!_withStorefront &&
+    if (_hoursRequired && _hours.isEmpty) {
+      return 'Ajoutez les horaires d\'ouverture.';
+    }
+    // Dine-in, hidden and not sent without storefront, doesn't count
+    if (!_isSuggestion &&
+        _serviceOptions.every((option) =>
+            !_withStorefront && option == RestaurantServiceOptions.dineIn)) {
+      return 'Indiquez si on peut manger sur place, à emporter ou se faire '
+          'livrer.';
+    }
+    if (_contactRequired &&
         [_phone, _website, _facebook, _instagram]
             .every((c) => _text(c) == null)) {
-      return 'Sans boutique, indiquez au moins un moyen de commander '
-          '(téléphone, site, Facebook ou Instagram).';
+      return _withStorefront
+          ? 'Indiquez au moins un contact (téléphone, site, Facebook ou '
+              'Instagram).'
+          : 'Sans boutique, indiquez au moins un moyen de commander '
+              '(téléphone, site, Facebook ou Instagram).';
     }
     if (_asksMilkPrice &&
         (_milkPrice == _MilkPrice.plantCostsMore ||
@@ -626,6 +648,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     _address,
     _city,
     _country,
+    _description,
     _serviceArea,
     _veganOptions,
     _surcharge,
@@ -640,6 +663,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   bool get _requiredFilled =>
       _text(_name) != null &&
       _text(_country) != null &&
+      (_isSuggestion || _text(_description) != null) &&
       // The stops carry the address and city
       (_withStops ||
           (_text(_city) != null &&
@@ -1369,15 +1393,24 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                   'vérifiée par l\'équipe avant d\'être appliquée.'
                               : 'Seuls les lieux 100 % véganes ou proposant plusieurs '
                                   'options véganes bien identifiées (notées vegan sur le '
-                                  'menu) sont référencés. Les grandes chaînes ne sont pas '
-                                  'acceptées. Le lieu sera visible pour tout le monde '
-                                  'après validation.',
+                                  'menu) sont référencés. Pas de grandes chaînes (O\'Tacos, BK, ...). Le lieu sera visible pour '
+                                  'tout le monde après validation.',
                           symbol: _isSuggestion ? 'i' : '!',
                           color: _isSuggestion ? kAccentYellow : kSemanticError,
                           backgroundColor: _isSuggestion
                               ? kSecondaryTag
                               : kSemanticError.withValues(alpha: 0.08),
                         ),
+                        if (!_isSuggestion) ...[
+                          SizedBox(height: 24.h),
+                          const InfoBox(
+                            text: 'Remplissez un maximum d\'infos : '
+                                'c\'est la fiche que tout le monde verra. '
+                                'Une fois le lieu validé, vous pourrez encore '
+                                'la compléter depuis sa fiche (photos, '
+                                'horaires, infos…). Merci beaucoup !',
+                          ),
+                        ],
                         _section('Le lieu', [
                           AppTextField(
                             controller: _name,
@@ -1446,11 +1479,17 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                           _gap(),
                           AppTextField(
                             controller: _description,
-                            hintText: 'Description (facultatif)',
+                            hintText: _isSuggestion
+                                ? 'Description'
+                                : 'Description (ambiance, spécialités... une petite description sympa du lieu !)',
+                            // Not to block a suggestion on a restaurant
+                            // that has none
+                            isRequired: !_isSuggestion,
                             textCapitalization: TextCapitalization.sentences,
                             minLines: 2,
                             maxLines: 5,
                             maxLength: 2000,
+                            validator: _isSuggestion ? null : _required,
                             enabled: !_isSubmitting,
                           ),
                         ]),
@@ -1572,6 +1611,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                         ]),
                         _section(
                           'Sur place, à emporter, livraison ?',
+                          isRequired: !_isSuggestion,
                           subtitle: 'Plusieurs choix possibles',
                           [
                             Wrap(
@@ -1685,22 +1725,26 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             _withStorefront
                                 ? 'Horaires'
                                 : 'Horaires de commande',
+                            isRequired: _hoursRequired,
                             subtitle: RestaurantTags.accommodations
                                     .any(_tags.contains)
                                 ? 'Pour un hébergement : les horaires du restaurant, '
                                     'ou à défaut du petit-déjeuner.'
-                                : null,
+                                : _isCaterer && !_isSuggestion
+                                    ? 'Facultatif pour un traiteur'
+                                    : null,
                             [
-                              CheckboxListTile(
-                                contentPadding: EdgeInsets.zero,
-                                value: _hoursUnknown,
-                                onChanged: _isSubmitting
-                                    ? null
-                                    : (v) => setState(
-                                        () => _hoursUnknown = v ?? false),
-                                title: Text('Je ne connais pas les horaires',
-                                    style: AppTextStyles.bodyRegular15),
-                              ),
+                              if (_isSuggestion)
+                                CheckboxListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  value: _hoursUnknown,
+                                  onChanged: _isSubmitting
+                                      ? null
+                                      : (v) => setState(
+                                          () => _hoursUnknown = v ?? false),
+                                  title: Text('Je ne connais pas les horaires',
+                                      style: AppTextStyles.bodyRegular15),
+                                ),
                               AnimatedReveal(
                                 visible: !_hoursUnknown,
                                 child: Column(
@@ -1800,10 +1844,12 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                         ),
                         _section(
                           'Contact',
-                          isRequired: !_withStorefront,
-                          subtitle: _withStorefront
-                              ? 'Facultatif'
-                              : 'Au moins un moyen de commander',
+                          isRequired: _contactRequired,
+                          subtitle: !_withStorefront
+                              ? 'Au moins un moyen de commander'
+                              : _contactRequired
+                                  ? 'Au moins un contact'
+                                  : 'Facultatif',
                           [
                             AppTextField(
                               controller: _phone,
@@ -1877,8 +1923,9 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               'Photos du menu',
                               subtitle: _veganStatus == VeganStatus.veganOptions
                                   ? 'Fortement conseillé : elles prouvent l\'option '
-                                      'végane à la validation.'
-                                  : 'Facultatif',
+                                      'végane à la validation. Pas de captures '
+                                      'd\'écran.'
+                                  : 'Facultatif mais très apprécié. Pas de captures d\'écran.',
                               [
                                 PickedPhotosRow(
                                   photos: _menuPhotos,
@@ -1893,8 +1940,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             'Photos du lieu',
                             subtitle: _placePhotos.length > 1
                                 ? 'Facultatif. Touchez une photo pour en faire '
-                                    'la photo principale (★).'
-                                : 'Facultatif mais très recommandé (merci 💚)',
+                                    'la photo principale (★). Pas de captures '
+                                    'd\'écran.'
+                                : 'Facultatif mais très recommandé (merci 💚). '
+                                    'Vos propres photos, pas de captures '
+                                    'd\'écran.',
                             [
                               PickedPhotosRow(
                                 photos: _placePhotos,
