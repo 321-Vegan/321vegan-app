@@ -1,10 +1,13 @@
+import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
+import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
 import '../shared/app_text_field.dart';
 import '../shared/bottom_sheet_shell.dart';
+import '../shared/picked_photos_row.dart';
 import 'star_rating.dart';
 
 /// What the user entered in [showReviewFormSheet]. [comment] is trimmed,
@@ -13,7 +16,23 @@ class ReviewFormResult {
   final int rating;
   final String? comment;
 
-  const ReviewFormResult({required this.rating, this.comment});
+  /// Detailed ratings by field, null when left empty (restaurants only).
+  final Map<String, int?> criteria;
+
+  /// Price per person picked among the form's price ranges, null when
+  /// left empty (restaurants only).
+  final String? priceRange;
+
+  /// New photos to upload with the review (restaurants only).
+  final List<File> photos;
+
+  const ReviewFormResult({
+    required this.rating,
+    this.comment,
+    this.criteria = const {},
+    this.priceRange,
+    this.photos = const [],
+  });
 }
 
 /// Entries whose sending failed, by review target (e.g. `product:<ean>`),
@@ -31,7 +50,12 @@ class ReviewDrafts {
 
 /// Opens the rate-and-comment form as a bottom sheet and resolves with the
 /// entry, or null if dismissed. Sending is left to the caller so the same
-/// form serves shop and product reviews.
+/// form serves shop, product and restaurant reviews.
+///
+/// [criteria] adds optional detailed ratings as (field, label) pairs (the
+/// [lockedCriteria] fields keep their initial value, greyed out),
+/// [priceRanges] an optional price per person as (value, label) pairs, and
+/// [maxPhotos] a photo picker (restaurant reviews).
 Future<ReviewFormResult?> showReviewFormSheet(
   BuildContext context, {
   required String title,
@@ -39,6 +63,14 @@ Future<ReviewFormResult?> showReviewFormSheet(
   int? initialRating,
   String? initialComment,
   String? moderationNotice,
+  List<(String, String)> criteria = const [],
+  Map<String, int?> initialCriteria = const {},
+  Set<String> lockedCriteria = const {},
+  List<(String, String)> priceRanges = const [],
+  String? initialPriceRange,
+  int maxPhotos = 0,
+  List<File> initialPhotos = const [],
+  String commentHint = 'Goût, texture, rapport qualité/prix...',
 }) {
   return showModalBottomSheet<ReviewFormResult>(
     context: context,
@@ -50,6 +82,14 @@ Future<ReviewFormResult?> showReviewFormSheet(
       initialRating: initialRating,
       initialComment: initialComment,
       moderationNotice: moderationNotice,
+      criteria: criteria,
+      initialCriteria: initialCriteria,
+      lockedCriteria: lockedCriteria,
+      priceRanges: priceRanges,
+      initialPriceRange: initialPriceRange,
+      maxPhotos: maxPhotos,
+      initialPhotos: initialPhotos,
+      commentHint: commentHint,
     ),
   );
 }
@@ -60,6 +100,14 @@ class _ReviewFormSheet extends StatefulWidget {
   final int? initialRating;
   final String? initialComment;
   final String? moderationNotice;
+  final List<(String, String)> criteria;
+  final Map<String, int?> initialCriteria;
+  final Set<String> lockedCriteria;
+  final List<(String, String)> priceRanges;
+  final String? initialPriceRange;
+  final int maxPhotos;
+  final List<File> initialPhotos;
+  final String commentHint;
 
   const _ReviewFormSheet({
     required this.title,
@@ -67,6 +115,14 @@ class _ReviewFormSheet extends StatefulWidget {
     this.initialRating,
     this.initialComment,
     this.moderationNotice,
+    required this.criteria,
+    required this.initialCriteria,
+    required this.lockedCriteria,
+    required this.priceRanges,
+    this.initialPriceRange,
+    required this.maxPhotos,
+    required this.initialPhotos,
+    required this.commentHint,
   });
 
   @override
@@ -77,6 +133,11 @@ class _ReviewFormSheetState extends State<_ReviewFormSheet> {
   late final TextEditingController _commentController =
       TextEditingController(text: widget.initialComment ?? '');
   late int? _rating = widget.initialRating;
+  late final Map<String, int?> _criteria = {...widget.initialCriteria};
+  late String? _priceRange = widget.initialPriceRange;
+  late List<File> _photos = [...widget.initialPhotos];
+  // Unfolded from the start, so the detailed ratings get noticed
+  bool _criteriaExpanded = true;
 
   @override
   void dispose() {
@@ -91,7 +152,119 @@ class _ReviewFormSheetState extends State<_ReviewFormSheet> {
     Navigator.of(context).pop(ReviewFormResult(
       rating: rating,
       comment: comment.isEmpty ? null : comment,
+      criteria: {
+        for (final (field, _) in widget.criteria) field: _criteria[field],
+      },
+      priceRange: widget.priceRanges.isEmpty ? null : _priceRange,
+      photos: _photos,
     ));
+  }
+
+  Widget _buildCriteria() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() => _criteriaExpanded = !_criteriaExpanded),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text('Détailler ma note (facultatif)',
+                    style: AppTextStyles.bodyBold15),
+              ),
+              Icon(
+                _criteriaExpanded ? Icons.expand_less : Icons.expand_more,
+                color: Colors.grey[600],
+              ),
+            ],
+          ),
+        ),
+        if (_criteriaExpanded)
+          for (final (field, label) in widget.criteria)
+            Builder(builder: (context) {
+              final locked = widget.lockedCriteria.contains(field);
+              return Padding(
+                padding: EdgeInsets.only(top: 24.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: AppTextStyles.bodyRegular15
+                            .copyWith(color: locked ? Colors.grey[500] : null),
+                      ),
+                    ),
+                    // Tapping the current value again clears it
+                    for (var star = 1; star <= 5; star++)
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: locked
+                            ? null
+                            : () => setState(() => _criteria[field] =
+                                _criteria[field] == star ? null : star),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w),
+                          child: Icon(
+                            (_criteria[field] ?? 0) >= star
+                                ? Icons.star_rounded
+                                : Icons.star_outline_rounded,
+                            size: 72.sp,
+                            color: locked ? Colors.grey[400] : kAccentYellow,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
+      ],
+    );
+  }
+
+  /// Price per person: one chip per range; tapping the picked one again
+  /// clears it.
+  Widget _buildPriceRanges() {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Prix par personne (facultatif)', style: AppTextStyles.bodyBold15),
+        SizedBox(height: 18.h),
+        Wrap(
+          spacing: 18.w,
+          runSpacing: 18.h,
+          children: [
+            for (final (value, label) in widget.priceRanges)
+              Builder(builder: (context) {
+                final selected = _priceRange == value;
+                return Material(
+                  color: selected ? primary : Colors.white,
+                  shape: squircleBorder(
+                    radius: 30.r,
+                    side:
+                        BorderSide(color: selected ? primary : kBorderDefault),
+                  ),
+                  child: InkWell(
+                    customBorder: squircleBorder(radius: 30.r),
+                    onTap: () =>
+                        setState(() => _priceRange = selected ? null : value),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 33.w, vertical: 18.h),
+                      child: Text(
+                        label,
+                        style: AppTextStyles.bodyMedium13.copyWith(
+                            color: selected ? Colors.white : kTextPrimary),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+          ],
+        ),
+      ],
+    );
   }
 
   @override
@@ -100,67 +273,88 @@ class _ReviewFormSheetState extends State<_ReviewFormSheet> {
       padding:
           EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: BottomSheetShell(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.title, style: AppTextStyles.baloo22),
-              if (widget.subtitle != null) ...[
-                SizedBox(height: 8.h),
-                Text(
-                  widget.subtitle!,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodyRegular13
-                      .copyWith(color: Colors.grey[500]),
-                ),
-              ],
-              SizedBox(height: 48.h),
-              StarRatingInput(
-                value: _rating,
-                onChanged: (value) => setState(() => _rating = value),
-              ),
-              SizedBox(height: 48.h),
-              Text('Un commentaire ? (facultatif)',
-                  style: AppTextStyles.bodyBold15),
-              SizedBox(height: 6.h),
-              AppTextField(
-                controller: _commentController,
-                hintText: 'Goût, texture, rapport qualité/prix...',
-                textCapitalization: TextCapitalization.sentences,
-                maxLength: 1000,
-                minLines: 3,
-                maxLines: 6,
-              ),
-              if (widget.moderationNotice != null) ...[
-                SizedBox(height: 12.h),
-                Text(
-                  widget.moderationNotice!,
-                  style: AppTextStyles.bodyRegular13
-                      .copyWith(color: Colors.grey[500]),
-                ),
-              ],
-              SizedBox(height: 48.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton(
-                      label: 'Annuler',
-                      backgroundColor: kAccentYellow,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                  SizedBox(width: 12.w),
-                  Expanded(
-                    child: AppButton(
-                      label: 'Envoyer',
-                      backgroundColor: kSemanticSuccess,
-                      onPressed: _rating == null ? null : _submit,
-                    ),
+        child: Flexible(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.title, style: AppTextStyles.baloo22),
+                if (widget.subtitle != null) ...[
+                  SizedBox(height: 8.h),
+                  Text(
+                    widget.subtitle!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyRegular13
+                        .copyWith(color: Colors.grey[500]),
                   ),
                 ],
-              ),
-            ],
+                SizedBox(height: 48.h),
+                StarRatingInput(
+                  value: _rating,
+                  onChanged: (value) => setState(() => _rating = value),
+                ),
+                if (widget.criteria.isNotEmpty) ...[
+                  SizedBox(height: 48.h),
+                  _buildCriteria(),
+                ],
+                if (widget.priceRanges.isNotEmpty) ...[
+                  SizedBox(height: 48.h),
+                  _buildPriceRanges(),
+                ],
+                SizedBox(height: 48.h),
+                Text('Un commentaire ? (facultatif)',
+                    style: AppTextStyles.bodyBold15),
+                SizedBox(height: 6.h),
+                AppTextField(
+                  controller: _commentController,
+                  hintText: widget.commentHint,
+                  textCapitalization: TextCapitalization.sentences,
+                  maxLength: 1000,
+                  minLines: 3,
+                  maxLines: 6,
+                ),
+                if (widget.maxPhotos > 0) ...[
+                  SizedBox(height: 24.h),
+                  Text('Des photos ? (facultatif)',
+                      style: AppTextStyles.bodyBold15),
+                  SizedBox(height: 18.h),
+                  PickedPhotosRow(
+                    photos: _photos,
+                    max: widget.maxPhotos,
+                    onChanged: (photos) => setState(() => _photos = photos),
+                  ),
+                ],
+                if (widget.moderationNotice != null) ...[
+                  SizedBox(height: 12.h),
+                  Text(
+                    widget.moderationNotice!,
+                    style: AppTextStyles.bodyRegular13
+                        .copyWith(color: Colors.grey[500]),
+                  ),
+                ],
+                SizedBox(height: 48.h),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppButton(
+                        label: 'Annuler',
+                        backgroundColor: kAccentYellow,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: AppButton(
+                        label: 'Envoyer',
+                        backgroundColor: kSemanticSuccess,
+                        onPressed: _rating == null ? null : _submit,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

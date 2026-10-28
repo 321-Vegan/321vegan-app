@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
@@ -19,6 +20,10 @@ class AppTextField extends StatefulWidget {
   final int? maxLength;
   final TextCapitalization textCapitalization;
   final TextInputType? keyboardType;
+
+  /// Restricts what can be typed or pasted (e.g. digits only): the
+  /// [keyboardType] is only a hint to the keyboard.
+  final List<TextInputFormatter>? inputFormatters;
   final int minLines;
   final int maxLines;
   final bool obscureText;
@@ -37,6 +42,13 @@ class AppTextField extends StatefulWidget {
 
   final String? labelText;
 
+  /// Appends a red asterisk to [hintText].
+  final bool isRequired;
+
+  /// Shows "12 / 100" under the field, right-aligned (red at the limit).
+  /// Needs [maxLength].
+  final bool showCounter;
+
   const AppTextField({
     super.key,
     required this.controller,
@@ -44,6 +56,7 @@ class AppTextField extends StatefulWidget {
     this.maxLength,
     this.textCapitalization = TextCapitalization.none,
     this.keyboardType,
+    this.inputFormatters,
     this.minLines = 1,
     this.maxLines = 1,
     this.obscureText = false,
@@ -54,6 +67,8 @@ class AppTextField extends StatefulWidget {
     this.suffixIcon,
     this.validator,
     this.labelText,
+    this.isRequired = false,
+    this.showCounter = false,
   });
 
   @override
@@ -82,6 +97,9 @@ class _AppTextFieldState extends State<AppTextField> {
     _focusNode.dispose();
     super.dispose();
   }
+
+  TextStyle get _hintStyle =>
+      AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]);
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +133,7 @@ class _AppTextFieldState extends State<AppTextField> {
                 maxLength: widget.maxLength,
                 textCapitalization: widget.textCapitalization,
                 keyboardType: widget.keyboardType,
+                inputFormatters: widget.inputFormatters,
                 minLines: widget.minLines,
                 maxLines: widget.obscureText ? 1 : widget.maxLines,
                 obscureText: widget.obscureText,
@@ -134,13 +153,26 @@ class _AppTextFieldState extends State<AppTextField> {
                   floatingLabelBehavior: widget.labelText != null
                       ? FloatingLabelBehavior.always
                       : FloatingLabelBehavior.auto,
-                  labelStyle:
-                      AppTextStyles.bodyMedium11.copyWith(color: Colors.grey[500]),
-                  floatingLabelStyle:
-                      AppTextStyles.bodyMedium11.copyWith(color: Colors.grey[500]),
-                  hintText: widget.hintText,
-                  hintStyle:
-                      AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]),
+                  labelStyle: AppTextStyles.bodyMedium11
+                      .copyWith(color: Colors.grey[500]),
+                  floatingLabelStyle: AppTextStyles.bodyMedium11
+                      .copyWith(color: Colors.grey[500]),
+                  // hint and hintText are exclusive: the rich one for the star
+                  // (hintStyle isn't applied to it, hence the explicit style)
+                  hintText: widget.isRequired ? null : widget.hintText,
+                  hint: widget.isRequired && widget.hintText != null
+                      ? Text.rich(
+                          TextSpan(children: [
+                            TextSpan(text: widget.hintText),
+                            const TextSpan(
+                              text: ' *',
+                              style: TextStyle(color: kSemanticError),
+                            ),
+                          ]),
+                          style: _hintStyle,
+                        )
+                      : null,
+                  hintStyle: _hintStyle,
                   suffixIcon: widget.suffixIcon,
                   border: InputBorder.none,
                   contentPadding:
@@ -158,6 +190,24 @@ class _AppTextFieldState extends State<AppTextField> {
                 ),
               ),
             ],
+            // Rebuilt on each keystroke by field.didChange
+            if (widget.showCounter && widget.maxLength != null)
+              Padding(
+                padding: EdgeInsets.only(top: 8.h, right: 12.w),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${widget.controller.text.characters.length} / '
+                    '${widget.maxLength}',
+                    style: AppTextStyles.bodyRegular13.copyWith(
+                      color: widget.controller.text.characters.length >=
+                              widget.maxLength!
+                          ? kSemanticError
+                          : Colors.grey[500],
+                    ),
+                  ),
+                ),
+              ),
           ],
         );
       },

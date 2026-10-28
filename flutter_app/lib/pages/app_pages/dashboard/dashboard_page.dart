@@ -16,6 +16,7 @@ import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
 import '../../../services/error_report_badge_service.dart';
 import '../../../services/profile_notification_service.dart';
+import '../../../services/selection_badge_service.dart';
 import '../../../themes/app_colors.dart';
 import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
@@ -37,6 +38,7 @@ import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/b12/b12_reminder_settings_modal.dart';
 import '../Profile/error_reports_page.dart';
 import '../Profile/product_review_page.dart';
+import '../Profile/saved_restaurants_page.dart';
 import '../home.dart';
 import '../settings/settings_page.dart';
 
@@ -284,8 +286,22 @@ class DashboardPageState extends State<DashboardPage> {
         unreadErrorResponses: AuthService.isLoggedIn
             ? ErrorReportBadgeService.unreadCount.value
             : null,
+        unreadSelections: AuthService.isLoggedIn
+            ? SelectionBadgeService.unreadCount.value
+            : 0,
         onOpenAnnouncement: _openAnnouncement,
         onOpenErrorReports: _openErrorReports,
+        onOpenSelections: _openSelections,
+      ),
+    );
+  }
+
+  /// Only reachable logged in, with selections not seen yet.
+  void _openSelections() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SavedRestaurantsPage(showSelections: true),
       ),
     );
   }

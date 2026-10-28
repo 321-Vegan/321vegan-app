@@ -81,9 +81,6 @@ class _ShopConfirmationModalState extends State<ShopConfirmationModal>
       ..showSnackBar(
         SnackBar(
           backgroundColor: primary,
-          behavior: SnackBarBehavior.floating,
-          shape: squircleBorder(radius: 16.r),
-          margin: EdgeInsets.symmetric(horizontal: 24.w, vertical: 24.h),
           duration: const Duration(seconds: 2),
           content: Row(
             mainAxisSize: MainAxisSize.min,

@@ -10,9 +10,10 @@ import '../../../services/auth_service.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
 import '../../../services/error_report_badge_service.dart';
+import '../../../services/selection_badge_service.dart';
 import '../../../widgets/auth/change_email_modal.dart';
 import '../../../widgets/auth/change_password_modal.dart';
-import '../../../widgets/auth/change_username_modal.dart';
+import '../../../widgets/auth/profile_sheet.dart';
 import '../../../widgets/settings/settings_row_tile.dart';
 import '../../../widgets/settings/settings_section.dart';
 import '../../../themes/app_colors.dart';
@@ -38,7 +39,8 @@ import '../Scan/scan_history_page.dart';
 import '../Scan/sent_products_page.dart';
 import 'package:vegan_app/services/subscription_service.dart';
 import '../Profile/error_reports_page.dart';
-import '../Profile/my_product_ratings_page.dart';
+import '../Profile/my_contributions_page.dart';
+import '../Profile/saved_restaurants_page.dart';
 import '../Profile/subscription_page.dart';
 
 /// Full-screen "Paramètres", reached from the Dashboard's gear icon.
@@ -87,6 +89,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _loadUser(),
       _loadPreferences(),
       _loadErrorReports(),
+      if (AuthService.isLoggedIn) SelectionBadgeService.refreshUnreadCount(),
     ]);
     if (mounted) setState(() => _isLoading = false);
   }
@@ -243,16 +246,11 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _openChangeUsernameModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => ChangeUsernameModal(
-        currentNickname: _user?.nickname ?? 'Utilisateur·ice',
-        onUsernameChanged: _loadUser,
-      ),
-    );
+  Future<void> _openProfileSheet() async {
+    final user = _user;
+    if (user == null) return;
+    final updated = await showProfileSheet(context, user);
+    if (updated != null && mounted) setState(() => _user = updated);
   }
 
   void _openChangeEmailModal() {
@@ -317,10 +315,10 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _openMyProductRatings() async {
+  Future<void> _openMyContributions() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const MyProductRatingsPage()),
+      MaterialPageRoute(builder: (_) => const MyContributionsPage()),
     );
     // Ratings may have been added or edited from the list.
     if (mounted) _loadUser();
@@ -483,7 +481,10 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsRowTile(
                 label: 'Pseudo',
                 value: _user?.nickname ?? '',
-                onTap: _openChangeUsernameModal,
+                secondaryValue: _user?.friendCode != null
+                    ? 'Code ami ${_user!.friendCode}'
+                    : null,
+                onTap: _openProfileSheet,
               ),
               SettingsRowTile(
                 label: 'Végane depuis',
@@ -579,10 +580,46 @@ class _SettingsPageState extends State<SettingsPage> {
                     : null,
                 onTap: _openErrorReports,
               ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.section),
+          SettingsSection(
+            title: 'Lieux',
+            children: [
+              // Badge: selections sent to the user, not seen yet
+              ValueListenableBuilder<int>(
+                valueListenable: SelectionBadgeService.unreadCount,
+                builder: (context, unreadSelections, _) => SettingsRowTile(
+                  label: 'Lieux sauvegardés',
+                  trailing: unreadSelections > 0
+                      ? Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 12.w, vertical: 4.h),
+                          decoration: const BoxDecoration(
+                              color: Colors.red, shape: BoxShape.circle),
+                          child: Text(
+                            '$unreadSelections',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 24.sp),
+                          ),
+                        )
+                      : null,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const SavedRestaurantsPage()),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppSpacing.section),
+          SettingsSection(
+            title: 'Contributions',
+            children: [
               SettingsRowTile(
-                label: 'Notes',
-                value: '${_user?.nbProductRatings ?? 0}',
-                onTap: _openMyProductRatings,
+                label: 'Mes contributions',
+                onTap: _openMyContributions,
               ),
             ],
           ),
@@ -641,7 +678,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               SettingsRowTile(
                 label: 'Notez l\'application',
-                labelSuffix: Icon(Icons.star, size: 48.sp, color: kAccentYellow),
+                labelSuffix:
+                    Icon(Icons.star, size: 48.sp, color: kAccentYellow),
                 trailing: Icon(Icons.arrow_forward_ios,
                     size: 32.sp, color: Colors.grey[400]),
                 onTap: () => SocialFeedbackButtons.rateApp(context),

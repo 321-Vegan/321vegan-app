@@ -9,6 +9,7 @@ import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/app_text_field.dart';
 import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
+import 'package:vegan_app/widgets/shared/info_box.dart';
 
 class CreateShopSheet extends StatefulWidget {
   final LatLng coordinates;
@@ -197,7 +198,13 @@ class _CreateShopSheetState extends State<CreateShopSheet> {
                       : 'Coordonnées : $lat, $lon',
                   style: TextStyle(fontSize: 42.sp, color: Colors.grey[600]),
                 ),
-                SizedBox(height: 48.h),
+                SizedBox(height: 36.h),
+                const InfoBox(
+                  text: 'Les magasins sont créés automatiquement quand vous '
+                      'scannez un produit sur place. S\'il n\'a pas été créé '
+                      'suite à une erreur, ajoutez-le ici manuellement.',
+                ),
+                SizedBox(height: 36.h),
                 AppTextField(
                   controller: _nameController,
                   hintText: 'Nom du magasin',

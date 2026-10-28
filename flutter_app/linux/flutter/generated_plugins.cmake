@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_linux
   flutter_localization
   flutter_timezone
+  gtk
   url_launcher_linux
 )
 

@@ -21,6 +21,10 @@ class User {
   final bool subscriptionBypass;
   final String? role;
 
+  /// To receive things from other users (restaurant selections...);
+  /// generated, premium users can choose it.
+  final String? friendCode;
+
   User({
     required this.id,
     required this.email,
@@ -40,6 +44,7 @@ class User {
     this.scannedProducts,
     this.subscriptionBypass = false,
     this.role,
+    this.friendCode,
   });
 
   bool get isContributor => role == 'contributor' || role == 'admin';
@@ -75,6 +80,7 @@ class User {
       subscriptionBypass: json['subscription_bypass'] == true ||
           json['subscription_bypass'] == 1,
       role: json['role'] as String?,
+      friendCode: json['friend_code'] as String?,
     );
   }
 

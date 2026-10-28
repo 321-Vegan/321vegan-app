@@ -24,10 +24,18 @@ class AppButton extends StatelessWidget {
   /// set — plain black glyph, tinted like [icon] at render time.
   final String? iconAsset;
 
+  /// Widget shown after the label (e.g. a [PremiumBadge] on a premium-only
+  /// action).
+  final Widget? trailing;
+
   /// Swaps the label (and icon) for a spinner and disables taps — the
   /// button keeps its size and colors so it doesn't jump while a request
   /// is in flight.
   final bool isLoading;
+
+  /// Smaller padding, label and icon, for secondary actions laid out side
+  /// by side (e.g. a selection's "Modifier" / "Envoyer").
+  final bool compact;
 
   const AppButton({
     super.key,
@@ -40,11 +48,15 @@ class AppButton extends StatelessWidget {
     this.borderColor,
     this.icon,
     this.iconAsset,
+    this.trailing,
     this.isLoading = false,
+    this.compact = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final double iconSize = compact ? 17 : 20;
+    final double fontSize = compact ? 14 : 16;
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
@@ -54,7 +66,9 @@ class AppButton extends StatelessWidget {
         disabledForegroundColor: disabledForegroundColor ?? Colors.white,
         elevation: 0,
         side: borderColor != null ? BorderSide(color: borderColor!) : BorderSide.none,
-        padding: EdgeInsets.symmetric(vertical: 39.h, horizontal: 70.5.w),
+        padding: compact
+            ? EdgeInsets.symmetric(vertical: 24.h, horizontal: 36.w)
+            : EdgeInsets.symmetric(vertical: 39.h, horizontal: 70.5.w),
         shape: const StadiumBorder(),
       ),
       child: isLoading
@@ -78,20 +92,24 @@ class AppButton extends StatelessWidget {
                 if (iconAsset != null) ...[
                   Image.asset(
                     iconAsset!,
-                    width: 20,
-                    height: 20,
+                    width: iconSize,
+                    height: iconSize,
                     color: foregroundColor,
                     colorBlendMode: BlendMode.srcIn,
                   ),
                   const SizedBox(width: 8),
                 ] else if (icon != null) ...[
-                  Icon(icon, size: 20, color: foregroundColor),
+                  Icon(icon, size: iconSize, color: foregroundColor),
                   const SizedBox(width: 8),
                 ],
                 Text(
                   label,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
                 ),
+                if (trailing != null) ...[
+                  const SizedBox(width: 8),
+                  trailing!,
+                ],
               ],
               ),
             ),

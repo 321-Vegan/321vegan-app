@@ -14,6 +14,10 @@ class SettingsRowTile extends StatelessWidget {
   /// Small widget rendered right after the label (e.g. the premium crown).
   final Widget? labelSuffix;
   final String? value;
+
+  /// Smaller second line under [value] (e.g. the friend code under the
+  /// pseudo).
+  final String? secondaryValue;
   final Widget? trailing;
   final VoidCallback? onTap;
 
@@ -22,6 +26,7 @@ class SettingsRowTile extends StatelessWidget {
     required this.label,
     this.labelSuffix,
     this.value,
+    this.secondaryValue,
     this.trailing,
     this.onTap,
   });
@@ -68,12 +73,25 @@ class SettingsRowTile extends StatelessWidget {
               SizedBox(width: 45.w),
               if (value != null)
                 Expanded(
-                  child: Text(
-                    value!,
-                    textAlign: TextAlign.right,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.bodyRegular15
-                        .copyWith(color: Colors.grey[500]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        value!,
+                        textAlign: TextAlign.right,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodyRegular15
+                            .copyWith(color: Colors.grey[500]),
+                      ),
+                      if (secondaryValue != null)
+                        Text(
+                          secondaryValue!,
+                          textAlign: TextAlign.right,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodyRegular13
+                              .copyWith(color: Colors.grey[500]),
+                        ),
+                    ],
                   ),
                 )
               else

@@ -26,6 +26,9 @@ class SearchField extends StatefulWidget {
   final double clearIconSize;
   final Widget? trailing;
 
+  /// Replaces the search icon (e.g. a back arrow on a full-page search).
+  final Widget? leading;
+
   const SearchField({
     super.key,
     required this.controller,
@@ -41,6 +44,7 @@ class SearchField extends StatefulWidget {
     this.fontSize = 42,
     this.clearIconSize = 36,
     this.trailing,
+    this.leading,
   });
 
   @override
@@ -110,13 +114,14 @@ class _SearchFieldState extends State<SearchField> {
               TextStyle(fontSize: widget.fontSize.sp, color: Colors.grey[500]),
           prefixIcon: Padding(
             padding: EdgeInsets.only(left: 39.w),
-            child: Image.asset(
-              'lib/assets/images/icons/search-line.webp',
-              width: widget.iconSize.sp,
-              height: widget.iconSize.sp,
-              color: Colors.grey[600],
-              colorBlendMode: BlendMode.srcIn,
-            ),
+            child: widget.leading ??
+                Image.asset(
+                  'lib/assets/images/icons/search-line.webp',
+                  width: widget.iconSize.sp,
+                  height: widget.iconSize.sp,
+                  color: Colors.grey[600],
+                  colorBlendMode: BlendMode.srcIn,
+                ),
           ),
           // InputDecorator floors prefixIcon to a 48px minimum by default
           // (kMinInteractiveDimension) — without this, iconSize values
@@ -132,7 +137,8 @@ class _SearchFieldState extends State<SearchField> {
                       onPressed: _clear,
                     )
                   : null),
-          contentPadding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 39.w, vertical: 33.h),
           border: InputBorder.none,
         ),
       ),

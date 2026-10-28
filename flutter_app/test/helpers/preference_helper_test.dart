@@ -364,4 +364,21 @@ void main() {
       expect(prefs.getString('scan_history'), isNull);
     });
   });
+
+  group('PreferencesHelper last map layer', () {
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test('is null until a layer was chosen', () async {
+      expect(await PreferencesHelper.getLastMapLayerPref(), isNull);
+    });
+
+    test('returns the last chosen layer', () async {
+      await PreferencesHelper.setLastMapLayerPref('restaurants');
+      expect(await PreferencesHelper.getLastMapLayerPref(), 'restaurants');
+      await PreferencesHelper.setLastMapLayerPref('shops');
+      expect(await PreferencesHelper.getLastMapLayerPref(), 'shops');
+    });
+  });
 }

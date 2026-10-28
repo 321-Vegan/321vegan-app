@@ -35,6 +35,10 @@ const Color kSemanticError = Color(0xFFD6484B);
 /// Use instead of ad-hoc `Colors.green*`.
 const Color kSemanticSuccess = Color(0xFF15866E);
 
+/// Map pins of places with vegan options (not 100 % vegan, which are
+/// [kSemanticSuccess]).
+const Color kVeganOptionsOrange = Color(0xFFF0892A);
+
 /// Dark green gradient for the first-launch welcome screen
 /// ("Rejoignez une communauté"), distinct from the app's default cream
 /// [kBackgroundGradientTop]/[kBackgroundGradientBottom].

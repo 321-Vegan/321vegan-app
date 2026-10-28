@@ -71,11 +71,11 @@ final List<PromoSlide> _promoSlides = [
             !SubscriptionService.isEntitlementDetermined),
   ),
   PromoSlide(
-    title: 'Accédez à la carte',
-    subtitle: 'Maintenant en accès libre !',
+    title: 'Nouvelle carte',
+    subtitle: 'Avec les restaurants !',
     image: 'lib/assets/images/stat-cards/co2.webp',
     onTap: (context) => MyHomePage.of(context)?.goToMapTab(),
-    buttonLabel: 'Trouver des produits',
+    buttonLabel: 'Voir la carte',
   ),
   PromoSlide(
     title: 'Partenaires',

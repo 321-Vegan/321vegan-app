@@ -115,6 +115,53 @@ class PreferencesHelper {
     return prefs.getBool('open_on_scan_page') ?? false;
   }
 
+  /// Layer shown on the map ("shops" or "restaurants"), restored on the
+  /// next visit.
+  static Future<void> setLastMapLayerPref(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_map_layer', value);
+  }
+
+  static Future<String?> getLastMapLayerPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('last_map_layer');
+  }
+
+  /// Tab of the saved places page ("places" or "selections"), restored on
+  /// the next visit.
+  static Future<void> setLastSavedTabPref(String value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_saved_tab', value);
+  }
+
+  static Future<String?> getLastSavedTabPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('last_saved_tab');
+  }
+
+  /// Whether the saved places button of the map was tapped once (it pulses
+  /// until then).
+  static Future<void> setMapSavedButtonFound() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('map_saved_button_found', true);
+  }
+
+  static Future<bool> getMapSavedButtonFound() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('map_saved_button_found') ?? false;
+  }
+
+  /// Whether the intro of the saved places page was closed for good.
+  static Future<void> setSavedPlacesWelcomeSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('saved_places_welcome_seen', true);
+  }
+
+  static Future<bool> getSavedPlacesWelcomeSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('saved_places_welcome_seen') ?? false;
+  }
+
   static Future<void> setLastSearchCategoryPref(String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('last_search_category', value);
@@ -569,8 +616,8 @@ class PreferencesHelper {
       'map_membership_action_count';
   static const String _mapMembershipPromptNextThresholdKey =
       'map_membership_prompt_next_threshold';
-  static const int _mapMembershipPromptInitialThreshold = 4;
-  static const int _mapMembershipPromptSnoozeActions = 4;
+  static const int _mapMembershipPromptInitialThreshold = 5;
+  static const int _mapMembershipPromptSnoozeActions = 10;
 
   /// Increments the map action counter and returns whether this action just
   /// crossed the next threshold, i.e. the subscription prompt should be shown.

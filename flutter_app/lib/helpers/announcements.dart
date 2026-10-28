@@ -12,30 +12,6 @@ import 'package:vegan_app/widgets/shared/announcement_sheet.dart';
 /// tab; null where they're never pressed (e.g. marking all seen).
 List<Announcement> appAnnouncements({MyHomePageState? home}) => [
       Announcement(
-        id: 'map_open_to_all',
-        badge: 'Nouveau',
-        title: 'La carte est ouverte à toustes !',
-        message:
-            'Vous pouvez maintenant trouver tous les produits du vegandex autour de vous.',
-        image: 'lib/assets/themes/cards/poule-summer.webp',
-        mirrorImage: true,
-        features: const [
-          'Trouvez tous les produits en magasin',
-          'Filtrez par produit recherché',
-          'Ajoutez des magasins et donnez votre avis',
-        ],
-        note: 'Les produits de la carte sont ceux du Vegandex : '
-            'scannez-les en magasin pour aider les autres utilisateur·ices '
-            'à les trouver !',
-        primaryLabel: 'Voir la carte',
-        onPrimary: home?.goToMapTab,
-        // Unknown status (offline, slow backend) counts as no: better skip
-        // it once than show it to a subscriber.
-        shouldShow: () async =>
-            SubscriptionService.isEntitlementDetermined &&
-            !SubscriptionService.isSubscribed,
-      ),
-      Announcement(
         id: 'product_ratings',
         badge: 'Nouveau',
         title: 'Notez les produits !',
@@ -47,10 +23,33 @@ List<Announcement> appAnnouncements({MyHomePageState? home}) => [
           'Ajoutez un commentaire si vous le souhaitez',
           'Consultez les avis des autres utilisateur·ices',
         ],
-        note: 'Scannez un produit ou ouvrez-le depuis le Vegandex ou l\'historuqe pour le '
+        note:
+            'Scannez un produit ou ouvrez-le depuis le Vegandex ou l\'historique pour le '
             'noter. Retrouvez toutes vos notes dans Paramètres > Notes.',
         primaryLabel: 'Scanner',
         onPrimary: home?.goToScanTab,
+      ),
+      Announcement(
+        id: 'map_places',
+        badge: 'Nouveau',
+        title: 'Les lieux véganes sont sur la carte !',
+        message: 'Restaurants, cafés, boulangeries, glaciers… trouvez où '
+            'manger végane près de chez vous ou en voyage.',
+        image: 'lib/assets/images/characters/avocado.webp',
+        features: const [
+          'Lieux 100 % véganes et lieux avec options véganes bien identifiés',
+          'Notes, avis et photos de la communauté',
+          'Sauvegardez vos lieux préférés et partagez-les',
+        ],
+        note: 'Sur la carte, passez sur « Lieux » en bas de l\'écran. Un lieu '
+            'manque ? Ajoutez-le avec le bouton +.',
+        primaryLabel: 'Voir les lieux',
+        onPrimary: home == null
+            ? null
+            : () async {
+                await PreferencesHelper.setLastMapLayerPref('restaurants');
+                home.goToMapTab();
+              },
       ),
     ];
 

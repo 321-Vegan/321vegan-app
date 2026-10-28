@@ -14,11 +14,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/auth_service.dart';
 import 'services/b12_reminder_service.dart';
+import 'services/deep_link_service.dart';
 import 'services/notification_service.dart';
 import 'services/anniversary_service.dart';
 import 'services/products_of_interest_cache.dart';
 import 'services/subscription_service.dart';
 import 'helpers/theme_helper.dart';
+import 'themes/app_snack_bar_theme.dart';
 
 /// Global navigator key for showing dialogs from notification handlers
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -36,6 +38,9 @@ void main() async {
   await AuthService.init();
 
   runApp(const MyApp());
+
+  // Doesn't wait: the link that launched the app comes through the stream
+  DeepLinkService.init();
 
   // Everything below touches the network or a native platform channel
   // (StoreKit/Play Billing, local notifications) and must never block the
@@ -119,6 +124,7 @@ class MyAppState extends State<MyApp> {
     colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF15866E)),
     useMaterial3: true,
     fontFamily: 'Karla',
+    snackBarTheme: appSnackBarTheme,
   );
 
   late final Upgrader _upgrader;
