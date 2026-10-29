@@ -47,7 +47,8 @@ class User {
     this.friendCode,
   });
 
-  bool get isContributor => role == 'contributor' || role == 'admin';
+  bool get isContributor =>
+      const ['contributor', 'moderator', 'admin'].contains(role);
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(

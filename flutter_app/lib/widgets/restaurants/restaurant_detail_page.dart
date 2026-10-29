@@ -99,6 +99,11 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
   bool _isUploadingPhotos = false;
   _Feedback? _photoFeedback;
 
+  /// Photos of the approved reviews with their review, shown among the
+  /// place photos; loaded when the photos tab is first opened.
+  List<(RestaurantPhoto, RestaurantReview)> _reviewPhotos = [];
+  bool _reviewPhotosRequested = false;
+
   // Reviews tab state
   RestaurantReviewSummary? _summary;
   List<RestaurantReview> _reviews = [];
@@ -122,6 +127,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
+      if (_tabController.index == 1 && !_reviewPhotosRequested) {
+        _loadReviewPhotos();
+      }
       if (_tabController.index == 2 && _isLoadingReviews) _loadReviews();
     });
     _loadRestaurant();
@@ -318,6 +326,49 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
               color: kSemanticError,
             );
     });
+  }
+
+  /// The API doesn't send review photos with the restaurant: taken from its
+  /// reviews, as many as one request gives (enough for nearly every
+  /// restaurant). Asked again next time the tab opens if it failed.
+  Future<void> _loadReviewPhotos() async {
+    _reviewPhotosRequested = true;
+    final paginated = await RestaurantApiService.getReviews(
+        restaurantId: widget.restaurant.id, pageSize: 100);
+    if (!mounted) return;
+    if (paginated == null) {
+      _reviewPhotosRequested = false;
+      return;
+    }
+    setState(() => _reviewPhotos = [
+          for (final review in paginated.items)
+            for (final photo in review.photos)
+              if (!photo.isPending) (photo, review),
+        ]);
+  }
+
+  /// The review a photo of the photos tab comes from, with all its photos.
+  void _showReview(RestaurantReview review) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BottomSheetShell(
+        child: Flexible(
+          child: SingleChildScrollView(
+            child: ReviewCard(
+              nickname: review.userNickname,
+              isPremium: review.userIsPremium,
+              rating: review.rating,
+              comment: review.comment,
+              date: review.createdAt,
+              footer: RestaurantReviewFooter.orNull(review,
+                  isFullyVegan: _restaurant.isFullyVegan),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // ── Reviews ───────────────────────────────────────────────────────────────
@@ -819,26 +870,52 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   // ── Photos tab ────────────────────────────────────────────────────────────
 
-  Widget _photoGrid(String title, List<RestaurantPhoto> photos) {
+  /// [reviews]: the review of the photos coming from one, by photo id; their
+  /// rating shows over them and tapping one opens it. With only those, still
+  /// asks for a photo.
+  Widget _photoGrid(String title, List<RestaurantPhoto> photos,
+      {Map<int, RestaurantReview> reviews = const {}}) {
+    final onlyFromReviews =
+        photos.every((photo) => reviews.containsKey(photo.id));
     return _section(
       title,
-      photos.isEmpty
-          ? Text(
-              'Aucune photo pour le moment. Vous pouvez en ajouter pour nous aider !',
-              style:
-                  AppTextStyles.bodyRegular15.copyWith(color: Colors.grey[500]))
-          : LayoutBuilder(builder: (context, constraints) {
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (onlyFromReviews)
+            Text(
+                photos.isEmpty
+                    ? 'Aucune photo pour le moment. Vous pouvez en ajouter '
+                        'pour nous aider !'
+                    : 'Pour l\'instant, seulement des photos d\'avis. '
+                        'Ajoutez des photos du lieu pour nous aider !',
+                style: AppTextStyles.bodyRegular15
+                    .copyWith(color: Colors.grey[500])),
+          if (onlyFromReviews && photos.isNotEmpty) SizedBox(height: 24.h),
+          if (photos.isNotEmpty)
+            LayoutBuilder(builder: (context, constraints) {
               final size = (constraints.maxWidth - 2 * 18.w) / 3;
               return Wrap(
                 spacing: 18.w,
                 runSpacing: 18.w,
                 children: [
                   for (var i = 0; i < photos.length; i++)
-                    RestaurantPhotoThumbnail(
-                        photos: photos, index: i, size: size),
+                    Builder(builder: (context) {
+                      final review = reviews[photos[i].id];
+                      return RestaurantPhotoThumbnail(
+                        photos: photos,
+                        index: i,
+                        size: size,
+                        rating: review?.rating,
+                        onTap:
+                            review == null ? null : () => _showReview(review),
+                      );
+                    }),
                 ],
               );
             }),
+        ],
+      ),
     );
   }
 
@@ -851,7 +928,16 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         if (!_restaurant.hasNoMenu)
           _photoGrid(
               'Menu', _restaurant.photosOfKind(RestaurantPhoto.kindMenu)),
-        _photoGrid('Lieu', _restaurant.photosOfKind(RestaurantPhoto.kindPlace)),
+        _photoGrid(
+          'Lieu',
+          [
+            ..._restaurant.photosOfKind(RestaurantPhoto.kindPlace),
+            for (final (photo, _) in _reviewPhotos) photo,
+          ],
+          reviews: {
+            for (final (photo, review) in _reviewPhotos) photo.id: review,
+          },
+        ),
         SizedBox(height: AppSpacing.section),
         Center(
           child: AppButton(

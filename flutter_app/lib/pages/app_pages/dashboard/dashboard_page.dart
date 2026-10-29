@@ -344,8 +344,8 @@ class DashboardPageState extends State<DashboardPage> {
             children: [
               SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.fromLTRB(
-                    AppSpacing.pageHorizontal, 16.h, AppSpacing.pageHorizontal, 32.h),
+                padding: EdgeInsets.fromLTRB(AppSpacing.pageHorizontal, 16.h,
+                    AppSpacing.pageHorizontal, 32.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -372,14 +372,20 @@ class DashboardPageState extends State<DashboardPage> {
                         },
                       ),
                       SizedBox(height: AppSpacing.section),
-                    ] else if (_b12Enabled && _b12DueToday && !_b12TakenToday) ...[
+                    ] else if (_b12Enabled &&
+                        _b12DueToday &&
+                        !_b12TakenToday) ...[
                       B12IntakeButton(onPressed: _markB12Taken),
                       SizedBox(height: AppSpacing.section),
                     ],
                     _buildVeganCounterRow(context, daysSince),
                     if (_targetDate != null) ...[
                       SizedBox(height: AppSpacing.afterTitle),
-                      VeganCounter(targetDate: _targetDate!),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: _pickDate,
+                        child: VeganCounter(targetDate: _targetDate!),
+                      ),
                     ],
                     SizedBox(height: AppSpacing.afterTitle),
                     _buildStatCards(context),
@@ -569,8 +575,8 @@ class DashboardPageState extends State<DashboardPage> {
     return Row(
       children: [
         Expanded(
-          // Tapping the title adjusts the start date (also editable from
-          // the "Végane depuis" row in Paramètres).
+          // Tapping the title or the counter adjusts the start date (also
+          // editable from the "Végane depuis" row in Paramètres).
           child: GestureDetector(
             onTap: daysSince == null ? null : _pickDate,
             child: Text(
