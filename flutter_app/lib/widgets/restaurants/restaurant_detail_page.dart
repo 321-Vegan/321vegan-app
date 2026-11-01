@@ -269,7 +269,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.storefront_outlined),
-                    title: Text('Du lieu', style: AppTextStyles.bodyRegular15),
+                    title: Text('Du lieu ou des plats',
+                        style: AppTextStyles.bodyRegular15),
                     onTap: () =>
                         Navigator.of(ctx).pop(RestaurantPhoto.kindPlace),
                   ),
@@ -888,7 +889,8 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                     ? 'Aucune photo pour le moment. Vous pouvez en ajouter '
                         'pour nous aider !'
                     : 'Pour l\'instant, seulement des photos d\'avis. '
-                        'Ajoutez des photos du lieu pour nous aider !',
+                        'Ajoutez des photos du lieu et des plats pour nous '
+                        'aider !',
                 style: AppTextStyles.bodyRegular15
                     .copyWith(color: Colors.grey[500])),
           if (onlyFromReviews && photos.isNotEmpty) SizedBox(height: 24.h),
@@ -929,7 +931,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
           _photoGrid(
               'Menu', _restaurant.photosOfKind(RestaurantPhoto.kindMenu)),
         _photoGrid(
-          'Lieu',
+          'Lieu et plats',
           [
             ..._restaurant.photosOfKind(RestaurantPhoto.kindPlace),
             for (final (photo, _) in _reviewPhotos) photo,

@@ -12,6 +12,10 @@ import 'bottom_sheet_shell.dart';
 /// dismissed or on picker error.
 Future<List<File>> pickPhotos(BuildContext context, {int max = 1}) async {
   if (max <= 0) return [];
+  // Keyboard closed first: the sheet would give the focus back to the field
+  // on closing, and a native picker opened over the keyboard leaves its
+  // inset stuck on iOS
+  FocusManager.instance.primaryFocus?.unfocus();
   final source = await showModalBottomSheet<ImageSource>(
     context: context,
     isScrollControlled: true,
@@ -76,6 +80,8 @@ Future<File?> cropPhoto(
   String title = 'Recadrer',
 }) async {
   final primary = Theme.of(context).colorScheme.primary;
+  // As in pickPhotos
+  FocusManager.instance.primaryFocus?.unfocus();
   try {
     final cropped = await ImageCropper().cropImage(
       sourcePath: photo.path,

@@ -25,6 +25,7 @@ import 'package:vegan_app/widgets/map/create_shop_sheet.dart';
 import 'package:vegan_app/widgets/map/map_access_overlay.dart';
 import 'package:vegan_app/widgets/map/map_filter_page.dart';
 import 'package:vegan_app/widgets/map/map_search_bar.dart';
+import 'package:vegan_app/widgets/map/map_new_feature_sheet.dart';
 import 'package:vegan_app/widgets/map/map_search_page.dart';
 import 'package:vegan_app/widgets/map/map_restaurant_list_page.dart';
 import 'package:vegan_app/widgets/map/shop_detail_sheet.dart';
@@ -35,6 +36,7 @@ import 'package:vegan_app/widgets/restaurants/restaurant_pin.dart';
 import 'package:vegan_app/services/geocoding_service.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
+import 'package:vegan_app/widgets/shared/tag_chip.dart';
 import 'package:vegan_app/widgets/shared/attention_pulse.dart';
 
 /// Places shown on the map, one kind at a time.
@@ -596,7 +598,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   /// Saved places. The places opened from there open over the list (going
   /// back returns to it), while the map moves to them behind: once the
   /// list is left, the map is on the last one.
-  Future<void> _openSaved() async {
+  Future<void> _openSaved({bool? showSelections}) async {
     if (_highlightSavedButton) {
       setState(() => _highlightSavedButton = false);
       PreferencesHelper.setMapSavedButtonFound();
@@ -605,6 +607,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => SavedRestaurantsPage(
+          showSelections: showSelections,
           onOpenRestaurant: (restaurant) {
             opened = true;
             if (mounted) _moveToRestaurant(restaurant);
@@ -973,77 +976,25 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
               top: MediaQuery.of(context).padding.top + 24,
               left: 48.w,
               right: 48.w,
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: MapSearchBar(
-                      query: _searchQuery,
-                      hintText: _layer == _MapLayer.restaurants
-                          ? 'Rechercher un lieu, une adresse...'
-                          : 'Rechercher l\'adresse',
-                      onTap: _openSearch,
-                      onClear: () => setState(() => _searchQuery = ''),
-                    ),
-                  ),
-                  SizedBox(width: 30.w),
-                  // Active filters: yellow icon + count badge (Figma)
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      SquareIconButton.action(
-                        icon: Icons.tune,
-                        iconColor: _activeFilterCount > 0
-                            ? kAccentYellow
-                            : kTextPrimary,
-                        onTap: _openFilters,
-                      ),
-                      if (_activeFilterCount > 0)
-                        Positioned(
-                          top: -16.w,
-                          right: -16.w,
-                          child: Container(
-                            width: 66.w,
-                            height: 66.w,
-                            decoration: const BoxDecoration(
-                              color: kAccentYellow,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                '$_activeFilterCount',
-                                style: TextStyle(
-                                  fontSize: 36.sp,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  height: 1,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  SizedBox(width: 30.w),
-                  SquareIconButton.action(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    onTap: _onAddPlace,
-                    child: _layer == _MapLayer.restaurants
-                        ? Icon(Icons.add_location_alt_outlined,
-                            color: Colors.white, size: 72.sp)
-                        : Image.asset(
-                            'lib/assets/images/icons/shop-add.webp',
-                            width: 72.sp,
-                            height: 72.sp,
-                            color: Colors.white,
-                            colorBlendMode: BlendMode.srcIn,
-                          ),
-                  ),
+                  _buildSearchRow(),
+                  if (_layer == _MapLayer.restaurants) ...[
+                    SizedBox(height: 24.h),
+                    _buildNewFeatureChip(),
+                  ],
                 ],
               ),
             ),
           if (_isLoading)
             Positioned(
-              top: MediaQuery.of(context).padding.top + 24 + 144.w + 24.h,
+              top: MediaQuery.of(context).padding.top +
+                  24 +
+                  144.w +
+                  24.h +
+                  // Below the "new feature" chip too
+                  (_layer == _MapLayer.restaurants ? 110.h : 0),
               left: 0,
               right: 0,
               child: const Center(
@@ -1054,6 +1005,116 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             MapAccessOverlay(onLoginSuccess: _onLoginSuccess),
         ],
       ),
+    );
+  }
+
+  /// Small chip under the search bar opening [MapNewFeatureSheet]: the
+  /// restaurants map is new and still sparse.
+  Widget _buildNewFeatureChip() {
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: squircleBorder(radius: 30.r),
+        shadows: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: TagChip(
+        label: 'Nouveau',
+        icon: Icons.auto_awesome,
+        color: Colors.white,
+        backgroundColor: kAccentYellow,
+        onTap: _openNewFeatureSheet,
+      ),
+    );
+  }
+
+  Future<void> _openNewFeatureSheet() async {
+    final action = await showModalBottomSheet<MapNewFeatureAction>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const MapNewFeatureSheet(),
+    );
+    if (!mounted) return;
+    switch (action) {
+      case MapNewFeatureAction.addPlace:
+        _createRestaurant();
+      case MapNewFeatureAction.openSelections:
+        _openSaved(showSelections: true);
+      case null:
+        break;
+    }
+  }
+
+  Widget _buildSearchRow() {
+    return Row(
+      children: [
+        Expanded(
+          child: MapSearchBar(
+            query: _searchQuery,
+            hintText: _layer == _MapLayer.restaurants
+                ? 'Rechercher un lieu, une adresse...'
+                : 'Rechercher l\'adresse',
+            onTap: _openSearch,
+            onClear: () => setState(() => _searchQuery = ''),
+          ),
+        ),
+        SizedBox(width: 30.w),
+        // Active filters: yellow icon + count badge (Figma)
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            SquareIconButton.action(
+              icon: Icons.tune,
+              iconColor: _activeFilterCount > 0 ? kAccentYellow : kTextPrimary,
+              onTap: _openFilters,
+            ),
+            if (_activeFilterCount > 0)
+              Positioned(
+                top: -16.w,
+                right: -16.w,
+                child: Container(
+                  width: 66.w,
+                  height: 66.w,
+                  decoration: const BoxDecoration(
+                    color: kAccentYellow,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$_activeFilterCount',
+                      style: TextStyle(
+                        fontSize: 36.sp,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        SizedBox(width: 30.w),
+        SquareIconButton.action(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          onTap: _onAddPlace,
+          child: _layer == _MapLayer.restaurants
+              ? Icon(Icons.add_location_alt_outlined,
+                  color: Colors.white, size: 72.sp)
+              : Image.asset(
+                  'lib/assets/images/icons/shop-add.webp',
+                  width: 72.sp,
+                  height: 72.sp,
+                  color: Colors.white,
+                  colorBlendMode: BlendMode.srcIn,
+                ),
+        ),
+      ],
     );
   }
 }

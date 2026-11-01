@@ -129,9 +129,17 @@ class MyAppState extends State<MyApp> {
 
   late final Upgrader _upgrader;
 
+  /// Closes the keyboard when the app leaves the foreground: switching apps
+  /// with it open leaves its inset stuck on iOS once back (layout squeezed
+  /// with no keyboard).
+  late final AppLifecycleListener _lifecycleListener;
+
   @override
   void initState() {
     super.initState();
+    _lifecycleListener = AppLifecycleListener(
+      onInactive: () => FocusManager.instance.primaryFocus?.unfocus(),
+    );
     const appcastURL =
         'https://raw.githubusercontent.com/llambrecht/321vegan_appcast/main/appcast.xml';
     _upgrader = Upgrader(
@@ -152,6 +160,7 @@ class MyAppState extends State<MyApp> {
   @override
   void dispose() {
     SubscriptionService.revision.removeListener(_loadTheme);
+    _lifecycleListener.dispose();
     super.dispose();
   }
 

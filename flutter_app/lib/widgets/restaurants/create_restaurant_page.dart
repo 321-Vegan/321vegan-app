@@ -1356,6 +1356,9 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
+        // Not to get the focus back when the dialog closes, the keyboard
+        // then reopening as the page leaves
+        FocusScope.of(context).unfocus();
         if (_hasUnsavedChanges) {
           _confirmLeave();
         } else {
@@ -1937,7 +1940,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               ],
                             ),
                           _section(
-                            'Photos du lieu',
+                            'Photos du lieu et des plats',
                             subtitle: _placePhotos.length > 1
                                 ? 'Facultatif. Touchez une photo pour en faire '
                                     'la photo principale (★). Pas de captures '

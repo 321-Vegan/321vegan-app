@@ -104,6 +104,8 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
   Future<void> _takePhoto() async {
     if (_isTakingPhoto) return;
     setState(() => _isTakingPhoto = true);
+    // The camera opened over the keyboard leaves its inset stuck on iOS
+    FocusManager.instance.primaryFocus?.unfocus();
 
     try {
       final picker = ImagePicker();
