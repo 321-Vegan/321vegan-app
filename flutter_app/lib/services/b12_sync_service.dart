@@ -18,6 +18,8 @@ import 'b12_reminder_service.dart';
 ///  - each new intake is appended to a persistent queue flushed on the next
 ///    [sync] trigger: app start, login, or the next intake. Intakes
 ///    recorded offline simply stay queued until then;
+///  - a day removed from the history calendar (marked by mistake) is queued
+///    for deletion the same way;
 ///  - the first sync of a user after each app launch reconciles with the
 ///    server both ways: every local day the server is missing is queued,
 ///    and every server day missing locally (reinstall, other device) is
@@ -31,6 +33,11 @@ import 'b12_reminder_service.dart';
 /// and the server needs the rhythm to score intakes fairly.
 class B12SyncService {
   static const String _pendingKey = 'b12_intakes_unsynced';
+
+  /// Days ('yyyy-MM-dd') removed locally whose server-side intake still has
+  /// to be deleted. Disjoint from [_pendingKey]: queuing a day in one
+  /// removes it from the other, so the latest user action wins.
+  static const String _pendingDeletionsKey = 'b12_intake_deletions_unsynced';
 
   /// Local intake history entries older than this user's first sync belong
   /// to whoever recorded them; the owner marker prevents attributing them
@@ -54,9 +61,34 @@ class B12SyncService {
     if (!AuthService.isLoggedIn) return;
     try {
       final prefs = await SharedPreferences.getInstance();
+      await _unqueueDeletion(prefs, DateFormat('yyyy-MM-dd').format(day));
       await _enqueue(prefs, [day], frequency);
     } catch (e) {
       debugPrint('Failed to queue B12 intake: $e');
+      return;
+    }
+    unawaited(sync());
+  }
+
+  /// Queue the server-side deletion of one intake day. Call after the day
+  /// has been removed from the local history. Until flushed, the day is
+  /// also kept out of reconciliation so the server copy doesn't restore it.
+  static Future<void> onIntakeRemoved(DateTime day) async {
+    if (!AuthService.isLoggedIn) return;
+    final date = DateFormat('yyyy-MM-dd').format(day);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pending = prefs.getStringList(_pendingKey) ?? [];
+      pending.removeWhere((e) =>
+          (json.decode(e) as Map<String, dynamic>)['date'] == date);
+      await prefs.setStringList(_pendingKey, pending);
+
+      final deletions = prefs.getStringList(_pendingDeletionsKey) ?? [];
+      if (!deletions.contains(date)) {
+        await prefs.setStringList(_pendingDeletionsKey, [...deletions, date]);
+      }
+    } catch (e) {
+      debugPrint('Failed to queue B12 intake deletion: $e');
       return;
     }
     unawaited(sync());
@@ -109,8 +141,17 @@ class B12SyncService {
   /// Returns false when the server history couldn't be fetched, so the
   /// caller retries on the next sync.
   static Future<bool> _reconcile(SharedPreferences prefs, int userId) async {
-    final serverIntakes = await ApiService.getB12Intakes();
-    if (serverIntakes == null) return false;
+    final fetched = await ApiService.getB12Intakes();
+    if (fetched == null) return false;
+
+    // Days removed locally but not yet deleted server-side must not come
+    // back through the merge below.
+    final pendingDeletions =
+        (prefs.getStringList(_pendingDeletionsKey) ?? []).toSet();
+    final serverIntakes = fetched
+        .where((intake) => !pendingDeletions
+            .contains(DateFormat('yyyy-MM-dd').format(intake.date)))
+        .toList();
 
     // Adopt the server-side rhythm before anything below reads the local
     // settings: on a device where reminders were never configured, the
@@ -200,6 +241,7 @@ class B12SyncService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_pendingKey);
+      await prefs.remove(_pendingDeletionsKey);
     } catch (e) {
       debugPrint('Failed to clear unsynced B12 intakes: $e');
     }
@@ -226,6 +268,14 @@ class B12SyncService {
     if (changed) await prefs.setStringList(_pendingKey, pending);
   }
 
+  static Future<void> _unqueueDeletion(
+      SharedPreferences prefs, String date) async {
+    final deletions = prefs.getStringList(_pendingDeletionsKey) ?? [];
+    if (deletions.remove(date)) {
+      await prefs.setStringList(_pendingDeletionsKey, deletions);
+    }
+  }
+
   /// Rejections that a retry can never fix: invalid data or state (409 is
   /// the expected duplicate-day answer and means "already synced"). Anything
   /// else — 401/403 (expired session that the HTTP client couldn't refresh),
@@ -239,6 +289,17 @@ class B12SyncService {
   /// entries stay queued for the next trigger; so does a network error,
   /// via the throw caught in [sync].
   static Future<void> _flush(SharedPreferences prefs) async {
+    // Deletions first: a day re-added while its deletion was in flight is
+    // then picked up by the intake list read below.
+    for (final date in prefs.getStringList(_pendingDeletionsKey) ?? []) {
+      final status = await ApiService.deleteB12Intake(intakeDate: date);
+      final synced = status >= 200 && status < 300;
+      if (!synced && !_dropStatuses.contains(status)) return;
+
+      await _unqueueDeletion(prefs, date);
+      if (synced) debugPrint('🗑️ Deleted B12 intake of $date');
+    }
+
     final pending = prefs.getStringList(_pendingKey) ?? [];
     if (pending.isEmpty) return;
 

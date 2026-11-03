@@ -58,6 +58,7 @@ class B12ReminderService {
     await saveSettings(B12ReminderSettings(
       frequency: frequency,
       dayOfWeek: lastIntake.weekday,
+      dayOfMonth: lastIntake.day.clamp(1, B12ReminderSettings.maxDayOfMonth),
     ));
   }
 
@@ -139,6 +140,18 @@ class B12ReminderService {
               startDate: settings.biweeklyStartDate,
             );
           }
+          break;
+
+        case ReminderFrequency.monthly:
+          await _notificationService.scheduleMonthlyNotification(
+            id: _notificationId,
+            title: title,
+            body: body,
+            dayOfMonth: settings.dayOfMonth ?? 1,
+            hour: settings.hour,
+            minute: settings.minute,
+            payload: 'b12_reminder',
+          );
           break;
       }
     }
@@ -419,6 +432,27 @@ class B12ReminderService {
         }
 
         return candidate;
+
+      case ReminderFrequency.monthly:
+        final dayOfMonth = settings.dayOfMonth ?? 1;
+        var candidate = DateTime(
+          now.year,
+          now.month,
+          dayOfMonth,
+          settings.hour,
+          settings.minute,
+        );
+        if (candidate.isBefore(now) ||
+            (skipToday && _isSameDay(candidate, now))) {
+          candidate = DateTime(
+            now.year,
+            now.month + 1,
+            dayOfMonth,
+            settings.hour,
+            settings.minute,
+          );
+        }
+        return candidate;
     }
   }
 
@@ -500,24 +534,25 @@ class B12ReminderService {
     );
   }
 
-  /// Record a B12 intake for today, snapshotting the frequency currently
+  /// Record a B12 intake for [day] (today by default — a past day when
+  /// correcting the history calendar), snapshotting the frequency currently
   /// in effect: the streak judges each intake against the rhythm it was
   /// taken under, and the server needs it to score intakes fairly.
-  static Future<void> recordB12Intake() async {
+  static Future<void> recordB12Intake({DateTime? day}) async {
     final prefs = await SharedPreferences.getInstance();
     final intakes = await _loadIntakes(prefs);
 
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
-    final todayKey = _dayFormat.format(todayDate);
+    final target = day ?? DateTime.now();
+    final targetDate = DateTime(target.year, target.month, target.day);
+    final targetKey = _dayFormat.format(targetDate);
 
-    if (intakes.any((intake) => _dayFormat.format(intake.date) == todayKey)) {
+    if (intakes.any((intake) => _dayFormat.format(intake.date) == targetKey)) {
       return;
     }
 
     final settings = await getSettings();
     intakes.add(B12Intake(
-      date: todayDate,
+      date: targetDate,
       frequency: reminderFrequencyToApi(settings.frequency),
     ));
     await _saveIntakes(prefs, intakes);
@@ -526,12 +561,42 @@ class B12ReminderService {
     // Biweekly's OS notification is a one-off tied to a tracked "next date"
     // (unlike the other frequencies' OS-repeating triggers), so push it out
     // to the next occurrence if today was the scheduled date.
-    if (settings.enabled && settings.frequency == ReminderFrequency.biweekly) {
-      await scheduleReminder(settings);
+    if (_isSameDay(targetDate, DateTime.now())) {
+      await _rescheduleBiweekly(settings);
     }
 
     // Mirror the intake to the API (offline-safe, queued)
-    unawaited(B12SyncService.onIntakeRecorded(todayDate, settings.frequency));
+    unawaited(B12SyncService.onIntakeRecorded(targetDate, settings.frequency));
+  }
+
+  /// Remove the intake recorded for [day], e.g. a day marked by mistake
+  /// from the history calendar. No-op when nothing was recorded that day.
+  static Future<void> removeB12Intake(DateTime day) async {
+    final prefs = await SharedPreferences.getInstance();
+    final intakes = await _loadIntakes(prefs);
+
+    final targetDate = DateTime(day.year, day.month, day.day);
+    final targetKey = _dayFormat.format(targetDate);
+    final remaining = intakes
+        .where((intake) => _dayFormat.format(intake.date) != targetKey)
+        .toList();
+    if (remaining.length == intakes.length) return;
+
+    await _saveIntakes(prefs, remaining);
+    _notifyHistoryChanged();
+
+    // Un-taking today makes today's biweekly slot due again.
+    if (_isSameDay(targetDate, DateTime.now())) {
+      await _rescheduleBiweekly(await getSettings());
+    }
+
+    unawaited(B12SyncService.onIntakeRemoved(targetDate));
+  }
+
+  static Future<void> _rescheduleBiweekly(B12ReminderSettings settings) async {
+    if (settings.enabled && settings.frequency == ReminderFrequency.biweekly) {
+      await scheduleReminder(settings);
+    }
   }
 
   /// Replace the whole local history. Used when the device's history was
@@ -662,6 +727,8 @@ class B12ReminderService {
         return 8;
       case ReminderFrequency.biweekly:
         return 16;
+      case ReminderFrequency.monthly:
+        return 33; // longest month (31) + 2
     }
   }
 
@@ -696,6 +763,8 @@ class B12ReminderService {
         final dayOnly = DateTime(day.year, day.month, day.day);
         final weeksDiff = calendarDaysBetween(startDay, dayOnly) ~/ 7;
         return weeksDiff % 2 == 0;
+      case ReminderFrequency.monthly:
+        return day.day == (settings.dayOfMonth ?? 1);
     }
   }
 }

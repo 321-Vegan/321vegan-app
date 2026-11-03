@@ -7,6 +7,7 @@ import '../../../themes/app_colors.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/homepage/b12_reminder_banner.dart';
+import '../../../widgets/shared/app_dialog.dart';
 import '../../../widgets/shared/bottom_sheet_shell.dart';
 import '../../../widgets/shared/info_box.dart';
 
@@ -114,6 +115,40 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
     );
   }
 
+  /// Tapping a past (or today's) calendar day lets the user correct the
+  /// history: record a forgotten intake, or remove one marked by mistake.
+  Future<void> _editDay(DateTime date) async {
+    final taken = _historyDays.contains(date);
+    final label = date == _dayOnly(DateTime.now())
+        ? 'aujourd\'hui'
+        : 'le ${DateFormat('EEEE d MMMM', 'fr_FR').format(date)}';
+    final confirmed = await AppDialog.confirm(
+      context,
+      title: taken ? 'Retirer cette prise ?' : 'Ajouter une prise ?',
+      message: taken
+          ? 'La prise de B12 $label sera retirée de votre historique.'
+          : 'Indiquer que vous avez pris votre B12 $label.',
+      confirmLabel: taken ? 'Retirer' : 'J\'ai pris ma B12',
+      destructive: taken,
+    );
+    if (!confirmed) return;
+
+    if (taken) {
+      await B12ReminderService.removeB12Intake(date);
+    } else {
+      await B12ReminderService.recordB12Intake(day: date);
+    }
+    await _load(showSpinner: false);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(taken ? 'Prise retirée' : 'Bien reçu !'),
+        backgroundColor: kSemanticSuccess,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return BottomSheetShell(
@@ -129,7 +164,8 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
                   Text('Historique de votre B12', style: AppTextStyles.baloo26),
                   SizedBox(height: 8.h),
                   Text(
-                    'Suivez l\'historique de vos prises de B12.',
+                    'Suivez l\'historique de vos prises de B12. Touchez un '
+                    'jour pour ajouter ou retirer une prise.',
                     style: TextStyle(fontSize: 40.sp, color: Colors.grey[600]),
                   ),
                   SizedBox(height: AppSpacing.section),
@@ -241,11 +277,18 @@ class _B12HistorySheetState extends State<B12HistorySheet> {
             }
             final day = index - leadingBlanks + 1;
             final date = DateTime(_visibleMonth.year, _visibleMonth.month, day);
-            return Container(
+            final cell = Container(
               decoration: BoxDecoration(
                 border: Border.all(color: kBorderDefault),
               ),
               child: _buildDayCell(day, date, today),
+            );
+            // Future days can't be edited — nothing to have taken yet.
+            if (date.isAfter(today)) return cell;
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _editDay(date),
+              child: cell,
             );
           },
         ),

@@ -16,7 +16,7 @@ import '../shared/info_box.dart';
 const List<String> _dayLabels = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 /// Bottom sheet for editing B12 reminder settings — frequency, day(s) of
-/// week, and time. Opened from Settings and the Dashboard's B12 banner.
+/// week or day of month, and time. Opened from Settings and the Dashboard's B12 banner.
 class B12ReminderSettingsModal extends StatefulWidget {
   const B12ReminderSettingsModal({super.key});
 
@@ -68,6 +68,10 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
           settings.dayOfWeek == null) {
         throw Exception(
             'Veuillez sélectionner un jour de la semaine pour ce type de rappel');
+      }
+      if (settings.frequency == ReminderFrequency.monthly &&
+          settings.dayOfMonth == null) {
+        throw Exception('Veuillez sélectionner un jour du mois');
       }
 
       await B12ReminderService.scheduleReminder(settings);
@@ -136,7 +140,15 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
                     SizedBox(height: AppSpacing.item),
                     _buildFrequencyOption(
                         'Toutes les deux semaines', ReminderFrequency.biweekly),
-                    if (_settings.frequency == ReminderFrequency.twiceWeekly) ...[
+                    SizedBox(height: AppSpacing.item),
+                    _buildFrequencyOption(
+                        'Une fois par mois', ReminderFrequency.monthly),
+                    if (_settings.frequency == ReminderFrequency.monthly) ...[
+                      SizedBox(height: AppSpacing.section),
+                      _sectionLabel('Jour du mois'),
+                      SizedBox(height: AppSpacing.afterTitle),
+                      _buildMonthDayGrid(),
+                    ] else if (_settings.frequency == ReminderFrequency.twiceWeekly) ...[
                       SizedBox(height: AppSpacing.section),
                       _sectionLabel('Jours de la semaine (2 jours)'),
                       SizedBox(height: AppSpacing.afterTitle),
@@ -232,6 +244,14 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
                 frequency: frequency,
                 daysOfWeek: _settings.daysOfWeek ?? [1, 4],
               );
+            } else if (frequency == ReminderFrequency.monthly) {
+              _settings = _settings.copyWith(
+                frequency: frequency,
+                dayOfMonth: _settings.dayOfMonth ??
+                    DateTime.now()
+                        .day
+                        .clamp(1, B12ReminderSettings.maxDayOfMonth),
+              );
             } else {
               _settings = _settings.copyWith(
                 frequency: frequency,
@@ -298,34 +318,73 @@ class _B12ReminderSettingsModalState extends State<B12ReminderSettingsModal> {
     return Row(
       children: List.generate(7, (i) {
         final day = i + 1;
-        final selected = isSelected(day);
         return Expanded(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.w),
-            child: GestureDetector(
-              onTap: () => onTap(day),
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 18.h),
-                alignment: Alignment.center,
-                decoration: ShapeDecoration(
-                  color: selected ? kAccentYellow : Colors.white,
-                  shape: squircleBorder(
-                    radius: 16.r,
-                    side: BorderSide(color: selected ? kAccentYellow : kBorderDefault),
-                  ),
-                ),
-                child: Text(
-                  _dayLabels[i],
-                  style: AppTextStyles.bodyMedium15.copyWith(
-                    fontWeight: const FontWeight(400),
-                    color: selected ? Colors.white : null,
-                  ),
-                ),
-              ),
-            ),
+          child: _buildDayPill(
+            label: _dayLabels[i],
+            selected: isSelected(day),
+            onTap: () => onTap(day),
           ),
         );
       }),
+    );
+  }
+
+  /// Days 1-[B12ReminderSettings.maxDayOfMonth] as rows of seven pills,
+  /// same look as [_buildDayRow].
+  Widget _buildMonthDayGrid() {
+    const perRow = 7;
+    const rows = B12ReminderSettings.maxDayOfMonth ~/ perRow;
+    return Column(
+      children: List.generate(rows, (row) {
+        return Padding(
+          padding: EdgeInsets.only(top: row == 0 ? 0 : 12.h),
+          child: Row(
+            children: List.generate(perRow, (col) {
+              final day = row * perRow + col + 1;
+              return Expanded(
+                child: _buildDayPill(
+                  label: '$day',
+                  selected: _settings.dayOfMonth == day,
+                  onTap: () => setState(() {
+                    _settings = _settings.copyWith(dayOfMonth: day);
+                  }),
+                ),
+              );
+            }),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildDayPill({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 18.h),
+          alignment: Alignment.center,
+          decoration: ShapeDecoration(
+            color: selected ? kAccentYellow : Colors.white,
+            shape: squircleBorder(
+              radius: 16.r,
+              side: BorderSide(color: selected ? kAccentYellow : kBorderDefault),
+            ),
+          ),
+          child: Text(
+            label,
+            style: AppTextStyles.bodyMedium15.copyWith(
+              fontWeight: const FontWeight(400),
+              color: selected ? Colors.white : null,
+            ),
+          ),
+        ),
+      ),
     );
   }
 

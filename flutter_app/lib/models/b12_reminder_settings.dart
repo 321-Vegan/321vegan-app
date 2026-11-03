@@ -3,9 +3,14 @@ enum ReminderFrequency {
   weekly,
   twiceWeekly,
   biweekly,
+  monthly, // stored by index: new values go last
 }
 
 class B12ReminderSettings {
+  /// Monthly reminders stop at the 28th so every month has the day — the
+  /// OS-repeating trigger would silently skip months without it.
+  static const int maxDayOfMonth = 28;
+
   bool enabled;
   ReminderFrequency frequency;
   int hour; // 0-23
@@ -13,6 +18,7 @@ class B12ReminderSettings {
   int? dayOfWeek; // 1-7 (Monday = 1, Sunday = 7), null for daily
   List<int>? daysOfWeek; // For twiceWeekly: exactly 2 days (1-7)
   DateTime? biweeklyStartDate; // Starting date for biweekly cycle
+  int? dayOfMonth; // For monthly: 1-[maxDayOfMonth]
 
   B12ReminderSettings({
     this.enabled = false,
@@ -22,6 +28,7 @@ class B12ReminderSettings {
     this.dayOfWeek = 1, // Default to Monday
     this.daysOfWeek,
     this.biweeklyStartDate,
+    this.dayOfMonth,
   });
 
   // Convert to JSON for storage
@@ -34,6 +41,7 @@ class B12ReminderSettings {
       'dayOfWeek': dayOfWeek,
       'daysOfWeek': daysOfWeek,
       'biweeklyStartDate': biweeklyStartDate?.millisecondsSinceEpoch,
+      'dayOfMonth': dayOfMonth,
     };
   }
 
@@ -51,6 +59,7 @@ class B12ReminderSettings {
       biweeklyStartDate: json['biweeklyStartDate'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['biweeklyStartDate'])
           : null,
+      dayOfMonth: json['dayOfMonth'],
     );
   }
 
@@ -78,6 +87,9 @@ class B12ReminderSettings {
       case ReminderFrequency.biweekly:
         final dayName = _getDayName(dayOfWeek ?? 1);
         return 'Toutes les deux semaines le $dayName à $timeStr';
+      case ReminderFrequency.monthly:
+        final day = dayOfMonth ?? 1;
+        return 'Le ${day == 1 ? '1er' : '$day'} de chaque mois à $timeStr';
     }
   }
 
@@ -110,6 +122,7 @@ class B12ReminderSettings {
     Object? dayOfWeek = _undefined,
     Object? daysOfWeek = _undefined,
     Object? biweeklyStartDate = _undefined,
+    Object? dayOfMonth = _undefined,
   }) {
     return B12ReminderSettings(
       enabled: enabled ?? this.enabled,
@@ -125,6 +138,9 @@ class B12ReminderSettings {
       biweeklyStartDate: identical(biweeklyStartDate, _undefined)
           ? this.biweeklyStartDate
           : (biweeklyStartDate as DateTime?),
+      dayOfMonth: identical(dayOfMonth, _undefined)
+          ? this.dayOfMonth
+          : (dayOfMonth as int?),
     );
   }
 }

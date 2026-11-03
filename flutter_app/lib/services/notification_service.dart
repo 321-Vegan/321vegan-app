@@ -532,6 +532,42 @@ class NotificationService {
     );
   }
 
+  /// Schedule a monthly notification on [dayOfMonth] (1-28: the trigger
+  /// repeats on that day number, so months without it would be skipped).
+  Future<void> scheduleMonthlyNotification({
+    required int id,
+    required String title,
+    required String body,
+    required int dayOfMonth,
+    required int hour,
+    required int minute,
+    String? payload,
+  }) async {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate =
+        tz.TZDateTime(tz.local, now.year, now.month, dayOfMonth, hour, minute);
+    // Already passed this month - schedule for next month
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = tz.TZDateTime(
+          tz.local, now.year, now.month + 1, dayOfMonth, hour, minute);
+    }
+
+    final details = _getNotificationDetails();
+
+    await _notifications.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledDate,
+      details,
+      androidScheduleMode: await _androidScheduleMode(),
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.dayOfMonthAndTime,
+      payload: payload,
+    );
+  }
+
   /// Cancel a specific notification
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id);

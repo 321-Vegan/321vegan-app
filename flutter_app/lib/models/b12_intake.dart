@@ -2,7 +2,7 @@ import 'b12_reminder_settings.dart';
 
 /// One recorded B12 intake: the day it was taken plus the reminder
 /// frequency in effect when it was recorded (API/storage values: 'daily',
-/// 'weekly', 'twice_weekly', 'biweekly'; null for intakes recorded before
+/// 'weekly', 'twice_weekly', 'biweekly', 'monthly'; null for intakes recorded before
 /// frequency snapshotting existed).
 class B12Intake {
   final DateTime date;
@@ -23,6 +23,8 @@ ReminderFrequency? reminderFrequencyFromApi(String? frequency) {
       return ReminderFrequency.twiceWeekly;
     case 'biweekly':
       return ReminderFrequency.biweekly;
+    case 'monthly':
+      return ReminderFrequency.monthly;
     default:
       return null;
   }
@@ -38,5 +40,7 @@ String reminderFrequencyToApi(ReminderFrequency frequency) {
       return 'twice_weekly';
     case ReminderFrequency.biweekly:
       return 'biweekly';
+    case ReminderFrequency.monthly:
+      return 'monthly';
   }
 }

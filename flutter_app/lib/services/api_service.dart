@@ -310,6 +310,31 @@ class ApiService {
     }
   }
 
+  /// Deletes the current user's B12 intake of [intakeDate] ('yyyy-MM-dd').
+  ///
+  /// Returns the HTTP status code — 404 means nothing was recorded that day
+  /// (treat as synced). Network failures are rethrown so callers can retry.
+  static Future<int> deleteB12Intake({required String intakeDate}) async {
+    final dio = await DioClient.getDio();
+    final accessToken = AuthService.accessToken;
+
+    try {
+      final response = await dio.delete(
+        '/me/b12-intakes/$intakeDate',
+        options: dio_pkg.Options(
+          headers: {
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+          },
+        ),
+      );
+      return response.statusCode ?? 0;
+    } on dio_pkg.DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status != null) return status;
+      rethrow;
+    }
+  }
+
   /// Gets all B12 intakes recorded server-side (dates at local midnight,
   /// frequency snapshotted at recording time). Null on failure.
   static Future<List<B12Intake>?> getB12Intakes() async {
