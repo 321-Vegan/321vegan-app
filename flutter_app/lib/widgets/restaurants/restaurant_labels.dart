@@ -42,7 +42,7 @@ String? plantMilkSurchargeText(double? surcharge) {
   if (surcharge == null) return null;
   if (surcharge == 0) return 'Lait végétal sans supplément';
   if (surcharge > 0) return 'Lait végétal : +${_euros(surcharge)}';
-  return 'Lait végétal moins cher (−${_euros(surcharge)})';
+  return 'Lait animal plus cher (+${_euros(surcharge)})';
 }
 
 /// Closure of the restaurant in words: closed for good, closed now until a

@@ -211,6 +211,19 @@ class RestaurantApiService {
     return (restaurant: result.value, error: result.error);
   }
 
+  /// Changes the user's own pending restaurant directly, [changes] by API
+  /// field. On refusal, [error] carries the API's reason when there is one.
+  static Future<({Restaurant? restaurant, String? error})> updateRestaurant(
+    int id,
+    Map<String, dynamic> changes,
+  ) async {
+    final result = await _submit(
+      (dio) => dio.put('/restaurants/$id', data: changes, options: _auth),
+      _restaurant,
+    );
+    return (restaurant: result.value, error: result.error);
+  }
+
   /// Why a photo upload failed, in words for the user.
   static String _photoErrorMessage(Object error) {
     if (error is! DioException) return 'Erreur inattendue.';
@@ -286,6 +299,16 @@ class RestaurantApiService {
   }) =>
       _ok((dio) => dio.patch(
             '/restaurants/$restaurantId/photos/$photoId/featured',
+            options: _auth,
+          ));
+
+  /// Deletes a place or menu photo the user sent. False on failure.
+  static Future<bool> deleteRestaurantPhoto({
+    required int restaurantId,
+    required int photoId,
+  }) =>
+      _ok((dio) => dio.delete(
+            '/restaurants/$restaurantId/photos/$photoId',
             options: _auth,
           ));
 

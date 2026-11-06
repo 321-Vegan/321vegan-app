@@ -186,8 +186,13 @@ class OpeningHoursEditor extends StatelessWidget {
                     PopupMenuButton<int>(
                       tooltip: 'Copier des horaires',
                       enabled: enabled,
-                      icon: Icon(Icons.content_copy_outlined,
-                          color: Colors.grey[600], size: 56.sp),
+                      icon: Image.asset(
+                        'lib/assets/images/icons/copy-plus.webp',
+                        width: 56.sp,
+                        height: 56.sp,
+                        color: Colors.grey[600],
+                        colorBlendMode: BlendMode.srcIn,
+                      ),
                       onSelected: (source) => _copyFrom(context, day, source),
                       itemBuilder: (_) => [
                         for (final (source, label) in _copySources(day))

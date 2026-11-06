@@ -662,8 +662,14 @@ class ScanPageState extends State<ScanPage>
       }
     }
 
+    // Vegandex products already open their own modal; they don't count
+    // towards the membership prompt.
+    final isVegandexProduct = _productsOfInterest
+        .contains(_alternativeEanToMainEan[barcode] ?? barcode);
+
     if ((product.status == ScanStatus.vegan ||
             product.status == ScanStatus.notVegan) &&
+        !isVegandexProduct &&
         AuthService.isLoggedIn &&
         !SubscriptionService.isSubscribed) {
       final shouldPrompt =

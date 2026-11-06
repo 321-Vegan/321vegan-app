@@ -122,6 +122,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   bool get _isLoggedIn => AuthService.isLoggedIn;
 
+  /// The user's own pending restaurant: they change it directly, there is
+  /// nothing to suggest yet.
+  bool get _canEdit {
+    final userId = AuthService.currentUser?.id;
+    return userId != null &&
+        !_restaurant.validated &&
+        _restaurant.createdBy == userId;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -1353,6 +1362,37 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     if (action != null && mounted) _suggest(action);
   }
 
+  /// Opens the form on the user's pending restaurant, then shows it as
+  /// saved.
+  Future<void> _edit() async {
+    final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(
+      builder: (_) => CreateRestaurantPage.edit(restaurant: _restaurant),
+    ));
+    if (saved != true || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Modifications enregistrées !'),
+        backgroundColor: kSemanticSuccess,
+      ),
+    );
+    _loadRestaurant();
+  }
+
+  Widget _buildEditButton() {
+    return Semantics(
+      button: true,
+      label: 'Modifier le lieu',
+      child: SquareIconButton(
+        onTap: _edit,
+        size: 102.w,
+        radius: 30.r,
+        backgroundColor: Colors.white,
+        shadows: const [],
+        child: Icon(Icons.edit_outlined, size: 54.sp, color: kTextPrimary),
+      ),
+    );
+  }
+
   /// "…" button opening the ways to propose a change, for a listed
   /// restaurant.
   Widget _buildSuggestButton() {
@@ -1363,9 +1403,15 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         onTap: _openSuggestSheet,
         size: 102.w,
         radius: 30.r,
-        backgroundColor: Colors.white,
-        shadows: const [],
-        child: Icon(Icons.more_horiz, size: 54.sp, color: kTextPrimary),
+        backgroundColor: kVeganOptionsOrange,
+        shadows: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+        child: Icon(Icons.more_horiz, size: 54.sp, color: Colors.white),
       ),
     );
   }
@@ -1435,6 +1481,9 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         if (_isLoggedIn && r.validated) ...[
           SizedBox(width: 24.w),
           _buildSuggestButton(),
+        ] else if (_canEdit) ...[
+          SizedBox(width: 24.w),
+          _buildEditButton(),
         ],
       ];
 
@@ -1598,7 +1647,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             final buttonCount = 1 +
                 (_isLoggedIn ? 1 : 0) +
                 (r.hasStorefront ? 1 : 0) +
-                (_isLoggedIn && r.validated ? 1 : 0);
+                ((_isLoggedIn && r.validated) || _canEdit ? 1 : 0);
             final actionsWidth = buttonCount * (102.w + 24.w);
             final namePainter = TextPainter(
               text: TextSpan(text: r.name, style: AppTextStyles.baloo26),

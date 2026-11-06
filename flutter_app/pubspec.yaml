@@ -239,6 +239,7 @@ flutter:
     - lib/assets/images/icons/search-line.webp
     - lib/assets/images/icons/instagram.webp
     - lib/assets/images/icons/share-line.webp
+    - lib/assets/images/icons/copy-plus.webp
     # Remerciements
     - lib/assets/images/remerciements/vilainevegane.webp
     - lib/assets/images/remerciements/noemie-bertosio.webp

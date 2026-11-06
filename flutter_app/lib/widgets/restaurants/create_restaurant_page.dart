@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:latlong2/latlong.dart';
 import '../../models/restaurants/restaurant.dart';
+import '../../services/auth_service.dart';
 import '../../services/geocoding_service.dart';
 import '../../services/restaurant_api_service.dart';
 import '../../themes/app_colors.dart';
@@ -47,21 +48,37 @@ enum _MilkPrice { unknown, noHotDrinks, same, plantCostsMore, cowCostsMore }
 /// With [CreateRestaurantPage.suggest], the same form prefilled with a
 /// validated restaurant proposes a change of it instead: only the changed
 /// fields are sent, with outdated photos to remove. Pops `true` once sent.
+///
+/// With [CreateRestaurantPage.edit], the creator changes their pending
+/// restaurant directly: the changed fields are saved, their photos removed
+/// or added right away. Pops `true` once saved.
 class CreateRestaurantPage extends StatefulWidget {
   /// Where the pin picker starts when there is no position yet.
   final LatLng mapCenter;
 
-  /// The restaurant to propose a change of, null to create one.
+  /// The restaurant to change, null to create one.
   final Restaurant? original;
+
+  /// [original] is the user's pending restaurant, changed directly rather
+  /// than through a suggestion.
+  final bool editsDirectly;
 
   /// A creation left unfinished, to go on with.
   final RestaurantDraft? draft;
 
   const CreateRestaurantPage({super.key, required this.mapCenter, this.draft})
-      : original = null;
+      : original = null,
+        editsDirectly = false;
 
   CreateRestaurantPage.suggest({super.key, required Restaurant restaurant})
       : original = restaurant,
+        editsDirectly = false,
+        draft = null,
+        mapCenter = LatLng(restaurant.latitude, restaurant.longitude);
+
+  CreateRestaurantPage.edit({super.key, required Restaurant restaurant})
+      : original = restaurant,
+        editsDirectly = true,
         draft = null,
         mapCenter = LatLng(restaurant.latitude, restaurant.longitude);
 
@@ -162,15 +179,23 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   /// trigger a new address search.
   bool _fillingFields = false;
 
-  // Suggestion mode: the form as prefilled, to send only what changed
-  bool get _isSuggestion => widget.original != null;
+  // Suggestion and edit modes: the form as prefilled, to send only what
+  // changed. An edit follows the creation rules, as the restaurant is still
+  // being created.
+  bool get _hasOriginal => widget.original != null;
+  bool get _isSuggestion => _hasOriginal && !widget.editsDirectly;
+  bool get _isEdit => _hasOriginal && widget.editsDirectly;
   Map<String, dynamic> _originalPayload = {};
   bool _positionChanged = false;
   final Set<int> _photosToRemove = {};
 
-  /// Photo proposed to show first instead of the current one (suggestion).
+  /// Photo proposed to show first instead of the current one. A pending
+  /// restaurant's photos are pending too, hence [RestaurantPhoto.isFeatured]
+  /// rather than its approved [Restaurant.featuredPhoto].
   int? _proposedFeaturedId;
-  int? get _currentFeaturedId => widget.original?.featuredPhoto?.id;
+  int? get _currentFeaturedId =>
+      widget.original?.featuredPhoto?.id ??
+      widget.original?.photos.where((p) => p.isFeatured).firstOrNull?.id;
   int? get _featuredId => _proposedFeaturedId ?? _currentFeaturedId;
 
   /// The draft this creation is saved to, once saved (or opened from one).
@@ -237,7 +262,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   }
 
   Future<void> _autosave() async {
-    if (_isSuggestion || !_hasUnsavedChanges) return;
+    if (_hasOriginal || !_hasUnsavedChanges) return;
     final snapshot = _snapshot();
     if (snapshot == _autosavedSnapshot) return;
     _autosavedSnapshot = snapshot;
@@ -358,16 +383,22 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   }
 
   /// Asks before leaving a form with changes: a creation can be kept as a
-  /// draft, a suggestion is just dropped. Dismissed: stays on the form.
+  /// draft, a suggestion or an edit is just dropped. Dismissed: stays on the
+  /// form.
   Future<void> _confirmLeave() async {
     final leave = await showDialog<bool>(
       context: context,
-      builder: (ctx) => _isSuggestion
+      builder: (ctx) => _hasOriginal
           ? AppDialog(
               image: 'lib/assets/images/characters/cow-mby.webp',
-              title: 'Abandonner la proposition ?',
-              message: 'Vos modifications ne seront pas envoyées.',
-              primaryLabel: 'Continuer la proposition',
+              title: _isEdit
+                  ? 'Abandonner les modifications ?'
+                  : 'Abandonner la proposition ?',
+              message: _isEdit
+                  ? 'Vos modifications ne seront pas enregistrées.'
+                  : 'Vos modifications ne seront pas envoyées.',
+              primaryLabel:
+                  _isEdit ? 'Continuer à modifier' : 'Continuer la proposition',
               onPrimary: () => Navigator.of(ctx).pop(false),
               secondaryLabel: 'Abandonner',
               onSecondary: () => Navigator.of(ctx).pop(true),
@@ -418,7 +449,8 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     _hasStorefront = r.hasStorefront;
     _hasGlutenFreeOptions = r.hasGlutenFreeOptions;
     _hours = [...r.openingHours];
-    _hoursUnknown = r.openingHours.isEmpty;
+    // Only a suggestion offers "unknown hours"; an edit shows the editor
+    _hoursUnknown = _isSuggestion && r.openingHours.isEmpty;
     _hasStops = r.stops.isNotEmpty;
     _stops = [...r.stops];
     final surcharge = r.plantMilkSurcharge;
@@ -514,7 +546,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   /// Warns right away when restaurants are already referenced there,
   /// rather than only when sending.
   Future<void> _checkNearby(LatLng position) async {
-    if (_isSuggestion) return;
+    if (_hasOriginal) return;
     final requestId = ++_nearbyRequestId;
     final nearby = await RestaurantApiService.getNearbyRestaurants(
       latitude: position.latitude,
@@ -753,21 +785,35 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     };
   }
 
-  /// Sends the fields that differ from the prefilled form, and the photos
-  /// to remove, as a suggestion.
-  Future<void> _submitSuggestion() async {
-    final original = widget.original!;
+  /// The fields that differ from the prefilled form (suggestion or edit).
+  Map<String, dynamic> _changes() {
     // The pin only moves when the user picked a new address or placed it
     final position =
         _positionChanged && _position != null ? _position! : widget.mapCenter;
     final payload = _payload(position);
-    final changes = {
+    return {
       for (final entry in payload.entries)
         if (jsonEncode(entry.value) != jsonEncode(_originalPayload[entry.key]))
           entry.key: entry.value,
     };
-    final featuredChanged = _proposedFeaturedId != null &&
-        _proposedFeaturedId != _currentFeaturedId;
+  }
+
+  bool get _featuredChanged =>
+      _proposedFeaturedId != null && _proposedFeaturedId != _currentFeaturedId;
+
+  /// The new photos to upload, menu ones first.
+  List<(String, File)> get _newPhotos => [
+        if (!_hasNoMenu)
+          for (final photo in _menuPhotos) (RestaurantPhoto.kindMenu, photo),
+        for (final photo in _placePhotos) (RestaurantPhoto.kindPlace, photo),
+      ];
+
+  /// Sends the fields that differ from the prefilled form, and the photos
+  /// to remove, as a suggestion.
+  Future<void> _submitSuggestion() async {
+    final original = widget.original!;
+    final changes = _changes();
+    final featuredChanged = _featuredChanged;
     if (changes.isEmpty && _photosToRemove.isEmpty && !featuredChanged) {
       setState(() => _error = 'Vous n\'avez rien modifié.');
       return;
@@ -797,6 +843,56 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       _error = result.error ??
           'L\'envoi a échoué. Vérifiez votre connexion et réessayez !';
     });
+  }
+
+  /// Saves the fields of the user's pending restaurant that differ from the
+  /// prefilled form, then removes the photos marked, shows the chosen one
+  /// first and uploads the new ones.
+  Future<void> _submitEdit() async {
+    final original = widget.original!;
+    final changes = _changes();
+    final featuredChanged = _featuredChanged;
+    final newPhotos = _newPhotos;
+    if (changes.isEmpty &&
+        _photosToRemove.isEmpty &&
+        !featuredChanged &&
+        newPhotos.isEmpty) {
+      setState(() => _error = 'Vous n\'avez rien modifié.');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _error = null;
+      _progress = 'Enregistrement…';
+      _suggestions = [];
+    });
+    if (changes.isNotEmpty) {
+      final result =
+          await RestaurantApiService.updateRestaurant(original.id, changes);
+      if (!mounted) return;
+      if (result.restaurant == null) {
+        setState(() {
+          _isSubmitting = false;
+          _progress = null;
+          _error = result.error ??
+              'L\'enregistrement a échoué. Vérifiez votre connexion et '
+                  'réessayez !';
+        });
+        return;
+      }
+    }
+    // Best effort from here on: the fields are saved
+    for (final photoId in _photosToRemove) {
+      await RestaurantApiService.deleteRestaurantPhoto(
+          restaurantId: original.id, photoId: photoId);
+    }
+    if (featuredChanged) {
+      await RestaurantApiService.featureRestaurantPhoto(
+          restaurantId: original.id, photoId: _proposedFeaturedId!);
+    }
+    await _uploadPhotos(original.id, newPhotos,
+        mainPhoto: _keptPhotos.isEmpty ? _mainPhoto : null);
   }
 
   /// The restaurant's position, null when it can't be found. Without
@@ -923,6 +1019,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       return;
     }
     if (_isSuggestion) return _submitSuggestion();
+    if (_isEdit) return _submitEdit();
 
     setState(() {
       _isSubmitting = true;
@@ -972,15 +1069,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       return;
     }
 
-    await _uploadPhotos(
-      restaurant.id,
-      [
-        if (!_hasNoMenu)
-          for (final photo in _menuPhotos) (RestaurantPhoto.kindMenu, photo),
-        for (final photo in _placePhotos) (RestaurantPhoto.kindPlace, photo),
-      ],
-      mainPhoto: _mainPhoto,
-    );
+    await _uploadPhotos(restaurant.id, _newPhotos, mainPhoto: _mainPhoto);
   }
 
   /// Uploads the photos one by one, then makes [mainPhoto] the one shown
@@ -1074,14 +1163,39 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
 
   Widget _gap() => SizedBox(height: 24.h);
 
-  /// Approved place and menu photos: the API only removes those.
-  List<RestaurantPhoto> get _removablePhotos => [
-        for (final photo in widget.original?.photos ?? <RestaurantPhoto>[])
-          if (photo.reviewId == null && !photo.isPending) photo,
+  /// Place and menu photos the user may remove: the approved ones for a
+  /// suggestion (the API only removes those), their own for an edit (the
+  /// API only lets them delete those).
+  List<RestaurantPhoto> get _removablePhotos {
+    final userId = AuthService.currentUser?.id;
+    return [
+      for (final photo in widget.original?.photos ?? <RestaurantPhoto>[])
+        if (photo.reviewId == null &&
+            (_isEdit ? photo.userId == userId : !photo.isPending))
+          photo,
+    ];
+  }
+
+  /// The [_removablePhotos] not marked to remove.
+  List<RestaurantPhoto> get _keptPhotos => [
+        for (final photo in _removablePhotos)
+          if (!_photosToRemove.contains(photo.id)) photo,
       ];
 
+  /// How many new photos of [kind] fit beside the restaurant's (edit), as
+  /// the API caps them.
+  int _photoRoom(String kind) =>
+      _maxPhotosPerKind -
+      (widget.original?.photos ?? <RestaurantPhoto>[])
+          .where((p) =>
+              p.reviewId == null &&
+              p.kind == kind &&
+              !_photosToRemove.contains(p.id))
+          .length;
+
   /// Tapping a photo marks it to remove (tap again to keep it); the removal
-  /// is sent with the suggestion, and applied once validated.
+  /// is sent with the suggestion and applied once validated, or done when
+  /// an edit is saved.
   Widget _buildRemovablePhotos() {
     final size = 220.w;
     final count = _photosToRemove.length;
@@ -1135,10 +1249,15 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
         if (count > 0) ...[
           SizedBox(height: 18.h),
           Text(
-            '$count photo${count > 1 ? 's' : ''} '
-            '${count > 1 ? 'seront retirées' : 'sera retirée'} après '
-            'validation de votre proposition. Touchez une photo à nouveau '
-            'pour la garder.',
+            _isEdit
+                ? '$count photo${count > 1 ? 's' : ''} '
+                    '${count > 1 ? 'seront supprimées' : 'sera supprimée'} à '
+                    'l\'enregistrement. Touchez une photo à nouveau pour la '
+                    'garder.'
+                : '$count photo${count > 1 ? 's' : ''} '
+                    '${count > 1 ? 'seront retirées' : 'sera retirée'} après '
+                    'validation de votre proposition. Touchez une photo à '
+                    'nouveau pour la garder.',
             style: AppTextStyles.bodyRegular13.copyWith(color: kSemanticError),
           ),
         ],
@@ -1146,24 +1265,23 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     );
   }
 
-  /// The approved photos to choose the one shown first among (those marked
-  /// to remove left out); tapping one proposes it.
+  /// The [_keptPhotos] to choose the one shown first among; tapping one
+  /// picks it.
   Widget _buildFeaturedPicker() {
     final size = 220.w;
     return Wrap(
       spacing: 24.w,
       runSpacing: 24.w,
       children: [
-        for (final photo in _removablePhotos)
-          if (!_photosToRemove.contains(photo.id))
-            PhotoTile(
-              image: CachedNetworkImageProvider(photo.url),
-              size: size,
-              featured: photo.id == _featuredId,
-              onTap: _isSubmitting
-                  ? null
-                  : () => setState(() => _proposedFeaturedId = photo.id),
-            ),
+        for (final photo in _keptPhotos)
+          PhotoTile(
+            image: CachedNetworkImageProvider(photo.url),
+            size: size,
+            featured: photo.id == _featuredId,
+            onTap: _isSubmitting
+                ? null
+                : () => setState(() => _proposedFeaturedId = photo.id),
+          ),
       ],
     );
   }
@@ -1370,7 +1488,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
           backgroundColor: Colors.transparent,
           appBar: AppBar(
             title: Text(
-                _isSuggestion ? 'Proposer une modification' : 'Ajouter un lieu',
+                _isEdit
+                    ? 'Modifier le lieu'
+                    : _isSuggestion
+                        ? 'Proposer une modification'
+                        : 'Ajouter un lieu',
                 style: AppTextStyles.baloo22
                     .copyWith(fontWeight: const FontWeight(500))),
             centerTitle: true,
@@ -1391,20 +1513,24 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                       children: [
                         SizedBox(height: 12.h),
                         InfoBox(
-                          text: _isSuggestion
-                              ? 'Corrigez ce qui a changé : la proposition sera '
-                                  'vérifiée par l\'équipe avant d\'être appliquée.'
-                              : 'Seuls les lieux 100 % véganes ou proposant plusieurs '
-                                  'options véganes bien identifiées (notées vegan sur le '
-                                  'menu) sont référencés. Pas de grandes chaînes (O\'Tacos, BK, ...). Le lieu sera visible pour '
-                                  'tout le monde après validation.',
-                          symbol: _isSuggestion ? 'i' : '!',
-                          color: _isSuggestion ? kAccentYellow : kSemanticError,
-                          backgroundColor: _isSuggestion
+                          text: _isEdit
+                              ? 'Le lieu est encore en attente de validation : '
+                                  'vos modifications sont enregistrées '
+                                  'directement.'
+                              : _isSuggestion
+                                  ? 'Corrigez ce qui a changé : la proposition sera '
+                                      'vérifiée par l\'équipe avant d\'être appliquée.'
+                                  : 'Seuls les lieux 100 % véganes ou proposant plusieurs '
+                                      'options véganes bien identifiées (notées vegan sur le '
+                                      'menu) sont référencés. Pas de grandes chaînes (O\'Tacos, BK, ...). Le lieu sera visible pour '
+                                      'tout le monde après validation.',
+                          symbol: _hasOriginal ? 'i' : '!',
+                          color: _hasOriginal ? kAccentYellow : kSemanticError,
+                          backgroundColor: _hasOriginal
                               ? kSecondaryTag
                               : kSemanticError.withValues(alpha: 0.08),
                         ),
-                        if (!_isSuggestion) ...[
+                        if (!_hasOriginal) ...[
                           SizedBox(height: 24.h),
                           const InfoBox(
                             text: 'Remplissez un maximum d\'infos : '
@@ -1921,9 +2047,25 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             ),
                           ]),
                         ] else ...[
+                          if (_isEdit && _removablePhotos.isNotEmpty)
+                            _section(
+                              'Vos photos',
+                              subtitle: 'Touchez les photos à supprimer pour '
+                                  'les marquer.',
+                              [_buildRemovablePhotos()],
+                            ),
+                          if (_isEdit && _keptPhotos.length > 1)
+                            _section(
+                              'Photo principale',
+                              subtitle: 'Celle affichée en haut de la fiche '
+                                  '(★). Touchez-en une autre pour la choisir.',
+                              [_buildFeaturedPicker()],
+                            ),
                           if (!_hasNoMenu)
                             _section(
-                              'Photos du menu',
+                              _isEdit
+                                  ? 'Ajouter des photos du menu'
+                                  : 'Photos du menu',
                               subtitle: _veganStatus == VeganStatus.veganOptions
                                   ? 'Fortement conseillé : elles prouvent l\'option '
                                       'végane à la validation. Pas de captures '
@@ -1932,35 +2074,44 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               [
                                 PickedPhotosRow(
                                   photos: _menuPhotos,
-                                  max: _maxPhotosPerKind,
+                                  max: _photoRoom(RestaurantPhoto.kindMenu),
                                   enabled: !_isSubmitting,
                                   onChanged: (p) =>
                                       setState(() => _menuPhotos = p),
                                 ),
                               ],
                             ),
-                          _section(
-                            'Photos du lieu et des plats',
-                            subtitle: _placePhotos.length > 1
-                                ? 'Facultatif. Touchez une photo pour en faire '
-                                    'la photo principale (★). Pas de captures '
-                                    'd\'écran.'
-                                : 'Facultatif mais très recommandé (merci 💚). '
-                                    'Vos propres photos, pas de captures '
-                                    'd\'écran.',
-                            [
-                              PickedPhotosRow(
-                                photos: _placePhotos,
-                                max: _maxPhotosPerKind,
-                                enabled: !_isSubmitting,
-                                onChanged: (p) =>
-                                    setState(() => _placePhotos = p),
-                                featured: _mainPhoto,
-                                onFeaturedChanged: (photo) =>
-                                    setState(() => _chosenMainPhoto = photo),
-                              ),
-                            ],
-                          ),
+                          Builder(builder: (context) {
+                            // With photos already, the main one is picked
+                            // among them
+                            final picksMain = !_isEdit || _keptPhotos.isEmpty;
+                            return _section(
+                              _isEdit
+                                  ? 'Ajouter des photos du lieu et des plats'
+                                  : 'Photos du lieu et des plats',
+                              subtitle: picksMain && _placePhotos.length > 1
+                                  ? 'Facultatif. Touchez une photo pour en faire '
+                                      'la photo principale (★). Pas de captures '
+                                      'd\'écran.'
+                                  : 'Facultatif mais très recommandé (merci 💚). '
+                                      'Vos propres photos, pas de captures '
+                                      'd\'écran.',
+                              [
+                                PickedPhotosRow(
+                                  photos: _placePhotos,
+                                  max: _photoRoom(RestaurantPhoto.kindPlace),
+                                  enabled: !_isSubmitting,
+                                  onChanged: (p) =>
+                                      setState(() => _placePhotos = p),
+                                  featured: picksMain ? _mainPhoto : null,
+                                  onFeaturedChanged: picksMain
+                                      ? (photo) => setState(
+                                          () => _chosenMainPhoto = photo)
+                                      : null,
+                                ),
+                              ],
+                            );
+                          }),
                         ],
                       ],
                     ),
@@ -1986,9 +2137,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                       ListenableBuilder(
                         listenable: _requiredFields,
                         builder: (context, _) => AppButton(
-                          label: _isSuggestion
-                              ? 'Envoyer la proposition'
-                              : 'Envoyer',
+                          label: _isEdit
+                              ? 'Enregistrer'
+                              : _isSuggestion
+                                  ? 'Envoyer la proposition'
+                                  : 'Envoyer',
                           backgroundColor: primary,
                           isLoading: _isSubmitting,
                           onPressed: _requiredFilled ? _submit : null,

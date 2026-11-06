@@ -334,6 +334,10 @@ class Restaurant {
   final bool isClosedNow;
   final bool validated;
 
+  /// The user who submitted it (full restaurant only): they can change it
+  /// directly while it is pending.
+  final int? createdBy;
+
   /// Refused by the team (only in the creator's list), with the reason.
   final bool isRejected;
   final String? rejectionReason;
@@ -379,6 +383,7 @@ class Restaurant {
     this.closureNote,
     this.isClosedNow = false,
     this.validated = true,
+    this.createdBy,
     this.isRejected = false,
     this.rejectionReason,
     this.photos = const [],
@@ -469,6 +474,7 @@ class Restaurant {
       closureNote: json['closure_note'] as String?,
       isClosedNow: json['is_closed_now'] as bool? ?? false,
       validated: json['validated'] as bool? ?? true,
+      createdBy: json['created_by'] as int?,
       isRejected: json['is_rejected'] as bool? ?? false,
       rejectionReason: json['rejection_reason'] as String?,
       isSaved: json['is_saved'] as bool? ?? false,

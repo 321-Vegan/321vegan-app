@@ -511,8 +511,8 @@ class PreferencesHelper {
   static const String _membershipHitScanCountKey = 'membership_hit_scan_count';
   static const String _membershipPromptNextThresholdKey =
       'membership_prompt_next_threshold';
-  static const int _membershipPromptInitialThreshold = 10;
-  static const int _membershipPromptSnoozeScans = 10;
+  static const int _membershipPromptInitialThreshold = 15;
+  static const int _membershipPromptSnoozeScans = 15;
 
   /// Increments the scan counter and returns whether this scan just crossed
   /// the next threshold, i.e. the subscription prompt should be shown now.
