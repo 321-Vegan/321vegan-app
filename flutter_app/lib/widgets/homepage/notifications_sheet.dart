@@ -50,75 +50,87 @@ class NotificationsSheet extends StatelessWidget {
 
     return BottomSheetShell(
       // The shell gives its child unbounded height: cap it below the screen
-      // (minus the shell's handle and paddings) so long content scrolls
-      // instead of overflowing on small phones.
+      // (minus the shell's handle and paddings). "Pour vous" shrinks to fit
+      // (it scrolls), so the announcements stay visible on small phones.
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(context).height * 0.8,
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Notifications', style: AppTextStyles.baloo22),
-              SizedBox(height: 24.h),
-              if (isEmpty)
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: 48.h),
-                  child: Center(
-                    child: Text(
-                      'Aucune notification pour le moment',
-                      style: AppTextStyles.bodyRegular15
-                          .copyWith(color: Colors.grey[600]),
-                    ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Notifications', style: AppTextStyles.baloo22),
+            SizedBox(height: 24.h),
+            if (isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 48.h),
+                child: Center(
+                  child: Text(
+                    'Aucune notification pour le moment',
+                    style: AppTextStyles.bodyRegular15
+                        .copyWith(color: Colors.grey[600]),
                   ),
                 ),
-              if (hasPersonal) const _SectionTitle('Pour vous'),
-              for (final notification in inbox)
-                _DismissibleNotification(
-                  key: ValueKey('app-notification-${notification.id}'),
-                  onDismissed: () =>
-                      AppNotificationService.delete(notification.id),
-                  child: _NotificationTile(
-                    leading: _IconBadge(
-                      icon: _iconFor(notification.type),
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    title: notification.title,
-                    subtitle: notification.body,
-                    unread: !notification.isRead,
-                    // Sheet kept open: its page is pushed above it, so
-                    // going back lands here again
-                    onTap: () => onOpenNotification(notification),
-                  ),
+              ),
+            if (hasPersonal) ...[
+              const _SectionTitle('Pour vous'),
+              Flexible(
+                child: _CappedList(
+                  maxVisible: 4,
+                  children: [
+                    for (final notification in inbox)
+                      _DismissibleNotification(
+                        key: ValueKey('app-notification-${notification.id}'),
+                        onDismissed: () =>
+                            AppNotificationService.delete(notification.id),
+                        child: _NotificationTile(
+                          leading: _IconBadge(
+                            icon: _iconFor(notification.type),
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          title: notification.title,
+                          subtitle: notification.body,
+                          unread: !notification.isRead,
+                          // Sheet kept open: its page is pushed above it, so
+                          // going back lands here again
+                          onTap: () => onOpenNotification(notification),
+                        ),
+                      ),
+                  ],
                 ),
-              if (announcements.isNotEmpty) ...[
-                // Spaced from the section above, if any
-                if (hasPersonal) SizedBox(height: 24.h),
-                const _SectionTitle('Nouveautés de l\'app'),
-              ],
-              for (final announcement in announcements)
-                _NotificationTile(
-                  leading: Transform.flip(
-                    flipX: announcement.mirrorImage,
-                    child: Image.asset(
-                      announcement.image,
-                      width: 110.w,
-                      height: 110.w,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  title: announcement.title,
-                  subtitle: announcement.message,
-                  unread: unseenAnnouncementIds.contains(announcement.id),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onOpenAnnouncement(announcement);
-                  },
-                ),
+              ),
             ],
-          ),
+            if (announcements.isNotEmpty) ...[
+              // Spaced from the section above, if any
+              if (hasPersonal) SizedBox(height: 24.h),
+              const _SectionTitle('Nouveautés de l\'app'),
+              _CappedList(
+                maxVisible: 2,
+                children: [
+                  for (final announcement in announcements)
+                    _NotificationTile(
+                      leading: Transform.flip(
+                        flipX: announcement.mirrorImage,
+                        child: Image.asset(
+                          announcement.image,
+                          width: 110.w,
+                          height: 110.w,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      title: announcement.title,
+                      subtitle: announcement.message,
+                      unread: unseenAnnouncementIds.contains(announcement.id),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        onOpenAnnouncement(announcement);
+                      },
+                    ),
+                ],
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -135,6 +147,44 @@ class _SectionTitle extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(bottom: 24.h),
       child: Text(title, style: AppTextStyles.baloo17),
+    );
+  }
+}
+
+/// Shows at most [maxVisible] of [children] (fewer when given less room),
+/// the rest scrolling within the same height. The rows differ in height
+/// (1 or 2 subtitle lines): an invisible copy of the first [maxVisible]
+/// gives the exact height.
+class _CappedList extends StatelessWidget {
+  final int maxVisible;
+  final List<Widget> children;
+
+  const _CappedList({required this.maxVisible, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.length <= maxVisible) {
+      return SingleChildScrollView(child: Column(children: children));
+    }
+    return Stack(
+      children: [
+        Visibility(
+          visible: false,
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          // Scrollable so it takes the room left when smaller than its rows
+          child: SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(children: children.take(maxVisible).toList()),
+          ),
+        ),
+        Positioned.fill(
+          child: SingleChildScrollView(
+            child: Column(children: children),
+          ),
+        ),
+      ],
     );
   }
 }
