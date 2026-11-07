@@ -403,13 +403,6 @@ class RestaurantApiService {
         if (search.isNotEmpty) 'search': search,
       });
 
-  /// Pending selections the user hasn't seen yet. Null on failure.
-  static Future<int?> getUnreadSelectionCount() => _fetch(
-        (dio) => dio.get('/restaurant-selections/received/unread-count',
-            options: _auth),
-        (data) => (data as Map<String, dynamic>)['count'] as int,
-      );
-
   /// Marks every selection sent to the user as seen. False on failure.
   static Future<bool> markReceivedSelectionsSeen() => _ok(
       (dio) => dio.put('/restaurant-selections/received/seen', options: _auth));

@@ -5,6 +5,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+import '../themes/app_colors.dart';
+import 'push_notification_service.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -159,6 +161,19 @@ class NotificationService {
 
         await androidPlugin.createNotificationChannel(anniversaryChannel);
 
+        // Server pushes (FCM), set as the default channel in the manifest
+        const pushChannel = AndroidNotificationChannel(
+          'push_notifications',
+          'Notifications',
+          description: 'Réponses à vos signalements et autres nouvelles',
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+          showBadge: true,
+        );
+
+        await androidPlugin.createNotificationChannel(pushChannel);
+
         if (kDebugMode) {
           print('Notification channel created for Android');
 
@@ -182,6 +197,8 @@ class NotificationService {
         navigateToProfile.value = true;
       } else if (payload.startsWith('vegan_anniversary')) {
         showAnniversary.value = true;
+      } else if (OpenedPush.fromPayload(payload) case final push?) {
+        PushNotificationService.opened.value = push;
       }
     }
   }
@@ -200,6 +217,9 @@ class NotificationService {
     } else if (payload.startsWith('vegan_anniversary')) {
       // Signal listeners to show the anniversary congratulation popup
       showAnniversary.value = true;
+    } else if (OpenedPush.fromPayload(payload) case final push?) {
+      // Server push shown while the app was open (see showPush)
+      PushNotificationService.opened.value = push;
     }
   }
 
@@ -284,6 +304,7 @@ class NotificationService {
       priority: Priority.high,
       // Small white icon for status bar
       icon: 'ic_notification',
+      color: kLogoGreen,
       // Large colored icon showing the app's logo
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       playSound: true,
@@ -316,6 +337,7 @@ class NotificationService {
       importance: Importance.high,
       priority: Priority.high,
       icon: 'ic_notification',
+      color: kLogoGreen,
       largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
       playSound: true,
       enableVibration: true,
@@ -363,6 +385,35 @@ class NotificationService {
     if (kDebugMode) {
       print('Scheduled annual notification for: $scheduledDate');
     }
+  }
+
+  /// Android: shows a server push received while the app is open (the OS
+  /// only displays them in the background). Above the ids of the scheduled
+  /// reminders (1000s, 2000, 9999).
+  Future<void> showPush(
+    OpenedPush push, {
+    required String title,
+    required String body,
+  }) async {
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'push_notifications',
+        'Notifications',
+        channelDescription: 'Réponses à vos signalements et autres nouvelles',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: 'ic_notification',
+        color: kLogoGreen,
+        autoCancel: true,
+      ),
+    );
+    await _notifications.show(
+      100000 + push.notificationId % 100000,
+      title,
+      body,
+      details,
+      payload: push.toPayload(),
+    );
   }
 
   /// Show an immediate test notification

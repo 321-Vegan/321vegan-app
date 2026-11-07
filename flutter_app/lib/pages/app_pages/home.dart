@@ -12,11 +12,13 @@ import 'package:vegan_app/pages/app_pages/map.dart';
 import 'package:confetti/confetti.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:vegan_app/services/anniversary_service.dart';
+import 'package:vegan_app/services/app_notification_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
 import 'package:vegan_app/services/b12_reminder_service.dart';
 import 'package:vegan_app/services/deep_link_service.dart';
 import 'package:vegan_app/services/notification_service.dart';
 import 'package:vegan_app/services/profile_notification_service.dart';
+import 'package:vegan_app/services/push_notification_service.dart';
 import 'package:vegan_app/widgets/homepage/anniversary_dialog.dart';
 import 'package:vegan_app/models/restaurants/restaurant_selection.dart';
 import 'package:vegan_app/widgets/auth/auth_bottom_sheet.dart';
@@ -44,6 +46,7 @@ class MyHomePageState extends State<MyHomePage>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   DateTime? _targetDate;
   late TabController _tabController;
+  final GlobalKey<DashboardPageState> _dashboardKey = GlobalKey();
   late ConfettiController _confettiController;
 
   bool _notificationForcedDashboard = false;
@@ -92,6 +95,11 @@ class MyHomePageState extends State<MyHomePage>
     // opened during the onboarding): it may already be set.
     DeepLinkService.pending.addListener(_onDeepLink);
     WidgetsBinding.instance.addPostFrameCallback((_) => _onDeepLink());
+
+    // Server push tapped (e.g. signalement answered) → what it's about.
+    // Cold start: it may already be set.
+    PushNotificationService.opened.addListener(_onPushOpened);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onPushOpened());
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _showAnnouncement());
   }
@@ -175,6 +183,19 @@ class MyHomePageState extends State<MyHomePage>
   /// Opens the selection or restaurant of a link, over whatever is shown.
   /// The API needs an account, even for a public one: logged out, it opens
   /// once logged in.
+  /// Server push tapped → the notification center (Dashboard bell), where
+  /// the new notification shows unread.
+  Future<void> _onPushOpened() async {
+    if (PushNotificationService.opened.value == null || !mounted) return;
+    PushNotificationService.opened.value = null;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() => _tabController.index = _dashboardTabIndex);
+    await AppNotificationService.refresh();
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    _dashboardKey.currentState?.openNotifications();
+  }
+
   void _onDeepLink() {
     final link = DeepLinkService.pending.value;
     if (link == null || !mounted) return;
@@ -264,6 +285,7 @@ class MyHomePageState extends State<MyHomePage>
         .removeListener(_onAnniversaryNotificationTap);
     NotificationService.navigateToScan.removeListener(_onNavigateToScan);
     DeepLinkService.pending.removeListener(_onDeepLink);
+    PushNotificationService.opened.removeListener(_onPushOpened);
     WidgetsBinding.instance.removeObserver(this);
     _tabController.removeListener(_onTabIndexChanged);
     _tabController.dispose();
@@ -293,7 +315,7 @@ class MyHomePageState extends State<MyHomePage>
           TabBarView(
             controller: _tabController,
             children: [
-              const DashboardPage(),
+              DashboardPage(key: _dashboardKey),
               ScanPage(onLoginSuccess: _onLoginSuccess),
               MapPage(onLoginSuccess: _onLoginSuccess),
             ],

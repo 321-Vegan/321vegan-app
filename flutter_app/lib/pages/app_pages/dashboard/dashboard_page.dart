@@ -5,18 +5,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../helpers/announcements.dart';
 import '../../../helpers/preference_helper.dart';
 import '../../../helpers/vegan_savings.dart';
-import '../../../models/error_report.dart';
 import '../../../models/partners/partners.dart';
 import '../../../models/seasonal_theme.dart';
 import '../../../models/user.dart';
 import '../../../services/anniversary_service.dart';
+import '../../../services/app_notification_service.dart';
 import '../../../services/api_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
-import '../../../services/error_report_badge_service.dart';
 import '../../../services/profile_notification_service.dart';
-import '../../../services/selection_badge_service.dart';
 import '../../../themes/app_colors.dart';
 import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
@@ -36,9 +34,7 @@ import '../../../widgets/homepage/vegan_counter.dart';
 import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/b12/b12_reminder_settings_modal.dart';
-import '../Profile/error_reports_page.dart';
 import '../Profile/product_review_page.dart';
-import '../Profile/saved_restaurants_page.dart';
 import '../home.dart';
 import '../settings/settings_page.dart';
 
@@ -68,7 +64,6 @@ class DashboardPageState extends State<DashboardPage> {
   bool _b12Enabled = false;
   bool _b12TakenToday = false;
   bool _b12DueToday = false;
-  ErrorReportPaginated? _errorReportsFirstPage;
 
   @override
   void initState() {
@@ -100,7 +95,7 @@ class DashboardPageState extends State<DashboardPage> {
       _loadUser(),
       _loadPartners(),
       _loadB12State(),
-      _checkErrorReportResponses(),
+      AppNotificationService.refresh(),
     ]);
     _checkForNewBadges();
   }
@@ -201,12 +196,6 @@ class DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Future<void> _checkErrorReportResponses() async {
-    final result = await ErrorReportBadgeService.refreshUnreadCount();
-    if (result == null || !mounted) return;
-    setState(() => _errorReportsFirstPage = result);
-  }
-
   Future<void> _checkForNewBadges() async {
     if (!AuthService.isLoggedIn || !mounted) return;
     final result = await AuthService.getCurrentUser();
@@ -269,7 +258,8 @@ class DashboardPageState extends State<DashboardPage> {
     _confettiController.play();
   }
 
-  Future<void> _openNotifications() async {
+  /// The bell's notification center (also opened by a tapped push).
+  Future<void> openNotifications() async {
     final announcements = await AnnouncementCenter.relevant(
       home: MyHomePage.of(context),
     );
@@ -283,25 +273,10 @@ class DashboardPageState extends State<DashboardPage> {
       builder: (_) => NotificationsSheet(
         announcements: announcements,
         unseenAnnouncementIds: unseenIds,
-        unreadErrorResponses: AuthService.isLoggedIn
-            ? ErrorReportBadgeService.unreadCount.value
-            : null,
-        unreadSelections: AuthService.isLoggedIn
-            ? SelectionBadgeService.unreadCount.value
-            : 0,
+        showInbox: AuthService.isLoggedIn,
         onOpenAnnouncement: _openAnnouncement,
-        onOpenErrorReports: _openErrorReports,
-        onOpenSelections: _openSelections,
-      ),
-    );
-  }
-
-  /// Only reachable logged in, with selections not seen yet.
-  void _openSelections() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const SavedRestaurantsPage(showSelections: true),
+        onOpenNotification: (notification) =>
+            AppNotificationService.open(context, notification),
       ),
     );
   }
@@ -312,22 +287,6 @@ class DashboardPageState extends State<DashboardPage> {
     AnnouncementCenter.refreshUnseenCount();
     if (!mounted) return;
     await showAnnouncementSheet(context, announcement);
-  }
-
-  /// Only reachable logged in (the bell hides the row otherwise).
-  void _openErrorReports() {
-    // Without the fetched page we don't know which ids to store, and an
-    // empty set would make every handled report "new" again next refresh.
-    if (ErrorReportBadgeService.unreadCount.value > 0 &&
-        _errorReportsFirstPage != null) {
-      ErrorReportBadgeService.markHandledAsSeen(_errorReportsFirstPage!.items);
-    }
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ErrorReportsPage(initialData: _errorReportsFirstPage),
-      ),
-    );
   }
 
   @override
@@ -518,7 +477,7 @@ class DashboardPageState extends State<DashboardPage> {
         _buildIconButton(
           icon: Icons.notifications_none_rounded,
           badgeCount: notifCount,
-          onTap: _openNotifications,
+          onTap: openNotifications,
         ),
         SizedBox(width: 30.w),
         _buildIconButton(icon: Icons.settings_outlined, onTap: _openSettings),

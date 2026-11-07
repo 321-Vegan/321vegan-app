@@ -11,6 +11,7 @@ import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/app_text_field.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 import 'package:vegan_app/widgets/shared/photo_picker_box.dart';
+import 'package:vegan_app/widgets/shared/push_permission_prompt.dart';
 
 /// Trigger + bottom sheet for reporting an error on a scanned product
 /// (wrong vegan status, missing/incorrect ingredients, etc). Tapping the
@@ -165,6 +166,8 @@ class _ReportErrorModalContentState extends State<_ReportErrorModalContent> {
           backgroundColor: kSemanticSuccess,
         ),
       );
+      // After the confirmation: the team's answer is pushed
+      await offerPushNotifications(widget.rootContext);
     }
   }
 

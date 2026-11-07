@@ -18,6 +18,7 @@ import 'services/deep_link_service.dart';
 import 'services/notification_service.dart';
 import 'services/anniversary_service.dart';
 import 'services/products_of_interest_cache.dart';
+import 'services/push_notification_service.dart';
 import 'services/subscription_service.dart';
 import 'helpers/theme_helper.dart';
 import 'themes/app_snack_bar_theme.dart';
@@ -64,6 +65,11 @@ Future<void> _initDeferred() async {
   await _withTimeout(
     NotificationService().initialize(),
     'NotificationService.initialize',
+  );
+  // After NotificationService: its Android channel receives the pushes
+  await _withTimeout(
+    PushNotificationService.init(),
+    'PushNotificationService.init',
   );
   await _withTimeout(
     _migrateBiweeklyReminderIfNeeded(),

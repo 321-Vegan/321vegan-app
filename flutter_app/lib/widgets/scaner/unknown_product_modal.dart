@@ -13,6 +13,7 @@ import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/app_text_field.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 import 'package:vegan_app/widgets/shared/photo_picker_box.dart';
+import 'package:vegan_app/widgets/shared/push_permission_prompt.dart';
 
 /// Bottom sheet for a barcode missing from the database
 /// ([ScanStatus.unknown]) or submitted but unidentified
@@ -113,6 +114,8 @@ class _UnknownProductModalState extends State<UnknownProductModal> {
             backgroundColor: success ? kSemanticSuccess : kSemanticError,
           ),
         );
+        // After the confirmation: the team's answer is pushed
+        if (success) await offerPushNotifications(context);
       }
     } else {
       success = await ProductHelper.tryAddDocument(

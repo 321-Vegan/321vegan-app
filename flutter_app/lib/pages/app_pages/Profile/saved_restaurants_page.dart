@@ -4,7 +4,6 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/restaurants/restaurant.dart';
 import 'package:vegan_app/models/restaurants/restaurant_selection.dart';
 import 'package:vegan_app/services/restaurant_api_service.dart';
-import 'package:vegan_app/services/selection_badge_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_spacing.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
@@ -90,8 +89,6 @@ class _SavedRestaurantsPageState extends State<SavedRestaurantsPage>
     final bool selectionsFirst;
     if (widget.showSelections != null) {
       selectionsFirst = widget.showSelections!;
-    } else if (SelectionBadgeService.unreadCount.value > 0) {
-      selectionsFirst = true;
     } else {
       selectionsFirst =
           await PreferencesHelper.getLastSavedTabPref() == _selectionsTab;
@@ -193,28 +190,9 @@ class _SavedRestaurantsPageState extends State<SavedRestaurantsPage>
           foregroundColor: kTextPrimary,
           bottom: TabBar(
             controller: tabs,
-            tabs: [
-              const Tab(text: 'Lieux'),
-              Tab(
-                child: ValueListenableBuilder<int>(
-                  valueListenable: SelectionBadgeService.unreadCount,
-                  builder: (_, unread, __) => Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Sélections'),
-                      if (unread > 0) ...[
-                        SizedBox(width: 12.w),
-                        Container(
-                          width: 24.w,
-                          height: 24.w,
-                          decoration: const BoxDecoration(
-                              color: Colors.red, shape: BoxShape.circle),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
+            tabs: const [
+              Tab(text: 'Lieux'),
+              Tab(text: 'Sélections'),
             ],
           ),
         ),
@@ -301,9 +279,9 @@ class _SelectionsTabState extends State<_SelectionsTab>
         _received = results[1]!.items;
       }
     });
-    // From the list, not the badge: it may be stale (sent since its refresh)
+    // Their "Nouvelle" label: shown once
     if (!_hasError && _received!.any((s) => !s.isSeen)) {
-      SelectionBadgeService.markAllSeen();
+      RestaurantApiService.markReceivedSelectionsSeen();
     }
   }
 

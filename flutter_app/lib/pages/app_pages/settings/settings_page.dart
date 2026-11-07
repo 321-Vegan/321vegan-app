@@ -3,14 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import '../../../helpers/preference_helper.dart';
-import '../../../models/error_report.dart';
 import '../../../models/seasonal_theme.dart';
 import '../../../models/user.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
-import '../../../services/error_report_badge_service.dart';
-import '../../../services/selection_badge_service.dart';
+import '../../../services/push_notification_service.dart';
 import '../../../widgets/auth/change_email_modal.dart';
 import '../../../widgets/auth/change_password_modal.dart';
 import '../../../widgets/auth/profile_sheet.dart';
@@ -23,6 +21,7 @@ import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/premium_badge.dart';
+import '../../../widgets/shared/push_permission_prompt.dart';
 import '../../../widgets/shared/shine_wrapper.dart';
 import '../../../widgets/shared/social_feedback_buttons.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
@@ -65,13 +64,28 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _hapticFeedback = true;
   bool _openOnScanPage = false;
 
-  int _unreadErrorResponses = 0;
-  ErrorReportPaginated? _errorReportsFirstPage;
+  bool _pushEnabled = false;
+
+  /// Back from the phone settings (snack bar "Réglages"): the notifications
+  /// switch follows the OS permission given or removed there.
+  late final AppLifecycleListener _lifecycleListener;
 
   @override
   void initState() {
     super.initState();
+    _lifecycleListener = AppLifecycleListener(onResume: _refreshPushEnabled);
     _loadAll();
+  }
+
+  @override
+  void dispose() {
+    _lifecycleListener.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshPushEnabled() async {
+    final pushEnabled = await PushNotificationService.isEnabled();
+    if (mounted) setState(() => _pushEnabled = pushEnabled);
   }
 
   /// After logging in from the Settings auth gate, land on the Dashboard
@@ -88,8 +102,6 @@ class _SettingsPageState extends State<SettingsPage> {
     await Future.wait([
       _loadUser(),
       _loadPreferences(),
-      _loadErrorReports(),
-      if (AuthService.isLoggedIn) SelectionBadgeService.refreshUnreadCount(),
     ]);
     if (mounted) setState(() => _isLoading = false);
   }
@@ -142,6 +154,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final showScores = await PreferencesHelper.getShowScoresPref();
     final hapticFeedback = await PreferencesHelper.getHapticFeedbackPref();
     final openOnScanPage = await PreferencesHelper.getOpenOnScanPagePref();
+    final pushEnabled = await PushNotificationService.isEnabled();
     if (!mounted) return;
     setState(() {
       _b12RemindersEnabled = b12Settings.enabled;
@@ -150,16 +163,16 @@ class _SettingsPageState extends State<SettingsPage> {
       _showScores = showScores;
       _hapticFeedback = hapticFeedback;
       _openOnScanPage = openOnScanPage;
+      _pushEnabled = pushEnabled;
     });
   }
 
-  Future<void> _loadErrorReports() async {
-    final result = await ErrorReportBadgeService.refreshUnreadCount();
-    if (result == null || !mounted) return;
-    setState(() {
-      _errorReportsFirstPage = result;
-      _unreadErrorResponses = ErrorReportBadgeService.unreadCount.value;
-    });
+  Future<void> _togglePushNotifications(bool value) async {
+    setState(() => _pushEnabled = value);
+    final enabled = await PushNotificationService.setEnabled(value);
+    if (!mounted) return;
+    setState(() => _pushEnabled = enabled);
+    if (value && !enabled) showPushBlockedSnackBar(context);
   }
 
   // Turning it on needs a frequency/time first, so it opens the B12 settings
@@ -301,17 +314,9 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   void _openErrorReports() {
-    // Without the fetched page we don't know which ids to store, and an
-    // empty set would make every handled report "new" again next refresh.
-    if (_unreadErrorResponses > 0 && _errorReportsFirstPage != null) {
-      ErrorReportBadgeService.markHandledAsSeen(_errorReportsFirstPage!.items);
-      setState(() => _unreadErrorResponses = 0);
-    }
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => ErrorReportsPage(initialData: _errorReportsFirstPage),
-      ),
+      MaterialPageRoute(builder: (_) => const ErrorReportsPage()),
     );
   }
 
@@ -509,6 +514,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 value: '••••••',
                 onTap: _openChangePasswordModal,
               ),
+              // Server pushes (answers to signalements...)
+              SettingsToggleTile(
+                title: 'Notifications',
+                value: _pushEnabled,
+                onChanged: _togglePushNotifications,
+              ),
             ],
           ),
           SizedBox(height: AppSpacing.section),
@@ -565,19 +576,6 @@ class _SettingsPageState extends State<SettingsPage> {
               SettingsRowTile(
                 label: 'Signalements',
                 value: '${_user?.nbErrorReports ?? 0}',
-                trailing: _unreadErrorResponses > 0
-                    ? Container(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: 12.w, vertical: 4.h),
-                        decoration: const BoxDecoration(
-                            color: Colors.red, shape: BoxShape.circle),
-                        child: Text(
-                          '$_unreadErrorResponses',
-                          style:
-                              TextStyle(color: Colors.white, fontSize: 24.sp),
-                        ),
-                      )
-                    : null,
                 onTap: _openErrorReports,
               ),
             ],
@@ -586,29 +584,12 @@ class _SettingsPageState extends State<SettingsPage> {
           SettingsSection(
             title: 'Lieux',
             children: [
-              // Badge: selections sent to the user, not seen yet
-              ValueListenableBuilder<int>(
-                valueListenable: SelectionBadgeService.unreadCount,
-                builder: (context, unreadSelections, _) => SettingsRowTile(
-                  label: 'Lieux sauvegardés',
-                  trailing: unreadSelections > 0
-                      ? Container(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12.w, vertical: 4.h),
-                          decoration: const BoxDecoration(
-                              color: Colors.red, shape: BoxShape.circle),
-                          child: Text(
-                            '$unreadSelections',
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 24.sp),
-                          ),
-                        )
-                      : null,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const SavedRestaurantsPage()),
-                  ),
+              SettingsRowTile(
+                label: 'Lieux sauvegardés',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const SavedRestaurantsPage()),
                 ),
               ),
             ],

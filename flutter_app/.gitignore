@@ -19,7 +19,7 @@ migrate_working_dir/
 .idea/
 
 /android/app/google-services.json
-/ios/GoogleService-Info.plist
+/ios/Runner/GoogleService-Info.plist
 
 .vscode/
 

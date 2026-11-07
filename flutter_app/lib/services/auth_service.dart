@@ -9,9 +9,11 @@ import '../models/user.dart';
 import '../models/scanned_product.dart';
 import '../helpers/preference_helper.dart';
 import '../themes/app_colors.dart';
+import 'app_notification_service.dart';
 import 'b12_reminder_service.dart';
 import 'b12_sync_service.dart';
 import 'dio_client.dart';
+import 'push_notification_service.dart';
 import 'scan_count_sync_service.dart';
 import 'subscription_service.dart';
 
@@ -91,6 +93,7 @@ class AuthService {
       await PreferencesHelper.clearPendingEmailChange();
       _accessToken = null;
       _currentUser = null;
+      AppNotificationService.clear();
     } catch (e) {
       debugPrint('Error clearing token: $e');
     }
@@ -178,6 +181,8 @@ class AuthService {
         unawaited(ScanCountSyncService.sync());
         // Same for B12 intakes (first sync seeds the local intake history).
         unawaited(B12SyncService.sync());
+        // Server pushes (signalement answers...) for this account
+        unawaited(PushNotificationService.registerDevice());
 
         return AuthResult.success(token);
       } else {
@@ -297,6 +302,8 @@ class AuthService {
     // (keeping frequency/time) so it can't keep firing for the next account
     // on this device.
     await B12ReminderService.disable();
+    // Needs the access token, cleared below
+    await PushNotificationService.unregisterDevice();
 
     try {
       final dio = await DioClient.getDio();
@@ -333,6 +340,7 @@ class AuthService {
       B12SyncService.clearPending(),
     ]);
     await B12ReminderService.disable();
+    await PushNotificationService.forgetDevice();
     try {
       final dio = await DioClient.getDio();
 

@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vegan_app/models/partners/partners.dart';
 import 'auth_service.dart';
 import 'dio_client.dart';
+import '../models/app_notification.dart';
 import '../models/b12_intake.dart';
 import '../models/error_report.dart';
 import '../models/product_of_interest.dart';
@@ -156,25 +157,28 @@ class ApiService {
     required String contact,
   }) async {
     try {
-      final url = Uri.parse('$_baseUrl/error-reports/');
+      // Logged in: the API takes the report's author from the bearer token
+      // (needed for "Mes signalements" and the answer notification); the
+      // API key alone files it anonymously.
+      final dio = await DioClient.getDio();
+      final accessToken = AuthService.accessToken;
 
-      final userId = AuthService.currentUser?.id;
-
-      final body = json.encode({
-        'ean': ean,
-        'comment': comment,
-        'contact': contact,
-        'handled': false,
-        if (userId != null) 'created_by': userId,
-      });
-
-      final response = await http.post(
-        url,
-        headers: _headers,
-        body: body,
+      final response = await dio.post(
+        '/error-reports/',
+        data: {
+          'ean': ean,
+          'comment': comment,
+          'contact': contact,
+        },
+        options: dio_pkg.Options(
+          headers: {
+            'x-api-key': _apiKey,
+            if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+          },
+        ),
       );
 
-      return response.statusCode >= 200 && response.statusCode < 300;
+      return _is2xx(response);
     } catch (e) {
       return false;
     }
@@ -366,6 +370,115 @@ class ApiService {
       return null;
     }
   }
+
+  static dio_pkg.Options get _authOptions {
+    final accessToken = AuthService.accessToken;
+    return dio_pkg.Options(
+      headers: {
+        if (accessToken != null) 'Authorization': 'Bearer $accessToken',
+      },
+    );
+  }
+
+  /// Gets the current user's notifications with an ID above [afterId],
+  /// oldest first (at most [limit]). Null on failure.
+  static Future<List<AppNotification>?> getMyNotifications({
+    int afterId = 0,
+    int limit = 100,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        '/me/notifications/',
+        queryParameters: {'after_id': afterId, 'limit': limit},
+        options: _authOptions,
+      );
+      final data = response.data;
+      if (data is! List) return null;
+      return [
+        for (final item in data)
+          AppNotification.fromJson(item as Map<String, dynamic>),
+      ];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Marks one of the current user's notifications as read. Idempotent.
+  static Future<bool> markNotificationRead(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.patch(
+        '/me/notifications/$id/read',
+        options: _authOptions,
+      );
+      return _is2xx(response);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Deletes one of the current user's notifications. Idempotent.
+  static Future<bool> deleteNotification(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.delete(
+        '/me/notifications/$id',
+        options: _authOptions,
+      );
+      return _is2xx(response);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Registers (or refreshes) this device's FCM token for the current user.
+  /// Returns the push device ID, or null on failure.
+  static Future<int?> registerPushDevice({
+    required String platform,
+    required String installationId,
+    required String token,
+  }) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.post(
+        '/me/push-devices/',
+        data: {
+          'platform': platform,
+          'installation_id': installationId,
+          'token': token,
+        },
+        options: _authOptions,
+      );
+      if (!_isSuccess(response) || response.data is! Map) return null;
+      return response.data['id'] as int?;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Stops pushes to this device (logout, notifications refused).
+  /// A 404 means the device is already gone: treated as done.
+  static Future<bool> deletePushDevice(int id) async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.delete(
+        '/me/push-devices/$id',
+        options: _authOptions,
+      );
+      return _is2xx(response);
+    } on dio_pkg.DioException catch (e) {
+      return e.response?.statusCode == 404;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// For endpoints answering 204 No Content (no body to check).
+  static bool _is2xx(dio_pkg.Response response) =>
+      response.statusCode != null &&
+      response.statusCode! >= 200 &&
+      response.statusCode! < 300;
 
   /// Confirm which shop the user is in by osm_id.
   /// Creates the shop in DB if it doesn't exist and links it to the scan event.

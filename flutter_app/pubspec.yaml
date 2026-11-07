@@ -81,6 +81,8 @@ dependencies:
   figma_squircle: ^0.6.3
   app_links: ^7.0.0
   image_cropper: ^12.2.1
+  firebase_core: ^5.1.0
+  firebase_messaging: ^17.0.1
 
 dev_dependencies:
   flutter_test:

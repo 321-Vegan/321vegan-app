@@ -35,6 +35,11 @@ const Color kSemanticError = Color(0xFFD6484B);
 /// Use instead of ad-hoc `Colors.green*`.
 const Color kSemanticSuccess = Color(0xFF15866E);
 
+/// Green of the app logo: tints the Android notification icon. Same value
+/// as `notification_accent` in android/app/src/main/res/values/colors.xml
+/// (server pushes).
+const Color kLogoGreen = Color(0xFF15866E);
+
 /// Map pins of places with vegan options (not 100 % vegan, which are
 /// [kSemanticSuccess]).
 const Color kVeganOptionsOrange = Color(0xFFF0892A);

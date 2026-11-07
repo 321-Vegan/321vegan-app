@@ -30,14 +30,24 @@ const _pageSize = 20;
 /// Full-screen page gathering what the current user contributed, one tab
 /// per kind: product ratings, restaurant reviews, restaurants created and
 /// restaurant changes proposed, each with its moderation status. Pushed
-/// from Settings.
+/// from Settings, and on the [placesTab] or [suggestionsTab] from a
+/// moderation notification whose place is gone.
 class MyContributionsPage extends StatelessWidget {
-  const MyContributionsPage({super.key});
+  /// Index of the "Lieux" tab (restaurants created).
+  static const int placesTab = 2;
+
+  /// Index of the "Propositions" tab (edit suggestions sent).
+  static const int suggestionsTab = 3;
+
+  final int initialTab;
+
+  const MyContributionsPage({super.key, this.initialTab = 0});
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 4,
+      initialIndex: initialTab,
       child: AppBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,

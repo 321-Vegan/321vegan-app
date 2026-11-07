@@ -5,7 +5,6 @@ import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/models/error_report.dart';
 import 'package:vegan_app/services/api_service.dart';
 import 'package:vegan_app/services/auth_service.dart';
-import 'package:vegan_app/services/error_report_badge_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
@@ -13,18 +12,11 @@ import 'package:vegan_app/widgets/shared/app_background.dart';
 
 /// Full-screen page listing the error reports sent by the current user,
 /// with their status and the team's response once handled.
-/// Pushed from Settings and from the Dashboard.
-///
-/// [initialData] lets the caller reuse an already fetched first page instead
-/// of refetching it; it must have been fetched with [pageSize] items.
+/// Pushed from Settings and from a "signalement traité" notification.
 class ErrorReportsPage extends StatefulWidget {
-  /// Must match [initialData]'s page size so "load more" page numbers line
-  /// up. Owned by the badge service, which performs the initial fetch.
-  static const int pageSize = ErrorReportBadgeService.pageSize;
+  static const int pageSize = 100;
 
-  final ErrorReportPaginated? initialData;
-
-  const ErrorReportsPage({super.key, this.initialData});
+  const ErrorReportsPage({super.key});
 
   @override
   State<ErrorReportsPage> createState() => _ErrorReportsPageState();
@@ -43,14 +35,7 @@ class _ErrorReportsPageState extends State<ErrorReportsPage> {
   @override
   void initState() {
     super.initState();
-    final initial = widget.initialData;
-    if (initial != null) {
-      _isLoading = false;
-      _reports.addAll(initial.items);
-      _pages = initial.pages;
-    } else {
-      _loadFirstPage();
-    }
+    _loadFirstPage();
     _scrollController.addListener(_onScroll);
     _loadAvatar();
   }

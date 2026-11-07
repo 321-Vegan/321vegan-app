@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:vegan_app/models/app_notification.dart';
+import 'package:vegan_app/services/app_notification_service.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/shared/announcement_sheet.dart';
 import 'package:vegan_app/widgets/shared/bottom_sheet_shell.dart';
 
-/// Dashboard bell content: responses to the user's error reports (logged-in
-/// only) and the app announcements, each opening its own page/sheet.
+/// Dashboard bell content, in two sections: "Pour vous" (the notifications
+/// sent by the API, logged-in only, swipe to delete) and "Nouveautés de l'app" (the announcements hard-coded in the
+/// app). Each item opens its own page/sheet.
 class NotificationsSheet extends StatelessWidget {
   /// Newest first; see AnnouncementCenter.relevant.
   final List<Announcement> announcements;
@@ -15,34 +18,35 @@ class NotificationsSheet extends StatelessWidget {
   /// Ids among [announcements] the user hasn't opened yet (red dot).
   final Set<String> unseenAnnouncementIds;
 
-  /// Null hides the error reports row (logged out).
-  final int? unreadErrorResponses;
-
-  /// Restaurant selections sent to the user, not seen yet; the row only
-  /// shows when there are some.
-  final int unreadSelections;
+  /// Shows the API notifications (AppNotificationService); false when
+  /// logged out.
+  final bool showInbox;
 
   final void Function(Announcement announcement) onOpenAnnouncement;
-  final VoidCallback onOpenErrorReports;
-  final VoidCallback onOpenSelections;
+  final void Function(AppNotification notification) onOpenNotification;
 
   const NotificationsSheet({
     super.key,
     required this.announcements,
     required this.unseenAnnouncementIds,
-    required this.unreadErrorResponses,
-    this.unreadSelections = 0,
+    required this.showInbox,
     required this.onOpenAnnouncement,
-    required this.onOpenErrorReports,
-    required this.onOpenSelections,
+    required this.onOpenNotification,
   });
 
   @override
   Widget build(BuildContext context) {
-    final unreadErrors = unreadErrorResponses;
-    final isEmpty = announcements.isEmpty &&
-        unreadErrors == null &&
-        unreadSelections == 0;
+    // Rebuilds when a notification is deleted or marked read
+    return ValueListenableBuilder<List<AppNotification>>(
+      valueListenable: AppNotificationService.items,
+      builder: (context, inboxItems, _) =>
+          _buildSheet(context, showInbox ? inboxItems : const []),
+    );
+  }
+
+  Widget _buildSheet(BuildContext context, List<AppNotification> inbox) {
+    final hasPersonal = inbox.isNotEmpty;
+    final isEmpty = !hasPersonal && announcements.isEmpty;
 
     return BottomSheetShell(
       // The shell gives its child unbounded height: cap it below the screen
@@ -70,40 +74,30 @@ class NotificationsSheet extends StatelessWidget {
                     ),
                   ),
                 ),
-              if (unreadSelections > 0)
-                _NotificationTile(
-                  leading: _IconBadge(
-                    icon: Icons.collections_bookmark,
-                    color: Theme.of(context).colorScheme.primary,
+              if (hasPersonal) const _SectionTitle('Pour vous'),
+              for (final notification in inbox)
+                _DismissibleNotification(
+                  key: ValueKey('app-notification-${notification.id}'),
+                  onDismissed: () =>
+                      AppNotificationService.delete(notification.id),
+                  child: _NotificationTile(
+                    leading: _IconBadge(
+                      icon: _iconFor(notification.type),
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    title: notification.title,
+                    subtitle: notification.body,
+                    unread: !notification.isRead,
+                    // Sheet kept open: its page is pushed above it, so
+                    // going back lands here again
+                    onTap: () => onOpenNotification(notification),
                   ),
-                  title: 'Sélections de lieux reçues',
-                  subtitle: unreadSelections == 1
-                      ? 'On vous a envoyé 1 sélection'
-                      : 'On vous a envoyé $unreadSelections sélections',
-                  unread: true,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onOpenSelections();
-                  },
                 ),
-              if (unreadErrors != null)
-                _NotificationTile(
-                  leading: _IconBadge(
-                    icon: Icons.chat,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  title: 'Réponses à vos signalements',
-                  subtitle: switch (unreadErrors) {
-                    0 => 'Aucune nouvelle réponse',
-                    1 => '1 nouvelle réponse',
-                    _ => '$unreadErrors nouvelles réponses',
-                  },
-                  unread: unreadErrors > 0,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    onOpenErrorReports();
-                  },
-                ),
+              if (announcements.isNotEmpty) ...[
+                // Spaced from the section above, if any
+                if (hasPersonal) SizedBox(height: 24.h),
+                const _SectionTitle('Nouveautés de l\'app'),
+              ],
               for (final announcement in announcements)
                 _NotificationTile(
                   leading: Transform.flip(
@@ -127,6 +121,66 @@ class NotificationsSheet extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+
+  const _SectionTitle(this.title);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 24.h),
+      child: Text(title, style: AppTextStyles.baloo17),
+    );
+  }
+}
+
+IconData _iconFor(String type) => switch (type) {
+      AppNotification.errorReportHandled => Icons.chat,
+      AppNotification.restaurantValidated => Icons.check_circle_outline,
+      AppNotification.restaurantRejected => Icons.highlight_off,
+      AppNotification.selectionReceived => Icons.collections_bookmark,
+      AppNotification.restaurantSuggestionApproved ||
+      AppNotification.restaurantSuggestionRejected =>
+        Icons.edit_note,
+      _ => Icons.notifications,
+    };
+
+/// Swipe left to delete, over a red background matching the tile's shape.
+class _DismissibleNotification extends StatelessWidget {
+  final VoidCallback onDismissed;
+  final Widget child;
+
+  const _DismissibleNotification({
+    super.key,
+    required this.onDismissed,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Dismissible(
+      key: key!,
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) => onDismissed(),
+      background: Padding(
+        // Same bottom gap as _NotificationTile
+        padding: EdgeInsets.only(bottom: 24.h),
+        child: Container(
+          alignment: Alignment.centerRight,
+          padding: EdgeInsets.symmetric(horizontal: 48.w),
+          decoration: ShapeDecoration(
+            color: Colors.red,
+            shape: squircleBorder(radius: 36.r),
+          ),
+          child: Icon(Icons.delete_outline, color: Colors.white, size: 60.sp),
+        ),
+      ),
+      child: child,
     );
   }
 }
