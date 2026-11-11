@@ -8,6 +8,9 @@ class AppNotification {
   static const String restaurantValidated = 'restaurant.validated';
   static const String restaurantRejected = 'restaurant.rejected';
 
+  /// The team contacted a place the user created before validating it.
+  static const String restaurantContacted = 'restaurant.contacted';
+
   /// A user sent the user one of their restaurant selections.
   static const String selectionReceived = 'restaurant_selection.received';
 

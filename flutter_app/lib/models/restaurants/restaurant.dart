@@ -48,6 +48,24 @@ class RestaurantServiceOptions {
       all.firstWhere((o) => o.$1 == value, orElse: () => (value, value)).$2;
 }
 
+/// How a wheelchair user gets in, mirrors the API entrance access.
+class EntranceAccess {
+  EntranceAccess._();
+
+  static const stepFree = 'step_free';
+  static const rampOnRequest = 'ramp_on_request';
+  static const notAccessible = 'not_accessible';
+
+  static const all = [
+    (stepFree, 'De plain-pied'),
+    (rampOnRequest, 'Rampe sur demande'),
+    (notAccessible, 'Non accessible'),
+  ];
+
+  static String label(String value) =>
+      all.firstWhere((o) => o.$1 == value, orElse: () => (value, value)).$2;
+}
+
 class VeganStatus {
   VeganStatus._();
 
@@ -313,6 +331,15 @@ class Restaurant {
   final bool? servesHotDrinks;
   final bool hasStorefront;
   final String? serviceArea;
+
+  /// Accessibility (PMR): [EntranceAccess] value, toilets for everyone and
+  /// toilets fit for wheelchair users; null when unknown.
+  final String? entranceAccess;
+  final bool? hasToilets;
+  final bool? hasAccessibleToilets;
+
+  /// Free details (narrow doorway, step at the toilets...).
+  final String? accessibilityNote;
   final List<OpeningSlot> openingHours;
   final String? openingHoursNote;
 
@@ -341,6 +368,10 @@ class Restaurant {
   /// Refused by the team (only in the creator's list), with the reason.
   final bool isRejected;
   final String? rejectionReason;
+
+  /// Pending, and the team is checking things with the place (only told to
+  /// its creator).
+  final bool contacted;
   final List<RestaurantPhoto> photos;
 
   /// Approved photo shown first on the restaurant page (also on map pins).
@@ -369,6 +400,10 @@ class Restaurant {
     this.servesHotDrinks,
     this.hasStorefront = true,
     this.serviceArea,
+    this.entranceAccess,
+    this.hasToilets,
+    this.hasAccessibleToilets,
+    this.accessibilityNote,
     this.openingHours = const [],
     this.openingHoursNote,
     this.stops = const [],
@@ -386,6 +421,7 @@ class Restaurant {
     this.createdBy,
     this.isRejected = false,
     this.rejectionReason,
+    this.contacted = false,
     this.photos = const [],
     this.featuredPhoto,
     this.isSaved = false,
@@ -400,6 +436,11 @@ class Restaurant {
   /// A grocery and nothing else: no menu (link or photos).
   bool get hasNoMenu =>
       tags.length == 1 && tags.first == RestaurantTags.grocery;
+  bool get hasAccessibilityInfo =>
+      entranceAccess != null ||
+      hasToilets != null ||
+      hasAccessibleToilets != null ||
+      accessibilityNote != null;
   bool get isPermanentlyClosed =>
       operatingStatus == OperatingStatus.permanentlyClosed;
 
@@ -455,6 +496,10 @@ class Restaurant {
       servesHotDrinks: json['serves_hot_drinks'] as bool?,
       hasStorefront: json['has_storefront'] as bool? ?? true,
       serviceArea: json['service_area'] as String?,
+      entranceAccess: json['entrance_access'] as String?,
+      hasToilets: json['has_toilets'] as bool?,
+      hasAccessibleToilets: json['has_accessible_toilets'] as bool?,
+      accessibilityNote: json['accessibility_note'] as String?,
       openingHours: (json['opening_hours'] as List<dynamic>? ?? [])
           .map((e) => OpeningSlot.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -477,6 +522,7 @@ class Restaurant {
       createdBy: json['created_by'] as int?,
       isRejected: json['is_rejected'] as bool? ?? false,
       rejectionReason: json['rejection_reason'] as String?,
+      contacted: json['contacted'] as bool? ?? false,
       isSaved: json['is_saved'] as bool? ?? false,
       photos: (json['photos'] as List<dynamic>? ?? [])
           .map((e) => RestaurantPhoto.fromJson(e as Map<String, dynamic>))

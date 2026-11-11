@@ -40,9 +40,16 @@ const Color kSemanticSuccess = Color(0xFF15866E);
 /// (server pushes).
 const Color kLogoGreen = Color(0xFF15866E);
 
+/// Blue of the international symbol of access (♿), behind the wheelchair
+/// of the restaurant page's accessibility button.
+const Color kAccessibilityBlue = Color(0xFF1F6FD1);
+
 /// Map pins of places with vegan options (not 100 % vegan, which are
 /// [kSemanticSuccess]).
 const Color kVeganOptionsOrange = Color(0xFFF0892A);
+
+/// Wheat brown of the "Options sans gluten" tags.
+const Color kGlutenFreeBrown = Color(0xFF8B5E34);
 
 /// Dark green gradient for the first-launch welcome screen
 /// ("Rejoignez une communauté"), distinct from the app's default cream

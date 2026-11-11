@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show File;
+import 'dart:math' show min;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,17 +67,28 @@ class CreateRestaurantPage extends StatefulWidget {
   /// A creation left unfinished, to go on with.
   final RestaurantDraft? draft;
 
+  /// Opens on the accessibility section (from the restaurant page's
+  /// accessibility sheet).
+  final bool scrollToAccessibility;
+
   const CreateRestaurantPage({super.key, required this.mapCenter, this.draft})
       : original = null,
-        editsDirectly = false;
+        editsDirectly = false,
+        scrollToAccessibility = false;
 
-  CreateRestaurantPage.suggest({super.key, required Restaurant restaurant})
+  CreateRestaurantPage.suggest(
+      {super.key,
+      required Restaurant restaurant,
+      this.scrollToAccessibility = false})
       : original = restaurant,
         editsDirectly = false,
         draft = null,
         mapCenter = LatLng(restaurant.latitude, restaurant.longitude);
 
-  CreateRestaurantPage.edit({super.key, required Restaurant restaurant})
+  CreateRestaurantPage.edit(
+      {super.key,
+      required Restaurant restaurant,
+      this.scrollToAccessibility = false})
       : original = restaurant,
         editsDirectly = true,
         draft = null,
@@ -110,9 +122,12 @@ class CreateRestaurantPage extends StatefulWidget {
 
 class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     with WidgetsBindingObserver {
-  static const int _maxPhotosPerKind = 10;
+  // Of each kind, so that one submission stays reasonable
+  static const int _maxPhotosPerUpload = 10;
 
   final _formKey = GlobalKey<FormState>();
+  final _scroll = ScrollController();
+  final _accessibilityKey = GlobalKey();
   final _name = TextEditingController();
   final _address = TextEditingController();
   final _city = TextEditingController();
@@ -127,6 +142,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   final _facebook = TextEditingController();
   final _instagram = TextEditingController();
   final _menuUrl = TextEditingController();
+  final _accessibilityNote = TextEditingController();
   final _comment = TextEditingController();
 
   final Set<String> _tags = {};
@@ -134,6 +150,11 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   String? _veganStatus;
   bool _hasStorefront = true;
   bool _hasGlutenFreeOptions = false;
+
+  /// Accessibility (PMR), null when unknown.
+  String? _entranceAccess;
+  bool? _hasToilets;
+  bool? _hasAccessibleToilets;
   List<OpeningSlot> _hours = [];
   bool _hoursUnknown = false;
 
@@ -249,6 +270,29 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     _savedSnapshot = _snapshot();
     _address.addListener(_onAddressChanged);
     WidgetsBinding.instance.addObserver(this);
+    if (widget.scrollToAccessibility) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _scrollToAccessibility());
+    }
+  }
+
+  /// The list builds its children lazily: scrolls down a screen at a time
+  /// until the section exists, then brings it to the top.
+  Future<void> _scrollToAccessibility() async {
+    while (mounted &&
+        _accessibilityKey.currentContext == null &&
+        _scroll.hasClients &&
+        _scroll.offset < _scroll.position.maxScrollExtent) {
+      _scroll.jumpTo(min(_scroll.offset + _scroll.position.viewportDimension,
+          _scroll.position.maxScrollExtent));
+      await WidgetsBinding.instance.endOfFrame;
+    }
+    final section = _accessibilityKey.currentContext;
+    if (section == null || !section.mounted) return;
+    await Scrollable.ensureVisible(section,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+        alignment: 0.05);
   }
 
   /// The app may be closed for good once in the background: a creation in
@@ -289,11 +333,15 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
         'facebook': _facebook.text,
         'instagram': _instagram.text,
         'menu_url': _menuUrl.text,
+        'accessibility_note': _accessibilityNote.text,
         'tags': _tags.toList(),
         'service_options': _serviceOptions.toList(),
         'vegan_status': _veganStatus,
         'has_storefront': _hasStorefront,
         'gluten_free': _hasGlutenFreeOptions,
+        'entrance_access': _entranceAccess,
+        'has_toilets': _hasToilets,
+        'has_accessible_toilets': _hasAccessibleToilets,
         'hours': _hours.map((s) => s.toJson()).toList(),
         'hours_unknown': _hoursUnknown,
         'has_stops': _hasStops,
@@ -324,12 +372,16 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     _facebook.text = text('facebook');
     _instagram.text = text('instagram');
     _menuUrl.text = text('menu_url');
+    _accessibilityNote.text = text('accessibility_note');
     _tags.addAll((f['tags'] as List?)?.cast<String>() ?? []);
     _serviceOptions
         .addAll((f['service_options'] as List?)?.cast<String>() ?? []);
     _veganStatus = f['vegan_status'] as String?;
     _hasStorefront = f['has_storefront'] as bool? ?? true;
     _hasGlutenFreeOptions = f['gluten_free'] as bool? ?? false;
+    _entranceAccess = f['entrance_access'] as String?;
+    _hasToilets = f['has_toilets'] as bool?;
+    _hasAccessibleToilets = f['has_accessible_toilets'] as bool?;
     _hours = [
       for (final slot in (f['hours'] as List?) ?? [])
         OpeningSlot.fromJson((slot as Map).cast<String, dynamic>()),
@@ -443,11 +495,15 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     _facebook.text = r.facebook ?? '';
     _instagram.text = r.instagram ?? '';
     _menuUrl.text = r.menuUrl ?? '';
+    _accessibilityNote.text = r.accessibilityNote ?? '';
     _tags.addAll(r.tags);
     _serviceOptions.addAll(r.serviceOptions);
     _veganStatus = r.veganStatus;
     _hasStorefront = r.hasStorefront;
     _hasGlutenFreeOptions = r.hasGlutenFreeOptions;
+    _entranceAccess = r.entranceAccess;
+    _hasToilets = r.hasToilets;
+    _hasAccessibleToilets = r.hasAccessibleToilets;
     _hours = [...r.openingHours];
     // Only a suggestion offers "unknown hours"; an edit shows the editor
     _hoursUnknown = _isSuggestion && r.openingHours.isEmpty;
@@ -474,6 +530,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _debounce?.cancel();
+    _scroll.dispose();
     for (final c in [
       _name,
       _address,
@@ -489,6 +546,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       _facebook,
       _instagram,
       _menuUrl,
+      _accessibilityNote,
       _comment,
     ]) {
       c.dispose();
@@ -588,6 +646,18 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
     if (_serviceOptions.isEmpty && info.serviceOptions.isNotEmpty) {
       _serviceOptions.addAll(info.serviceOptions);
       filled.add('sur place / à emporter / livraison');
+    }
+    if (_entranceAccess == null && info.entranceAccess != null) {
+      _entranceAccess = info.entranceAccess;
+      filled.add('entrée');
+    }
+    if (_hasToilets == null && info.hasToilets != null) {
+      _hasToilets = info.hasToilets;
+      filled.add('toilettes');
+    }
+    if (_hasAccessibleToilets == null && info.hasAccessibleToilets != null) {
+      _hasAccessibleToilets = info.hasAccessibleToilets;
+      filled.add('toilettes PMR');
     }
     final hours = info.openingHours;
     if (_hours.isEmpty && hours != null) {
@@ -768,6 +838,14 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
       'serves_hot_drinks': _servesHotDrinks,
       'has_storefront': _withStorefront,
       'service_area': _withStorefront ? null : _text(_serviceArea),
+      // No place to welcome customers without storefront, nor accessible
+      // toilets without toilets (OpenStreetMap may say both)
+      'entrance_access': _withStorefront ? _entranceAccess : null,
+      'has_toilets': _withStorefront ? _hasToilets : null,
+      'has_accessible_toilets': !_withStorefront || _hasToilets == false
+          ? null
+          : _hasAccessibleToilets,
+      'accessibility_note': _withStorefront ? _text(_accessibilityNote) : null,
       'opening_hours': _withStops
           ? stopSlots.isEmpty
               ? null
@@ -1152,16 +1230,48 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
 
   /// Locked while sending.
   Widget _choiceChip(String label, bool selected, VoidCallback onTap,
-          {IconData? icon, Color? iconColor}) =>
+          {IconData? icon, Color? iconColor, Color? selectedColor}) =>
       SelectableChip(
         label: label,
         selected: selected,
         onTap: _isSubmitting ? null : onTap,
         icon: icon,
         iconColor: iconColor,
+        selectedColor: selectedColor,
       );
 
+  /// Accessibility answers in the colors of the restaurant page's sheet:
+  /// green when accessible, orange with help, red when not, grey unknown.
+  static Color _accessColor(Object? answer) => switch (answer) {
+        null => Colors.grey[600]!,
+        true || EntranceAccess.stepFree => kSemanticSuccess,
+        EntranceAccess.rampOnRequest => kVeganOptionsOrange,
+        _ => kSemanticError,
+      };
+
   Widget _gap() => SizedBox(height: 24.h);
+
+  /// A question of the accessibility section, above its chips.
+  Widget _questionLabel(String label) => Padding(
+        padding: EdgeInsets.only(bottom: 18.h),
+        child: Text(label, style: AppTextStyles.bodyMedium15),
+      );
+
+  /// "Je ne sais pas" (null), "Oui", "Non" chips.
+  Widget _yesNoChips(bool? value, ValueChanged<bool?> onChanged) => Wrap(
+        spacing: 18.w,
+        runSpacing: 18.h,
+        children: [
+          for (final (choice, label) in const [
+            (null, 'Je ne sais pas'),
+            (true, 'Oui'),
+            (false, 'Non'),
+          ])
+            _choiceChip(
+                label, value == choice, () => setState(() => onChanged(choice)),
+                selectedColor: _accessColor(choice)),
+        ],
+      );
 
   /// Place and menu photos the user may remove: the approved ones for a
   /// suggestion (the API only removes those), their own for an edit (the
@@ -1181,17 +1291,6 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
         for (final photo in _removablePhotos)
           if (!_photosToRemove.contains(photo.id)) photo,
       ];
-
-  /// How many new photos of [kind] fit beside the restaurant's (edit), as
-  /// the API caps them.
-  int _photoRoom(String kind) =>
-      _maxPhotosPerKind -
-      (widget.original?.photos ?? <RestaurantPhoto>[])
-          .where((p) =>
-              p.reviewId == null &&
-              p.kind == kind &&
-              !_photosToRemove.contains(p.id))
-          .length;
 
   /// Tapping a photo marks it to remove (tap again to keep it); the removal
   /// is sent with the suggestion and applied once validated, or done when
@@ -1508,6 +1607,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                   child: Form(
                     key: _formKey,
                     child: ListView(
+                      controller: _scroll,
                       padding: EdgeInsets.fromLTRB(AppSpacing.pageHorizontal, 0,
                           AppSpacing.pageHorizontal, 48.h),
                       children: [
@@ -1780,6 +1880,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                 _veganStatus == VeganStatus.veganOptions,
                                 () => setState(() =>
                                     _veganStatus = VeganStatus.veganOptions),
+                                selectedColor: kVeganOptionsOrange,
                               ),
                             ],
                           ),
@@ -1788,6 +1889,16 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
+                                _gap(),
+                                InfoBox(
+                                  text: 'Seuls les lieux dont les plats '
+                                      'véganes sont indiqués comme tels sur '
+                                      'le menu seront acceptés.',
+                                  symbol: '!',
+                                  color: kSemanticError,
+                                  backgroundColor:
+                                      kSemanticError.withValues(alpha: 0.08),
+                                ),
                                 _gap(),
                                 AppTextField(
                                   controller: _veganOptions,
@@ -1936,6 +2047,14 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                           Icons.trending_down,
                                         _ => null,
                                       },
+                                      selectedColor: switch (price) {
+                                        _MilkPrice.unknown => Colors.grey[600],
+                                        _MilkPrice.plantCostsMore =>
+                                          kSemanticError,
+                                        _MilkPrice.cowCostsMore =>
+                                          kSemanticSuccess,
+                                        _ => null,
+                                      },
                                       iconColor: switch (price) {
                                         _MilkPrice.plantCostsMore =>
                                           kSemanticError,
@@ -1967,6 +2086,69 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                                     ),
                                   ],
                                 ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        AnimatedReveal(
+                          key: _accessibilityKey,
+                          visible: _withStorefront,
+                          child: _section(
+                            'Accessibilité PMR',
+                            subtitle: 'Pour les personnes à mobilité réduite',
+                            [
+                              _questionLabel('Entrée'),
+                              Wrap(
+                                spacing: 18.w,
+                                runSpacing: 18.h,
+                                children: [
+                                  for (final (value, label) in [
+                                    (null, 'Je ne sais pas'),
+                                    ...EntranceAccess.all,
+                                  ])
+                                    _choiceChip(
+                                      label,
+                                      _entranceAccess == value,
+                                      () => setState(
+                                          () => _entranceAccess = value),
+                                      selectedColor: _accessColor(value),
+                                    ),
+                                ],
+                              ),
+                              _gap(),
+                              _questionLabel(
+                                  'Des toilettes pour les clients ?'),
+                              _yesNoChips(_hasToilets, (v) {
+                                _hasToilets = v;
+                                // No toilets, so none fit for wheelchairs
+                                if (v == false) _hasAccessibleToilets = null;
+                              }),
+                              AnimatedReveal(
+                                visible: _hasToilets != false,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    _gap(),
+                                    _questionLabel('Toilettes adaptées PMR ?'),
+                                    _yesNoChips(_hasAccessibleToilets, (v) {
+                                      _hasAccessibleToilets = v;
+                                      if (v == true) _hasToilets = true;
+                                    }),
+                                  ],
+                                ),
+                              ),
+                              _gap(),
+                              AppTextField(
+                                controller: _accessibilityNote,
+                                hintText: 'Remarque (ex : porte étroite, une '
+                                    'marche pour les toilettes, bouton accès)',
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                minLines: 1,
+                                maxLines: 4,
+                                maxLength: 500,
+                                enabled: !_isSubmitting,
                               ),
                             ],
                           ),
@@ -2074,7 +2256,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               [
                                 PickedPhotosRow(
                                   photos: _menuPhotos,
-                                  max: _photoRoom(RestaurantPhoto.kindMenu),
+                                  max: _maxPhotosPerUpload,
                                   enabled: !_isSubmitting,
                                   onChanged: (p) =>
                                       setState(() => _menuPhotos = p),
@@ -2099,7 +2281,7 @@ class _CreateRestaurantPageState extends State<CreateRestaurantPage>
                               [
                                 PickedPhotosRow(
                                   photos: _placePhotos,
-                                  max: _photoRoom(RestaurantPhoto.kindPlace),
+                                  max: _maxPhotosPerUpload,
                                   enabled: !_isSubmitting,
                                   onChanged: (p) =>
                                       setState(() => _placePhotos = p),

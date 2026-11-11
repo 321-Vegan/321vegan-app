@@ -316,11 +316,15 @@ class _RestaurantsTabState extends State<_RestaurantsTab> {
             ),
           VeganStatusChip(isFullyVegan: restaurant.isFullyVegan),
         ],
-        footer: restaurant.rejectionReason == null
-            ? null
-            : Text('Motif : ${restaurant.rejectionReason}',
-                style: AppTextStyles.bodyRegular13
-                    .copyWith(color: kSemanticError)),
+        footer: restaurant.rejectionReason != null
+            ? Text('Motif : ${restaurant.rejectionReason}',
+                style:
+                    AppTextStyles.bodyRegular13.copyWith(color: kSemanticError))
+            : restaurant.contacted && !restaurant.validated
+                ? Text(restaurantContactedText,
+                    style: AppTextStyles.bodyRegular13
+                        .copyWith(color: Colors.grey[600]))
+                : null,
       ),
     );
   }
@@ -346,6 +350,10 @@ const _fieldLabels = {
   'serves_hot_drinks': 'lait végétal',
   'has_storefront': 'boutique',
   'service_area': 'zone servie',
+  'entrance_access': 'accessibilité',
+  'has_toilets': 'toilettes',
+  'has_accessible_toilets': 'accessibilité',
+  'accessibility_note': 'accessibilité',
   'opening_hours': 'horaires',
   'opening_hours_note': 'horaires',
   'stops': 'emplacements',

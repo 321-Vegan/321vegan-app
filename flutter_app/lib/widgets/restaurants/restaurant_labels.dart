@@ -69,6 +69,11 @@ String? closureText(Restaurant restaurant, DateTime now) {
   return null;
 }
 
+/// Pending restaurant the team is checking with the place.
+const restaurantContactedText =
+    'Nous vérifions quelques informations auprès du restaurant avant de '
+    'le valider.';
+
 /// "100 % végane" (green) or "Options véganes" (yellow) tag.
 class VeganStatusChip extends StatelessWidget {
   final bool isFullyVegan;

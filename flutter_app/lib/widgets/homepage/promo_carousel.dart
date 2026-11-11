@@ -7,10 +7,7 @@ import 'package:vegan_app/widgets/b12/b12_reminder_settings_modal.dart';
 import '../../models/seasonal_theme.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../pages/app_pages/home.dart';
-import '../../pages/app_pages/Profile/subscription_page.dart';
-import '../../services/auth_service.dart';
 import '../../services/b12_reminder_service.dart';
-import '../../services/subscription_service.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../shared/page_dots_indicator.dart';
@@ -60,17 +57,6 @@ class PromoSlide {
 /// Static content until the real news source is wired
 final List<PromoSlide> _promoSlides = [
   PromoSlide(
-    title: 'Soutenir 321 Vegan',
-    subtitle: 'Aidez le projet à continuer et grandir',
-    image: 'lib/assets/images/characters/cow-ok.webp',
-    page: () => const SubscriptionPage(),
-    buttonLabel: 'Soutenir',
-    hidden: () async =>
-        AuthService.isLoggedIn &&
-        (SubscriptionService.isSubscribed ||
-            !SubscriptionService.isEntitlementDetermined),
-  ),
-  PromoSlide(
     title: 'Nouvelle carte',
     subtitle: 'Avec les restaurants !',
     image: 'lib/assets/images/stat-cards/co2.webp',
@@ -78,13 +64,11 @@ final List<PromoSlide> _promoSlides = [
     buttonLabel: 'Voir la carte',
   ),
   PromoSlide(
-    title: 'Partenaires',
-    subtitle:
-        'Profitez de nouvelles réductions !',
-    image: 'lib/assets/images/characters/tomatoes.webp',
-    page: () => const PartnersPage(),
-    buttonLabel: "Je veux voir !"
-  ),
+      title: 'Partenaires',
+      subtitle: 'Profitez de nouvelles réductions !',
+      image: 'lib/assets/images/characters/tomatoes.webp',
+      page: () => const PartnersPage(),
+      buttonLabel: "Je veux voir !"),
   PromoSlide(
     title: 'Rappel B12',
     subtitle: 'Configurez un rappel pour votre B12.',
@@ -131,10 +115,6 @@ class _PromoCarouselState extends State<PromoCarousel> {
   void initState() {
     super.initState();
     _resolveSlides();
-    // Re-resolve once premium entitlement is actually known (or changes),
-    // so the "Soutenir 321 Vegan" slide correctly hides/shows instead of
-    // staying stuck on whatever it first resolved to at cold start.
-    SubscriptionService.revision.addListener(_resolveSlides);
   }
 
   Future<void> _resolveSlides() async {
@@ -172,7 +152,6 @@ class _PromoCarouselState extends State<PromoCarousel> {
   @override
   void dispose() {
     // _autoScrollTimer?.cancel();
-    SubscriptionService.revision.removeListener(_resolveSlides);
     _controller.dispose();
     super.dispose();
   }

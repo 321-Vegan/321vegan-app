@@ -19,6 +19,11 @@ class OsmPlaceInfo {
   final String? instagram;
   final String? menuUrl;
 
+  /// From wheelchair, toilets and toilets:wheelchair.
+  final String? entranceAccess;
+  final bool? hasToilets;
+  final bool? hasAccessibleToilets;
+
   const OsmPlaceInfo({
     this.name,
     this.tags = const {},
@@ -31,6 +36,9 @@ class OsmPlaceInfo {
     this.facebook,
     this.instagram,
     this.menuUrl,
+    this.entranceAccess,
+    this.hasToilets,
+    this.hasAccessibleToilets,
   });
 
   /// OSM category/type → restaurant tag.
@@ -61,6 +69,12 @@ class OsmPlaceInfo {
 
   static const _placeClasses = {'amenity', 'shop', 'tourism', 'craft'};
 
+  static bool? _yesNo(String? value) => switch (value) {
+        'yes' => true,
+        'no' => false,
+        _ => null,
+      };
+
   /// Null when [place] is an address, not a place (a street has a "name"
   /// too).
   static OsmPlaceInfo? from(PlaceResult place) {
@@ -84,8 +98,8 @@ class OsmPlaceInfo {
         'yes' || 'limited' => VeganStatus.veganOptions,
         _ => null,
       },
-      glutenFree: const {'yes', 'only', 'limited'}
-          .contains(osm['diet:gluten_free']),
+      glutenFree:
+          const {'yes', 'only', 'limited'}.contains(osm['diet:gluten_free']),
       serviceOptions: {
         if (takeaway != 'only' &&
             (osm['indoor_seating'] == 'yes' || osm['outdoor_seating'] == 'yes'))
@@ -100,6 +114,14 @@ class OsmPlaceInfo {
       facebook: tag(['contact:facebook', 'facebook']),
       instagram: tag(['contact:instagram', 'instagram']),
       menuUrl: tag(['website:menu', 'menu:url']),
+      // "limited" can be a ramp as well as a single step: left unknown
+      entranceAccess: switch (osm['wheelchair']) {
+        'yes' => EntranceAccess.stepFree,
+        'no' => EntranceAccess.notAccessible,
+        _ => null,
+      },
+      hasToilets: _yesNo(osm['toilets']),
+      hasAccessibleToilets: _yesNo(osm['toilets:wheelchair']),
     );
   }
 }

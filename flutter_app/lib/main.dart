@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -137,14 +138,21 @@ class MyAppState extends State<MyApp> {
 
   /// Closes the keyboard when the app leaves the foreground: switching apps
   /// with it open leaves its inset stuck on iOS once back (layout squeezed
-  /// with no keyboard).
+  /// with no keyboard). On hide, not inactive: the Face ID prompt of password
+  /// autofill makes the app inactive, and losing the focus there dropped the
+  /// filled credentials. iOS only: an Android autofill service can cover the
+  /// app with its own activity.
   late final AppLifecycleListener _lifecycleListener;
 
   @override
   void initState() {
     super.initState();
     _lifecycleListener = AppLifecycleListener(
-      onInactive: () => FocusManager.instance.primaryFocus?.unfocus(),
+      onHide: () {
+        if (defaultTargetPlatform == TargetPlatform.iOS) {
+          FocusManager.instance.primaryFocus?.unfocus();
+        }
+      },
     );
     const appcastURL =
         'https://raw.githubusercontent.com/llambrecht/321vegan_appcast/main/appcast.xml';

@@ -248,9 +248,6 @@ class RestaurantApiService {
     if (detail.contains('too large')) {
       return 'Photo trop lourde (5 Mo maximum).';
     }
-    if (detail.contains('more than')) {
-      return 'Ce lieu a déjà le nombre maximum de photos de ce type.';
-    }
     return status != null
         ? 'Erreur du serveur ($status).'
         : 'Erreur inattendue.';

@@ -77,7 +77,8 @@ class AppNotificationService {
           MaterialPageRoute(builder: (_) => const ErrorReportsPage()),
         );
       case AppNotification.restaurantValidated ||
-            AppNotification.restaurantRejected:
+            AppNotification.restaurantRejected ||
+            AppNotification.restaurantContacted:
         await _openRestaurant(
             context, notification, MyContributionsPage.placesTab);
       case AppNotification.restaurantSuggestionApproved ||

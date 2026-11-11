@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:latlong2/latlong.dart';
 import '../../models/restaurants/restaurant.dart';
 import '../../themes/app_colors.dart';
@@ -54,11 +55,40 @@ class MapRestaurantListPage extends StatelessWidget {
         : '${km.round()} km';
   }
 
+  /// The entrance, then the toilets when fit for wheelchair users; nothing
+  /// when unknown.
+  static List<Widget> _accessibilityChips(Restaurant r) => [
+        switch (r.entranceAccess) {
+          EntranceAccess.stepFree => const TagChip(
+              label: 'Accessible',
+              icon: Icons.accessible_forward,
+              color: kAccessibilityBlue,
+            ),
+          EntranceAccess.rampOnRequest => const TagChip(
+              label: 'Rampe sur demande',
+              icon: Icons.accessible_forward,
+              color: kAccessibilityBlue,
+            ),
+          EntranceAccess.notAccessible => const TagChip(
+              label: 'Non accessible',
+              icon: Icons.not_accessible,
+              color: kSemanticError,
+            ),
+          _ => null,
+        },
+        if (r.hasAccessibleToilets == true)
+          const TagChip(
+            label: 'Toilettes PMR',
+            icon: Icons.accessible,
+            color: kAccessibilityBlue,
+          ),
+      ].nonNulls.toList();
+
   @override
   Widget build(BuildContext context) {
     final from = userLocation ?? center;
-    double distanceTo(Restaurant r) => _distance.as(
-        LengthUnit.Meter, from, LatLng(r.latitude, r.longitude));
+    double distanceTo(Restaurant r) =>
+        _distance.as(LengthUnit.Meter, from, LatLng(r.latitude, r.longitude));
     final sorted = [...restaurants]
       ..sort((a, b) => distanceTo(a).compareTo(distanceTo(b)));
     final count = sorted.length;
@@ -69,6 +99,8 @@ class MapRestaurantListPage extends StatelessWidget {
         appBar: AppBar(
           title: Text(
             switch (count) {
+              // The most the API sends: there are more
+              >= 300 => '$count+ lieux ici',
               0 => 'Aucun lieu ici',
               1 => '1 lieu ici',
               _ => '$count lieux ici',
@@ -89,8 +121,8 @@ class MapRestaurantListPage extends StatelessWidget {
                       'filtres, pour en voir plus.',
                 )
               : ListView.separated(
-                  padding: EdgeInsets.fromLTRB(AppSpacing.pageHorizontal,
-                      24.h, AppSpacing.pageHorizontal, 32.h),
+                  padding: EdgeInsets.fromLTRB(AppSpacing.pageHorizontal, 24.h,
+                      AppSpacing.pageHorizontal, 32.h),
                   itemCount: count,
                   separatorBuilder: (_, __) =>
                       SizedBox(height: AppSpacing.item),
@@ -117,6 +149,13 @@ class MapRestaurantListPage extends StatelessWidget {
                             color: kVeganOptionsOrange,
                           ),
                         VeganStatusChip(isFullyVegan: r.isFullyVegan),
+                        if (r.hasGlutenFreeOptions)
+                          const TagChip(
+                            label: 'Options sans gluten',
+                            icon: FontAwesomeIcons.wheatAwn,
+                            color: kGlutenFreeBrown,
+                          ),
+                        ..._accessibilityChips(r),
                       ],
                     );
                   },

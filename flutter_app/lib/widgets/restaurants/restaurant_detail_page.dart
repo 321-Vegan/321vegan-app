@@ -81,7 +81,7 @@ class RestaurantDetailPage extends StatefulWidget {
 
 class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     with SingleTickerProviderStateMixin {
-  static const int _maxPhotosPerKind = 10;
+  static const int _maxPhotosPerUpload = 10;
   static const int _maxPhotosPerReview = 5;
 
   late Restaurant _restaurant = widget.restaurant;
@@ -289,15 +289,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
           );
     if (kind == null || !mounted) return;
 
-    final remaining = _maxPhotosPerKind - _restaurant.photosOfKind(kind).length;
-    if (remaining <= 0) {
-      setState(() => _photoFeedback = (
-            text: 'Il y a déjà $_maxPhotosPerKind photos de ce type.',
-            color: kSemanticError,
-          ));
-      return;
-    }
-    final files = await pickPhotos(context, max: remaining);
+    final files = await pickPhotos(context, max: _maxPhotosPerUpload);
     if (files.isEmpty || !mounted) return;
 
     setState(() {
@@ -653,17 +645,21 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
     );
   }
 
-  Widget _contactRow(IconData icon, String label, Uri url) {
+  /// [compact]: only as wide as its label, to sit beside something else.
+  Widget _contactRow(IconData icon, String label, Uri url,
+      {bool compact = false}) {
     return InkWell(
       onTap: () => openExternalUrl(context, url),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 14.h),
         child: Row(
+          mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
           children: [
             Icon(icon,
                 size: 56.sp, color: Theme.of(context).colorScheme.primary),
             SizedBox(width: 24.w),
-            Expanded(
+            Flexible(
+              fit: compact ? FlexFit.loose : FlexFit.tight,
               child: Text(label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -671,6 +667,327 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Can propose a change of the restaurant, or change it directly.
+  bool get _canContribute => (_isLoggedIn && _restaurant.validated) || _canEdit;
+
+  /// Known or not (then it asks for them); a caterer has no place to visit.
+  bool get _showsAccessibility => _restaurant.hasStorefront;
+
+  /// The international symbol of access: white wheelchair on blue, or on
+  /// grey when nothing is known yet (grey = unknown, as in the sheet).
+  Widget _accessibilityBadge(double size, {bool known = true}) => Container(
+        width: size,
+        height: size,
+        decoration: ShapeDecoration(
+          color: known ? kAccessibilityBlue : Colors.grey[400],
+          shape: squircleBorder(radius: size / 4),
+        ),
+        child: Icon(Icons.accessible_forward,
+            size: size * 0.72, color: Colors.white),
+      );
+
+  /// The ♿ symbol and a chevron on white, like the header's other buttons,
+  /// so it doesn't read as one of the (flat, tinted) tags. Without infos:
+  /// "Accessibilité ?", greyed, with a "+" to add them.
+  Widget _buildAccessibilityButton() {
+    final known = _restaurant.hasAccessibilityInfo;
+    return Semantics(
+      button: true,
+      label: known ? null : 'Accessibilité non renseignée',
+      child: Material(
+        color: Colors.white,
+        shape: squircleBorder(
+            radius: 30.r, side: const BorderSide(color: kBorderDefault)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: _showAccessibility,
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(12.w, 12.h, 18.w, 12.h),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _accessibilityBadge(60.w, known: known),
+                SizedBox(width: 18.w),
+                Text(known ? 'Accessibilité' : 'Accessibilité ?',
+                    style: AppTextStyles.bodyMedium13.copyWith(
+                        color: known ? kTextPrimary : Colors.grey[600])),
+                SizedBox(width: 6.w),
+                if (known || !_canContribute)
+                  Icon(Icons.chevron_right,
+                      size: 48.sp, color: Colors.grey[500])
+                else ...[
+                  SizedBox(width: 6.w),
+                  Icon(Icons.add_circle_rounded,
+                      size: 48.sp,
+                      color: Theme.of(context).colorScheme.primary),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Entrance and toilets, each with a status color, the note, and the way
+  /// to correct or add them.
+  void _showAccessibility() {
+    final r = _restaurant;
+    final rows = [
+      switch (r.entranceAccess) {
+        EntranceAccess.stepFree => (
+            _Access.good,
+            Icons.accessible_forward,
+            'Entrée',
+            'De plain-pied',
+            'Aucune marche pour entrer',
+          ),
+        EntranceAccess.rampOnRequest => (
+            _Access.partial,
+            Icons.accessible_forward,
+            'Entrée',
+            'Rampe sur demande',
+            'Demandez-la à l\'équipe en arrivant',
+          ),
+        EntranceAccess.notAccessible => (
+            _Access.bad,
+            Icons.not_accessible,
+            'Entrée',
+            'Non accessible',
+            'Des marches, sans rampe',
+          ),
+        _ => (
+            _Access.unknown,
+            Icons.door_front_door_outlined,
+            'Entrée',
+            'Non renseignée',
+            null,
+          ),
+      },
+      switch (r.hasToilets) {
+        true => (
+            _Access.good,
+            FontAwesomeIcons.toilet,
+            'Toilettes',
+            'Pour les clients',
+            null,
+          ),
+        false => (
+            _Access.bad,
+            FontAwesomeIcons.toilet,
+            'Toilettes',
+            'Pas de toilettes',
+            null,
+          ),
+        null => (
+            _Access.unknown,
+            FontAwesomeIcons.toilet,
+            'Toilettes',
+            'Non renseignées',
+            null,
+          ),
+      },
+      // Nothing to adapt without toilets
+      if (r.hasToilets != false)
+        switch (r.hasAccessibleToilets) {
+          true => (
+              _Access.good,
+              Icons.accessible,
+              'Toilettes PMR',
+              'Adaptées aux fauteuils',
+              null,
+            ),
+          false => (
+              _Access.bad,
+              Icons.accessible,
+              'Toilettes PMR',
+              'Non adaptées',
+              null,
+            ),
+          null => (
+              _Access.unknown,
+              Icons.accessible,
+              'Toilettes PMR',
+              'Non renseignées',
+              null,
+            ),
+        },
+    ];
+    final hasInfo = r.hasAccessibilityInfo;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => BottomSheetShell(
+        child: Flexible(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 24.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    _accessibilityBadge(84.w, known: hasInfo),
+                    SizedBox(width: 24.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Accessibilité', style: AppTextStyles.baloo22),
+                          Text('Pour les personnes à mobilité réduite',
+                              style: AppTextStyles.bodyRegular13
+                                  .copyWith(color: Colors.grey[600])),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 42.h),
+                // The criteria stay listed, greyed: what is missing
+                if (!hasInfo) ...[
+                  Text(
+                    'Pas encore renseignée. Vous connaissez ce lieu ? Aidez '
+                    'les personnes à mobilité réduite à savoir si elles '
+                    'pourront y aller.',
+                    style: AppTextStyles.bodyRegular15.copyWith(height: 1.4),
+                  ),
+                  SizedBox(height: 36.h),
+                ],
+                for (final (status, icon, label, value, detail) in rows)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 18.h),
+                    child: _accessRow(status, icon, label, value, detail),
+                  ),
+                // Even empty, so people know they can add one
+                Container(
+                  padding: EdgeInsets.all(30.w),
+                  decoration: ShapeDecoration(
+                    color: kBackgroundGradientBottom,
+                    shape: squircleBorder(radius: 30.r),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline_rounded,
+                          size: 54.sp,
+                          color: r.accessibilityNote != null
+                              ? Colors.grey[600]
+                              : Colors.grey[400]),
+                      SizedBox(width: 24.w),
+                      Expanded(
+                        child: r.accessibilityNote != null
+                            ? Text(r.accessibilityNote!,
+                                style: AppTextStyles.bodyRegular15
+                                    .copyWith(height: 1.35))
+                            : Text.rich(
+                                TextSpan(children: [
+                                  TextSpan(
+                                    text: 'Aucune remarque',
+                                    style: AppTextStyles.bodyMedium13
+                                        .copyWith(color: Colors.grey[600]),
+                                  ),
+                                  TextSpan(
+                                    text: '\nPorte étroite, marche devant les '
+                                        'toilettes, place handicapée à '
+                                        'côté… Tout détail utile peut être '
+                                        'ajouté.',
+                                    style: AppTextStyles.bodyRegular13.copyWith(
+                                        color: Colors.grey[500], height: 1.35),
+                                  ),
+                                ]),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (!_isLoggedIn) ...[
+                  SizedBox(height: 30.h),
+                  Text(
+                      hasInfo
+                          ? 'Connectez-vous pour proposer une correction.'
+                          : 'Connectez-vous pour ajouter ces infos.',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyRegular13
+                          .copyWith(color: Colors.grey[600])),
+                ],
+                if (_canContribute) ...[
+                  SizedBox(height: 48.h),
+                  AppButton(
+                    label: !hasInfo
+                        ? 'Ajouter ces infos'
+                        : _canEdit
+                            ? 'Modifier ces infos'
+                            : 'Proposer une correction',
+                    icon: hasInfo ? Icons.edit_outlined : Icons.add,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      _canEdit
+                          ? _edit(toAccessibility: true)
+                          : _suggest('edit', toAccessibility: true);
+                    },
+                  )
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// One criterion: its icon tinted with the [status] color, what it is,
+  /// its value, and the status mark at the end.
+  Widget _accessRow(_Access status, IconData icon, String label, String value,
+      String? detail) {
+    final color = status.color;
+    final known = status != _Access.unknown;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 24.h),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(
+            radius: 36.r, side: const BorderSide(color: kBorderDefault)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 96.w,
+            height: 96.w,
+            decoration: ShapeDecoration(
+              color: color.withValues(alpha: 0.12),
+              shape: squircleBorder(radius: 27.r),
+            ),
+            child: Icon(icon, size: 50.sp, color: color),
+          ),
+          SizedBox(width: 30.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: AppTextStyles.bodyRegular13
+                        .copyWith(color: Colors.grey[600])),
+                Text(value,
+                    style: known
+                        ? AppTextStyles.bodyBold15.copyWith(color: kTextPrimary)
+                        : AppTextStyles.bodyRegular15
+                            .copyWith(color: Colors.grey[500])),
+                if (detail != null)
+                  Text(detail,
+                      style: AppTextStyles.bodyRegular13
+                          .copyWith(color: Colors.grey[600])),
+              ],
+            ),
+          ),
+          SizedBox(width: 18.w),
+          Icon(status.mark, size: 60.sp, color: color),
+        ],
       ),
     );
   }
@@ -783,11 +1100,22 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
               'Options véganes',
               Text(r.veganOptionsDetails!,
                   style: AppTextStyles.bodyRegular15.copyWith(height: 1.3))),
-        if (r.menuUrl != null)
+        if (r.menuUrl != null || _showsAccessibility)
           Padding(
             padding: EdgeInsets.only(top: 24.h),
-            child: _contactRow(Icons.menu_book_outlined, 'Voir le menu',
-                _socialUrl(r.menuUrl!, r.menuUrl!)),
+            // Side by side, the link going under the button if too narrow
+            child: Wrap(
+              spacing: 48.w,
+              runSpacing: 12.h,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (_showsAccessibility) _buildAccessibilityButton(),
+                if (r.menuUrl != null)
+                  _contactRow(Icons.menu_book_outlined, 'Voir le menu',
+                      _socialUrl(r.menuUrl!, r.menuUrl!),
+                      compact: true),
+              ],
+            ),
           ),
         if (surcharge != null)
           Padding(
@@ -815,12 +1143,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
         if (r.hasGlutenFreeOptions)
           Padding(
             padding: EdgeInsets.only(top: 36.h),
-            child: Align(
+            child: const Align(
               alignment: Alignment.centerLeft,
               child: TagChip(
                 label: 'Options sans gluten',
                 icon: FontAwesomeIcons.wheatAwn,
-                color: Theme.of(context).colorScheme.primary,
+                color: kGlutenFreeBrown,
               ),
             ),
           ),
@@ -1286,11 +1614,13 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   // ── Suggestions ───────────────────────────────────────────────────────────
 
-  Future<void> _suggest(String action) async {
+  /// [toAccessibility]: the form opens on the accessibility section.
+  Future<void> _suggest(String action, {bool toAccessibility = false}) async {
     // Every use of the context happens before the first await
     final Future<bool?> report = switch (action) {
       'edit' => Navigator.of(context).push<bool>(MaterialPageRoute(
-          builder: (_) => CreateRestaurantPage.suggest(restaurant: _restaurant),
+          builder: (_) => CreateRestaurantPage.suggest(
+              restaurant: _restaurant, scrollToAccessibility: toAccessibility),
         )),
       'closure' => showClosureReportSheet(context, _restaurant),
       'no_vegan_option' => showNoVeganOptionReportSheet(context, _restaurant),
@@ -1364,9 +1694,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
 
   /// Opens the form on the user's pending restaurant, then shows it as
   /// saved.
-  Future<void> _edit() async {
+  Future<void> _edit({bool toAccessibility = false}) async {
     final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(
-      builder: (_) => CreateRestaurantPage.edit(restaurant: _restaurant),
+      builder: (_) => CreateRestaurantPage.edit(
+          restaurant: _restaurant, scrollToAccessibility: toAccessibility),
     ));
     if (saved != true || !mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1700,6 +2031,12 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
                       Text('En attente de validation',
                           style: AppTextStyles.bodyMedium13
                               .copyWith(color: kAccentYellow)),
+                      if (r.contacted) ...[
+                        SizedBox(height: 6.h),
+                        Text(restaurantContactedText,
+                            style: AppTextStyles.bodyRegular13
+                                .copyWith(color: Colors.grey[600])),
+                      ],
                     ],
                   ],
                 ),
@@ -1775,4 +2112,17 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage>
       ),
     );
   }
+}
+
+/// How accessible an accessibility criterion is, with its color and mark.
+enum _Access {
+  good(kSemanticSuccess, Icons.check_circle_rounded),
+  partial(kVeganOptionsOrange, Icons.error_rounded),
+  bad(kSemanticError, Icons.cancel_rounded),
+  unknown(Color(0xFF9E9E9E), Icons.help_outline_rounded);
+
+  final Color color;
+  final IconData mark;
+
+  const _Access(this.color, this.mark);
 }

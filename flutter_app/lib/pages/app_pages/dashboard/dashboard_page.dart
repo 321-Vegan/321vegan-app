@@ -15,6 +15,7 @@ import '../../../services/auth_service.dart';
 import '../../../services/b12_reminder_service.dart';
 import '../../../services/badge_service.dart';
 import '../../../services/profile_notification_service.dart';
+import '../../../services/subscription_service.dart';
 import '../../../themes/app_colors.dart';
 import '../../../themes/app_shapes.dart';
 import '../../../themes/app_spacing.dart';
@@ -35,6 +36,7 @@ import '../../../widgets/shared/app_card.dart';
 import '../../../widgets/shared/vegan_since_date_modal.dart';
 import '../../../widgets/b12/b12_reminder_settings_modal.dart';
 import '../Profile/product_review_page.dart';
+import '../Profile/subscription_page.dart';
 import '../home.dart';
 import '../settings/settings_page.dart';
 
@@ -474,6 +476,23 @@ class DashboardPageState extends State<DashboardPage> {
             ),
           ),
         ),
+        // Hidden for subscribers; rebuilt when entitlement resolves or a
+        // purchase completes.
+        ValueListenableBuilder<int>(
+          valueListenable: SubscriptionService.revision,
+          builder: (context, _, __) {
+            if (SubscriptionService.isSubscribed) {
+              return const SizedBox.shrink();
+            }
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildPremiumButton(),
+                SizedBox(width: 30.w),
+              ],
+            );
+          },
+        ),
         _buildIconButton(
           icon: Icons.notifications_none_rounded,
           badgeCount: notifCount,
@@ -482,6 +501,45 @@ class DashboardPageState extends State<DashboardPage> {
         SizedBox(width: 30.w),
         _buildIconButton(icon: Icons.settings_outlined, onTap: _openSettings),
       ],
+    );
+  }
+
+  /// Gold crown button opening the subscription page (replaces the old
+  /// "Soutenir 321 Vegan" carousel slide).
+  Widget _buildPremiumButton() {
+    return Semantics(
+      button: true,
+      label: 'Premium',
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SubscriptionPage()),
+        ),
+        child: Container(
+          width: 144.w,
+          height: 144.w,
+          decoration: ShapeDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFFFD866), kAccentYellow, Color(0xFFE09E12)],
+            ),
+            shape: squircleBorder(
+              radius: 42.r,
+              side: BorderSide(color: Colors.white, width: 5.w),
+            ),
+          ),
+          child: Center(
+            child: Image.asset(
+              'lib/assets/images/icons/crown-line.webp',
+              width: 72.sp,
+              height: 72.sp,
+              color: Colors.white,
+              colorBlendMode: BlendMode.srcIn,
+            ),
+          ),
+        ),
+      ),
     );
   }
 

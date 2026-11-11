@@ -4,8 +4,8 @@ import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
 
-/// Pill to pick in a form or a filter: outlined, tinted with the theme's
-/// primary color once [selected]. [icon] (in [iconColor]) goes before the
+/// Pill to pick in a form or a filter: outlined, tinted with
+/// [selectedColor] (the theme's primary color by default) once [selected]. [icon] (in [iconColor]) goes before the
 /// label, e.g. a kind of place's. [dense] for the tighter rows of a sheet.
 /// Without [onTap], it can't be changed (e.g. while sending).
 class SelectableChip extends StatelessWidget {
@@ -14,6 +14,10 @@ class SelectableChip extends StatelessWidget {
   final VoidCallback? onTap;
   final IconData? icon;
   final Color? iconColor;
+
+  /// For a choice that means something (orange "options véganes", red "non
+  /// accessible"...).
+  final Color? selectedColor;
   final bool dense;
 
   const SelectableChip({
@@ -23,12 +27,19 @@ class SelectableChip extends StatelessWidget {
     required this.onTap,
     this.icon,
     this.iconColor,
+    this.selectedColor,
     this.dense = false,
   });
 
+  /// Light colors (orange, red) darkened for the label to stay readable.
+  static Color _readable(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    return hsl.lightness > 0.42 ? hsl.withLightness(0.42).toColor() : color;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final primary = selectedColor ?? Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -55,8 +66,8 @@ class SelectableChip extends StatelessWidget {
             ],
             Text(
               label,
-              style: AppTextStyles.bodyMedium13
-                  .copyWith(color: selected ? primary : kTextPrimary),
+              style: AppTextStyles.bodyMedium13.copyWith(
+                  color: selected ? _readable(primary) : kTextPrimary),
             ),
           ],
         ),

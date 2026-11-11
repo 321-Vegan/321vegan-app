@@ -193,6 +193,7 @@ IconData _iconFor(String type) => switch (type) {
       AppNotification.errorReportHandled => Icons.chat,
       AppNotification.restaurantValidated => Icons.check_circle_outline,
       AppNotification.restaurantRejected => Icons.highlight_off,
+      AppNotification.restaurantContacted => Icons.phone_in_talk_outlined,
       AppNotification.selectionReceived => Icons.collections_bookmark,
       AppNotification.restaurantSuggestionApproved ||
       AppNotification.restaurantSuggestionRejected =>
