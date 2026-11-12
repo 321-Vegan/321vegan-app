@@ -18,6 +18,7 @@ import 'services/b12_reminder_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/notification_service.dart';
 import 'services/anniversary_service.dart';
+import 'services/veganuary_reminder_service.dart';
 import 'services/products_of_interest_cache.dart';
 import 'services/push_notification_service.dart';
 import 'services/subscription_service.dart';
@@ -82,6 +83,13 @@ Future<void> _initDeferred() async {
   await _withTimeout(
     AnniversaryService.rescheduleIfNeeded(),
     'AnniversaryService.rescheduleIfNeeded',
+  );
+
+  // Plans the next Veganuary morning reminders, if the user turned them on
+  // (silent too)
+  await _withTimeout(
+    VeganuaryReminderService.reschedule(),
+    'VeganuaryReminderService.reschedule',
   );
 
   // Pre-load products of interest cache at app startup (when likely to have internet)

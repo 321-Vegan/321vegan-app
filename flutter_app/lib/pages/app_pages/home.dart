@@ -9,6 +9,8 @@ import 'package:vegan_app/helpers/vegan_savings.dart';
 import 'package:vegan_app/pages/app_pages/Scan/scan.dart';
 import 'package:vegan_app/pages/app_pages/dashboard/dashboard_page.dart';
 import 'package:vegan_app/pages/app_pages/map.dart';
+import 'package:vegan_app/pages/app_pages/Veganuary/veganuary_page.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:confetti/confetti.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:vegan_app/services/anniversary_service.dart';
@@ -30,6 +32,8 @@ import 'package:vegan_app/widgets/restaurants/restaurant_detail_page.dart';
 const int _dashboardTabIndex = 0;
 const int _scanTabIndex = 1;
 const int _mapTabIndex = 2;
+const int _veganuaryTabIndex = 3;
+const int _tabCount = 4;
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -50,6 +54,7 @@ class MyHomePageState extends State<MyHomePage>
   late ConfettiController _confettiController;
 
   bool _notificationForcedDashboard = false;
+  bool _notificationForcedVeganuary = false;
   bool _openedFromLink = false;
 
   @override
@@ -60,7 +65,7 @@ class MyHomePageState extends State<MyHomePage>
 
     _tabController = TabController(
       initialIndex: _dashboardTabIndex,
-      length: 3,
+      length: _tabCount,
       vsync: this,
     );
     // Swiping the TabBarView changes the index without going through the
@@ -91,6 +96,13 @@ class MyHomePageState extends State<MyHomePage>
     // to jump to the Scan tab.
     NotificationService.navigateToScan.addListener(_onNavigateToScan);
 
+    // Veganuary morning reminder tapped → the Veganuary tab. Cold start: it
+    // may already be set.
+    NotificationService.navigateToVeganuary
+        .addListener(_onVeganuaryNotificationTap);
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _onVeganuaryNotificationTap());
+
     // Link to a public selection opened → its page. Cold start (or link
     // opened during the onboarding): it may already be set.
     DeepLinkService.pending.addListener(_onDeepLink);
@@ -108,8 +120,14 @@ class MyHomePageState extends State<MyHomePage>
   /// has settled.
   Future<void> _showAnnouncement() async {
     await Future.delayed(const Duration(seconds: 1));
-    // Don't stack it on the anniversary popup or a selection opened by a link
-    if (!mounted || _notificationForcedDashboard || _openedFromLink) return;
+    // Don't stack it on the anniversary popup, a selection opened by a link
+    // or the Veganuary day the reminder brought the user to
+    if (!mounted ||
+        _notificationForcedDashboard ||
+        _notificationForcedVeganuary ||
+        _openedFromLink) {
+      return;
+    }
     await AnnouncementCenter.showNext(context, home: this);
   }
 
@@ -250,6 +268,17 @@ class MyHomePageState extends State<MyHomePage>
     }
   }
 
+  void _onVeganuaryNotificationTap() {
+    if (NotificationService.navigateToVeganuary.value && mounted) {
+      NotificationService.navigateToVeganuary.value = false;
+      _notificationForcedVeganuary = true;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      setState(() {
+        _tabController.index = _veganuaryTabIndex;
+      });
+    }
+  }
+
   void _onTabIndexChanged() {
     if (mounted) {
       setState(() {});
@@ -264,8 +293,10 @@ class MyHomePageState extends State<MyHomePage>
         .timeout(const Duration(milliseconds: 800), onTimeout: () {});
 
     if (!_notificationForcedDashboard &&
+        !_notificationForcedVeganuary &&
         !NotificationService.navigateToProfile.value &&
         !NotificationService.showAnniversary.value &&
+        !NotificationService.navigateToVeganuary.value &&
         mounted) {
       setState(() {
         _tabController.index = _scanTabIndex;
@@ -284,6 +315,8 @@ class MyHomePageState extends State<MyHomePage>
     NotificationService.showAnniversary
         .removeListener(_onAnniversaryNotificationTap);
     NotificationService.navigateToScan.removeListener(_onNavigateToScan);
+    NotificationService.navigateToVeganuary
+        .removeListener(_onVeganuaryNotificationTap);
     DeepLinkService.pending.removeListener(_onDeepLink);
     PushNotificationService.opened.removeListener(_onPushOpened);
     WidgetsBinding.instance.removeObserver(this);
@@ -318,6 +351,7 @@ class MyHomePageState extends State<MyHomePage>
               DashboardPage(key: _dashboardKey),
               ScanPage(onLoginSuccess: _onLoginSuccess),
               MapPage(onLoginSuccess: _onLoginSuccess),
+              const VeganuaryPage(),
             ],
           ),
           Align(
@@ -350,6 +384,10 @@ class MyHomePageState extends State<MyHomePage>
             iconAsset: 'lib/assets/images/icons/map-off.webp',
             activeIconAsset: 'lib/assets/images/icons/map-on.webp',
             label: 'Carte',
+          ),
+          AppBottomNavItem(
+            icon: FontAwesomeIcons.seedling,
+            label: 'Veganuary',
           ),
         ],
         onTap: (int value) {

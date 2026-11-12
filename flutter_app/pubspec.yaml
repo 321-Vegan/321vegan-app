@@ -250,6 +250,9 @@ flutter:
     - lib/assets/images/remerciements/ancielle.webp
     - lib/assets/images/remerciements/discord.png
     - lib/assets/images/remerciements/github.png
+    # Veganuary
+    - lib/assets/veganuary/week1.json
+    - lib/assets/images/veganuary/recipe-pot.png
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - lib/assets/images/vegandex.webp

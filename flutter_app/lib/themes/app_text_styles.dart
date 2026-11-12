@@ -24,6 +24,17 @@ class AppTextStyles {
   // Figma frame maps straight to a getter name — no guessing which one a
   // semantic name like "sectionTitle" refers to.
 
+  /// Baloo 2 Bold 13.3/15.07, letter-spacing 0.45 — label of the bubble
+  /// above the Veganuary path's next day ("COMMENCER").
+  static TextStyle get baloo13Bold => TextStyle(
+        fontFamily: 'Baloo2',
+        fontWeight: FontWeight.w700,
+        fontSize: 40.sp,
+        height: 15.07 / 13.3,
+        letterSpacing: 0.45,
+        color: kTextPrimary,
+      );
+
   /// Baloo 2 SemiBold 17/Auto — smallest heading (compact titles, tags).
   static TextStyle get baloo17 => TextStyle(
         fontFamily: 'Baloo2',
@@ -67,6 +78,27 @@ class AppTextStyles {
         color: kTextPrimary,
       );
 
+  /// Baloo 2 Bold 30/Auto — celebration line under a big counter ("jours !",
+  /// "Badge débloqué !" at the end of a Veganuary day).
+  static TextStyle get baloo30Bold => TextStyle(
+        fontFamily: 'Baloo2',
+        fontWeight: FontWeight.w700,
+        fontSize: 90.sp,
+        height: 1.0,
+        letterSpacing: -1,
+        color: kTextPrimary,
+      );
+
+  /// Baloo 2 ExtraBold 90 — giant counter (number of Veganuary days done).
+  static TextStyle get baloo90 => TextStyle(
+        fontFamily: 'Baloo2',
+        fontWeight: FontWeight.w800,
+        fontSize: 270.sp,
+        height: 0.9,
+        letterSpacing: -1,
+        color: kTextPrimary,
+      );
+
   /// Baloo 2 SemiBold 36/43.2 — hero/display size (subscription price,
   /// onboarding headline).
   static TextStyle get baloo36 => TextStyle(
@@ -95,6 +127,21 @@ class AppTextStyles {
         fontFamily: 'Karla',
         fontWeight: FontWeight.w400,
         fontSize: 30.sp,
+        color: kTextPrimary,
+      );
+
+  /// Captions under an image, small print (e.g. a recipe's source).
+  static TextStyle get bodyItalic12 => TextStyle(
+        fontFamily: 'Karla',
+        fontStyle: FontStyle.italic,
+        fontSize: 36.sp,
+        color: kTextPrimary,
+      );
+
+  static TextStyle get bodyRegular12 => TextStyle(
+        fontFamily: 'Karla',
+        fontWeight: FontWeight.w400,
+        fontSize: 36.sp,
         color: kTextPrimary,
       );
 

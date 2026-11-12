@@ -1,0 +1,514 @@
+{
+  "number": 1,
+  "title": "Basics & Alimentations",
+  "illustration": "lib/assets/images/characters/watermelon.webp",
+  "cover_image": "lib/assets/images/vegandex.webp",
+  "path_illustrations": [
+    "lib/assets/avatars/canard.png",
+    "lib/assets/images/buy-premium/flower.webp"
+  ],
+  "myths": [
+    {
+      "id": "carnivore",
+      "label": "L’humain est carnivore par nature",
+      "answer": {
+        "title": "L’humain est-il carnivore ?",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "**Notre corps n’est pas celui d’un carnivore.** Pas de crocs ni de griffes pour chasser, des molaires faites pour broyer et un intestin long, typique des espèces qui mangent beaucoup de végétaux.",
+              "**Nous sommes capables de manger de tout, pas obligés de le faire.** Les grandes associations de nutrition reconnaissent qu’une alimentation végétalienne bien menée convient à tous les âges de la vie.",
+              "**« Naturel » ne veut pas dire « souhaitable ».** Ce qui se faisait il y a des milliers d’années ne nous dit pas comment vivre aujourd’hui, quand on a le choix."
+            ]
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🦷",
+        "title": "L’humain n’est pas carnivore",
+        "bullets": [
+          "Notre corps est fait pour les végétaux",
+          "On peut manger de tout, sans y être obligé",
+          "Naturel ne veut pas dire souhaitable"
+        ]
+      }
+    },
+    {
+      "id": "carences",
+      "label": "Les végans sont carencés",
+      "answer": {
+        "title": "Les végans sont-ils carencés ?",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "**Un seul nutriment est vraiment absent des végétaux : la vitamine B12.** Elle se prend en complément, simplement et pour pas cher.",
+              "**Tout le reste se trouve dans une alimentation variée** : fer, calcium, oméga-3, protéines… À condition de manger des légumineuses, des céréales, des fruits, des légumes et des oléagineux.",
+              "**Les carences touchent aussi les omnivores**, en vitamine D ou en fibres par exemple. Les animaux d’élevage sont d’ailleurs souvent eux-mêmes complémentés en B12."
+            ]
+          },
+          {
+            "type": "callout",
+            "text": "321 Vegan peut vous rappeler de prendre votre B12 : rendez-vous dans les paramètres."
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "💪",
+        "title": "Pas de carence avec la B12",
+        "bullets": [
+          "Seule la B12 est à compléter",
+          "Le reste vient d’une alimentation variée",
+          "Les omnivores aussi ont des carences"
+        ]
+      }
+    },
+    {
+      "id": "proteines",
+      "label": "On manque de protéines sans viande",
+      "answer": {
+        "title": "Et les protéines ?",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "**Les végétaux regorgent de protéines.** Lentilles, pois chiches, haricots, tofu, tempeh ou seitan en contiennent autant voire plus que bien des produits animaux.",
+              "**Pas besoin de calculer à chaque repas.** Varier ses sources sur la journée (légumineuses, céréales, oléagineux) suffit à couvrir ses besoins.",
+              "**La plupart des gens mangent déjà plus de protéines qu’il n’en faut.** Le manque de protéines est très rare dans les pays où l’on mange à sa faim."
+            ]
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🥜",
+        "title": "Les protéines ne manquent pas",
+        "bullets": [
+          "Les végétaux en regorgent",
+          "Il suffit de varier sur la journée",
+          "Le manque est très rare"
+        ]
+      }
+    },
+    {
+      "id": "soja",
+      "label": "Le soja détruit la planète",
+      "answer": {
+        "title": "Le soja détruit-il la planète ?",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "**Plus des trois quarts du soja cultivé dans le monde nourrissent des animaux d’élevage.** Seule une petite partie finit directement dans nos assiettes.",
+              "**C’est l’élevage qui pousse à la déforestation**, pour les pâturages et les cultures destinées aux animaux.",
+              "**Le soja de nos tofus et boissons végétales vient souvent d’Europe, voire de France.** Regardez l’origine sur l’emballage !"
+            ]
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🌍",
+        "title": "Le soja nourrit surtout l’élevage",
+        "bullets": [
+          "Plus des ¾ vont aux animaux",
+          "L’élevage pousse à la déforestation",
+          "Notre tofu vient souvent d’Europe"
+        ]
+      }
+    },
+    {
+      "id": "plantes",
+      "label": "Les plantes aussi souffrent",
+      "answer": {
+        "title": "Et les plantes, alors ?",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "**Les plantes n’ont ni cerveau ni système nerveux.** Elles réagissent à leur environnement, mais rien n’indique qu’elles ressentent la douleur comme les animaux.",
+              "**Manger des animaux, c’est manger encore plus de plantes.** Il faut plusieurs kilos de végétaux pour produire un kilo de viande.",
+              "**Si l’on se soucie des plantes, le véganisme reste donc le meilleur choix** : il en consomme beaucoup moins."
+            ]
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🌿",
+        "title": "Les plantes ne souffrent pas",
+        "bullets": [
+          "Ni cerveau ni système nerveux",
+          "La viande demande plus de plantes",
+          "Le véganisme en consomme moins"
+        ]
+      }
+    },
+    {
+      "id": "prix",
+      "label": "Être vegan coûte trop cher",
+      "answer": {
+        "title": "Être végan, c’est trop cher ?",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "**Les aliments de base du végan sont parmi les moins chers** : légumineuses, céréales, pâtes, riz, légumes de saison.",
+              "**Ce qui coûte, ce sont les produits transformés**, comme les simili-carnés ou les fromages végétaux. Pratiques, mais pas indispensables.",
+              "**Une étude de l’Université d’Oxford (2021)** estime qu’une alimentation végane peut réduire le budget alimentaire jusqu’à un tiers dans les pays riches."
+            ]
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "💶",
+        "title": "Végan ne rime pas avec cher",
+        "bullets": [
+          "Les aliments de base sont bon marché",
+          "Les produits transformés coûtent plus",
+          "Jusqu’à un tiers d’économies"
+        ]
+      }
+    },
+    {
+      "id": "sport",
+      "label": "On ne peut pas faire de sport en étant végan",
+      "answer": {
+        "title": "Végan et sportif, c’est possible ?",
+        "blocks": [
+          {
+            "type": "bullets",
+            "items": [
+              "**De nombreux sportifs de haut niveau sont végans**, comme le pilote Lewis Hamilton ou l’homme fort Patrik Baboumian.",
+              "**Les besoins des sportifs se couvrent très bien avec des végétaux** : plus d’énergie et de protéines, donc un peu plus de tout.",
+              "**Beaucoup rapportent même une meilleure récupération**, grâce à une alimentation riche en fibres et en antioxydants."
+            ]
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🏃",
+        "title": "Végan et sportif, c’est possible",
+        "bullets": [
+          "Des champions sont végans",
+          "Les végétaux couvrent les besoins",
+          "Une bonne récupération"
+        ]
+      }
+    }
+  ],
+  "days": [
+    {
+      "number": 1,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Végétarien, végétalien… quelles différences ?",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Végétarien.** Pas de viande ni de poisson, mais des œufs, des produits laitiers et du miel.",
+                "**Pesco-végétarien.** Pas de viande, mais du poisson et des fruits de mer, en plus des œufs et des produits laitiers. Ce n’est donc pas vraiment végétarien !",
+                "**Végétalien.** Aucun produit d’origine animale dans l’assiette : ni viande, ni poisson, ni œufs, ni produits laitiers, ni miel."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Spécisme et antispécisme",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Le spécisme, c’est traiter un être différemment selon son espèce.** Caresser un chien mais manger un cochon, alors que tous deux ressentent la douleur et la peur.",
+                "**Le mot date de 1970.** Le psychologue Richard Ryder l’a inventé, puis le philosophe Peter Singer l’a fait connaître avec son livre « La Libération animale » en 1975.",
+                "**L’antispécisme refuse cette discrimination.** Les intérêts d’un animal, comme ne pas souffrir ou vivre, comptent quelle que soit son espèce."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Qu’est-ce que le véganisme ?",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Le véganisme est un mode de vie, pas seulement un régime.** Il cherche à exclure, autant que possible, toute forme d’exploitation animale, pour se nourrir comme pour s’habiller ou se divertir.",
+                "**Il va au-delà de l’assiette.** En plus de la viande, du poisson, des œufs, des produits laitiers et du miel, les vegans évitent le cuir, la laine, les cosmétiques testés sur les animaux et les spectacles avec des animaux.",
+                "**Son principe tient en une idée : les animaux ne sont pas des ressources.** Le terme « vegan » est né en 1944 en Angleterre, quand des végétariens ont voulu aller plus loin et refuser toute utilisation des animaux."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🥚",
+          "title": "Végétarien ou végétalien",
+          "bullets": [
+            "Végétarien : ni viande ni poisson",
+            "Pesco-végétarien : du poisson, pas de viande",
+            "Végétalien : aucun produit animal"
+          ]
+        },
+        {
+          "emoji": "🐷",
+          "title": "L’antispécisme",
+          "bullets": [
+            "Le spécisme discrimine selon l’espèce",
+            "Un mot inventé en 1970",
+            "Tous les intérêts comptent"
+          ]
+        },
+        {
+          "emoji": "🌱",
+          "title": "Le véganisme, un mode de vie",
+          "bullets": [
+            "Il exclut toute exploitation animale",
+            "Il va au-delà de l’assiette",
+            "Les animaux ne sont pas des ressources"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "icon": "myth",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Où trouver ses protéines ?",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Les légumineuses sont vos meilleures alliées** : lentilles, pois chiches, haricots rouges ou blancs, pois cassés…",
+                "**Le soja se décline à l’infini** : tofu, tempeh, boissons et yaourts. Le seitan, à base de blé, est aussi très riche en protéines.",
+                "**Céréales, oléagineux et graines complètent le tout** : quinoa, avoine, amandes, cacahuètes, graines de courge…"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🫘",
+          "title": "Les protéines sont partout",
+          "bullets": [
+            "Légumineuses en tête",
+            "Tofu, tempeh et seitan en renfort",
+            "Céréales et oléagineux complètent"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "icon": "recipe",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Cuisiner végan, c’est simple",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Partez de vos plats préférés.** Chili, bolognaise, curry, gratin : la plupart se véganisent en changeant un ou deux ingrédients.",
+                "**Misez sur le goût** : épices, herbes fraîches, sauce soja, levure maltée ou fumée apportent de la profondeur aux plats.",
+                "**Pas besoin de tout réinventer d’un coup.** Une nouvelle recette par semaine suffit pour se constituer un répertoire."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        },
+        {
+          "type": "recipe",
+          "title": "Curry express de pois chiches au lait de coco",
+          "servings": 2,
+          "ingredients": [
+            "1 boîte de pois chiches (400 g)",
+            "20 cl de lait de coco",
+            "1 boîte de tomates concassées (400 g)",
+            "1 oignon",
+            "2 gousses d’ail",
+            "1 c. à soupe de curry en poudre",
+            "1 c. à café de curcuma",
+            "1 c. à soupe d’huile d’olive",
+            "Quelques brins de coriandre fraîche",
+            "150 g de riz basmati",
+            "Sel, poivre"
+          ],
+          "steps": [
+            "Faites cuire le riz selon les indications du paquet.",
+            "Émincez l’oignon et faites-le revenir 5 minutes dans l’huile, à feu moyen.",
+            "Ajoutez l’ail haché, le curry et le curcuma, puis laissez cuire 1 minute en remuant.",
+            "Versez les tomates et les pois chiches rincés, puis laissez mijoter 10 minutes.",
+            "Ajoutez le lait de coco, salez, poivrez et laissez cuire encore 5 minutes.",
+            "Servez avec le riz et parsemez de coriandre."
+          ]
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🍛",
+          "title": "Cuisiner végan, c’est simple",
+          "bullets": [
+            "On part de ses plats préférés",
+            "Les épices font le goût",
+            "Une nouvelle recette par semaine suffit"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "La B12, le seul complément indispensable",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**La vitamine B12 est produite par des bactéries**, pas par les plantes ni par les animaux. Les végétaux n’en apportent pas de façon fiable.",
+                "**Se complémenter est indispensable.** Sans B12, une carence arrive tôt ou tard et peut avoir des conséquences graves sur la santé.",
+                "**C’est simple et peu coûteux** : un comprimé ou quelques gouttes, selon la fréquence de prise qui vous convient."
+              ]
+            },
+            {
+              "type": "callout",
+              "text": "Retrouvez les doses recommandées, validées par une diététicienne, dans Paramètres › B12."
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "💊",
+          "title": "La B12, indispensable",
+          "bullets": [
+            "Absente des végétaux",
+            "À prendre en complément",
+            "Simple et peu coûteux"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "icon": "book",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Lire une étiquette",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Certains ingrédients d’origine animale se cachent** : lactose, caséine, lactosérum (lait), gélatine, albumine (œuf)…",
+                "**Les additifs aussi** : E120 (carmin, tiré d’insectes), E441 (gélatine), E904 (shellac, sécrétion d’insecte), E1105 (lysozyme, issu de l’œuf).",
+                "**Pas envie de tout retenir ?** Scannez le produit avec 321 Vegan : l’app vous dit tout de suite s’il est végan."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🔍",
+          "title": "Lire une étiquette",
+          "bullets": [
+            "Lactose, caséine, gélatine…",
+            "Attention aux E120, E441, E904, E1105",
+            "Le scanner 321 Vegan vérifie pour vous"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Remplacer les produits laitiers",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Les boissons végétales remplacent le lait** : soja, avoine, amande, riz… Choisissez-les enrichies en calcium.",
+                "**Yaourts et crèmes existent en version végétale**, au soja, à la coco ou à l’avoine, pour le dessert comme pour la cuisine.",
+                "**Pour le goût fromage, pensez à la levure maltée** sur vos pâtes et gratins. Les fromages végétaux, eux, se trouvent de plus en plus facilement."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🥛",
+          "title": "Adieu les produits laitiers",
+          "bullets": [
+            "Boissons végétales enrichies en calcium",
+            "Yaourts et crèmes végétales",
+            "Levure maltée pour le goût fromage"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Faire ses courses végan",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Constituez-vous un placard de base** : légumineuses sèches ou en conserve, riz, pâtes, flocons d’avoine, oléagineux.",
+                "**Ajoutez des légumes et des fruits de saison**, souvent moins chers et plus savoureux.",
+                "**Gardez quelques produits pratiques** pour les soirs pressés : tofu, galettes végétales, houmous, soupes."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🛒",
+          "title": "Des courses véganes",
+          "bullets": [
+            "Un placard de base",
+            "Des fruits et légumes de saison",
+            "Quelques produits pratiques"
+          ]
+        }
+      ]
+    }
+  ]
+}

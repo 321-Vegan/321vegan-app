@@ -27,6 +27,16 @@ const Color kTextPrimary = Color(0xFF313337);
 /// "Border/Default" in Figma — 1px hairline on white cards.
 const Color kBorderDefault = Color(0xFFE7E5E1);
 
+/// Locked / not-yet states (Veganuary): fill of a locked coin, ring track,
+/// unticked day dot, bubble outline.
+const Color kLockedFill = Color(0xFFE5E5E5);
+
+/// Darker edge of a [kLockedFill] shape (side of a locked coin).
+const Color kLockedEdge = Color(0xFFC4C4C4);
+
+/// Icon or label drawn on a [kLockedFill] shape ("DEMAIN").
+const Color kLockedContent = Color(0xFFA3A3A3);
+
 /// "Color/Semantic/Error" in Figma — errors, destructive actions, "non-végane"/
 /// "à éviter" states. Use instead of ad-hoc `Colors.red*`.
 const Color kSemanticError = Color(0xFFD6484B);

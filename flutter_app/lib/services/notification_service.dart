@@ -45,6 +45,11 @@ class NotificationService {
   /// back to the root route and select the Scan tab.
   static final ValueNotifier<bool> navigateToScan = ValueNotifier<bool>(false);
 
+  /// Notifier that fires when a Veganuary daily reminder is tapped.
+  /// Listeners (the home page) should select the Veganuary tab.
+  static final ValueNotifier<bool> navigateToVeganuary =
+      ValueNotifier<bool>(false);
+
   /// Minimal, fast-as-possible init: just enough of the plugin to read
   /// whether this cold start came from tapping a notification
   /// ([navigateToProfile] / [showAnniversary] are set accordingly).
@@ -161,6 +166,19 @@ class NotificationService {
 
         await androidPlugin.createNotificationChannel(anniversaryChannel);
 
+        const veganuaryChannel = AndroidNotificationChannel(
+          'veganuary_reminders',
+          'Rappels Veganuary',
+          description: 'Un rappel le matin quand un jour du Veganuary '
+              'vous attend',
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+          showBadge: true,
+        );
+
+        await androidPlugin.createNotificationChannel(veganuaryChannel);
+
         // Server pushes (FCM), set as the default channel in the manifest
         const pushChannel = AndroidNotificationChannel(
           'push_notifications',
@@ -197,6 +215,8 @@ class NotificationService {
         navigateToProfile.value = true;
       } else if (payload.startsWith('vegan_anniversary')) {
         showAnniversary.value = true;
+      } else if (payload.startsWith('veganuary_reminder')) {
+        navigateToVeganuary.value = true;
       } else if (OpenedPush.fromPayload(payload) case final push?) {
         PushNotificationService.opened.value = push;
       }
@@ -217,6 +237,8 @@ class NotificationService {
     } else if (payload.startsWith('vegan_anniversary')) {
       // Signal listeners to show the anniversary congratulation popup
       showAnniversary.value = true;
+    } else if (payload.startsWith('veganuary_reminder')) {
+      navigateToVeganuary.value = true;
     } else if (OpenedPush.fromPayload(payload) case final push?) {
       // Server push shown while the app was open (see showPush)
       PushNotificationService.opened.value = push;
@@ -387,9 +409,54 @@ class NotificationService {
     }
   }
 
+  /// Schedule a one-shot Veganuary reminder (its own channel, and a tap
+  /// opens the Veganuary tab).
+  Future<void> scheduleVeganuaryReminder({
+    required int id,
+    required String title,
+    required String body,
+    required tz.TZDateTime scheduledDate,
+  }) async {
+    const details = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'veganuary_reminders',
+        'Rappels Veganuary',
+        channelDescription:
+            'Un rappel le matin quand un jour du Veganuary vous attend',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: 'ic_notification',
+        color: kLogoGreen,
+        largeIcon: DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+        playSound: true,
+        enableVibration: true,
+        channelShowBadge: true,
+        visibility: NotificationVisibility.public,
+        autoCancel: true,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+
+    await _notifications.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduledDate,
+      details,
+      androidScheduleMode: await _androidScheduleMode(),
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      payload: 'veganuary_reminder',
+    );
+  }
+
   /// Android: shows a server push received while the app is open (the OS
   /// only displays them in the background). Above the ids of the scheduled
-  /// reminders (1000s, 2000, 9999).
+  /// reminders (1000s, 2000, 3000s, 9999).
   Future<void> showPush(
     OpenedPush push, {
     required String title,
