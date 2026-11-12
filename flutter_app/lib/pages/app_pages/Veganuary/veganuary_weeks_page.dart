@@ -18,7 +18,6 @@ import '../../../widgets/veganuary/saturation_filter.dart';
 import '../../../widgets/veganuary/veganuary_progress_bar.dart';
 import '../../../widgets/veganuary/veganuary_step_views.dart';
 import '../../../widgets/veganuary/veganuary_week_title.dart';
-import '../../../widgets/veganuary/veganuary_welcome_modal.dart';
 import 'veganuary_week_recap_page.dart';
 
 enum _WeekState { completed, current, locked }

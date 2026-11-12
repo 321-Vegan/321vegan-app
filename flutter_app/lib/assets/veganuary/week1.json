@@ -9,188 +9,255 @@
   ],
   "myths": [
     {
-      "id": "carnivore",
-      "label": "L’humain est carnivore par nature",
-      "answer": {
-        "title": "L’humain est-il carnivore ?",
-        "blocks": [
-          {
-            "type": "bullets",
-            "items": [
-              "**Notre corps n’est pas celui d’un carnivore.** Pas de crocs ni de griffes pour chasser, des molaires faites pour broyer et un intestin long, typique des espèces qui mangent beaucoup de végétaux.",
-              "**Nous sommes capables de manger de tout, pas obligés de le faire.** Les grandes associations de nutrition reconnaissent qu’une alimentation végétalienne bien menée convient à tous les âges de la vie.",
-              "**« Naturel » ne veut pas dire « souhaitable ».** Ce qui se faisait il y a des milliers d’années ne nous dit pas comment vivre aujourd’hui, quand on a le choix."
-            ]
-          }
-        ]
-      },
-      "recap": {
-        "emoji": "🦷",
-        "title": "L’humain n’est pas carnivore",
-        "bullets": [
-          "Notre corps est fait pour les végétaux",
-          "On peut manger de tout, sans y être obligé",
-          "Naturel ne veut pas dire souhaitable"
-        ]
-      }
-    },
-    {
       "id": "carences",
-      "label": "Les végans sont carencés",
+      "label": "Les véganes sont carencé·es",
       "answer": {
-        "title": "Les végans sont-ils carencés ?",
+        "title": "Et les carences ?",
         "blocks": [
           {
-            "type": "bullets",
-            "items": [
-              "**Un seul nutriment est vraiment absent des végétaux : la vitamine B12.** Elle se prend en complément, simplement et pour pas cher.",
-              "**Tout le reste se trouve dans une alimentation variée** : fer, calcium, oméga-3, protéines… À condition de manger des légumineuses, des céréales, des fruits, des légumes et des oléagineux.",
-              "**Les carences touchent aussi les omnivores**, en vitamine D ou en fibres par exemple. Les animaux d’élevage sont d’ailleurs souvent eux-mêmes complémentés en B12."
-            ]
+            "type": "text",
+            "text": "Une alimentation végétalienne bien planifiée convient à toutes les étapes de la vie : enfance, grossesse, âge adulte, vieillesse. Elle convient aussi tout à fait aux personnes sportives. C’est la position de l’**Academy of Nutrition and Dietetics**, la plus grande association de diététicien·nes au monde [1]. Elle y associe même des bénéfices pour la santé, comme un risque plus faible de maladies cardiovasculaires et de diabète de type 2."
           },
           {
             "type": "callout",
-            "text": "321 Vegan peut vous rappeler de prendre votre B12 : rendez-vous dans les paramètres."
+            "text": "Quand on dit « bien planifiée », ça veut surtout dire qu’il faut se supplémenter en vitamine B12. Elle est produite par des bactéries et n’est pas présente dans les végétaux. On reparlera très vite de la supplémentation en B12 dans ce parcours. (Petit fait intéressant : les animaux d’élevage sont eux aussi souvent supplémentés en B12.)"
+          },
+          {
+            "type": "text",
+            "text": "Tous les autres nutriments se retrouvent aisément dans une alimentation végétale variée, et on les verra au fil du parcours."
+          }
+        ],
+        "sources": [
+          {
+            "label": "Melina et al., « Position of the Academy of Nutrition and Dietetics: Vegetarian Diets », Journal of the Academy of Nutrition and Dietetics, 2016",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/27886704/"
           }
         ]
       },
       "recap": {
         "emoji": "💪",
-        "title": "Pas de carence avec la B12",
+        "title": "Pas de carence si c’est bien planifié",
         "bullets": [
-          "Seule la B12 est à compléter",
-          "Le reste vient d’une alimentation variée",
-          "Les omnivores aussi ont des carences"
+          "Adapté à tous les âges, et au sport",
+          "La B12 se prend en complément",
+          "Le reste : une alimentation variée"
         ]
       }
     },
     {
-      "id": "proteines",
-      "label": "On manque de protéines sans viande",
+      "id": "privilegies",
+      "label": "Le véganisme, c’est un truc de privilégié·es",
       "answer": {
-        "title": "Et les protéines ?",
+        "title": "Un truc de privilégié·es ?",
         "blocks": [
           {
-            "type": "bullets",
-            "items": [
-              "**Les végétaux regorgent de protéines.** Lentilles, pois chiches, haricots, tofu, tempeh ou seitan en contiennent autant voire plus que bien des produits animaux.",
-              "**Pas besoin de calculer à chaque repas.** Varier ses sources sur la journée (légumineuses, céréales, oléagineux) suffit à couvrir ses besoins.",
-              "**La plupart des gens mangent déjà plus de protéines qu’il n’en faut.** Le manque de protéines est très rare dans les pays où l’on mange à sa faim."
-            ]
+            "type": "text",
+            "text": "**Côté alimentation**, les bases de l’alimentation végétale sont parmi les aliments les moins chers : légumineuses, riz, pâtes, flocons d’avoine, pommes de terre, légumes de saison ou surgelés."
+          },
+          {
+            "type": "text",
+            "text": "Une étude de l’Université d’Oxford, publiée en 2021 dans The Lancet Planetary Health, a comparé le coût de plusieurs régimes dans 150 pays. Dans les pays riches comme la France, l’alimentation végane est ressortie comme la plus abordable, avec une facture réduite de 21 à 34 % selon sa composition [1]."
+          },
+          {
+            "type": "text",
+            "text": "Et partout dans le monde, de nombreuses cuisines populaires reposent depuis toujours sur les céréales et les légumineuses. On verra pendant le parcours comment manger végane avec un petit budget !"
+          },
+          {
+            "type": "text",
+            "text": "**Côté éthique** : le véganisme, c’est refuser l’exploitation des animaux. Avoir de l’empathie pour elleux, se poser des questions morales et agir selon ses valeurs n’est pas une affaire de classe sociale. Laisser entendre que seules les personnes aisées s’intéressent à ces questions, c’est sous-entendre que les autres n’en sont pas capables. C’est un préjugé classiste, et c’est aussi factuellement faux."
           }
-        ]
-      },
-      "recap": {
-        "emoji": "🥜",
-        "title": "Les protéines ne manquent pas",
-        "bullets": [
-          "Les végétaux en regorgent",
-          "Il suffit de varier sur la journée",
-          "Le manque est très rare"
-        ]
-      }
-    },
-    {
-      "id": "soja",
-      "label": "Le soja détruit la planète",
-      "answer": {
-        "title": "Le soja détruit-il la planète ?",
-        "blocks": [
+        ],
+        "sources": [
           {
-            "type": "bullets",
-            "items": [
-              "**Plus des trois quarts du soja cultivé dans le monde nourrissent des animaux d’élevage.** Seule une petite partie finit directement dans nos assiettes.",
-              "**C’est l’élevage qui pousse à la déforestation**, pour les pâturages et les cultures destinées aux animaux.",
-              "**Le soja de nos tofus et boissons végétales vient souvent d’Europe, voire de France.** Regardez l’origine sur l’emballage !"
-            ]
-          }
-        ]
-      },
-      "recap": {
-        "emoji": "🌍",
-        "title": "Le soja nourrit surtout l’élevage",
-        "bullets": [
-          "Plus des ¾ vont aux animaux",
-          "L’élevage pousse à la déforestation",
-          "Notre tofu vient souvent d’Europe"
-        ]
-      }
-    },
-    {
-      "id": "plantes",
-      "label": "Les plantes aussi souffrent",
-      "answer": {
-        "title": "Et les plantes, alors ?",
-        "blocks": [
-          {
-            "type": "bullets",
-            "items": [
-              "**Les plantes n’ont ni cerveau ni système nerveux.** Elles réagissent à leur environnement, mais rien n’indique qu’elles ressentent la douleur comme les animaux.",
-              "**Manger des animaux, c’est manger encore plus de plantes.** Il faut plusieurs kilos de végétaux pour produire un kilo de viande.",
-              "**Si l’on se soucie des plantes, le véganisme reste donc le meilleur choix** : il en consomme beaucoup moins."
-            ]
-          }
-        ]
-      },
-      "recap": {
-        "emoji": "🌿",
-        "title": "Les plantes ne souffrent pas",
-        "bullets": [
-          "Ni cerveau ni système nerveux",
-          "La viande demande plus de plantes",
-          "Le véganisme en consomme moins"
-        ]
-      }
-    },
-    {
-      "id": "prix",
-      "label": "Être vegan coûte trop cher",
-      "answer": {
-        "title": "Être végan, c’est trop cher ?",
-        "blocks": [
-          {
-            "type": "bullets",
-            "items": [
-              "**Les aliments de base du végan sont parmi les moins chers** : légumineuses, céréales, pâtes, riz, légumes de saison.",
-              "**Ce qui coûte, ce sont les produits transformés**, comme les simili-carnés ou les fromages végétaux. Pratiques, mais pas indispensables.",
-              "**Une étude de l’Université d’Oxford (2021)** estime qu’une alimentation végane peut réduire le budget alimentaire jusqu’à un tiers dans les pays riches."
-            ]
+            "label": "Springmann et al., The Lancet Planetary Health, 2021 (présentation de l’étude par l’Université d’Oxford)",
+            "url": "https://www.leap.ox.ac.uk/article/sustainable-eating-is-cheaper-as-well-as-healthier-reveals-new-study"
           }
         ]
       },
       "recap": {
         "emoji": "💶",
-        "title": "Végan ne rime pas avec cher",
+        "title": "Pas un truc de privilégié·es",
         "bullets": [
-          "Les aliments de base sont bon marché",
-          "Les produits transformés coûtent plus",
-          "Jusqu’à un tiers d’économies"
+          "Les aliments de base sont parmi les moins chers",
+          "Jusqu’à un tiers d’économies dans les pays riches",
+          "L’empathie n’est pas une affaire de classe"
         ]
       }
     },
     {
-      "id": "sport",
-      "label": "On ne peut pas faire de sport en étant végan",
+      "id": "naturel",
+      "label": "Il faut un complément, donc ce n’est pas naturel",
       "answer": {
-        "title": "Végan et sportif, c’est possible ?",
+        "title": "Un complément, pas naturel ?",
         "blocks": [
           {
-            "type": "bullets",
-            "items": [
-              "**De nombreux sportifs de haut niveau sont végans**, comme le pilote Lewis Hamilton ou l’homme fort Patrik Baboumian.",
-              "**Les besoins des sportifs se couvrent très bien avec des végétaux** : plus d’énergie et de protéines, donc un peu plus de tout.",
-              "**Beaucoup rapportent même une meilleure récupération**, grâce à une alimentation riche en fibres et en antioxydants."
-            ]
+            "type": "text",
+            "text": "C’est un argument qui s’appelle **l’appel à la nature** : un raisonnement fallacieux qui consiste à considérer qu’une chose est bonne parce qu’elle est naturelle, ou mauvaise parce qu’elle ne l’est pas."
+          },
+          {
+            "type": "text",
+            "text": "Mais « naturel » ne veut pas dire « bon ». Par exemple, les champignons vénéneux sont naturels, alors que les lunettes, les vaccins ou les médicaments ne le sont pas. Au final, ce qui compte, c’est d’être en bonne santé et de faire des choix en accord avec ses valeurs. Un simple complément en B12 suffit pour répondre à ces deux points."
+          },
+          {
+            "type": "text",
+            "text": "D’ailleurs, on se supplémente déjà toutes et tous sans y penser. Par exemple, le sel est enrichi en iode, et beaucoup de produits en grande surface contiennent aussi des vitamines ajoutées. Personne ne trouve ça choquant : c’est simplement de la prévention."
           }
         ]
       },
       "recap": {
-        "emoji": "🏃",
-        "title": "Végan et sportif, c’est possible",
+        "emoji": "🍄",
+        "title": "Naturel ne veut pas dire bon",
         "bullets": [
-          "Des champions sont végans",
-          "Les végétaux couvrent les besoins",
-          "Une bonne récupération"
+          "L’appel à la nature est un raisonnement fallacieux",
+          "Un simple complément de B12 suffit",
+          "On se supplémente déjà : le sel iodé…"
+        ]
+      }
+    },
+    {
+      "id": "traite",
+      "label": "Les vaches ont besoin d’être traites",
+      "answer": {
+        "title": "Les vaches ont-elles besoin d’être traites ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Comme tous les mammifères, la vache produit du lait uniquement après avoir eu un enfant, pour le nourrir. Chaque année, les éleveurs et éleveuses inséminent donc de force les vaches."
+          },
+          {
+            "type": "text",
+            "text": "Les vaches laitières ont été sélectionnées pendant des générations pour produire énormément de lait, bien plus qu’un veau ne pourrait en boire. Et de toute façon, le veau n’en profite pas : il est séparé de sa mère peu après sa naissance, pour que le lait soit vendu. Les femelles deviendront souvent vaches laitières à leur tour, et les mâles seront engraissés puis assassinés pour leur viande. La filière viande est étroitement liée à l’industrie du lait."
+          },
+          {
+            "type": "text",
+            "text": "Le besoin pour la vache d’être traite a été **créé de toutes pièces par l’élevage** : on l’a sélectionnée pour produire une énorme quantité de lait, on l’a inséminée, puis on lui a retiré son petit."
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🐄",
+        "title": "Un besoin créé par l’élevage",
+        "bullets": [
+          "Pas de lait sans petit à nourrir",
+          "Le veau est séparé de sa mère",
+          "Le lait et la viande sont liés"
+        ]
+      }
+    },
+    {
+      "id": "oeufs",
+      "label": "Tu peux quand même manger des œufs de poules heureuses",
+      "answer": {
+        "title": "Et les œufs de poules heureuses ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Les poules d’aujourd’hui ont été sélectionnées génétiquement pour pondre énormément : environ 300 œufs par an. Leur ancêtre sauvage en pond une vingtaine tout au plus, seulement pendant une certaine période."
+          },
+          {
+            "type": "text",
+            "text": "Ce rythme de ponte énorme cause beaucoup de souffrances et épuise leur organisme. Pour fabriquer la coquille, la poule utilise ses réserves de calcium, jusque dans ses os, ce qui provoque de l’ostéoporose, des fractures, et des maladies de l’appareil reproducteur, toujours douloureuses et parfois mortelles."
+          },
+          {
+            "type": "text",
+            "text": "On peut laisser leurs œufs aux poules : elles les mangent souvent. On peut aussi les leur écraser : en mangeant la coquille, elles récupèrent une partie du calcium perdu. C’est ce que font de nombreux refuges pour animaux d’élevage sauvés de l’abattoir."
+          },
+          {
+            "type": "text",
+            "text": "Il existe une autre solution : un **implant hormonal** qui met la ponte en pause pendant plusieurs mois. Il permet de soulager les poules et de prévenir les maladies liées à la ponte. Une alternative plus coûteuse, mais qui permet d’améliorer grandement la vie des poules."
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🐔",
+        "title": "Pondre épuise les poules",
+        "bullets": [
+          "Environ 300 œufs par an, contre une vingtaine",
+          "Le calcium des coquilles est pris sur leurs os",
+          "Leur laisser leurs œufs les aide"
+        ]
+      }
+    },
+    {
+      "id": "abeilles",
+      "label": "L’apiculture sauve les abeilles et aide la pollinisation",
+      "answer": {
+        "title": "L’apiculture sauve-t-elle les abeilles ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Il faut bien faire la distinction entre les **abeilles domestiques** (qu’on élève pour voler leur miel) et les **abeilles et autres pollinisateurs sauvages**. Les abeilles domestiques ne sont absolument pas en danger ; en revanche, les milliers d’espèces d’abeilles sauvages le sont. Et l’élevage d’abeilles mellifères contribue à leur mise en danger en leur faisant concurrence [1]."
+          },
+          {
+            "type": "text",
+            "text": "Évidemment, l’apiculture n’est pas la principale cause de disparition des pollinisateurs (qui est l’usage d’insecticides), mais il est certain que l’apiculture et l’introduction d’abeilles mellifères dans ces milieux ne les aident pas !"
+          },
+          {
+            "type": "text",
+            "text": "Et l’apiculture reste de l’exploitation : le miel, c’est la réserve de nourriture que les abeilles fabriquent pour passer l’hiver. Les apiculteurs le récoltent et le remplacent souvent par du sirop de sucre, bien moins nutritif. Certaines pratiques sont très cruelles : reines inséminées artificiellement, remplacées régulièrement, ou dont on coupe les ailes pour éviter que la colonie ne parte, enfumage pour la récolte, etc."
+          },
+          {
+            "type": "text",
+            "text": "Pour aider vraiment les pollinisateurs, mieux vaut planter des fleurs locales et laisser des coins de jardin sauvages. Et militer pour l’arrêt de l’utilisation des pesticides !"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Ropars et al., « Wild pollinator activity negatively related to honey bee colony densities in urban context », PLOS ONE, 2019",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6742366/"
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🐝",
+        "title": "Les abeilles sauvages, elles, sont menacées",
+        "bullets": [
+          "Les abeilles domestiques ne sont pas en danger",
+          "Elles concurrencent les pollinisateurs sauvages",
+          "Mieux vaut planter des fleurs locales"
+        ]
+      }
+    },
+    {
+      "id": "soja",
+      "label": "Le soja est mauvais pour la santé",
+      "answer": {
+        "title": "Le soja est-il mauvais pour la santé ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Le soja a très mauvaise réputation, surtout en France. Il contient des **phyto-œstrogènes** (des isoflavones). Malgré leur nom, ce ne sont pas des œstrogènes. Leur structure ressemble un peu, mais elles n’agissent pas de la même façon : elles se fixent surtout sur certains récepteurs, et peuvent avoir un effet différent, voire opposé."
+          },
+          {
+            "type": "text",
+            "text": "**Chez les hommes, pas d’effet sur les hormones.** Une méta-analyse de 2021 conclut que, quelle que soit la dose, le soja ne modifie ni la testostérone ni les œstrogènes [1]. Le soja ne féminise pas, ne fait pas pousser les seins : tout ça, ce sont des mythes…"
+          },
+          {
+            "type": "text",
+            "text": "En 2025, l’Anses a déconseillé le soja aux femmes enceintes ou allaitantes et recommandé de ne plus en servir dans les cantines. Cet avis est très discuté. Il repose surtout sur des études chez le rat, or les rongeurs métabolisent les isoflavones très différemment de nous [2]. L’Anses n’a pas non plus pris en compte les bénéfices du soja, ni ce qui le remplacerait dans les assiettes des cantines. Or les études chez l’humain sont plutôt rassurantes, et même souvent positives [3]."
+          }
+        ],
+        "sources": [
+          {
+            "label": "Reed et al., « Neither soy nor isoflavone intake affects male reproductive hormones », Reproductive Toxicology, 2021",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/33383165/"
+          },
+          {
+            "label": "Setchell et al., « Soy isoflavone phase II metabolism differs between rodents and humans », The American Journal of Clinical Nutrition, 2011",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3192476/"
+          },
+          {
+            "label": "Li et al., « Soy Foods Consumption and Multiple Health Outcomes: An Umbrella Review of Meta-Analyses », Molecular Nutrition & Food Research, 2026",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/41327897/"
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🫘",
+        "title": "Le soja n’est pas mauvais pour la santé",
+        "bullets": [
+          "Phyto-œstrogènes ne veut pas dire œstrogènes",
+          "Pas d'effets négatifs sur les hormones"
         ]
       }
     }
@@ -201,43 +268,93 @@
       "icon": "info",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, être végane, c’est…",
+          "choices": [
+            {
+              "text": "Ne plus manger de viande ni de poisson"
+            },
+            {
+              "text": "Ne manger aucun produit d’origine animale",
+              "result": "partial"
+            },
+            {
+              "text": "Refuser autant que possible toute exploitation animale",
+              "result": "right"
+            },
+            {
+              "text": "Suivre un régime alimentaire pour être en bonne santé"
+            }
+          ],
+          "explanation": "Le véganisme n’est pas un régime alimentaire : il rejette autant que possible **toute exploitation animale**, dans l’assiette mais aussi pour s’habiller, se divertir ou prendre soin de soi. Ne manger aucun produit d’origine animale, c’est le **végétalisme**, le régime alimentaire des véganes. On voit tout ça juste après !"
+        },
+        {
           "type": "info",
-          "title": "Végétarien, végétalien… quelles différences ?",
+          "title": "Végétarisme et végétalisme",
           "blocks": [
+            {
+              "type": "text",
+              "text": "Souvent, les notions de véganisme, végétalisme, végétarisme, etc. sont mal comprises. C’est important de bien définir tout ça et donc c’est ce qu’on va faire pour ce premier jour !"
+            },
             {
               "type": "bullets",
               "items": [
-                "**Végétarien.** Pas de viande ni de poisson, mais des œufs, des produits laitiers et du miel.",
-                "**Pesco-végétarien.** Pas de viande, mais du poisson et des fruits de mer, en plus des œufs et des produits laitiers. Ce n’est donc pas vraiment végétarien !",
-                "**Végétalien.** Aucun produit d’origine animale dans l’assiette : ni viande, ni poisson, ni œufs, ni produits laitiers, ni miel."
+                "**Végétarisme** : régime alimentaire qui exclut la consommation de chair animale (dont, évidemment, le poisson).",
+                "**Pesco-végétarisme** : comme le végétarisme, mais qui n’exclut pas le poisson.",
+                "**Ovo-végétarisme** : végétarisme qui exclut le lait mais pas les œufs.",
+                "**Lacto-végétarisme** : végétarisme qui exclut les œufs mais pas le lait.",
+                "**Végétalisme** : régime alimentaire qui exclut la consommation de produits d’origine animale (chair animale, lait, œufs, miel et leurs dérivés)."
               ]
             }
           ]
         },
         {
           "type": "info",
-          "title": "Spécisme et antispécisme",
+          "title": "Le véganisme",
           "blocks": [
+            {
+              "type": "text",
+              "text": "Le **véganisme** rejette et exclut autant que possible toute exploitation animale. Ce n’est pas un régime alimentaire : le régime alimentaire des véganes, c’est le végétalisme."
+            },
+            {
+              "type": "text",
+              "text": "Le véganisme concerne aussi :"
+            },
             {
               "type": "bullets",
               "items": [
-                "**Le spécisme, c’est traiter un être différemment selon son espèce.** Caresser un chien mais manger un cochon, alors que tous deux ressentent la douleur et la peur.",
-                "**Le mot date de 1970.** Le psychologue Richard Ryder l’a inventé, puis le philosophe Peter Singer l’a fait connaître avec son livre « La Libération animale » en 1975.",
-                "**L’antispécisme refuse cette discrimination.** Les intérêts d’un animal, comme ne pas souffrir ou vivre, comptent quelle que soit son espèce."
+                "**les loisirs** : zoos, cirques avec animaux, équitation…",
+                "**l’habillement** : laine, soie, cuir…",
+                "**les cosmétiques** contenant des produits d’origine animale, ou dont les marques n’excluent pas les tests sur les animaux",
+                "**les procédés de fabrication** qui utilisent des produits d’origine animale : collage du vin au blanc d’œuf, clarification du jus de pomme à la gélatine…",
+                "**certaines méthodes de récolte** : chiens truffiers pour les truffes, singes pour la cueillette des noix de coco…"
               ]
             }
           ]
         },
         {
           "type": "info",
-          "title": "Qu’est-ce que le véganisme ?",
+          "title": "Carnisme, spécisme et antispécisme",
           "blocks": [
             {
               "type": "bullets",
               "items": [
-                "**Le véganisme est un mode de vie, pas seulement un régime.** Il cherche à exclure, autant que possible, toute forme d’exploitation animale, pour se nourrir comme pour s’habiller ou se divertir.",
-                "**Il va au-delà de l’assiette.** En plus de la viande, du poisson, des œufs, des produits laitiers et du miel, les vegans évitent le cuir, la laine, les cosmétiques testés sur les animaux et les spectacles avec des animaux.",
-                "**Son principe tient en une idée : les animaux ne sont pas des ressources.** Le terme « vegan » est né en 1944 en Angleterre, quand des végétariens ont voulu aller plus loin et refuser toute utilisation des animaux."
+                "**Carnisme** : c’est le système de croyance qui légitime la consommation de viande.",
+                "**Spécisme** : c’est le système d’oppression fondé sur l’espèce.",
+                "**Antispécisme** : c’est l’opposition au spécisme et donc à l’exploitation animale. C’est considérer que les intérêts des animaux doivent être pris en compte de façon équitable. Les antispécistes sont donc véganes et ont un régime alimentaire végétalien."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Les abréviations à connaître",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**POA – Produit d’Origine Animale** : ça désigne tous les produits qui sont obtenus à partir d’animaux (viande, lait, œufs, miel, etc.).",
+                "**PEA – Produit de l’Exploitation Animale** : ça désigne tous les produits qui ont nécessité une forme d’exploitation d’animaux non-humains."
               ]
             }
           ]
@@ -249,48 +366,429 @@
       "recap": [
         {
           "emoji": "🥚",
-          "title": "Végétarien ou végétalien",
+          "title": "Végétarisme et végétalisme",
           "bullets": [
-            "Végétarien : ni viande ni poisson",
-            "Pesco-végétarien : du poisson, pas de viande",
-            "Végétalien : aucun produit animal"
-          ]
-        },
-        {
-          "emoji": "🐷",
-          "title": "L’antispécisme",
-          "bullets": [
-            "Le spécisme discrimine selon l’espèce",
-            "Un mot inventé en 1970",
-            "Tous les intérêts comptent"
+            "Végétarisme : pas de chair animale, poisson compris",
+            "Pesco, ovo, lacto : ce qu’on garde en plus",
+            "Végétalisme : aucun produit d’origine animale"
           ]
         },
         {
           "emoji": "🌱",
-          "title": "Le véganisme, un mode de vie",
+          "title": "Le véganisme",
           "bullets": [
-            "Il exclut toute exploitation animale",
-            "Il va au-delà de l’assiette",
-            "Les animaux ne sont pas des ressources"
+            "Il exclut autant que possible l’exploitation animale",
+            "Son régime alimentaire : le végétalisme",
+            "Il concerne aussi les loisirs, les vêtements, les cosmétiques…"
+          ]
+        },
+        {
+          "emoji": "🐷",
+          "title": "Carnisme et spécisme",
+          "bullets": [
+            "Carnisme : ce qui légitime la consommation de viande",
+            "Spécisme : une oppression fondée sur l’espèce",
+            "Antispécisme : les intérêts des animaux comptent"
+          ]
+        },
+        {
+          "emoji": "🔤",
+          "title": "Les abréviations",
+          "bullets": [
+            "POA : produit d’origine animale",
+            "PEA : produit de l’exploitation animale"
           ]
         }
       ]
     },
     {
       "number": 2,
-      "icon": "myth",
+      "icon": "cart",
       "steps": [
         {
           "type": "info",
-          "title": "Où trouver ses protéines ?",
+          "title": "Les indispensables du placard végane",
           "blocks": [
             {
-              "type": "bullets",
+              "type": "text",
+              "text": "Pas besoin de tout racheter d’un coup : voici les bases à avoir sous la main pour cuisiner végane au quotidien. **Touchez chaque catégorie** pour la découvrir !"
+            },
+            {
+              "type": "grid",
               "items": [
-                "**Les légumineuses sont vos meilleures alliées** : lentilles, pois chiches, haricots rouges ou blancs, pois cassés…",
-                "**Le soja se décline à l’infini** : tofu, tempeh, boissons et yaourts. Le seitan, à base de blé, est aussi très riche en protéines.",
-                "**Céréales, oléagineux et graines complètent le tout** : quinoa, avoine, amandes, cacahuètes, graines de courge…"
-              ]
+                {
+                  "image": "lib/assets/images/veganuary/placard-conserves.webp",
+                  "label": "Conserves",
+                  "details": {
+                    "title": "Les conserves",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Qu’elles soient à base de légumes ou de légumineuses, les conserves sont de précieuses alliées au quotidien. Elles offrent un accès simple et rapide à des aliments riches en fibres, tout en conservant leurs qualités nutritionnelles et en facilitant la préparation des repas."
+                      },
+                      {
+                        "type": "grid",
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-conserves-ratatouille.webp",
+                            "label": "Ratatouille"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-conserves-pois-chiches.webp",
+                            "label": "Pois chiches"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-conserves-lentilles.webp",
+                            "label": "Lentilles"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-conserves-asperges.webp",
+                            "label": "Asperges"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "callout",
+                        "text": "Attention aux conserves cuisinées, de lentilles par exemple : certaines contiennent de la graisse d’oie."
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/placard-laits.webp",
+                  "label": "Laits végétaux",
+                  "details": {
+                    "title": "Les laits végétaux",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "À base de soja, d’amande, d’avoine, de riz ou autres, ils remplacent très bien le lait de vache (comme boisson ou dans des recettes)."
+                      },
+                      {
+                        "type": "grid",
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-laits-soja.webp",
+                            "label": "Le soja",
+                            "text": "Il s’utilise principalement pour cuisiner (béchamel, sauce « fromagère », gâteaux, etc.)."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-laits-avoine.webp",
+                            "label": "L’avoine",
+                            "text": "Doux et légèrement sucré, il peut s’utiliser partout. Un très bon choix dans les cafés au lait par exemple !"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-laits-riz.webp",
+                            "label": "Le riz",
+                            "text": "Assez neutre, et avec une texture très légère."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-laits-amande.webp",
+                            "label": "L’amande",
+                            "text": "Plus fort en goût, il est très utile dans de nombreuses préparations sucrées."
+                          }
+                        ],
+                        "columns": 1
+                      },
+                      {
+                        "type": "text",
+                        "text": "Et il y en a plein d’autres (cajou, noisette, chanvre…). Essayez-en et trouvez ceux que vous préférez !"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/placard-epices.webp",
+                  "label": "Épices",
+                  "details": {
+                    "title": "Les épices",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Elles permettent d’enrichir les recettes tout en offrant une grande variété d’arômes et de bienfaits."
+                      },
+                      {
+                        "type": "text",
+                        "text": "Poivre, paprika (doux ou fumé), curry, cumin, curcuma, cannelle, gingembre, piment (doux ou fort)…"
+                      },
+                      {
+                        "type": "grid",
+                        "columns": 1,
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-epices-kala-namak.webp",
+                            "label": "Sel kala namak",
+                            "text": "Avec un goût soufré pour rappeler les œufs."
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": "Les **bouillons de légumes** sont aussi presque toujours véganes, et très utiles dans vos préparations."
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/placard-matieres-grasses.webp",
+                  "label": "Matières grasses",
+                  "details": {
+                    "title": "Les matières grasses",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "À ne pas négliger dans une alimentation équilibrée. Hormis le beurre, les matières grasses sont souvent végétales."
+                      },
+                      {
+                        "type": "grid",
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-matieres-grasses-huiles.webp",
+                            "label": "Les huiles",
+                            "text": "Colza, tournesol, olive. Aussi les huiles de noix, ou bien des mélanges."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-matieres-grasses-margarine.webp",
+                            "label": "La margarine",
+                            "text": "Il en existe de nombreuses marques, molles ou dures. Les marques **Flora** et **St Hubert** sont notamment très appréciées !"
+                          }
+                        ],
+                        "columns": 1
+                      },
+                      {
+                        "type": "callout",
+                        "text": "Attention : certaines huiles sont enrichies en vitamine D d’origine animale (produite à partir de laine de mouton), et certaines margarines contiennent du lait. Pensez à scanner le produit avec 321 Vegan pour vérifier !"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/placard-sauces.webp",
+                  "label": "Sauces",
+                  "details": {
+                    "title": "Les bases pour les sauces",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Elles permettent d’assaisonner et de relever rapidement les plats. Pratiques, elles apportent de la profondeur aux recettes."
+                      },
+                      {
+                        "type": "grid",
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-sauces-soja.webp",
+                            "label": "Sauce soja",
+                            "text": "La base de très nombreuses recettes."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-sauces-tahin.webp",
+                            "label": "Le tahin",
+                            "text": "Fabriqué à partir de sésame."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-sauces-cacahuete.webp",
+                            "label": "Beurre de cacahuète"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-sauces-vinaigre.webp",
+                            "label": "Vinaigre de cidre",
+                            "text": "Attention, il est parfois clarifié avec de la caséine de lait."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-sauces-miso.webp",
+                            "label": "Miso",
+                            "text": "Blanc, rouge ou mixte, fait à base de soja fermenté."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-sauces-citron.webp",
+                            "label": "Jus de citron"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/placard-proteines.webp",
+                  "label": "Sources de protéines",
+                  "details": {
+                    "title": "Les sources de protéines",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "L’alimentation végétale offre une très grande variété de sources de protéines ! En voici quelques-unes."
+                      },
+                      {
+                        "type": "grid",
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-proteines-tempeh.webp",
+                            "label": "Le tempeh",
+                            "text": "À base de soja fermenté. Texture ferme et goût légèrement noisette. Pour les sautés, les grillades ou les plats marinés."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-proteines-seitan.webp",
+                            "label": "Le seitan",
+                            "text": "Fabriqué à partir de gluten de blé. Il se prête particulièrement bien aux sautés, grillades et plats mijotés."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-proteines-pst.webp",
+                            "label": "Les protéines de soja",
+                            "text": "Les PST (protéines de soja texturées) sont très protéinées. À réhydrater, on peut les utiliser dans des plats en sauce ou grillés."
+                          }
+                        ],
+                        "columns": 1
+                      },
+                      {
+                        "type": "text",
+                        "text": "Les légumineuses, oléagineux et céréales contiennent aussi des protéines. En variant les sources et en mangeant suffisamment, il est facile de couvrir ses besoins tout en bénéficiant de fibres, vitamines et minéraux."
+                      },
+                      {
+                        "type": "callout",
+                        "text": "En cas de doute, il existe des nutritionnistes spécialisé·es en alimentation végétale."
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/placard-oleagineux.webp",
+                  "label": "Oléagineux",
+                  "details": {
+                    "title": "Les oléagineux",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Ils se consomment crus, grillés ou en purée pour enrichir facilement les repas et les collations."
+                      },
+                      {
+                        "type": "grid",
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-oleagineux-noix.webp",
+                            "label": "Les noix",
+                            "text": "De Grenoble, de macadamia, du Brésil…"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-oleagineux-amandes.webp",
+                            "label": "Les amandes"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-oleagineux-noisettes.webp",
+                            "label": "Les noisettes"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-oleagineux-cajou.webp",
+                            "label": "Les noix de cajou"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-oleagineux-pistaches.webp",
+                            "label": "Les pistaches"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-oleagineux-graines.webp",
+                            "label": "Les graines",
+                            "text": "De courge, de tournesol, de sésame, de lin…"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/placard-feculents.webp",
+                  "label": "Féculents",
+                  "details": {
+                    "title": "Les féculents",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Transformés ou non, c’est une source de glucides, et une des bases de tous les repas."
+                      },
+                      {
+                        "type": "grid",
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-feculents-pates.webp",
+                            "label": "Les pâtes"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-feculents-riz.webp",
+                            "label": "Le riz"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "grid",
+                        "columns": 1,
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-feculents-pommes-de-terre.webp",
+                            "label": "Les pommes de terre",
+                            "text": "Et les patates douces."
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "text": "Mais aussi quinoa, semoules, millet, avoine, épeautre, boulgour, etc. **En fonction de ce que vous préférez !**"
+                      },
+                      {
+                        "type": "callout",
+                        "text": "Attention aux pâtes fraîches, qui peuvent contenir des œufs."
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/placard-cremes.webp",
+                  "label": "Crèmes",
+                  "details": {
+                    "title": "Les crèmes",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Elles remplacent facilement la crème à base de lait animal dans toutes les recettes !"
+                      },
+                      {
+                        "type": "grid",
+                        "items": [
+                          {
+                            "image": "lib/assets/images/veganuary/placard-cremes-soja.webp",
+                            "label": "Soja",
+                            "text": "Pas chère, pratique, c’est la base !"
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-cremes-cajou.webp",
+                            "label": "Cajou",
+                            "text": "Plus riche en goût, et épaisse."
+                          },
+                          {
+                            "image": "lib/assets/images/veganuary/placard-cremes-riz.webp",
+                            "label": "Riz",
+                            "text": "Plus neutre et discrète."
+                          }
+                        ],
+                        "columns": 3
+                      }
+                    ]
+                  }
+                }
+              ],
+              "columns": 3
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Et les produits pas véganes qu’on a chez soi ?",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Quand on devient végane, on prend conscience de la violence qui se cache derrière ces produits. On n’a donc plus envie de les voir dans ses placards."
+            },
+            {
+              "type": "text",
+              "text": "Ce que vous en faites vous appartient. Certaines personnes choisissent de les donner à leur entourage ou à une association, d’autres de les jeter. **Il n’y a pas de bonne ou de mauvaise réponse** : faites ce qui vous semble juste !"
             }
           ]
         },
@@ -300,12 +798,30 @@
       ],
       "recap": [
         {
-          "emoji": "🫘",
-          "title": "Les protéines sont partout",
+          "emoji": "🛒",
+          "title": "Le placard végane",
           "bullets": [
-            "Légumineuses en tête",
-            "Tofu, tempeh et seitan en renfort",
-            "Céréales et oléagineux complètent"
+            "Conserves, féculents, laits et crèmes végétales",
+            "Tempeh, seitan, protéines de soja et oléagineux",
+            "Épices et sauces pour relever le tout"
+          ]
+        },
+        {
+          "emoji": "🔍",
+          "title": "Les pièges à éviter",
+          "bullets": [
+            "Pâtes fraîches aux œufs, conserves à la graisse d’oie",
+            "Vitamine D animale, margarines au lait",
+            "Dans le doute, scannez avec l'appli !"
+          ]
+        },
+        {
+          "emoji": "📦",
+          "title": "Les produits pas véganes",
+          "bullets": [
+            "Les donner, ou les jeter",
+            "Pas de bonne ou de mauvaise réponse",
+            "Faites ce qui vous semble juste"
           ]
         }
       ]
@@ -316,15 +832,33 @@
       "steps": [
         {
           "type": "info",
-          "title": "Cuisiner végan, c’est simple",
+          "title": "Les compléments alimentaires",
           "blocks": [
             {
-              "type": "bullets",
-              "items": [
-                "**Partez de vos plats préférés.** Chili, bolognaise, curry, gratin : la plupart se véganisent en changeant un ou deux ingrédients.",
-                "**Misez sur le goût** : épices, herbes fraîches, sauce soja, levure maltée ou fumée apportent de la profondeur aux plats.",
-                "**Pas besoin de tout réinventer d’un coup.** Une nouvelle recette par semaine suffit pour se constituer un répertoire."
-              ]
+              "type": "text",
+              "text": "La **vitamine B12** ne se trouve pas de façon fiable dans les végétaux. On prend donc un complément alimentaire pour couvrir nos besoins en cette vitamine."
+            },
+            {
+              "type": "text",
+              "text": "L’ajout de B12 dans les produits du commerce (fromages végétaux, steaks végétaux, laits végétaux, levure maltée…) ne suffit pas. **Sans complémentation, une carence arrivera tôt ou tard**, et peut avoir des conséquences graves."
+            },
+            {
+              "type": "app_link",
+              "label": "Tout savoir sur la B12",
+              "target": "b12_info"
+            },
+            {
+              "type": "text",
+              "text": "Vous pouvez ajouter un rappel directement sur l’app :"
+            },
+            {
+              "type": "app_link",
+              "label": "Programmer mon rappel B12",
+              "target": "b12_reminder"
+            },
+            {
+              "type": "text",
+              "text": "Les autres compléments sont optionnels, et dépendent de votre rythme, de votre mode de vie et de vos besoins. **De la vitamine D en hiver est conseillée** (pas uniquement pour les véganes d'ailleurs)."
             }
           ]
         },
@@ -333,39 +867,70 @@
         },
         {
           "type": "recipe",
-          "title": "Curry express de pois chiches au lait de coco",
-          "servings": 2,
+          "title": "Tarte aux poireaux",
+          "image": "lib/assets/images/veganuary/recette-tarte-poireaux.webp",
+          "servings": "une tarte",
           "ingredients": [
-            "1 boîte de pois chiches (400 g)",
-            "20 cl de lait de coco",
-            "1 boîte de tomates concassées (400 g)",
-            "1 oignon",
-            "2 gousses d’ail",
-            "1 c. à soupe de curry en poudre",
-            "1 c. à café de curcuma",
-            "1 c. à soupe d’huile d’olive",
-            "Quelques brins de coriandre fraîche",
-            "150 g de riz basmati",
-            "Sel, poivre"
+            {
+              "title": "Pour la garniture",
+              "items": [
+                "5 blancs de poireaux",
+                "Des lardons végétaux ou 1 bloc de tofu fumé"
+              ]
+            },
+            {
+              "title": "Pour la crème",
+              "items": [
+                "20 cl de crème de soja",
+                "1 cuillère à café de moutarde",
+                "1 cuillère à soupe de levure maltée",
+                "1 cuillère à café de poudre d’ail",
+                "1 pincée de sel"
+              ]
+            },
+            {
+              "title": "Pour la pâte",
+              "items": [
+                "1 pâte feuilletée ou brisée"
+              ]
+            },
+            {
+              "title": "Ou pour une pâte brisée maison",
+              "items": [
+                "250 g de farine",
+                "8 cl d’eau",
+                "8 cl d’huile",
+                "1 pincée de sel",
+                "Optionnel : quelques graines (lin, moutarde, courge, tournesol…)"
+              ]
+            }
           ],
           "steps": [
-            "Faites cuire le riz selon les indications du paquet.",
-            "Émincez l’oignon et faites-le revenir 5 minutes dans l’huile, à feu moyen.",
-            "Ajoutez l’ail haché, le curry et le curcuma, puis laissez cuire 1 minute en remuant.",
-            "Versez les tomates et les pois chiches rincés, puis laissez mijoter 10 minutes.",
-            "Ajoutez le lait de coco, salez, poivrez et laissez cuire encore 5 minutes.",
-            "Servez avec le riz et parsemez de coriandre."
+            "Pâte maison : on mélange la farine, le sel et les graines, on ajoute l’eau et l’huile, puis on pétrit jusqu’à obtenir une boule homogène.",
+            "On coupe les poireaux et on les fait revenir dans une poêle avec de l’huile (ou du beurre végétal).",
+            "Une fois cuits, on ajoute les lardons végétaux ou le tofu fumé.",
+            "On mélange la crème, la moutarde, la levure maltée, la poudre d’ail et le sel, puis on ajoute tout ça aux poireaux.",
+            "On étale la pâte dans un moule et on y verse la garniture.",
+            "Au four à 180 °C pendant 25 à 30 minutes, ou jusqu’à ce que la pâte soit cuite : ça dépend de la pâte utilisée."
           ]
         }
       ],
       "recap": [
         {
-          "emoji": "🍛",
-          "title": "Cuisiner végan, c’est simple",
+          "emoji": "💊",
+          "title": "La B12, indispensable",
           "bullets": [
-            "On part de ses plats préférés",
-            "Les épices font le goût",
-            "Une nouvelle recette par semaine suffit"
+            "Pas de source végétale fiable",
+            "Les produits enrichis ne suffisent pas",
+            "Un rappel dans l’app pour ne pas oublier"
+          ]
+        },
+        {
+          "emoji": "☀️",
+          "title": "Les autres compléments",
+          "bullets": [
+            "Optionnels, selon vos besoins",
+            "De la vitamine D en hiver conseillée"
           ]
         }
       ]

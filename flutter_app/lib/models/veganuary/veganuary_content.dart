@@ -1,6 +1,7 @@
 /// Content of the Veganuary course (31 days: 4 weeks of 7 days + 1 of 3),
 /// read from one JSON file per week in lib/assets/veganuary/. A day is a
-/// list of steps (pages shown one after the other); each step type has its
+/// list of steps (pages shown one after the other: maybe a quiz, info pages,
+/// an idée reçue, sometimes a recipe); each step type has its
 /// own JSON shape, see [VeganuaryStep.fromJson].
 class VeganuaryWeek {
   final int number;
@@ -63,8 +64,9 @@ class VeganuaryWeek {
   }
 }
 
-/// Icon of a day's node on the path.
-enum VeganuaryDayIcon { info, myth, recipe, book }
+/// Icon of a day's node on the path, after the day's theme (`"icon":
+/// "cart"`); add one here and in the node for a new theme.
+enum VeganuaryDayIcon { info, myth, recipe, book, cart }
 
 class VeganuaryDay {
   /// Number in the whole course (1 to 31), not in the week.
@@ -140,8 +142,61 @@ sealed class VeganuaryStep {
         return MythStep(title: json['title'] as String?);
       case 'recipe':
         return RecipeStep.fromJson(json);
+      case 'quiz':
+        return QuizStep.fromJson(json);
     }
     throw FormatException('Unknown Veganuary step type: ${json['type']}');
+  }
+}
+
+/// `{"type": "quiz", "question": ..., "choices": [{"text": ...,
+/// "result": "right"}, {"text": ..., "result": "partial"}, {"text": ...}],
+/// "explanation": ...}`: one question, answered once. Put before the info
+/// pages it leads to.
+class QuizStep extends VeganuaryStep {
+  final String question;
+  final List<QuizChoice> choices;
+
+  /// Shown once answered, whatever the answer; `**text**` is bold.
+  final String explanation;
+
+  const QuizStep({
+    required this.question,
+    required this.choices,
+    required this.explanation,
+  });
+
+  factory QuizStep.fromJson(Map<String, dynamic> json) {
+    return QuizStep(
+      question: json['question'] as String,
+      choices: [
+        for (final choice in json['choices'] as List)
+          QuizChoice.fromJson(choice as Map<String, dynamic>),
+      ],
+      explanation: json['explanation'] as String,
+    );
+  }
+}
+
+/// `"result"`: "right", "partial" (half right) or "wrong" (when absent).
+enum QuizResult { right, partial, wrong }
+
+class QuizChoice {
+  final String text;
+  final QuizResult result;
+
+  const QuizChoice({required this.text, required this.result});
+
+  factory QuizChoice.fromJson(Map<String, dynamic> json) {
+    final result = json['result'] as String? ?? 'wrong';
+    return QuizChoice(
+      text: json['text'] as String,
+      result: QuizResult.values.firstWhere(
+        (value) => value.name == result,
+        orElse: () =>
+            throw FormatException('Unknown Veganuary quiz result: $result'),
+      ),
+    );
   }
 }
 
@@ -162,42 +217,99 @@ class MythStep extends VeganuaryStep {
 }
 
 /// `{"type": "recipe", "title": ..., "image": ..., "servings": 2,
-/// "ingredients": [...], "steps": [...]}`
+/// "ingredients": [...], "steps": [...]}`. `servings` can be a number of
+/// people or a text ("une tarte"); `ingredients`, plain lines, or groups
+/// `{"title": "Pour la pâte", "items": [...]}` (both can be mixed).
 class RecipeStep extends VeganuaryStep {
   final String title;
 
   /// Asset path or URL.
   final String? image;
-  final int servings;
-  final List<String> ingredients;
+
+  /// After "Ingrédients pour" ("2 personnes", "une tarte"), if given.
+  final String? servings;
+  final List<RecipeIngredients> ingredients;
   final List<String> steps;
 
   const RecipeStep({
     required this.title,
     this.image,
-    required this.servings,
+    this.servings,
     required this.ingredients,
     required this.steps,
   });
 
   factory RecipeStep.fromJson(Map<String, dynamic> json) {
+    final servings = json['servings'];
+    // Lines in a row make a group without a title
+    final ingredients = <RecipeIngredients>[];
+    var lines = <String>[];
+    void addLines() {
+      if (lines.isEmpty) return;
+      ingredients.add(RecipeIngredients(items: lines));
+      lines = [];
+    }
+
+    for (final entry in json['ingredients'] as List) {
+      if (entry is String) {
+        lines.add(entry);
+      } else {
+        addLines();
+        ingredients
+            .add(RecipeIngredients.fromJson(entry as Map<String, dynamic>));
+      }
+    }
+    addLines();
     return RecipeStep(
       title: json['title'] as String,
       image: json['image'] as String?,
-      servings: json['servings'] as int,
-      ingredients: List<String>.from(json['ingredients'] as List),
+      servings: switch (servings) {
+        int people => '$people personne${people > 1 ? 's' : ''}',
+        String text => text,
+        _ => null,
+      },
+      ingredients: ingredients,
       steps: List<String>.from(json['steps'] as List),
     );
   }
 }
 
+class RecipeIngredients {
+  /// "Pour la pâte"; null for lines given without a group.
+  final String? title;
+  final List<String> items;
+
+  const RecipeIngredients({this.title, required this.items});
+
+  factory RecipeIngredients.fromJson(Map<String, dynamic> json) {
+    return RecipeIngredients(
+      title: json['title'] as String?,
+      items: List<String>.from(json['items'] as List),
+    );
+  }
+}
+
 /// An info page (or a myth's answer): a title, then blocks shown one under
-/// the other, see [VeganuaryBlock.fromJson].
+/// the other, see [VeganuaryBlock.fromJson], then its sources, if any.
 class VeganuaryInfo {
   final String title;
   final List<VeganuaryBlock> blocks;
 
-  const VeganuaryInfo({required this.title, required this.blocks});
+  /// Listed under the blocks, numbered from 1: `[1]` in a text or bullet
+  /// refers to the first one.
+  final List<VeganuarySource> sources;
+
+  const VeganuaryInfo({
+    required this.title,
+    required this.blocks,
+    this.sources = const [],
+  });
+
+  /// Grid cards with details: all to open before going on.
+  Iterable<GridItem> get cardsToOpen => blocks
+      .whereType<GridBlock>()
+      .expand((grid) => grid.items)
+      .where((item) => item.details != null);
 
   factory VeganuaryInfo.fromJson(Map<String, dynamic> json) {
     return VeganuaryInfo(
@@ -206,6 +318,25 @@ class VeganuaryInfo {
         for (final block in json['blocks'] as List? ?? const [])
           VeganuaryBlock.fromJson(block as Map<String, dynamic>),
       ],
+      sources: [
+        for (final source in json['sources'] as List? ?? const [])
+          VeganuarySource.fromJson(source as Map<String, dynamic>),
+      ],
+    );
+  }
+}
+
+/// `{"label": "Reed et al., Reproductive Toxicology, 2021", "url": ...}`
+class VeganuarySource {
+  final String label;
+  final String url;
+
+  const VeganuarySource({required this.label, required this.url});
+
+  factory VeganuarySource.fromJson(Map<String, dynamic> json) {
+    return VeganuarySource(
+      label: json['label'] as String,
+      url: json['url'] as String,
     );
   }
 }
@@ -227,6 +358,24 @@ sealed class VeganuaryBlock {
         );
       case 'callout':
         return CalloutBlock(json['text'] as String);
+      case 'app_link':
+        final target = json['target'] as String;
+        return AppLinkBlock(
+          label: json['label'] as String,
+          target: AppLinkTarget.values.firstWhere(
+            (value) => value.json == target,
+            orElse: () =>
+                throw FormatException('Unknown Veganuary link target: $target'),
+          ),
+        );
+      case 'grid':
+        return GridBlock(
+          columns: json['columns'] as int? ?? 2,
+          items: [
+            for (final item in json['items'] as List)
+              GridItem.fromJson(item as Map<String, dynamic>),
+          ],
+        );
     }
     throw FormatException('Unknown Veganuary block type: ${json['type']}');
   }
@@ -261,6 +410,70 @@ class CalloutBlock extends VeganuaryBlock {
   final String text;
 
   const CalloutBlock(this.text);
+}
+
+/// `{"type": "app_link", "label": "Tout savoir sur la B12", "target":
+/// "b12_info"}`: a button opening a page of the app.
+class AppLinkBlock extends VeganuaryBlock {
+  final String label;
+  final AppLinkTarget target;
+
+  const AppLinkBlock({required this.label, required this.target});
+}
+
+/// Pages of the app a link can open; add one here (and where the link
+/// opens it, in the step views) for a new one.
+enum AppLinkTarget {
+  /// The B12 explanations ("Plus d'informations").
+  b12Info('b12_info'),
+
+  /// The B12 reminder settings.
+  b12Reminder('b12_reminder');
+
+  /// Its name in the JSON.
+  final String json;
+
+  const AppLinkTarget(this.json);
+}
+
+/// `{"type": "grid", "columns": 2, "items": [{"image": ..., "label":
+/// "Conserves", "text": "Pois chiches, lentilles…"}]}`: cards side by side
+/// (2 columns when absent), e.g. what to have in the cupboard. With 1
+/// column, a list: each image beside its text, for longer texts.
+class GridBlock extends VeganuaryBlock {
+  final int columns;
+  final List<GridItem> items;
+
+  const GridBlock({required this.columns, required this.items});
+}
+
+class GridItem {
+  /// Asset path or URL; none: just the label and text.
+  final String? image;
+  final String label;
+
+  /// Under the label, smaller; `**text**` is bold.
+  final String? text;
+
+  /// `"details": {"title": ..., "blocks": [...], "sources": [...]}`: the
+  /// card opens them in a dialog (the title defaults to the label), and is
+  /// checked once they were read.
+  final VeganuaryInfo? details;
+
+  const GridItem({this.image, required this.label, this.text, this.details});
+
+  factory GridItem.fromJson(Map<String, dynamic> json) {
+    final label = json['label'] as String;
+    final details = json['details'] as Map<String, dynamic>?;
+    return GridItem(
+      image: json['image'] as String?,
+      label: label,
+      text: json['text'] as String?,
+      details: details == null
+          ? null
+          : VeganuaryInfo.fromJson({'title': label, ...details}),
+    );
+  }
 }
 
 /// `{"id": ..., "label": ..., "answer": {"title": ..., "blocks": [...]},

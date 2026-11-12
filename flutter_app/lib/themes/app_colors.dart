@@ -45,6 +45,10 @@ const Color kSemanticError = Color(0xFFD6484B);
 /// Use instead of ad-hoc `Colors.green*`.
 const Color kSemanticSuccess = Color(0xFF15866E);
 
+/// Between the two: half right (a Veganuary quiz answer). Darker than
+/// [kVeganOptionsOrange] to stay readable as text.
+const Color kSemanticWarning = Color(0xFFC2620E);
+
 /// Green of the app logo: tints the Android notification icon. Same value
 /// as `notification_accent` in android/app/src/main/res/values/colors.xml
 /// (server pushes).

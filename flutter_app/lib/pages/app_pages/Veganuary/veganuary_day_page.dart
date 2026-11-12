@@ -1,6 +1,9 @@
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../../helpers/haptic_helper.dart';
+import '../../../helpers/preference_helper.dart';
 import '../../../models/veganuary/veganuary_content.dart';
 import '../../../models/veganuary/veganuary_progress.dart';
 import '../../../services/veganuary_reminder_service.dart';
@@ -8,6 +11,7 @@ import '../../../services/veganuary_service.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/app_button.dart';
+import '../../../widgets/shared/tag_chip.dart';
 import '../../../widgets/veganuary/veganuary_progress_bar.dart';
 import '../../../widgets/veganuary/veganuary_step_views.dart';
 
@@ -20,6 +24,11 @@ const int _mythChoices = 5;
 /// One screen of the day. A myth step makes two: the pick, then the answer.
 sealed class _Screen {
   const _Screen();
+}
+
+class _QuizScreen extends _Screen {
+  final QuizStep quiz;
+  const _QuizScreen(this.quiz);
 }
 
 class _InfoScreen extends _Screen {
@@ -96,6 +105,16 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
   /// An idée reçue was just tapped: ignores other taps until its answer.
   bool _picking = false;
 
+  /// Choice picked on each quiz page answered, by page index. Saved with
+  /// the day left halfway; rereading a done day, the right ones.
+  final Map<int, int> _quizAnswers = {};
+
+  /// Grid cards opened, saved with the day left halfway too.
+  final Set<GridItem> _seenCards = {};
+
+  /// Vibrates on a quiz answer, like a scan (unless turned off for it).
+  bool _haptics = true;
+
   /// Bursts on reaching the done page.
   final _confettiController =
       ConfettiController(duration: const Duration(seconds: 2));
@@ -111,8 +130,22 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
         picked != null && widget.week.mythById(picked) != null ? picked : null;
     _screens = _buildScreens();
     _resume();
+    if (_alreadyDone) _revealQuizzes();
     // Started today: no reminder this morning
     if (!_alreadyDone) VeganuaryReminderService.markDayOpened();
+    PreferencesHelper.getHapticFeedbackPref()
+        .then((enabled) => _haptics = enabled);
+  }
+
+  /// Rereading: each quiz shows its right answer and explanation already.
+  void _revealQuizzes() {
+    for (int i = 0; i < _screens.length; i++) {
+      if (_screens[i] case _QuizScreen(:final quiz)) {
+        final right = quiz.choices
+            .indexWhere((choice) => choice.result == QuizResult.right);
+        if (right != -1) _quizAnswers[i] = right;
+      }
+    }
   }
 
   /// Pages before the done one: what the day's progress counts.
@@ -130,6 +163,54 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
     // The content may have changed since
     _index = started.screen.clamp(0, _contentScreens - 1);
     if (_screen is _MythAnswerScreen && _mythId == null) _index--;
+    // What was done on its pages, if they're still there
+    for (final MapEntry(key: screen, value: choice)
+        in started.quizAnswers.entries) {
+      if (screen >= _screens.length) continue;
+      if (_screens[screen] case _QuizScreen(:final quiz)
+          when choice < quiz.choices.length) {
+        _quizAnswers[screen] = choice;
+      }
+    }
+    _seenCards.addAll([
+      for (final screen in _screens)
+        if (screen case _InfoScreen(:final info))
+          ...info.cardsToOpen
+              .where((card) => started.openedCards.contains(card.label)),
+    ]);
+  }
+
+  /// For the ring on the path, and to resume on [screen] with what was done
+  /// so far.
+  void _saveStarted(int screen) {
+    if (_alreadyDone) return;
+    VeganuaryService.saveStarted(
+      VeganuaryStartedDay(
+        day: widget.day.number,
+        screen: screen,
+        screens: _contentScreens,
+        quizAnswers: Map.of(_quizAnswers),
+        openedCards: {for (final card in _seenCards) card.label},
+      ),
+      mythId: _mythId,
+    );
+  }
+
+  void _answerQuiz(QuizStep quiz, int choice) {
+    setState(() => _quizAnswers[_index] = choice);
+    _saveStarted(_index);
+    if (!_haptics) return;
+    // Like a scan: two pulses when wrong
+    if (quiz.choices[choice].result == QuizResult.wrong) {
+      HapticHelper.doubleImpact();
+    } else {
+      HapticHelper.impact();
+    }
+  }
+
+  void _openedCard(GridItem card) {
+    setState(() => _seenCards.add(card));
+    _saveStarted(_index);
   }
 
   @override
@@ -147,6 +228,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
     return [
       for (final step in widget.day.steps)
         ...switch (step) {
+          QuizStep() => [_QuizScreen(step)],
           InfoStep(:final info) => [_InfoScreen(info)],
           RecipeStep() => [_RecipeScreen(step)],
           MythStep(:final title) => _alreadyDone
@@ -203,16 +285,8 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
       if (!mounted) return;
       setState(() => _saving = false);
       _confettiController.play();
-    } else if (!_alreadyDone) {
-      // For the ring on the path, and to resume here
-      VeganuaryService.saveStarted(
-        VeganuaryStartedDay(
-          day: widget.day.number,
-          screen: _index + 1,
-          screens: _contentScreens,
-        ),
-        mythId: _mythId,
-      );
+    } else {
+      _saveStarted(_index + 1);
     }
     setState(() => _index++);
   }
@@ -248,18 +322,71 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
         _ => 'On continue !',
       };
 
+  /// The idée reçue pick goes on by itself; a quiz, once answered.
+  bool get _showButton => switch (_screen) {
+        _MythPickScreen() => false,
+        _QuizScreen() => _quizAnswers.containsKey(_index),
+        _ => true,
+      };
+
+  /// Grid cards of the page still to open before going on (none when
+  /// rereading): the button stays grey until then.
+  int get _cardsLeft => switch (_screen) {
+        _InfoScreen(:final info) when !_alreadyDone =>
+          info.cardsToOpen.where((card) => !_seenCards.contains(card)).length,
+        _ => 0,
+      };
+
+  void _remindCards() {
+    final left = _cardsLeft;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(left == 1
+            ? 'Touchez la dernière carte pour la découvrir avant de continuer.'
+            : 'Touchez les $left cartes restantes pour les découvrir avant '
+                'de continuer.'),
+      ));
+  }
+
+  /// What kind of page it is, right above its title (icons of the path's
+  /// days).
+  Widget _tag(String label, IconData icon) => TagChip(
+        label: label,
+        icon: icon,
+        color: Theme.of(context).colorScheme.primary,
+      );
+
   Widget _buildScreen(_Screen screen) {
     return switch (screen) {
-      _InfoScreen(:final info) => VeganuaryInfoView(info: info),
-      _RecipeScreen(:final recipe) => VeganuaryRecipeView(recipe: recipe),
+      _QuizScreen(:final quiz) => VeganuaryQuizView(
+          quiz: quiz,
+          selected: _quizAnswers[_index],
+          reviewing: _alreadyDone,
+          onSelected: (choice) => _answerQuiz(quiz, choice),
+          tag: _tag('Quiz', FontAwesomeIcons.circleQuestion),
+        ),
+      _InfoScreen(:final info) => VeganuaryInfoView(
+          info: info,
+          seenCards: _seenCards,
+          onCardSeen: _openedCard,
+          tag: _tag('Info', FontAwesomeIcons.scroll),
+        ),
+      _RecipeScreen(:final recipe) => VeganuaryRecipeView(
+          recipe: recipe,
+          tag: _tag('Recette', FontAwesomeIcons.bowlFood),
+        ),
       _MythPickScreen(:final title, :final pool) => VeganuaryMythPicker(
           title: title,
           myths: pool,
           selectedId: _mythId,
           onSelected: _pickMyth,
+          tag: _tag('Idée reçue', FontAwesomeIcons.comments),
         ),
-      _MythAnswerScreen() =>
-        VeganuaryInfoView(info: widget.week.mythById(_mythId!)!.answer),
+      _MythAnswerScreen() => VeganuaryInfoView(
+          info: widget.week.mythById(_mythId!)!.answer,
+          tag: _tag('Idée reçue', FontAwesomeIcons.comments),
+        ),
       _DoneScreen() => VeganuaryDoneView(
           day: widget.day.number,
           weekDays: [for (final day in widget.week.days) day.number],
@@ -268,7 +395,10 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
               VeganuaryDayState.available,
           badgeImage: widget.week.badgeImage,
         ),
-      _RecapScreen() => VeganuaryRecapView(cards: _recapCards),
+      _RecapScreen() => VeganuaryRecapView(
+          cards: _recapCards,
+          tag: _tag('Récap', FontAwesomeIcons.listCheck),
+        ),
     };
   }
 
@@ -300,6 +430,15 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
                           12.w, 12.h, AppSpacing.pageHorizontal + 60.w, 0),
                       child: Row(
                         children: [
+                          // Stops for now: the day resumes where it was
+                          // left (saved on each page)
+                          IconButton(
+                            onPressed: () =>
+                                Navigator.of(context).pop(_completed),
+                            tooltip: 'Retour au parcours',
+                            icon: Icon(Icons.home_outlined,
+                                color: Colors.grey[700], size: 72.sp),
+                          ),
                           IconButton(
                             onPressed: _back,
                             tooltip: 'Retour',
@@ -334,9 +473,8 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
                       ),
                     ),
                   ),
-                  // No button on the idée reçue pick: a tap on one goes on
                   Visibility(
-                    visible: _screen is! _MythPickScreen,
+                    visible: _showButton,
                     maintainSize: true,
                     maintainAnimation: true,
                     maintainState: true,
@@ -345,11 +483,13 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
                           24.h, AppSpacing.pageHorizontal, 24.h),
                       child: SizedBox(
                         width: double.infinity,
+                        // Grey like a disabled one, but still says why
                         child: AppButton(
                           label: _buttonLabel,
-                          onPressed: _next,
+                          onPressed: _cardsLeft > 0 ? _remindCards : _next,
                           isLoading: _saving,
-                          backgroundColor: primary,
+                          backgroundColor:
+                              _cardsLeft > 0 ? Colors.grey.shade500 : primary,
                           disabledBackgroundColor: primary,
                         ),
                       ),

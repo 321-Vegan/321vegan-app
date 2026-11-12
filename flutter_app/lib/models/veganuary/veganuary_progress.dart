@@ -117,16 +117,25 @@ class VeganuaryProgress {
       '${date.day.toString().padLeft(2, '0')}';
 }
 
-/// Where the user left a day: [screen] pages read out of [screens].
+/// Where the user left a day: [screen] pages read out of [screens], and
+/// what was done on them, to find it again.
 class VeganuaryStartedDay {
   final int day;
   final int screen;
   final int screens;
 
+  /// Page index of each quiz answered → index of the choice picked.
+  final Map<int, int> quizAnswers;
+
+  /// Labels of the grid cards opened.
+  final Set<String> openedCards;
+
   const VeganuaryStartedDay({
     required this.day,
     required this.screen,
     required this.screens,
+    this.quizAnswers = const {},
+    this.openedCards = const {},
   });
 
   factory VeganuaryStartedDay.fromJson(Map<String, dynamic> json) {
@@ -134,11 +143,26 @@ class VeganuaryStartedDay {
       day: json['day'] as int,
       screen: json['screen'] as int,
       screens: json['screens'] as int,
+      quizAnswers: {
+        for (final entry
+            in (json['quiz'] as Map<String, dynamic>? ?? {}).entries)
+          int.parse(entry.key): entry.value as int,
+      },
+      openedCards: {...?(json['cards'] as List?)?.cast<String>()},
     );
   }
 
-  Map<String, dynamic> toJson() =>
-      {'day': day, 'screen': screen, 'screens': screens};
+  Map<String, dynamic> toJson() => {
+        'day': day,
+        'screen': screen,
+        'screens': screens,
+        if (quizAnswers.isNotEmpty)
+          'quiz': {
+            for (final entry in quizAnswers.entries)
+              '${entry.key}': entry.value,
+          },
+        if (openedCards.isNotEmpty) 'cards': openedCards.toList(),
+      };
 
   double get fraction => screens == 0 ? 0 : (screen / screens).clamp(0, 1);
 }

@@ -8,12 +8,17 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../helpers/external_links.dart';
 import '../../models/veganuary/veganuary_content.dart';
+import '../../pages/app_pages/Profile/b12_info_page.dart';
 import '../../services/veganuary_service.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
+import '../b12/b12_reminder_settings_modal.dart';
+import '../shared/animated_reveal.dart';
+import '../shared/attention_pulse.dart';
 import '../shared/app_button.dart';
 import '../shared/info_box.dart';
 
@@ -25,7 +30,34 @@ TextStyle get _bodyStyle => AppTextStyles.bodyRegular15.copyWith(
       height: 1.4,
     );
 
-/// [text] with its `**…**` parts in bold.
+/// The page's kind ("Idée reçue"...), at the left right above its title.
+List<Widget> _tagAbove(Widget? tag) => tag == null
+    ? const []
+    : [
+        Align(alignment: AlignmentDirectional.centerStart, child: tag),
+        SizedBox(height: 24.h),
+      ];
+
+/// `[1]`: the first source of the page.
+final _sourceRef = RegExp(r'\[\d+\]');
+
+/// The sources of the page around, for its `[1]` references to open them.
+class _SourcesScope extends InheritedWidget {
+  final List<VeganuarySource> sources;
+
+  const _SourcesScope({required this.sources, required super.child});
+
+  static List<VeganuarySource> of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_SourcesScope>()?.sources ??
+      const [];
+
+  @override
+  bool updateShouldNotify(_SourcesScope oldWidget) =>
+      sources != oldWidget.sources;
+}
+
+/// [text] with its `**…**` parts in bold, and its `[1]`-like references
+/// to the page's sources highlighted, each opening its source.
 class VeganuaryRichText extends StatelessWidget {
   final String text;
   final TextStyle? style;
@@ -42,6 +74,11 @@ class VeganuaryRichText extends StatelessWidget {
   Widget build(BuildContext context) {
     final base = style ?? _bodyStyle;
     final parts = text.split('**');
+    final refStyle = base.copyWith(
+      fontWeight: FontWeight.bold,
+      color: Theme.of(context).colorScheme.primary,
+    );
+    final sources = _SourcesScope.of(context);
     return Text.rich(
       TextSpan(
         style: base,
@@ -50,18 +87,59 @@ class VeganuaryRichText extends StatelessWidget {
           for (int i = 0; i < parts.length; i++)
             if (parts[i].isNotEmpty)
               TextSpan(
-                text: parts[i],
                 style: i.isOdd
                     ? const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: kTextPrimary,
                       )
                     : null,
+                children: _withSourceRefs(context, parts[i], refStyle, sources),
               ),
         ],
       ),
       textAlign: textAlign,
     );
+  }
+
+  static List<InlineSpan> _withSourceRefs(
+    BuildContext context,
+    String text,
+    TextStyle refStyle,
+    List<VeganuarySource> sources,
+  ) {
+    final spans = <InlineSpan>[];
+    text.splitMapJoin(
+      _sourceRef,
+      onMatch: (match) {
+        final ref = match[0]!;
+        final n = int.parse(ref.substring(1, ref.length - 1));
+        if (n < 1 || n > sources.length) {
+          spans.add(TextSpan(text: ref, style: refStyle));
+          return '';
+        }
+        final source = sources[n - 1];
+        spans.add(WidgetSpan(
+          alignment: PlaceholderAlignment.baseline,
+          baseline: TextBaseline.alphabetic,
+          child: Semantics(
+            link: true,
+            label: 'Source $n : ${source.label}',
+            excludeSemantics: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => openExternalUrl(context, Uri.parse(source.url)),
+              child: Text(ref, style: refStyle),
+            ),
+          ),
+        ));
+        return '';
+      },
+      onNonMatch: (part) {
+        if (part.isNotEmpty) spans.add(TextSpan(text: part));
+        return '';
+      },
+    );
+    return spans;
   }
 }
 
@@ -125,25 +203,131 @@ class _CenteredScroll extends StatelessWidget {
 class VeganuaryInfoView extends StatelessWidget {
   final VeganuaryInfo info;
 
-  const VeganuaryInfoView({super.key, required this.info});
+  /// Grid cards whose details were read: checked.
+  final Set<GridItem> seenCards;
+
+  /// A grid card's details were just read (closed).
+  final ValueChanged<GridItem>? onCardSeen;
+
+  /// Above the title: what kind of page it is.
+  final Widget? tag;
+
+  const VeganuaryInfoView({
+    super.key,
+    required this.info,
+    this.seenCards = const {},
+    this.onCardSeen,
+    this.tag,
+  });
 
   @override
   Widget build(BuildContext context) {
     return _CenteredScroll(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            info.title,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.baloo36,
-          ),
-          for (final block in info.blocks) ...[
-            SizedBox(height: AppSpacing.section),
-            _VeganuaryBlockView(block: block),
+      child: _SourcesScope(
+        sources: info.sources,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ..._tagAbove(tag),
+            Text(
+              info.title,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.baloo36,
+            ),
+            for (final block in info.blocks) ...[
+              SizedBox(height: AppSpacing.section),
+              _VeganuaryBlockView(
+                block: block,
+                seenCards: seenCards,
+                onCardSeen: onCardSeen,
+              ),
+            ],
+            if (info.sources.isNotEmpty) ...[
+              SizedBox(height: AppSpacing.section),
+              _VeganuarySources(sources: info.sources),
+            ],
           ],
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Numbered like the `[1]` of the text, each opening its link.
+class _VeganuarySources extends StatelessWidget {
+  final List<VeganuarySource> sources;
+
+  const _VeganuarySources({required this.sources});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 39.w, vertical: 24.h),
+      decoration: ShapeDecoration(
+        color: Colors.white.withValues(alpha: 0.6),
+        shape: squircleBorder(
+          radius: 48.r,
+          side: const BorderSide(color: kBorderDefault, width: 1.5),
+        ),
+      ),
+      // The taps' ink above the box's color
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+              child: Text('Sources',
+                  style:
+                      AppTextStyles.bodyBold13.copyWith(color: kTextPrimary)),
+            ),
+            for (int i = 0; i < sources.length; i++)
+              Semantics(
+                link: true,
+                label: 'Source ${i + 1} : ${sources[i].label}',
+                excludeSemantics: true,
+                child: InkWell(
+                  onTap: () =>
+                      openExternalUrl(context, Uri.parse(sources[i].url)),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 18.h),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 66.w,
+                          child: Text('[${i + 1}]',
+                              style: AppTextStyles.bodyBold13
+                                  .copyWith(color: primary)),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(sources[i].label,
+                                  style: AppTextStyles.bodyRegular13
+                                      .copyWith(color: kTextPrimary)),
+                              Text(
+                                Uri.parse(sources[i].url).host,
+                                style: AppTextStyles.bodyRegular12
+                                    .copyWith(color: Colors.grey[600]),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 24.w),
+                        Icon(Icons.open_in_new_rounded,
+                            color: primary, size: 48.sp),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -151,8 +335,14 @@ class VeganuaryInfoView extends StatelessWidget {
 
 class _VeganuaryBlockView extends StatelessWidget {
   final VeganuaryBlock block;
+  final Set<GridItem> seenCards;
+  final ValueChanged<GridItem>? onCardSeen;
 
-  const _VeganuaryBlockView({required this.block});
+  const _VeganuaryBlockView({
+    required this.block,
+    this.seenCards = const {},
+    this.onCardSeen,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -191,7 +381,329 @@ class _VeganuaryBlockView extends StatelessWidget {
           ],
         ),
       CalloutBlock(:final text) => InfoBox(text: text),
+      AppLinkBlock(:final label, :final target) =>
+        _AppLink(label: label, target: target),
+      GridBlock(:final columns, :final items) => _VeganuaryGrid(
+          columns: columns,
+          items: items,
+          seenCards: seenCards,
+          onCardSeen: onCardSeen,
+        ),
     };
+  }
+}
+
+/// A button opening a page of the app, e.g. the B12 reminder settings.
+class _AppLink extends StatelessWidget {
+  final String label;
+  final AppLinkTarget target;
+
+  const _AppLink({required this.label, required this.target});
+
+  IconData get _icon => switch (target) {
+        AppLinkTarget.b12Info => Icons.menu_book_rounded,
+        AppLinkTarget.b12Reminder => Icons.notifications_active_outlined,
+      };
+
+  void _open(BuildContext context) {
+    switch (target) {
+      case AppLinkTarget.b12Info:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const B12InfoPage()),
+        );
+      case AppLinkTarget.b12Reminder:
+        // Like from the settings and the dashboard's B12 banner
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => const B12ReminderSettingsModal(),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: () => _open(context),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 45.w, vertical: 39.h),
+          decoration: ShapeDecoration(
+            color: Colors.white,
+            shape: squircleBorder(
+              radius: 48.r,
+              side: const BorderSide(color: kBorderDefault, width: 1.5),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(_icon, color: primary, size: 60.sp),
+              SizedBox(width: 36.w),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTextStyles.bodyBold15.copyWith(color: kTextPrimary),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded,
+                  color: Colors.grey[500], size: 66.sp),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Rows of [columns] cards of the same height. Cards with details open them
+/// in a dialog, then show a check; the first one pulses until one is read.
+class _VeganuaryGrid extends StatelessWidget {
+  final int columns;
+  final List<GridItem> items;
+  final Set<GridItem> seenCards;
+  final ValueChanged<GridItem>? onCardSeen;
+
+  const _VeganuaryGrid({
+    required this.columns,
+    required this.items,
+    required this.seenCards,
+    required this.onCardSeen,
+  });
+
+  Future<void> _open(BuildContext context, GridItem item) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _GridDetailsDialog(item: item),
+    );
+    onCardSeen?.call(item);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final spacing = 30.w;
+    final noneSeen = !items.any(seenCards.contains);
+    Widget cardAt(int i) {
+      final item = items[i];
+      final card = _GridCard(
+        item: item,
+        horizontal: columns == 1,
+        seen: seenCards.contains(item),
+        onTap: item.details == null ? null : () => _open(context, item),
+      );
+      if (item.details == null) return card;
+      // Shows the cards can be opened, as long as none was
+      return AttentionPulse(
+        enabled: noneSeen &&
+            item == items.firstWhere((other) => other.details != null),
+        radius: 48.r,
+        color: Theme.of(context).colorScheme.primary,
+        child: card,
+      );
+    }
+
+    return Column(
+      children: [
+        for (int start = 0; start < items.length; start += columns) ...[
+          if (start > 0) SizedBox(height: spacing),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (int i = start; i < start + columns; i++) ...[
+                  if (i > start) SizedBox(width: spacing),
+                  Expanded(
+                    // The last row keeps the cards' width
+                    child:
+                        i < items.length ? cardAt(i) : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _GridCard extends StatelessWidget {
+  final GridItem item;
+
+  /// Image beside the text (a single column), for longer texts.
+  final bool horizontal;
+
+  /// Its details were read.
+  final bool seen;
+
+  /// Opens its details; null without any.
+  final VoidCallback? onTap;
+
+  const _GridCard({
+    required this.item,
+    required this.horizontal,
+    required this.seen,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final image = item.image == null
+        ? null
+        : AspectRatio(
+            aspectRatio: 1,
+            child: VeganuaryImage(item.image!, fit: BoxFit.contain),
+          );
+    final textAlign = horizontal ? TextAlign.start : TextAlign.center;
+    final texts = [
+      Text(
+        item.label,
+        textAlign: textAlign,
+        style: AppTextStyles.bodyBold13.copyWith(color: kTextPrimary),
+      ),
+      if (item.text != null) ...[
+        SizedBox(height: 6.h),
+        VeganuaryRichText(
+          item.text!,
+          textAlign: textAlign,
+          style: AppTextStyles.bodyRegular12
+              .copyWith(color: Colors.grey[600], height: 1.3),
+        ),
+      ],
+    ];
+
+    final card = Container(
+      padding: EdgeInsets.all(30.w),
+      decoration: ShapeDecoration(
+        color: Colors.white,
+        shape: squircleBorder(
+          radius: 48.r,
+          side: BorderSide(
+            color: seen ? kAccentYellow : kBorderDefault,
+            width: seen ? 2 : 1.5,
+          ),
+        ),
+      ),
+      child: horizontal
+          ? Row(
+              children: [
+                if (image != null) ...[
+                  SizedBox(width: 210.w, child: image),
+                  SizedBox(width: 36.w),
+                ],
+                Expanded(
+                  child: Column(
+                    // Beside the image, when shorter than it
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: texts,
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              children: [
+                if (image != null) ...[image, SizedBox(height: 18.h)],
+                ...texts,
+              ],
+            ),
+    );
+    if (onTap == null) return card;
+
+    return Semantics(
+      button: true,
+      label: seen ? '${item.label}, lu' : item.label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            card,
+            // Like a day done on the path
+            Positioned(
+              top: 18.w,
+              right: 18.w,
+              child: AnimatedScale(
+                scale: seen ? 1 : 0,
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutBack,
+                child: Container(
+                  width: 54.w,
+                  height: 54.w,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: kAccentYellow,
+                  ),
+                  child: Icon(Icons.check_rounded,
+                      color: Colors.white, size: 38.sp),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A grid card's details, opened from it.
+class _GridDetailsDialog extends StatelessWidget {
+  final GridItem item;
+
+  const _GridDetailsDialog({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final details = item.details!;
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: squircleBorder(radius: 28.r),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(48.w, 48.w, 48.w, 0),
+              child: _SourcesScope(
+                sources: details.sources,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(details.title,
+                        style: AppTextStyles.baloo22,
+                        textAlign: TextAlign.center),
+                    for (final block in details.blocks) ...[
+                      SizedBox(height: AppSpacing.item),
+                      _VeganuaryBlockView(block: block),
+                    ],
+                    if (details.sources.isNotEmpty) ...[
+                      SizedBox(height: AppSpacing.item),
+                      _VeganuarySources(sources: details.sources),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(48.w),
+            child: SizedBox(
+              width: double.infinity,
+              child: AppButton(
+                label: 'J’ai compris',
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -202,12 +714,16 @@ class VeganuaryMythPicker extends StatelessWidget {
   final String? selectedId;
   final ValueChanged<String> onSelected;
 
+  /// Above the title: what kind of page it is.
+  final Widget? tag;
+
   const VeganuaryMythPicker({
     super.key,
     required this.title,
     required this.myths,
     required this.selectedId,
     required this.onSelected,
+    this.tag,
   });
 
   @override
@@ -216,6 +732,7 @@ class VeganuaryMythPicker extends StatelessWidget {
       padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.pageHorizontal, vertical: 48.h),
       children: [
+        ..._tagAbove(tag),
         Text(
           title,
           textAlign: TextAlign.center,
@@ -224,33 +741,162 @@ class VeganuaryMythPicker extends StatelessWidget {
         ),
         SizedBox(height: AppSpacing.section),
         for (final myth in myths) ...[
-          _MythOption(
+          _ChoiceOption(
             label: myth.label,
-            selected: myth.id == selectedId,
+            highlight: myth.id == selectedId ? _ChoiceHighlight.picked : null,
             onTap: () => onSelected(myth.id),
           ),
           SizedBox(height: AppSpacing.item),
         ],
+        // The pool is as big as the week: one a day, all done by its end
+        SizedBox(height: AppSpacing.item),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.info_outline, color: Colors.grey[600], size: 48.sp),
+            SizedBox(width: 18.w),
+            Expanded(
+              child: Text(
+                'Ne vous inquiétez pas, à la fin de la semaine vous les aurez '
+                'toutes vues !',
+                style: AppTextStyles.bodyRegular13
+                    .copyWith(color: Colors.grey[600]),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
 }
 
-class _MythOption extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
+/// A quiz question: once a choice is tapped, it shows in green, orange
+/// (half right) or red, the right ones in green, then the explanation.
+class VeganuaryQuizView extends StatelessWidget {
+  final QuizStep quiz;
 
-  const _MythOption({
-    required this.label,
+  /// Index of the choice picked, null until answered.
+  final int? selected;
+
+  /// Rereading a done day: [selected] is the right answer, shown without
+  /// a verdict.
+  final bool reviewing;
+  final ValueChanged<int> onSelected;
+
+  /// Above the question: what kind of page it is.
+  final Widget? tag;
+
+  const VeganuaryQuizView({
+    super.key,
+    required this.quiz,
     required this.selected,
+    this.reviewing = false,
+    required this.onSelected,
+    this.tag,
+  });
+
+  _ChoiceHighlight? _highlightOf(int index) {
+    if (selected == null) return null;
+    final result = quiz.choices[index].result;
+    if (index != selected && result != QuizResult.right) return null;
+    return switch (result) {
+      QuizResult.right => _ChoiceHighlight.right,
+      QuizResult.partial => _ChoiceHighlight.partial,
+      QuizResult.wrong => _ChoiceHighlight.wrong,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final picked =
+        selected == null || reviewing ? null : _highlightOf(selected!);
+    return ListView(
+      padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.pageHorizontal, vertical: 48.h),
+      children: [
+        ..._tagAbove(tag),
+        Text(
+          quiz.question,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.baloo26
+              .copyWith(fontWeight: FontWeight.w700, height: 1.15),
+        ),
+        SizedBox(height: AppSpacing.section),
+        for (int i = 0; i < quiz.choices.length; i++) ...[
+          _ChoiceOption(
+            label: quiz.choices[i].text,
+            highlight: _highlightOf(i),
+            // Answered once
+            onTap: selected == null ? () => onSelected(i) : null,
+          ),
+          SizedBox(height: AppSpacing.item),
+        ],
+        AnimatedReveal(
+          visible: selected != null,
+          child: Padding(
+            padding: EdgeInsets.only(top: AppSpacing.item),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (picked?.verdict != null) ...[
+                  Text(
+                    picked!.verdict!,
+                    style:
+                        AppTextStyles.bodyBold15.copyWith(color: picked.color),
+                  ),
+                  SizedBox(height: 18.h),
+                ],
+                VeganuaryRichText(quiz.explanation),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+enum _ChoiceHighlight {
+  /// An idée reçue picked
+  picked(kAccentYellow, Icons.check_rounded, null),
+  right(kSemanticSuccess, Icons.check_rounded, 'Bonne réponse !'),
+  partial(kSemanticWarning, Icons.remove_rounded, 'Presque !'),
+  wrong(kSemanticError, Icons.close_rounded, 'Pas tout à fait…');
+
+  final Color color;
+  final IconData icon;
+
+  /// Above a quiz's explanation, for the answer picked.
+  final String? verdict;
+
+  const _ChoiceHighlight(this.color, this.icon, this.verdict);
+
+  Color get background =>
+      this == picked ? kSecondaryTag : color.withValues(alpha: 0.1);
+}
+
+/// An idée reçue to pick, or a quiz answer.
+class _ChoiceOption extends StatelessWidget {
+  final String label;
+
+  /// Null: not picked (nor the right answer).
+  final _ChoiceHighlight? highlight;
+
+  /// Null once it can't be picked anymore.
+  final VoidCallback? onTap;
+
+  const _ChoiceOption({
+    required this.label,
+    required this.highlight,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final highlight = this.highlight;
+    final selected = highlight != null;
     return Semantics(
-      button: true,
+      button: onTap != null,
       selected: selected,
       child: GestureDetector(
         onTap: onTap,
@@ -258,12 +904,11 @@ class _MythOption extends StatelessWidget {
           duration: const Duration(milliseconds: 150),
           padding: EdgeInsets.symmetric(horizontal: 51.w, vertical: 54.h),
           decoration: ShapeDecoration(
-            color:
-                selected ? kSecondaryTag : Colors.white.withValues(alpha: 0.6),
+            color: highlight?.background ?? Colors.white.withValues(alpha: 0.6),
             shape: squircleBorder(
               radius: 48.r,
               side: BorderSide(
-                color: selected ? kAccentYellow : kBorderDefault,
+                color: highlight?.color ?? kBorderDefault,
                 width: selected ? 2 : 1.5,
               ),
             ),
@@ -276,14 +921,13 @@ class _MythOption extends StatelessWidget {
                 height: 66.w,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: selected ? kAccentYellow : Colors.transparent,
+                  color: highlight?.color ?? Colors.transparent,
                   border: selected
                       ? null
                       : Border.all(color: kBorderDefault, width: 2),
                 ),
                 child: selected
-                    ? Icon(Icons.check_rounded,
-                        color: Colors.white, size: 46.sp)
+                    ? Icon(highlight.icon, color: Colors.white, size: 46.sp)
                     : null,
               ),
               SizedBox(width: 39.w),
@@ -291,7 +935,7 @@ class _MythOption extends StatelessWidget {
                 child: Text(
                   label,
                   style: AppTextStyles.bodyRegular15
-                      .copyWith(color: selected ? kAccentYellow : kTextPrimary),
+                      .copyWith(color: highlight?.color ?? kTextPrimary),
                 ),
               ),
             ],
@@ -308,7 +952,10 @@ class _MythOption extends StatelessWidget {
 class VeganuaryRecipeView extends StatefulWidget {
   final RecipeStep recipe;
 
-  const VeganuaryRecipeView({super.key, required this.recipe});
+  /// At the top (not in the downloaded image): what kind of page it is.
+  final Widget? tag;
+
+  const VeganuaryRecipeView({super.key, required this.recipe, this.tag});
 
   @override
   State<VeganuaryRecipeView> createState() => _VeganuaryRecipeViewState();
@@ -371,7 +1018,13 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
           Padding(
             padding:
                 EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal),
-            child: _buildDownloadInvitation(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ..._tagAbove(widget.tag),
+                _buildDownloadInvitation(),
+              ],
+            ),
           ),
           RepaintBoundary(
             key: _recipeKey,
@@ -458,23 +1111,35 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
               ),
               SizedBox(height: AppSpacing.section),
               Text(
-                'Ingrédients pour ${recipe.servings} personne'
-                '${recipe.servings > 1 ? 's' : ''}',
+                recipe.servings == null
+                    ? 'Ingrédients'
+                    : 'Ingrédients pour ${recipe.servings}',
                 style: AppTextStyles.baloo22,
               ),
               SizedBox(height: AppSpacing.afterTitle),
-              for (final ingredient in recipe.ingredients)
-                Padding(
-                  padding: EdgeInsets.only(bottom: 18.h),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('•', style: _bodyStyle),
-                      SizedBox(width: 30.w),
-                      Expanded(child: VeganuaryRichText(ingredient)),
-                    ],
+              for (final group in recipe.ingredients) ...[
+                if (group.title != null)
+                  Padding(
+                    padding: EdgeInsets.only(top: 18.h, bottom: 18.h),
+                    child: Text(
+                      group.title!,
+                      style: AppTextStyles.bodyBold15
+                          .copyWith(color: kTextPrimary),
+                    ),
                   ),
-                ),
+                for (final ingredient in group.items)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 18.h),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('•', style: _bodyStyle),
+                        SizedBox(width: 30.w),
+                        Expanded(child: VeganuaryRichText(ingredient)),
+                      ],
+                    ),
+                  ),
+              ],
               SizedBox(height: AppSpacing.section),
               Text('Étapes', style: AppTextStyles.baloo22),
               SizedBox(height: AppSpacing.afterTitle),
@@ -644,7 +1309,10 @@ class _WeekDayDot extends StatelessWidget {
 class VeganuaryRecapView extends StatelessWidget {
   final List<VeganuaryRecapCard> cards;
 
-  const VeganuaryRecapView({super.key, required this.cards});
+  /// Above the title: what kind of page it is.
+  final Widget? tag;
+
+  const VeganuaryRecapView({super.key, required this.cards, this.tag});
 
   @override
   Widget build(BuildContext context) {
@@ -653,6 +1321,7 @@ class VeganuaryRecapView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          ..._tagAbove(tag),
           Text(
             'Récapitulatif du jour',
             textAlign: TextAlign.center,

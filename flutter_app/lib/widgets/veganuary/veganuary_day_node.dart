@@ -17,13 +17,15 @@ Color _side(Color color) {
   return hsl.withLightness((hsl.lightness - 0.1).clamp(0.0, 1.0)).toColor();
 }
 
-const String _recipeIllustration = 'lib/assets/images/veganuary/recipe-pot.png';
+const String _recipeIllustration =
+    'lib/assets/images/veganuary/recipe-pot.webp';
 
 IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       VeganuaryDayIcon.info => FontAwesomeIcons.scroll,
       VeganuaryDayIcon.myth => FontAwesomeIcons.comments,
       VeganuaryDayIcon.recipe => FontAwesomeIcons.bowlFood,
       VeganuaryDayIcon.book => FontAwesomeIcons.book,
+      VeganuaryDayIcon.cart => FontAwesomeIcons.basketShopping,
     };
 
 /// A day on the Veganuary path: a coin, yellow once done, green when it's

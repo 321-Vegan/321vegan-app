@@ -26,14 +26,17 @@ class AttentionPulse extends StatefulWidget {
 
 class _AttentionPulseState extends State<AttentionPulse>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    duration: const Duration(milliseconds: 2800),
-    vsync: this,
-  );
+  // Not lazy: first used in dispose() (never enabled), it would look up its
+  // ticker's ancestors once out of the tree, which throws
+  late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 2800),
+      vsync: this,
+    );
     if (widget.enabled) _controller.repeat();
   }
 

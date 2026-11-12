@@ -47,7 +47,13 @@ void main() {
 
     test('a day left halfway shows how far, until done', () {
       final started = const VeganuaryProgress().withStarted(
-        const VeganuaryStartedDay(day: 1, screen: 2, screens: 4),
+        const VeganuaryStartedDay(
+          day: 1,
+          screen: 2,
+          screens: 4,
+          quizAnswers: {0: 2},
+          openedCards: {'Conserves'},
+        ),
         mythId: 'soja',
       );
       expect(started.dayProgress(1), 0.5);
@@ -55,6 +61,9 @@ void main() {
       final restored = VeganuaryProgress.fromJson(
           jsonDecode(jsonEncode(started.toJson())) as Map<String, dynamic>);
       expect(restored.started?.screen, 2);
+      // With what was done on its pages
+      expect(restored.started?.quizAnswers, {0: 2});
+      expect(restored.started?.openedCards, {'Conserves'});
       // Done: no longer started
       final done = started.withCompleted(1, mythId: 'soja', now: monday);
       expect(done.started, isNull);
@@ -73,6 +82,45 @@ void main() {
 
   // A mistake in a week's JSON would leave the whole tab on "Le contenu
   // n'a pas pu être chargé": caught here instead.
+  group('Recipe', () {
+    RecipeStep parse(Object? servings, List<Object> ingredients) =>
+        VeganuaryStep.fromJson({
+          'type': 'recipe',
+          'title': 'Tarte',
+          'servings': servings,
+          'ingredients': ingredients,
+          'steps': <String>[],
+        }) as RecipeStep;
+
+    test('servings: people or a text', () {
+      expect(parse(1, []).servings, '1 personne');
+      expect(parse(4, []).servings, '4 personnes');
+      expect(parse('une tarte', []).servings, 'une tarte');
+      expect(parse(null, []).servings, isNull);
+    });
+
+    test('ingredients: lines in a row make an untitled group', () {
+      final recipe = parse(2, [
+        'Sel',
+        'Poivre',
+        {
+          'title': 'Pour la pâte',
+          'items': ['Farine']
+        },
+        'Graines',
+      ]);
+      expect([for (final g in recipe.ingredients) g.title],
+          [null, 'Pour la pâte', null]);
+      expect([
+        for (final g in recipe.ingredients) g.items
+      ], [
+        ['Sel', 'Poivre'],
+        ['Farine'],
+        ['Graines'],
+      ]);
+    });
+  });
+
   group('Bundled content', () {
     test('every week file is listed in the service and in pubspec.yaml', () {
       final files = Directory('lib/assets/veganuary')
@@ -102,6 +150,36 @@ void main() {
       expect(days.length, lessThanOrEqualTo(VeganuaryService.totalDays));
     });
 
+    test('every image of the content exists and is in pubspec.yaml', () {
+      final pubspec = File('pubspec.yaml').readAsStringSync();
+      Iterable<String> assetsIn(Object? json) sync* {
+        if (json is String && json.startsWith('lib/assets/')) yield json;
+        if (json is List) {
+          for (final value in json) {
+            yield* assetsIn(value);
+          }
+        }
+        if (json is Map) {
+          for (final value in json.values) {
+            yield* assetsIn(value);
+          }
+        }
+      }
+
+      for (final file in VeganuaryService.weekAssets) {
+        for (final asset
+            in assetsIn(jsonDecode(File(file).readAsStringSync()))) {
+          expect(File(asset).existsSync(), isTrue, reason: '$file : $asset');
+          final folder = asset.substring(0, asset.lastIndexOf('/') + 1);
+          expect(
+            pubspec.contains('- $asset') || pubspec.contains('- $folder\n'),
+            isTrue,
+            reason: '$asset absent de pubspec.yaml',
+          );
+        }
+      }
+    });
+
     for (final week in weeks) {
       test('week ${week.number}: one idée reçue per day, all with a recap', () {
         final mythDays = week.days
@@ -112,6 +190,56 @@ void main() {
             week.myths.map((m) => m.id).toSet(), hasLength(week.myths.length));
         expect(week.days.every((day) => day.recap.isNotEmpty), isTrue);
         expect(week.myths.every((myth) => myth.recap != null), isTrue);
+      });
+
+      test('week ${week.number}: every [n] has its source on the page', () {
+        // With the details of their grid cards, which have their own sources
+        Iterable<VeganuaryInfo> withDetails(VeganuaryInfo page) sync* {
+          yield page;
+          for (final grid in page.blocks.whereType<GridBlock>()) {
+            for (final item in grid.items) {
+              if (item.details != null) yield* withDetails(item.details!);
+            }
+          }
+        }
+
+        final pages = [
+          for (final day in week.days)
+            for (final step in day.steps.whereType<InfoStep>())
+              ...withDetails(step.info),
+          for (final myth in week.myths) ...withDetails(myth.answer),
+        ];
+        for (final page in pages) {
+          final texts = [
+            for (final block in page.blocks)
+              ...switch (block) {
+                TextBlock(:final text) => [text],
+                BulletsBlock(:final items) => items,
+                _ => <String>[],
+              },
+          ];
+          for (final match in RegExp(r'\[(\d+)\]').allMatches(texts.join())) {
+            final n = int.parse(match[1]!);
+            expect(n, inInclusiveRange(1, page.sources.length),
+                reason: '${page.title} : [$n]');
+          }
+          for (final source in page.sources) {
+            expect(Uri.parse(source.url).host, isNotEmpty,
+                reason: '${page.title} : ${source.url}');
+          }
+        }
+      });
+
+      test('week ${week.number}: every quiz has a right answer', () {
+        for (final day in week.days) {
+          for (final quiz in day.steps.whereType<QuizStep>()) {
+            expect(
+              quiz.choices.any((choice) => choice.result == QuizResult.right),
+              isTrue,
+              reason: 'Jour ${day.number} : ${quiz.question}',
+            );
+          }
+        }
       });
     }
   });
