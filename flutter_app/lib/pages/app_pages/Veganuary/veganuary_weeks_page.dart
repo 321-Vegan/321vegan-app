@@ -107,6 +107,16 @@ class VeganuaryWeeksPage extends StatelessWidget {
                       },
                       child: const Text('Debug : réinitialiser'),
                     ),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: VeganuaryService.debugUnlockAll,
+                      builder: (context, unlocked, _) => TextButton(
+                        onPressed: () =>
+                            VeganuaryService.debugUnlockAll.value = !unlocked,
+                        child: Text(unlocked
+                            ? 'Debug : reverrouiller'
+                            : 'Debug : tout débloquer (aperçu)'),
+                      ),
+                    ),
                     TextButton(
                       onPressed: () async {
                         await VeganuaryReminderService.showTestSoon();

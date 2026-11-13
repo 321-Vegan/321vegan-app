@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,7 +18,12 @@ class VeganuaryService {
   /// written (and in pubspec.yaml). Checked by test/models/veganuary_test.
   static const List<String> weekAssets = [
     'lib/assets/veganuary/week1.json',
+    'lib/assets/veganuary/week2.json',
   ];
+
+  /// Debug: locked days open too, as a preview saving nothing (until the
+  /// app restarts).
+  static final ValueNotifier<bool> debugUnlockAll = ValueNotifier(false);
 
   static const String _progressKey = 'veganuary_progress';
   static const String _welcomeSeenKey = 'veganuary_welcome_seen';

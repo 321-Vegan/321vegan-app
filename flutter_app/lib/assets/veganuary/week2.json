@@ -1,0 +1,187 @@
+{
+  "number": 2,
+  "title": "Semaine 2 (provisoire)",
+  "illustration": "lib/assets/images/characters/radish.webp",
+  "path_illustrations": [
+    "lib/assets/images/buy-premium/bee.webp",
+    "lib/assets/avatars/poule.png"
+  ],
+  "myths": [],
+  "days": [
+    {
+      "number": 8,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Jour 8 (provisoire)",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Contenu à écrire."
+            }
+          ]
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🚧",
+          "title": "Jour 8",
+          "bullets": [
+            "Contenu à écrire"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Jour 9 (provisoire)",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Contenu à écrire."
+            }
+          ]
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🚧",
+          "title": "Jour 9",
+          "bullets": [
+            "Contenu à écrire"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Jour 10 (provisoire)",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Contenu à écrire."
+            }
+          ]
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🚧",
+          "title": "Jour 10",
+          "bullets": [
+            "Contenu à écrire"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Jour 11 (provisoire)",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Contenu à écrire."
+            }
+          ]
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🚧",
+          "title": "Jour 11",
+          "bullets": [
+            "Contenu à écrire"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Jour 12 (provisoire)",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Contenu à écrire."
+            }
+          ]
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🚧",
+          "title": "Jour 12",
+          "bullets": [
+            "Contenu à écrire"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Jour 13 (provisoire)",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Contenu à écrire."
+            }
+          ]
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🚧",
+          "title": "Jour 13",
+          "bullets": [
+            "Contenu à écrire"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "icon": "info",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Jour 14 (provisoire)",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Contenu à écrire."
+            }
+          ]
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🚧",
+          "title": "Jour 14",
+          "bullets": [
+            "Contenu à écrire"
+          ]
+        }
+      ]
+    }
+  ]
+}

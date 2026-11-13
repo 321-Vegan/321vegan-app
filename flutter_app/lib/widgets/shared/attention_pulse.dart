@@ -69,6 +69,9 @@ class _AttentionPulseState extends State<AttentionPulse>
         final swell = 1 + 0.06 * (1 - (2 * t - 1).abs());
         return Stack(
           clipBehavior: Clip.none,
+          // The child is laid out like without the pulse (a card filling
+          // its cell stays as wide)
+          fit: StackFit.passthrough,
           children: [
             Positioned.fill(
               child: IgnorePointer(

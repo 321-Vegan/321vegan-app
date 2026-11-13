@@ -937,23 +937,96 @@
     },
     {
       "number": 4,
-      "icon": "info",
+      "icon": "cow",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, combien de temps vit en moyenne une vache laitière en France ?",
+          "choices": [
+            {
+              "text": "Une vingtaine d’années"
+            },
+            {
+              "text": "Une dizaine d’années"
+            },
+            {
+              "text": "Moins de 6 ans",
+              "result": "right"
+            }
+          ],
+          "explanation": "En moyenne **5,7 ans**, alors qu’une vache peut vivre une vingtaine d’années. Dès que sa production de lait baisse, elle est envoyée à l’abattoir."
+        },
+        {
           "type": "info",
-          "title": "La B12, le seul complément indispensable",
+          "image": "lib/assets/images/characters/cow-not.webp",
+          "title": "Ce que le lait coûte aux vaches 🐄",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Derrière l’image joyeuse et rassurante des produits laitiers se cache une tout autre réalité : une vie de souffrance pour des millions de vaches, et la mort pour leurs enfants."
+            },
+            {
+              "type": "text",
+              "text": "Une vache, comme tous les mammifères, ne produit du lait que pour nourrir son petit. Pour qu’elle en produise en continu, elle est **inséminée artificiellement tous les ans**."
+            },
+            {
+              "type": "text",
+              "text": "Son veau lui est retiré peu après la naissance, pour que le lait soit vendu. Les femelles deviendront souvent vaches laitières à leur tour, et les mâles seront engraissés puis abattus pour leur viande."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "image": "lib/assets/images/characters/cow-not.webp",
+          "title": "Une vie écourtée ⏳",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Quand sa production baisse, la vache est envoyée à l’abattoir. En France, les vaches laitières ont une **durée de vie moyenne de 5,7 ans**, alors qu’elles peuvent vivre une vingtaine d’années. Une bonne partie de la viande de bœuf vendue en France provient d’ailleurs de ces vaches laitières."
+            },
+            {
+              "type": "text",
+              "text": "Autrement dit : **derrière le lait, il y a aussi de la viande**. Les deux sont étroitement liés."
+            },
+            {
+              "type": "text",
+              "text": "On a pris le cas des vaches, mais c’est la même chose pour les chèvres et tous les animaux à qui on vole le lait."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Les différents laits végétaux 🥛",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Il y a un énorme choix de laits végétaux :"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Soja** : riche en protéines, plutôt utilisé pour la cuisine et en pâtisserie.",
+                "**Avoine** : plus doux et crémeux, parfait dans le café ou avec du muesli.",
+                "**Amande** : plus fort en goût, moins neutre.",
+                "**Riz** : très doux, au goût discret.",
+                "**Coco** : goût plus marqué, beaucoup utilisé en cuisine, en pâtisserie, dans les smoothies…",
+                "**Autres** (cajou, chanvre, noisette…) : à tester pour trouver vos préférés !"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Comment choisir son lait ? 🤔",
           "blocks": [
             {
               "type": "bullets",
               "items": [
-                "**La vitamine B12 est produite par des bactéries**, pas par les plantes ni par les animaux. Les végétaux n’en apportent pas de façon fiable.",
-                "**Se complémenter est indispensable.** Sans B12, une carence arrive tôt ou tard et peut avoir des conséquences graves sur la santé.",
-                "**C’est simple et peu coûteux** : un comprimé ou quelques gouttes, selon la fréquence de prise qui vous convient."
+                "**Avec ou sans sucre ?** Certains ont du sucre ajouté : vérifiez les ingrédients en fonction de ce que vous voulez ! Certains laits, comme l’avoine ou le riz, ont naturellement un petit goût sucré. C’est normal, il vient des céréales elles-mêmes, mais ils sont moins adaptés à la cuisine salée.",
+                "**Aromatisé ?** Vanille, chocolat, caramel… il en existe plein, plus ou moins sucrés.",
+                "**Version barista ?** Ces laits sont conçus pour le café. Idéal pour les cappuccinos et lattes maison.",
+                "**Enrichi en calcium ?** Vous pouvez aussi en choisir."
               ]
-            },
-            {
-              "type": "callout",
-              "text": "Retrouvez les doses recommandées, validées par une diététicienne, dans Paramètres › B12."
             }
           ]
         },
@@ -963,30 +1036,287 @@
       ],
       "recap": [
         {
-          "emoji": "💊",
-          "title": "La B12, indispensable",
+          "emoji": "🐄",
+          "title": "Ce que le lait coûte aux vaches",
           "bullets": [
-            "Absente des végétaux",
-            "À prendre en complément",
-            "Simple et peu coûteux"
+            "Inséminées chaque année pour produire du lait",
+            "Le veau leur est retiré peu après sa naissance",
+            "Abattues vers 5,7 ans, au lieu d’une vingtaine"
+          ]
+        },
+        {
+          "emoji": "🥛",
+          "title": "Les laits végétaux",
+          "bullets": [
+            "Soja pour cuisiner, avoine pour le café",
+            "Attention au sucre ajouté",
+            "Versions barista ou enrichies en calcium"
           ]
         }
       ]
     },
     {
       "number": 5,
-      "icon": "book",
+      "icon": "egg",
       "steps": [
         {
           "type": "info",
-          "title": "Lire une étiquette",
+          "image": "lib/assets/themes/cards/poule-basic.webp",
+          "title": "Le problème avec les œufs",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Les œufs sont toujours plus consommés, à cause de discours pseudo-santé et de marketing. Pourtant, ils cachent une réalité de **domination, de souffrance et de mort**."
+            },
+            {
+              "type": "text",
+              "text": "On parle ici des poules, parce que ce sont leurs œufs qui sont les plus consommés."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Les numéros sur les œufs 🔢",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Les œufs sont numérotés, de **0 à 3**. Ce chiffre indique le **type d’élevage** de la poule qui a produit l’œuf."
+            },
+            {
+              "type": "text",
+              "text": "Et en vrai, ça donne quoi ? **Touchez chaque œuf** pour le découvrir."
+            },
+            {
+              "type": "grid",
+              "items": [
+                {
+                  "image": "lib/assets/images/veganuary/oeufs-code-3-oeuf.webp",
+                  "label": "Code 3",
+                  "text": "En cage",
+                  "details": {
+                    "title": "Code 3 : en cage",
+                    "blocks": [
+                      {
+                        "type": "image",
+                        "src": "lib/assets/images/veganuary/oeufs-code-3.webp",
+                        "caption": "Photo : fondation-droit-animal.org"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Les poules sont **enfermées en permanence**, réduites à la productivité. Privées de mouvements et de tout comportement naturel."
+                      },
+                      {
+                        "type": "text",
+                        "text": "**Ici, la violence est entièrement assumée.**"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/oeufs-code-2-oeuf.webp",
+                  "label": "Code 2",
+                  "text": "Au sol",
+                  "details": {
+                    "title": "Code 2 : au sol",
+                    "blocks": [
+                      {
+                        "type": "image",
+                        "src": "lib/assets/images/veganuary/oeufs-code-2.webp",
+                        "caption": "Photo : Fred Tanneau / AFP"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Pas de cages, mais enfermées quand même, avec une densité extrême, un stress constant, énormément de blessures, du cannibalisme…"
+                      },
+                      {
+                        "type": "text",
+                        "text": "**Sans cage, mais tout aussi violent.**"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/oeufs-code-1-oeuf.webp",
+                  "label": "Code 1",
+                  "text": "« Plein air »",
+                  "details": {
+                    "title": "Code 1 : « plein air »",
+                    "blocks": [
+                      {
+                        "type": "image",
+                        "src": "lib/assets/images/veganuary/oeufs-code-1.webp",
+                        "caption": "Photo : Rue89 Strasbourg"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Très majoritairement des **structures** industrielles **gigantesques** qui peuvent abriter des **dizaines de milliers de poules**, avec un accès **extérieur** minimal ou **peu utilisé**."
+                      },
+                      {
+                        "type": "bullets",
+                        "items": [
+                          "**Trop grand nombre** devant les portes, donc **incapables de se disperser**.",
+                          "Environnement **extérieur pas adapté** : pas d’abris, de végétation, rien pour se cacher alors que ce sont des animaux prudents.",
+                          "**Alimentation** disponible uniquement **à l’intérieur**."
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "image": "lib/assets/images/veganuary/oeufs-code-0-oeuf.webp",
+                  "label": "Code 0",
+                  "text": "« Plein air » bio",
+                  "details": {
+                    "title": "Code 0 : « plein air » bio",
+                    "blocks": [
+                      {
+                        "type": "image",
+                        "src": "lib/assets/images/veganuary/oeufs-code-0.webp",
+                        "caption": "Photo : mfrpuysec.fr"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Ce n’est pas bien différent du code 1, si ce n’est l’alimentation bio et le nombre théoriquement réduit."
+                      },
+                      {
+                        "type": "text",
+                        "text": "Sur le site où est prise cette image, on peut lire :"
+                      },
+                      {
+                        "type": "callout",
+                        "text": "« L’exploitation comporte 7500 poules pondeuses d’œufs-BIO, ce qui représente une production d’environ 6400 à 7000 œufs par jour. Les poules ont le luxe de pouvoir prendre l’air sur un total de 3 ha ! »"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Voici le terrain désertique où les poules ont **« le luxe de pouvoir prendre l’air »** :"
+                      },
+                      {
+                        "type": "image",
+                        "src": "lib/assets/images/veganuary/oeufs-code-0-terrain.webp",
+                        "caption": "Photo : mfrpuysec.fr"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Derrière les numéros 🐔",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Petit, moyen, grand élevage, plein air, au sol, en cage, bio…"
+            },
+            {
+              "type": "text",
+              "text": "Derrière tout ça, il y a juste **des individus qui ne veulent pas se faire exploiter** et dont les **intérêts sont totalement niés**."
+            },
+            {
+              "type": "callout",
+              "text": "Les animaux ne sont pas des ressources. Les vrais codes 0, ce sont les alternatives végétales !"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Ce que les œufs coûtent aux poules 💔",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Quel que soit le numéro sur l’œuf, la filière fonctionne de la même façon :"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Les poussins mâles sont tués.** Ils ne pondent pas, et ne grossissent pas assez vite pour être rentables en viande : ils sont éliminés à la naissance, ou avant l’éclosion. En France, leur élimination systématique est interdite depuis 2023, mais des dérogations existent et des millions de poussins sont encore tués chaque année [1].",
+                "**Les poules sont abattues jeunes.** Vers 18 mois, quand leur ponte ralentit, elles sont envoyées à l’abattoir, alors qu’elles pourraient vivre encore plusieurs années.",
+                "**Leur corps s’épuise.** Elles ont été sélectionnées pour pondre environ 300 œufs par an, un rythme qui abîme leur organisme."
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Bio, plein air, au sol ou en cage : **ça ne change rien à tout ça**."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Reporterre, « Les poussins sont toujours broyés en France malgré l’interdiction »",
+              "url": "https://reporterre.net/Les-poussins-sont-toujours-broyes-en-France-malgre-l-interdiction"
+            }
+          ]
+        },
+        {
+          "type": "quiz",
+          "question": "Savez-vous par quoi on peut remplacer les œufs en pâtisserie ?",
+          "choices": [
+            {
+              "text": "De la compote de pommes",
+              "result": "partial"
+            },
+            {
+              "text": "Des graines de lin moulues",
+              "result": "partial"
+            },
+            {
+              "text": "Du tofu soyeux",
+              "result": "partial"
+            },
+            {
+              "text": "Tout ça, selon la recette !",
+              "result": "right"
+            }
+          ],
+          "explanation": "**Les trois fonctionnent !** La compote apporte du moelleux, les graines de lin et le tofu soyeux servent de liant. On voit tout ça juste après."
+        },
+        {
+          "type": "info",
+          "title": "Remplacer les œufs en pâtisserie 🧁",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Dans un gâteau, l’œuf sert surtout à lier et à donner du moelleux. Plein d’ingrédients savent faire la même chose ! Pour remplacer **un œuf** :"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Compote de pommes** : 50 g, pour le moelleux des gâteaux, des muffins et des cookies.",
+                "**Banane écrasée** : une demi-banane, quand son goût va bien avec la recette.",
+                "**Graines de lin moulues** : 2 cuillères à café mélangées à 2 cuillères à soupe d’eau, pour lier.",
+                "**Tofu soyeux ** : 50 g, pour les flans, les cheesecakes et les gâteaux.",
+                "**Fécule de maïs** : 1 cuillère à soupe délayée dans un peu d’eau, pour lier.",
+                "**Aquafaba** (l’eau des pois chiches en conserve) : elle se monte en neige comme des blancs d’œufs, pour les mousses au chocolat et les meringues."
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Il existe aussi des substituts tout prêts !"
+            },
+            {
+              "type": "text",
+              "text": "Et si vous n’êtes pas sûr·e de comment remplacer les œufs dans vos recettes, il y a un super article sur **Vegan Pratique** [1]."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Vegan Pratique, « Remplacer les œufs »",
+              "url": "https://vegan-pratique.fr/cote-cuisine/remplacer-les-oeufs/"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Et en salé ? 🍳",
           "blocks": [
             {
               "type": "bullets",
               "items": [
-                "**Certains ingrédients d’origine animale se cachent** : lactose, caséine, lactosérum (lait), gélatine, albumine (œuf)…",
-                "**Les additifs aussi** : E120 (carmin, tiré d’insectes), E441 (gélatine), E904 (shellac, sécrétion d’insecte), E1105 (lysozyme, issu de l’œuf).",
-                "**Pas envie de tout retenir ?** Scannez le produit avec 321 Vegan : l’app vous dit tout de suite s’il est végan."
+                "**Tofu brouillé** : du tofu ferme émietté à la poêle, avec du curcuma pour la couleur et une pincée de sel kala namak pour le goût d’œuf. Parfait à la place des œufs brouillés !",
+                "**Quiches et tartes salées** : on remplace l’appareil aux œufs par du tofu soyeux mixé, ou simplement par de la crème de soja, comme dans la tarte aux poireaux du jour 3.",
+                "**Omelettes** : avec de la farine de pois chiches et de l’eau, ou avec des substituts tout prêts.",
+                "**Mayonnaise** : de la crème de soja, de l’huile et de la moutarde, au mixeur plongeant."
               ]
             }
           ]
@@ -997,30 +1327,190 @@
       ],
       "recap": [
         {
-          "emoji": "🔍",
-          "title": "Lire une étiquette",
+          "emoji": "🥚",
+          "title": "Les numéros sur les œufs",
           "bullets": [
-            "Lactose, caséine, gélatine…",
-            "Attention aux E120, E441, E904, E1105",
-            "Le scanner 321 Vegan vérifie pour vous"
+            "De 0 (bio) à 3 (en cage) : le type d’élevage",
+            "« Plein air » : des milliers de poules, un extérieur peu utilisé",
+            "Les vrais codes 0 : les alternatives végétales"
+          ]
+        },
+        {
+          "emoji": "🐔",
+          "title": "Ce que les œufs coûtent aux poules",
+          "bullets": [
+            "Les poussins mâles sont tués",
+            "Les poules sont abattues vers 18 mois",
+            "Quel que soit le numéro sur l’œuf"
+          ]
+        },
+        {
+          "emoji": "🧁",
+          "title": "Remplacer les œufs",
+          "bullets": [
+            "Sucré : compote, graines de lin, tofu soyeux, aquafaba",
+            "Salé : tofu brouillé, farine de pois chiches",
+            "Le sel kala namak pour le goût d’œuf"
           ]
         }
       ]
     },
     {
       "number": 6,
-      "icon": "info",
+      "icon": "honey",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, pourquoi les abeilles fabriquent-elles du miel ?",
+          "choices": [
+            {
+              "text": "C’est un déchet qu’elles rejettent"
+            },
+            {
+              "text": "Elles en produisent trop : c’est du surplus"
+            },
+            {
+              "text": "Pour se nourrir : c’est leur nourriture",
+              "result": "right"
+            }
+          ],
+          "explanation": "**Le miel n’est pas un déchet, et il n’y a pas de surplus.** C’est la nourriture des abeilles, qu’elles produisent pour leur survie."
+        },
+        {
           "type": "info",
-          "title": "Remplacer les produits laitiers",
+          "image": "lib/assets/images/buy-premium/bee.webp",
+          "title": "Ce que le miel coûte aux abeilles",
           "blocks": [
+            {
+              "type": "text",
+              "text": "Le miel est souvent vanté comme étant un produit naturel, sain et bénéfique. Pourtant, derrière ce mythe se cachent d’importants **enjeux éthiques et écologiques**."
+            },
+            {
+              "type": "text",
+              "text": "Le miel est un **produit de l’élevage** d’animaux : les **abeilles domestiques**. Et comme tout élevage, il implique la **reproduction contrôlée** des animaux et l’**exploitation de leur travail**."
+            },
+            {
+              "type": "callout",
+              "text": "En France, il y a environ 63 400 apiculteurs et près de 1,8 million de ruches en production [1]."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Ministère de l’Agriculture, « La gestion sanitaire des abeilles »",
+              "url": "https://agriculture.gouv.fr/la-gestion-sanitaire-des-abeilles"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "image": "lib/assets/images/buy-premium/bee.webp",
+          "title": "« On prend juste un peu de miel » 🍯",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "**L’élevage est un problème en tant que tel.** Mais on pourrait penser que dans le cas des abeilles, « ça va, on ne les tue pas : on prend juste un peu de miel »."
+            },
+            {
+              "type": "text",
+              "text": "Il faut bien comprendre que **le miel n’est pas un déchet et qu’il n’y a pas de surplus**. C’est la nourriture des abeilles, qu’elles produisent pour leur survie."
+            },
+            {
+              "type": "text",
+              "text": "Et beaucoup d’entre elles meurent !"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Qui sont les abeilles ?",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Ce sont des animaux **sentients**, avec des **capacités cognitives complexes**, et qui **communiquent**."
+            },
+            {
+              "type": "callout",
+              "text": "« Les preuves démontrent que les abeilles à miel possèdent des caractéristiques comportementales et neurologiques semblables à celles des vertébrés protégés, ce qui rend leur exclusion des protections juridiques à la fois scientifiquement infondée et éthiquement problématique. »"
+            },
+            {
+              "type": "text",
+              "text": "C’est la conclusion d’un article scientifique publié en 2025 [1]."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Bava et al., « Honeybee Sentience: Scientific Evidence and Implications for EU Animal Welfare Policy », Veterinary Sciences, 2025",
+              "url": "https://www.mdpi.com/2306-7381/12/7/661"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Pour communiquer, les abeilles dansent ! 💃",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Elles utilisent un système de communication appelé « waggle dance » (danse frétillante). Et il y a **différents types de danses** qui ont des **utilités diverses** !"
+            },
+            {
+              "type": "text",
+              "text": "Ça leur permet par exemple de transmettre des informations sur :"
+            },
             {
               "type": "bullets",
               "items": [
-                "**Les boissons végétales remplacent le lait** : soja, avoine, amande, riz… Choisissez-les enrichies en calcium.",
-                "**Yaourts et crèmes existent en version végétale**, au soja, à la coco ou à l’avoine, pour le dessert comme pour la cuisine.",
-                "**Pour le goût fromage, pensez à la levure maltée** sur vos pâtes et gratins. Les fromages végétaux, eux, se trouvent de plus en plus facilement."
+                "la localisation de la nourriture",
+                "la distance",
+                "la qualité de la source",
+                "la présence de dangers"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Pas que le miel 🕯️",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Pour des raisons éthiques et écologiques, on arrête de consommer des produits de l’apiculture. Mais ce n’est **pas que le miel**, c’est aussi :"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "label": "La gelée royale",
+                  "text": "Produite par les abeilles ouvrières, c’est la nourriture des larves et de la reine. Utilisée en compléments alimentaires, parfois en cosmétique."
+                },
+                {
+                  "label": "La propolis",
+                  "text": "Fabriquée par l’abeille à partir de ses sécrétions et de la propolis végétale qu’elle a récoltée. Utilisée en compléments alimentaires, dans certains médicaments et en cosmétique."
+                },
+                {
+                  "label": "La cire d’abeille",
+                  "text": "Sécrétée par les abeilles, qui l’utilisent pour construire les rayons de leur ruche. Produits d’entretien, bougies, cosmétiques, enrobage, emballages…"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Des idées pour remplacer le miel 🥞",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Si vous aimez ça, ou que vous en utilisez dans des recettes, voilà quelques idées :"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Sirop d’agave**",
+                "**Sirop de dattes**",
+                "**Sirop d’érable**",
+                "**Mélasse**",
+                "**« Miel » végane** (par exemple **Vegablum**)"
               ]
             }
           ]
@@ -1031,31 +1521,119 @@
       ],
       "recap": [
         {
-          "emoji": "🥛",
-          "title": "Adieu les produits laitiers",
+          "emoji": "🐝",
+          "title": "Ce que le miel coûte aux abeilles",
           "bullets": [
-            "Boissons végétales enrichies en calcium",
-            "Yaourts et crèmes végétales",
-            "Levure maltée pour le goût fromage"
+            "Le miel est un produit de l’élevage",
+            "Ni déchet ni surplus : c’est leur nourriture",
+            "Les abeilles sont sentientes et communiquent"
+          ]
+        },
+        {
+          "emoji": "🕯️",
+          "title": "Pas que le miel",
+          "bullets": [
+            "Gelée royale, propolis, cire d’abeille",
+            "En compléments, cosmétiques, bougies…"
+          ]
+        },
+        {
+          "emoji": "🥞",
+          "title": "Remplacer le miel",
+          "bullets": [
+            "Sirops d’agave, de dattes ou d’érable",
+            "Mélasse, « miel » végane"
           ]
         }
       ]
     },
     {
       "number": 7,
-      "icon": "info",
+      "icon": "plate",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, pour manger équilibré, il faut…",
+          "choices": [
+            {
+              "text": "Que chaque repas soit parfait nutritionnellement"
+            },
+            {
+              "text": "Peser et compter tout ce qu’on mange"
+            },
+            {
+              "text": "Que l’équilibre se fasse sur la journée",
+              "result": "right"
+            }
+          ],
+          "explanation": "L’équilibre alimentaire ne se fait pas sur un seul repas, mais plutôt **sur la journée**. Tous vos repas n’ont pas à être « parfaits » nutritionnellement !"
+        },
+        {
           "type": "info",
-          "title": "Faire ses courses végan",
+          "title": "Équilibrer ses repas 🍽️",
           "blocks": [
+            {
+              "type": "text",
+              "text": "Faire un repas végane ne consiste pas seulement à retirer les produits d’origine animale de vos plats habituels : il s’agit de **modifier les recettes** pour avoir un plat à la fois bon et complet."
+            },
+            {
+              "type": "text",
+              "text": "Notez que l’équilibre alimentaire ne se fait pas sur un seul repas, mais plutôt sur la journée, et que tous vos repas n’ont pas à être « parfaits » nutritionnellement !"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "L’assiette équilibrée 🥗",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Une assiette équilibrée contient :"
+            },
             {
               "type": "bullets",
               "items": [
-                "**Constituez-vous un placard de base** : légumineuses sèches ou en conserve, riz, pâtes, flocons d’avoine, oléagineux.",
-                "**Ajoutez des légumes et des fruits de saison**, souvent moins chers et plus savoureux.",
-                "**Gardez quelques produits pratiques** pour les soirs pressés : tofu, galettes végétales, houmous, soupes."
+                "**Des légumes**",
+                "**Des céréales ou féculents** : riz, pâtes, quinoa, pain, pommes de terre…",
+                "**Des protéines végétales** : tofu, tempeh, seitan, légumineuses…",
+                "**Des graisses** : huile de colza, oléagineux…"
               ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Où trouver quoi ? 🔎",
+          "blocks": [
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "label": "Protéines",
+                  "text": "Tofu, tempeh, seitan, protéines de soja texturées, légumineuses."
+                },
+                {
+                  "label": "Fer",
+                  "text": "Lentilles et autres légumineuses, tofu, graines de courge, flocons d’avoine, quinoa, légumes verts à feuilles, chocolat noir."
+                },
+                {
+                  "label": "Calcium",
+                  "text": "Eaux minérales, boissons végétales enrichies, tofu, choux (kale, brocoli…), amandes, tahin."
+                },
+                {
+                  "label": "Oméga-3",
+                  "text": "Huile de colza, graines de lin moulues, graines de chia, noix."
+                },
+                {
+                  "label": "Zinc",
+                  "text": "Légumineuses, graines de courge, céréales complètes, oléagineux."
+                }
+              ]
+            },
+            {
+              "type": "callout",
+              "text": "L’absorption du fer est améliorée s’il est associé à une source de vitamine C. Et évitez le thé et le café pendant les repas, qui freinent son absorption."
             }
           ]
         },
@@ -1065,12 +1643,21 @@
       ],
       "recap": [
         {
-          "emoji": "🛒",
-          "title": "Des courses véganes",
+          "emoji": "🥗",
+          "title": "L’assiette équilibrée",
           "bullets": [
-            "Un placard de base",
-            "Des fruits et légumes de saison",
-            "Quelques produits pratiques"
+            "Légumes, féculents, protéines végétales, graisses",
+            "L’équilibre se fait sur la journée",
+            "Pas besoin de repas « parfaits »"
+          ]
+        },
+        {
+          "emoji": "🔎",
+          "title": "Où trouver quoi ?",
+          "bullets": [
+            "Protéines : tofu, tempeh, seitan, légumineuses",
+            "Fer : légumineuses, avec de la vitamine C",
+            "Calcium, oméga-3, zinc : dans plein de végétaux"
           ]
         }
       ]

@@ -68,11 +68,16 @@ class VeganuaryDayPage extends StatefulWidget {
   final VeganuaryDay day;
   final VeganuaryProgress progress;
 
+  /// Debug: a locked day opened anyway, done like a new one but saving
+  /// nothing (see [VeganuaryService.debugUnlockAll]).
+  final bool preview;
+
   const VeganuaryDayPage({
     super.key,
     required this.week,
     required this.day,
     required this.progress,
+    this.preview = false,
   });
 
   /// Resolves to true when the day was done.
@@ -81,10 +86,11 @@ class VeganuaryDayPage extends StatefulWidget {
     required VeganuaryWeek week,
     required VeganuaryDay day,
     required VeganuaryProgress progress,
+    bool preview = false,
   }) {
     return Navigator.of(context).push<bool>(MaterialPageRoute(
-      builder: (_) =>
-          VeganuaryDayPage(week: week, day: day, progress: progress),
+      builder: (_) => VeganuaryDayPage(
+          week: week, day: day, progress: progress, preview: preview),
     ));
   }
 
@@ -132,7 +138,9 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
     _resume();
     if (_alreadyDone) _revealQuizzes();
     // Started today: no reminder this morning
-    if (!_alreadyDone) VeganuaryReminderService.markDayOpened();
+    if (!_alreadyDone && !widget.preview) {
+      VeganuaryReminderService.markDayOpened();
+    }
     PreferencesHelper.getHapticFeedbackPref()
         .then((enabled) => _haptics = enabled);
   }
@@ -183,7 +191,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
   /// For the ring on the path, and to resume on [screen] with what was done
   /// so far.
   void _saveStarted(int screen) {
-    if (_alreadyDone) return;
+    if (_alreadyDone || widget.preview) return;
     VeganuaryService.saveStarted(
       VeganuaryStartedDay(
         day: widget.day.number,
@@ -270,12 +278,25 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
 
   bool get _isLast => _index == _screens.length - 1;
 
+  /// Back on the path: true once the day was done (not in a preview, which
+  /// saved nothing to celebrate).
+  void _close() => Navigator.of(context).pop(_completed && !widget.preview);
+
   Future<void> _next() async {
     if (_isLast) {
-      Navigator.of(context).pop(_completed);
+      _close();
       return;
     }
     if (_screens[_index + 1] is _DoneScreen) {
+      if (widget.preview) {
+        // As if done, for the done page only
+        _savedProgress =
+            widget.progress.withCompleted(widget.day.number, mythId: _mythId);
+        _completed = true;
+        _confettiController.play();
+        setState(() => _index++);
+        return;
+      }
       setState(() => _saving = true);
       _savedProgress = await VeganuaryService.completeDay(widget.day.number,
           mythId: _mythId);
@@ -295,7 +316,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
     // Once saved (done or recap page), going back would only reopen the
     // celebration or pages already read
     if (_index == 0 || _completed) {
-      Navigator.of(context).pop(_completed);
+      _close();
     } else {
       setState(() => _index--);
     }
@@ -433,8 +454,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
                           // Stops for now: the day resumes where it was
                           // left (saved on each page)
                           IconButton(
-                            onPressed: () =>
-                                Navigator.of(context).pop(_completed),
+                            onPressed: _close,
                             tooltip: 'Retour au parcours',
                             icon: Icon(Icons.home_outlined,
                                 color: Colors.grey[700], size: 72.sp),

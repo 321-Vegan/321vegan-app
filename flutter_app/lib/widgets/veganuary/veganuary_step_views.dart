@@ -230,6 +230,10 @@ class VeganuaryInfoView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ..._tagAbove(tag),
+            if (info.image != null) ...[
+              VeganuaryImage(info.image!, height: 420.h, fit: BoxFit.contain),
+              SizedBox(height: AppSpacing.item),
+            ],
             Text(
               info.title,
               textAlign: TextAlign.center,

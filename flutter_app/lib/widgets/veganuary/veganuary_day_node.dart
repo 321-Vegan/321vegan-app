@@ -9,6 +9,7 @@ import '../../models/veganuary/veganuary_progress.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
+import '../shared/attention_pulse.dart';
 import 'saturation_filter.dart';
 
 /// Darker shade of [color], for the side of a coin.
@@ -26,6 +27,11 @@ IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       VeganuaryDayIcon.recipe => FontAwesomeIcons.bowlFood,
       VeganuaryDayIcon.book => FontAwesomeIcons.book,
       VeganuaryDayIcon.cart => FontAwesomeIcons.basketShopping,
+      VeganuaryDayIcon.cow => FontAwesomeIcons.cow,
+      VeganuaryDayIcon.egg => FontAwesomeIcons.egg,
+      // Font Awesome has no bee nor honeycomb
+      VeganuaryDayIcon.honey => Icons.hive,
+      VeganuaryDayIcon.plate => FontAwesomeIcons.utensils,
     };
 
 /// A day on the Veganuary path: a coin, yellow once done, green when it's
@@ -271,6 +277,12 @@ class _VeganuaryDayNodeState extends State<VeganuaryDayNode>
             coin,
           ],
         ),
+      );
+      // Breathes, round like the ring, to show it's the one to do
+      node = AttentionPulse(
+        radius: ringSize / 2,
+        color: primary,
+        child: node,
       );
     }
 

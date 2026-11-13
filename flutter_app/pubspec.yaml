@@ -252,6 +252,7 @@ flutter:
     - lib/assets/images/remerciements/github.png
     # Veganuary
     - lib/assets/veganuary/week1.json
+    - lib/assets/veganuary/week2.json
     # The whole folder (not its subfolders): images dropped in need no line
     - lib/assets/images/veganuary/
     # Others

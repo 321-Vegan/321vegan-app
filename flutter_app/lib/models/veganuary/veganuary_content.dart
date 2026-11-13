@@ -66,7 +66,7 @@ class VeganuaryWeek {
 
 /// Icon of a day's node on the path, after the day's theme (`"icon":
 /// "cart"`); add one here and in the node for a new theme.
-enum VeganuaryDayIcon { info, myth, recipe, book, cart }
+enum VeganuaryDayIcon { info, myth, recipe, book, cart, cow, egg, honey, plate }
 
 class VeganuaryDay {
   /// Number in the whole course (1 to 31), not in the week.
@@ -293,6 +293,10 @@ class RecipeIngredients {
 /// the other, see [VeganuaryBlock.fromJson], then its sources, if any.
 class VeganuaryInfo {
   final String title;
+
+  /// `"image"`: above the title (asset path or URL), e.g. the animal the
+  /// page is about.
+  final String? image;
   final List<VeganuaryBlock> blocks;
 
   /// Listed under the blocks, numbered from 1: `[1]` in a text or bullet
@@ -301,6 +305,7 @@ class VeganuaryInfo {
 
   const VeganuaryInfo({
     required this.title,
+    this.image,
     required this.blocks,
     this.sources = const [],
   });
@@ -314,6 +319,7 @@ class VeganuaryInfo {
   factory VeganuaryInfo.fromJson(Map<String, dynamic> json) {
     return VeganuaryInfo(
       title: json['title'] as String,
+      image: json['image'] as String?,
       blocks: [
         for (final block in json['blocks'] as List? ?? const [])
           VeganuaryBlock.fromJson(block as Map<String, dynamic>),
