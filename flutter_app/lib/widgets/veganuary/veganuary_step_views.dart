@@ -56,6 +56,28 @@ class _SourcesScope extends InheritedWidget {
       sources != oldWidget.sources;
 }
 
+/// What a day's app links need from the day page: leaving it for another
+/// tab of the app. Not in the dialogs of grid cards (another route).
+class VeganuaryLinkScope extends InheritedWidget {
+  /// Leaves the day for the map tab, on a layer ('shops' or
+  /// 'restaurants'); null when there are no tabs to go to.
+  final ValueChanged<String>? onOpenMap;
+
+  const VeganuaryLinkScope({
+    super.key,
+    required this.onOpenMap,
+    required super.child,
+  });
+
+  static ValueChanged<String>? openMapOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<VeganuaryLinkScope>()
+      ?.onOpenMap;
+
+  @override
+  bool updateShouldNotify(VeganuaryLinkScope oldWidget) =>
+      onOpenMap != oldWidget.onOpenMap;
+}
+
 /// [text] with its `**…**` parts in bold, and its `[1]`-like references
 /// to the page's sources highlighted, each opening its source.
 class VeganuaryRichText extends StatelessWidget {
@@ -407,6 +429,8 @@ class _AppLink extends StatelessWidget {
   IconData get _icon => switch (target) {
         AppLinkTarget.b12Info => Icons.menu_book_rounded,
         AppLinkTarget.b12Reminder => Icons.notifications_active_outlined,
+        AppLinkTarget.restaurantsMap => Icons.restaurant_rounded,
+        AppLinkTarget.productsMap => Icons.storefront_rounded,
       };
 
   void _open(BuildContext context) {
@@ -423,11 +447,21 @@ class _AppLink extends StatelessWidget {
           backgroundColor: Colors.transparent,
           builder: (_) => const B12ReminderSettingsModal(),
         );
+      case AppLinkTarget.restaurantsMap:
+        VeganuaryLinkScope.openMapOf(context)?.call('restaurants');
+      case AppLinkTarget.productsMap:
+        VeganuaryLinkScope.openMapOf(context)?.call('shops');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Nowhere to go (e.g. in a grid card's dialog): no button
+    if ((target == AppLinkTarget.restaurantsMap ||
+            target == AppLinkTarget.productsMap) &&
+        VeganuaryLinkScope.openMapOf(context) == null) {
+      return const SizedBox.shrink();
+    }
     final primary = Theme.of(context).colorScheme.primary;
     return Semantics(
       button: true,
@@ -556,12 +590,16 @@ class _GridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = item.image == null
-        ? null
-        : AspectRatio(
+    final image = item.image != null
+        ? AspectRatio(
             aspectRatio: 1,
             child: VeganuaryImage(item.image!, fit: BoxFit.contain),
-          );
+          )
+        : item.emoji != null
+            ? Center(
+                child: Text(item.emoji!, style: TextStyle(fontSize: 96.sp)),
+              )
+            : null;
     final textAlign = horizontal ? TextAlign.start : TextAlign.center;
     final texts = [
       Text(
@@ -596,7 +634,9 @@ class _GridCard extends StatelessWidget {
           ? Row(
               children: [
                 if (image != null) ...[
-                  SizedBox(width: 210.w, child: image),
+                  // An emoji takes less room than a picture
+                  SizedBox(
+                      width: item.image != null ? 210.w : 150.w, child: image),
                   SizedBox(width: 36.w),
                 ],
                 Expanded(

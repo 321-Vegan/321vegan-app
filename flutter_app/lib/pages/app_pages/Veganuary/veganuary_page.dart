@@ -16,6 +16,7 @@ import '../../../widgets/shared/square_icon_button.dart';
 import '../../../widgets/veganuary/veganuary_day_node.dart';
 import '../../../widgets/veganuary/veganuary_week_title.dart';
 import '../../../widgets/veganuary/veganuary_welcome_modal.dart';
+import '../home.dart';
 import 'veganuary_day_page.dart';
 import 'veganuary_weeks_page.dart';
 
@@ -172,6 +173,12 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     return false;
   }
 
+  /// For the app links of a day: the map tab, on a layer.
+  ValueChanged<String>? get _mapOpener {
+    final home = MyHomePage.of(context);
+    return home == null ? null : (layer) => home.goToMapTab(layer: layer);
+  }
+
   Future<void> _openDay(VeganuaryDay day) async {
     final state = _progress.stateOf(day.number);
     if (kDebugMode &&
@@ -179,7 +186,11 @@ class _VeganuaryPageState extends State<VeganuaryPage>
         (state == VeganuaryDayState.locked ||
             state == VeganuaryDayState.tomorrow)) {
       await VeganuaryDayPage.open(context,
-          week: _week, day: day, progress: _progress, preview: true);
+          week: _week,
+          day: day,
+          progress: _progress,
+          preview: true,
+          onOpenMap: _mapOpener);
       return;
     }
     switch (state) {
@@ -194,6 +205,7 @@ class _VeganuaryPageState extends State<VeganuaryPage>
           week: _week,
           day: day,
           progress: _progress,
+          onOpenMap: _mapOpener,
         );
         if (done == true) {
           await _celebrate();

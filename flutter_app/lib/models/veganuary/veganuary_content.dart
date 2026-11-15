@@ -66,7 +66,21 @@ class VeganuaryWeek {
 
 /// Icon of a day's node on the path, after the day's theme (`"icon":
 /// "cart"`); add one here and in the node for a new theme.
-enum VeganuaryDayIcon { info, myth, recipe, book, cart, cow, egg, honey, plate }
+enum VeganuaryDayIcon {
+  info,
+  myth,
+  recipe,
+  book,
+  cart,
+  cow,
+  egg,
+  honey,
+  plate,
+  label,
+  outside,
+  people,
+  travel
+}
 
 class VeganuaryDay {
   /// Number in the whole course (1 to 31), not in the week.
@@ -434,7 +448,14 @@ enum AppLinkTarget {
   b12Info('b12_info'),
 
   /// The B12 reminder settings.
-  b12Reminder('b12_reminder');
+  b12Reminder('b12_reminder'),
+
+  /// The map tab on the places, leaving the day (it resumes where it was
+  /// left).
+  restaurantsMap('restaurants_map'),
+
+  /// The map tab on the shops where products were found, likewise.
+  productsMap('products_map');
 
   /// Its name in the JSON.
   final String json;
@@ -456,6 +477,9 @@ class GridBlock extends VeganuaryBlock {
 class GridItem {
   /// Asset path or URL; none: just the label and text.
   final String? image;
+
+  /// `"emoji": "🥪"`: shown instead of an image.
+  final String? emoji;
   final String label;
 
   /// Under the label, smaller; `**text**` is bold.
@@ -466,13 +490,20 @@ class GridItem {
   /// checked once they were read.
   final VeganuaryInfo? details;
 
-  const GridItem({this.image, required this.label, this.text, this.details});
+  const GridItem({
+    this.image,
+    this.emoji,
+    required this.label,
+    this.text,
+    this.details,
+  });
 
   factory GridItem.fromJson(Map<String, dynamic> json) {
     final label = json['label'] as String;
     final details = json['details'] as Map<String, dynamic>?;
     return GridItem(
       image: json['image'] as String?,
+      emoji: json['emoji'] as String?,
       label: label,
       text: json['text'] as String?,
       details: details == null

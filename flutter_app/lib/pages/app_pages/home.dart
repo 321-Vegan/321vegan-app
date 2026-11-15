@@ -330,8 +330,13 @@ class MyHomePageState extends State<MyHomePage>
     await ProfileNotificationService.refreshAll();
   }
 
-  /// Switches to the Map tab (e.g. from a Dashboard promo slide).
-  void goToMapTab() {
+  /// Switches to the Map tab (e.g. from a Dashboard promo slide), on
+  /// [layer] ('shops' or 'restaurants') if given.
+  void goToMapTab({String? layer}) {
+    if (layer != null) {
+      PreferencesHelper.setLastMapLayerPref(layer);
+      MapPage.requestedLayer.value = layer;
+    }
     _tabController.animateTo(_mapTabIndex);
   }
 

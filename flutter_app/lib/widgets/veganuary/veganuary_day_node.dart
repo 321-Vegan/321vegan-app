@@ -32,6 +32,10 @@ IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       // Font Awesome has no bee nor honeycomb
       VeganuaryDayIcon.honey => Icons.hive,
       VeganuaryDayIcon.plate => FontAwesomeIcons.utensils,
+      VeganuaryDayIcon.label => FontAwesomeIcons.magnifyingGlass,
+      VeganuaryDayIcon.outside => FontAwesomeIcons.mapLocationDot,
+      VeganuaryDayIcon.people => FontAwesomeIcons.userGroup,
+      VeganuaryDayIcon.travel => FontAwesomeIcons.train,
     };
 
 /// A day on the Veganuary path: a coin, yellow once done, green when it's

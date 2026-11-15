@@ -72,12 +72,17 @@ class VeganuaryDayPage extends StatefulWidget {
   /// nothing (see [VeganuaryService.debugUnlockAll]).
   final bool preview;
 
+  /// Switches to the map tab, on a layer (its app links), once the day is
+  /// closed.
+  final ValueChanged<String>? onOpenMap;
+
   const VeganuaryDayPage({
     super.key,
     required this.week,
     required this.day,
     required this.progress,
     this.preview = false,
+    this.onOpenMap,
   });
 
   /// Resolves to true when the day was done.
@@ -87,10 +92,15 @@ class VeganuaryDayPage extends StatefulWidget {
     required VeganuaryDay day,
     required VeganuaryProgress progress,
     bool preview = false,
+    ValueChanged<String>? onOpenMap,
   }) {
     return Navigator.of(context).push<bool>(MaterialPageRoute(
       builder: (_) => VeganuaryDayPage(
-          week: week, day: day, progress: progress, preview: preview),
+          week: week,
+          day: day,
+          progress: progress,
+          preview: preview,
+          onOpenMap: onOpenMap),
     ));
   }
 
@@ -281,6 +291,12 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
   /// Back on the path: true once the day was done (not in a preview, which
   /// saved nothing to celebrate).
   void _close() => Navigator.of(context).pop(_completed && !widget.preview);
+
+  /// The day resumes where it was left, like when closed with its button.
+  void _openMap(String layer) {
+    _close();
+    widget.onOpenMap!(layer);
+  }
 
   Future<void> _next() async {
     if (_isLast) {
@@ -489,7 +505,10 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
                       ),
                       child: KeyedSubtree(
                         key: ValueKey(_index),
-                        child: _buildScreen(_screen),
+                        child: VeganuaryLinkScope(
+                          onOpenMap: widget.onOpenMap == null ? null : _openMap,
+                          child: _buildScreen(_screen),
+                        ),
                       ),
                     ),
                   ),

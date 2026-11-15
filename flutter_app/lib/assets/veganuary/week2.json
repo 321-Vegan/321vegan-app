@@ -1,134 +1,1219 @@
 {
   "number": 2,
-  "title": "Semaine 2 (provisoire)",
+  "title": "Alimentation & Social",
   "illustration": "lib/assets/images/characters/radish.webp",
   "path_illustrations": [
     "lib/assets/images/buy-premium/bee.webp",
     "lib/assets/avatars/poule.png"
   ],
-  "myths": [],
+  "myths": [
+    {
+      "id": "cultures",
+      "label": "On tue aussi des animaux en cultivant des légumes",
+      "answer": {
+        "title": "Les cultures tuent-elles aussi des animaux ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Évidemment, toute culture végétale entraîne la mort de petits animaux et d’insectes, que ce soit par le labour, la récolte ou les pesticides éventuellement utilisés. Mais il faut bien comprendre qu’une grande partie des cultures dans le monde sert à **nourrir les animaux d’élevage** : environ 40 % des terres cultivées. Pour une raison simple : il faut énormément de végétaux pour nourrir les animaux que nous exploitons pour leur viande, leur lait ou leurs œufs."
+          },
+          {
+            "type": "text",
+            "text": "L’élevage occupe aussi d’immenses surfaces pour les animaux eux-mêmes. Si on additionne les pâturages et les cultures destinées aux animaux, l’élevage utilise **77 % des terres agricoles** dans le monde… pour ne fournir que 18 % des calories et 37 % des protéines que l’on consomme [1]."
+          },
+          {
+            "type": "text",
+            "text": "Autant d’espaces qui pourraient être rendus à la nature : forêts, prairies sauvages, zones humides… et donc à tous les animaux et insectes qui y vivent !"
+          },
+          {
+            "type": "text",
+            "text": "Il en va de même pour les pesticides : une grande partie est utilisée pour l’agriculture intensive qui produit l’alimentation du bétail. En mangeant directement des végétaux, on a donc besoin de beaucoup moins de cultures… et on tue beaucoup moins d’animaux !"
+          },
+          {
+            "type": "text",
+            "text": "**« Mais on a besoin de fumier pour fertiliser les sols ! »**"
+          },
+          {
+            "type": "text",
+            "text": "C’est tout simplement faux. L’agriculture végane est non seulement possible, mais elle existe déjà. Les solutions existent, sans engrais chimiques : engrais verts, légumineuses qui enrichissent naturellement le sol en azote, compost végétal… [2]"
+          }
+        ],
+        "sources": [
+          {
+            "label": "Our World in Data, « Half of the world’s habitable land is used for agriculture »",
+            "url": "https://ourworldindata.org/global-land-for-agriculture"
+          },
+          {
+            "label": "Wikifarmer, « Qu’est-ce que l’agriculture biocyclique végétalienne ? »",
+            "url": "https://wikifarmer.com/library/fr/article/quest-ce-que-lagriculture-biocyclique-vegetalienne"
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🌾",
+        "title": "Moins d’élevage, moins de cultures",
+        "bullets": [
+          "Environ 40 % des terres cultivées nourrissent le bétail",
+          "L’élevage : 77 % des terres pour 18 % des calories",
+          "Pas besoin de fumier : engrais verts, compost végétal"
+        ]
+      }
+    },
+    {
+      "id": "difficile",
+      "label": "C’est trop difficile, je ne veux pas me priver",
+      "answer": {
+        "title": "Trop difficile ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "On vit dans une société spéciste, organisée autour de l’exploitation animale. Elle est partout : dans les produits alimentaires, les cosmétiques, les habits, les feutres, les pellicules photo, la colle… Évidemment, esquiver l’exploitation animale est alors plus compliqué que de l’accepter. Cela dit, les choses importantes sont souvent les plus difficiles. Et derrière ce qu’on perçoit comme une difficulté ou un effort, il y a des vies : celles des animaux exploités."
+          },
+          {
+            "type": "text",
+            "text": "Et puis, c’est souvent moins difficile qu’on ne l’imagine ! Au début, il faut changer ses habitudes, et c’est ce qui demande le plus d’énergie. Mais une fois les nouveaux réflexes pris, on se rend compte que ce n’était pas si compliqué."
+          },
+          {
+            "type": "text",
+            "text": "Quand on parle de privation, il faut se poser la question : **qui est vraiment privé ?** Pour un fromage ou un steak, un animal est privé de sa liberté, de ses petits et de sa vie. Face à ça, on se rend bien compte que notre « privation » représente bien peu."
+          },
+          {
+            "type": "text",
+            "text": "Et en réalité, manger végétal, c’est surtout **manger autrement**. Beaucoup de personnes découvrent même une cuisine plus variée qu’avant : de nouvelles légumineuses, des épices, des recettes du monde entier… Sans compter que presque tous nos plats préférés ont aujourd’hui leur version végétale !"
+          },
+          {
+            "type": "text",
+            "text": "Et niveau restaurants, il y a de plus en plus de choix. Découvrez ceux près de chez vous, ou partout où vous allez, directement sur la carte de l’appli :"
+          },
+          {
+            "type": "app_link",
+            "label": "Voir la carte des restaurants",
+            "target": "restaurants_map"
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🍽️",
+        "title": "Pas une privation",
+        "bullets": [
+          "Le plus dur : changer ses habitudes au début",
+          "Les vrais privés, ce sont les animaux",
+          "Une cuisine plus variée, et la carte des restos"
+        ]
+      }
+    },
+    {
+      "id": "validisme",
+      "label": "Le véganisme est validiste : tout le monde ne peut pas s’en passer",
+      "answer": {
+        "title": "Le véganisme est-il validiste ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Cet argument est souvent avancé par des personnes qui ne sont pas concernées, pour justifier leur propre consommation. Les personnes handicapées ou malades deviennent alors un simple prétexte, une caution qu’on brandit dans un débat sans jamais se soucier réellement de leurs besoins. Cette attitude est **elle-même validiste** : elle réduit ces personnes à un argument, et parle à leur place au lieu de les écouter."
+          },
+          {
+            "type": "text",
+            "text": "D’ailleurs, le véganisme ne demande à personne de faire l’impossible : il consiste à refuser l’exploitation animale **autant que possible et praticable**."
+          },
+          {
+            "type": "text",
+            "text": "Et puis, de nombreuses personnes handicapées, malades, pauvres… sont elles-mêmes véganes. Une société moins spéciste, avec des options végétales accessibles partout, faciliterait d’ailleurs la vie de tout le monde."
+          },
+          {
+            "type": "text",
+            "text": "L’alimentation végétale est celle qui convient au plus de monde, que ce soit du point de vue de la santé, de la religion ou de l’éthique : agir contre sa démocratisation et son expansion est une posture qui dessert celleux qu’on prétend défendre."
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "♿",
+        "title": "Un argument lui-même validiste",
+        "bullets": [
+          "Il se sert des personnes concernées sans les écouter",
+          "Le véganisme : autant que possible et praticable",
+          "Beaucoup de personnes concernées sont véganes"
+        ]
+      }
+    },
+    {
+      "id": "imiter",
+      "label": "Pourquoi vouloir reproduire la viande ?",
+      "answer": {
+        "title": "Pourquoi reproduire la viande ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Le véganisme, **ce n’est pas une question de goût** : ce qu’on refuse, c’est l’exploitation et la mort des animaux. Reproduire une saveur et une texture n’a rien de contradictoire avec le véganisme. D’ailleurs, ce qu’on aime dans un burger ou une saucisse, c’est souvent surtout l’assaisonnement, la cuisson, les épices, la sauce…"
+          },
+          {
+            "type": "text",
+            "text": "Les simili-carnés existent aussi parce qu’ils sont **pratiques**. Les saucisses et les steaks à base de viande n’ont pas non plus cette forme au départ : c’est une façon de rendre un aliment pratique pour l’incorporer dans une recette. Les alternatives végétales permettent de garder ses habitudes sans exploiter ni tuer d’animaux."
+          },
+          {
+            "type": "text",
+            "text": "Ils ne sont pas nouveaux non plus : le tofu et le seitan sont utilisés depuis des siècles en Asie, notamment dans la cuisine bouddhiste."
+          },
+          {
+            "type": "text",
+            "text": "Au fond, la question devrait plutôt être posée dans l’autre sens : si on peut avoir le même plaisir sans tuer d’animal, **pourquoi ne pas le faire ?**"
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🌭",
+        "title": "Le goût n’est pas le problème",
+        "bullets": [
+          "On refuse l’exploitation, pas une saveur",
+          "Pratiques, comme les steaks et les saucisses",
+          "Le tofu et le seitan existent depuis des siècles"
+        ]
+      }
+    },
+    {
+      "id": "tradition",
+      "label": "Manger de la viande, c’est notre héritage culturel",
+      "answer": {
+        "title": "Et l’héritage culturel ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Cet argument porte un nom : **l’appel à la tradition**. C’est un raisonnement fallacieux qui consiste à considérer qu’une pratique est juste simplement parce qu’elle existe depuis longtemps."
+          },
+          {
+            "type": "text",
+            "text": "Or une tradition ne justifie pas la souffrance qu’elle cause. Par exemple, les combats de chiens ont longtemps été un divertissement légal. De même, des boucheries canines existaient encore en 1920 à Paris. Aujourd’hui, ces combats et ces boucheries sont interdits et unanimement condamnés."
+          },
+          {
+            "type": "text",
+            "text": "Pourtant, la loi française continue de faire des exceptions au nom de la tradition : les combats de coqs et la corrida sont autorisés dans les régions où existe une « tradition locale ininterrompue ». La même violence est donc punie (parce que cruelle) à un endroit, et tolérée à quelques kilomètres, uniquement parce qu’elle est « traditionnelle »."
+          },
+          {
+            "type": "text",
+            "text": "Les cultures évoluent sans cesse, et on a déjà renoncé à de nombreuses pratiques quand on a compris qu’elles faisaient des victimes."
+          },
+          {
+            "type": "text",
+            "text": "Et la culture, ce n’est pas que la viande ! Partout dans le monde, de nombreuses traditions culinaires sont végétales depuis des siècles. D’autres cultures se réapproprient leurs traditions en version végétale : c’est le cas de l’**afrovéganisme**, porté par des personnes afrodescendantes qui relient le véganisme à leurs héritages culinaires et à leurs luttes contre les oppressions."
+          },
+          {
+            "type": "text",
+            "text": "Partout, les plats emblématiques se réinventent : mafé, dal, couscous, chili, pho, bourguignon ou galette des rois existent tous en version végane. Garder le plaisir de partager un plat de famille, c’est tout à fait possible en version végétale. Et ça n’enlève rien à la tradition : ça enlève seulement la souffrance causée aux autres animaux."
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🍲",
+        "title": "La tradition ne justifie pas la souffrance",
+        "bullets": [
+          "L’appel à la tradition est un raisonnement fallacieux",
+          "Les cultures évoluent sans cesse",
+          "Les plats emblématiques existent en version végane"
+        ]
+      }
+    },
+    {
+      "id": "inuits",
+      "label": "Et les Inuits, alors ?",
+      "answer": {
+        "title": "Et les Inuits ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "L’exemple des **Inuits** revient souvent, alors que leur situation n’a rien à voir avec la nôtre : la plupart des personnes qui avancent cet argument ont un supermarché au coin de la rue."
+          },
+          {
+            "type": "text",
+            "text": "C’est un mécanisme d’**instrumentalisation** : on se sert d’un peuple comme d’un alibi pour justifier sa propre consommation, sans jamais s’intéresser à ses conditions de vie ni lui laisser la parole. C’est le même mécanisme que lorsqu’on se sert des personnes handicapées ou malades pour dire que le véganisme est validiste."
+          },
+          {
+            "type": "text",
+            "text": "À cela s’ajoute une forme d’**essentialisation** : on réduit tout un peuple à un cliché, « les Inuits mangent du phoque et des poissons crus », comme si c’était tout ce qui le définissait. Cette façon de parler à la place des peuples autochtones et de les utiliser au service d’intérêts qui ne sont pas les leurs n’est pas anodine : elle reproduit des logiques coloniales."
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🧊",
+        "title": "Un alibi, pas un argument",
+        "bullets": [
+          "Leur situation n’a rien à voir avec la nôtre",
+          "On parle à leur place sans les écouter",
+          "Ça reproduit des logiques coloniales"
+        ]
+      }
+    },
+    {
+      "id": "choix",
+      "label": "Chacun fait ce qu’il veut, et puis c’est légal",
+      "answer": {
+        "title": "Chacun fait ce qu’il veut ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Cet argument, qui sert à légitimer la consommation de produits d’origine animale, pose une question : où s’arrête vraiment ce qui relève de notre choix, et où commence celui des autres ?"
+          },
+          {
+            "type": "text",
+            "text": "Chaque année, **2 050 milliards d’êtres sensibles** (animaux terrestres et aquatiques) sont tués pour l’alimentation humaine [1]. Avec environ 8,3 milliards d’humains, c’est 247 fois plus d’animaux tués que d’humains sur Terre. Par an. Ce « choix personnel », qui concerne plus de 2 000 milliards d’autres individus, est-il si personnel que ça ?"
+          },
+          {
+            "type": "text",
+            "text": "Pour ce qui est de l’imposer aux autres, il faut être réaliste : actuellement, ce qui est imposé, c’est le spécisme, la consommation de viande et de produits animaux. On est martelé·es de publicités dans ce sens, et de fausses informations qui blâment l’alimentation végétale."
+          },
+          {
+            "type": "text",
+            "text": "Quant à la légalité : la consommation de produits d’origine animale est légale, en effet. Cependant, **ce qui est légal n’est pas forcément moral**. Et il n’y a pas besoin d’attendre qu’une loi soit votée ou abrogée pour changer sa manière de consommer. Par exemple, l’ordonnance du 7 novembre 1800 qui interdisait aux femmes de porter le pantalon n’a été abrogée qu’en 2013 [2]. Pourtant, les femmes n’ont pas attendu 2013 pour en porter !"
+          },
+          {
+            "type": "text",
+            "text": "La morale n’a pas besoin de texte de loi pour être juste. Consommer des produits d’origine animale n’est pas moral : des animaux en meurent chaque jour, et c’est à nous, individuellement, de faire le bon choix, celui de vivre sans tuer d’innocents."
+          }
+        ],
+        "sources": [
+          {
+            "label": "L214, « Animaux abattus dans le monde »",
+            "url": "https://www.l214.com/animaux/chiffres-cles/statistiques-nombre-animaux-abattus-monde-viande/"
+          },
+          {
+            "label": "Sénat, question écrite n° 00692 sur l’interdiction du port du pantalon par les femmes",
+            "url": "https://www.senat.fr/questions/base/2012/qSEQ120700692.html"
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "⚖️",
+        "title": "Pas qu’un choix personnel",
+        "bullets": [
+          "Plus de 2 000 milliards d’animaux tués par an",
+          "Ce qui est imposé, c’est le spécisme",
+          "Légal ne veut pas dire moral"
+        ]
+      }
+    },
+    {
+      "id": "ultratransformes",
+      "label": "Les produits véganes sont ultra-transformés, donc mauvais pour la santé",
+      "answer": {
+        "title": "Ultra-transformés, donc mauvais ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "« Ultra-transformé » ne veut pas dire « malsain ». Ce terme vient de la **classification NOVA**, qui range les aliments selon leur degré de transformation industrielle et leurs ingrédients, pas selon leur qualité nutritionnelle. Un soda, une boisson végétale enrichie en calcium et un pain complet industriel peuvent se retrouver dans la même catégorie, alors qu’ils n’apportent pas du tout les mêmes nutriments."
+          },
+          {
+            "type": "text",
+            "text": "Une grande étude européenne menée par le CIRC (l’agence de l’OMS spécialisée dans le cancer) a suivi plus de 260 000 personnes pendant 11 ans. Parmi les produits ultra-transformés, seuls deux groupes étaient associés à un risque accru de maladies chroniques : **les produits d’origine animale et les boissons sucrées ou édulcorées**. Les alternatives végétales, elles, n’étaient pas associées à un risque accru [1]."
+          },
+          {
+            "type": "text",
+            "text": "Remplacer la viande par des simili-carnés a même des effets positifs. Une méta-analyse de 2025, qui regroupe des essais cliniques randomisés (le niveau de preuve le plus solide), a montré que remplacer la viande par des alternatives végétales faisait baisser le cholestérol total de 6 % et le LDL (le « mauvais » cholestérol) de 12 %, en quelques semaines [2]. Ces produits contiennent généralement moins de graisses saturées que la viande, pas de cholestérol, et plus de fibres."
+          },
+          {
+            "type": "text",
+            "text": "Enfin, l’alimentation végétale se base beaucoup sur les produits bruts (légumineuses, céréales, légumes, fruits…), et c’est idéal. Mais pour remplacer la viande, les œufs et les produits laitiers, les alternatives végétales transformées sont une option tout à fait valable."
+          }
+        ],
+        "sources": [
+          {
+            "label": "Cordova et al., « Consumption of ultra-processed foods and risk of multimorbidity of cancer and cardiometabolic diseases », The Lancet Regional Health – Europe, 2023",
+            "url": "https://doi.org/10.1016/j.lanepe.2023.100771"
+          },
+          {
+            "label": "« Plant-based meat alternatives and cardiometabolic health: a systematic review and meta-analysis », The American Journal of Clinical Nutrition, 2025",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/39653176/"
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🏭",
+        "title": "Ultra-transformé ne veut pas dire malsain",
+        "bullets": [
+          "NOVA classe la transformation, pas la qualité",
+          "Les alternatives végétales ne sont pas en cause",
+          "Elles font même baisser le cholestérol"
+        ]
+      }
+    }
+  ],
   "days": [
     {
       "number": 8,
-      "icon": "info",
+      "icon": "label",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, le colorant E120 (ou carmin), c’est…",
+          "choices": [
+            {
+              "text": "Un colorant de synthèse"
+            },
+            {
+              "text": "Un extrait de betterave rouge"
+            },
+            {
+              "text": "Des insectes broyés",
+              "result": "right"
+            }
+          ],
+          "explanation": "Le carmin est un colorant rouge obtenu à partir de **cochenilles**, des insectes broyés. On le trouve dans des bonbons, des boissons, de la charcuterie… et des rouges à lèvres."
+        },
+        {
           "type": "info",
-          "title": "Jour 8 (provisoire)",
+          "title": "Lire les ingrédients 🔍",
           "blocks": [
             {
               "type": "text",
-              "text": "Contenu à écrire."
+              "text": "Les ingrédients des produits alimentaires sont forcément inscrits sur l’étiquette. Parfois, ils sont facilement compréhensibles : œufs, lait… Mais parfois, ils sont écrits **en code** (E120, E901), et parfois ils se cachent derrière des **formules génériques** : « arômes », « exhausteurs de goût »…"
+            },
+            {
+              "type": "text",
+              "text": "Pas de panique : on fait le tour aujourd’hui. Et en cas de doute, le scanner de 321 Vegan vérifie pour vous !"
             }
           ]
+        },
+        {
+          "type": "info",
+          "title": "Les ingrédients jamais véganes 🚫",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Voici les ingrédients qui ne sont **jamais** véganes. **Touchez chaque catégorie** pour la découvrir !"
+            },
+            {
+              "type": "grid",
+              "items": [
+                {
+                  "label": "Viande et poisson",
+                  "text": "Gélatine, saindoux, bonite…",
+                  "details": {
+                    "title": "Viande et poisson",
+                    "blocks": [
+                      {
+                        "type": "bullets",
+                        "items": [
+                          "**Viande, bouillon de viande, extrait de viande, graisse animale**",
+                          "**Saindoux** : graisse de porc fondue, utilisée en pâtisserie, en biscuiterie ou pour la friture.",
+                          "**Suif** : graisse de bœuf ou de mouton.",
+                          "**Lard** : graisse de porc, souvent dans les plats préparés.",
+                          "**Gélatine** : obtenue en faisant bouillir la peau, les os et les cartilages de porc, de bœuf ou de poisson.",
+                          "**Collagène** : protéine extraite de la peau et des os des animaux.",
+                          "**Bonite** : poisson séché et râpé. On la trouve dans certains bouillons, sauces et assaisonnements."
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "label": "Dérivés du lait",
+                  "text": "Lactose, caséine, présure…",
+                  "details": {
+                    "title": "Les dérivés du lait",
+                    "blocks": [
+                      {
+                        "type": "bullets",
+                        "items": [
+                          "**Lait, crème, beurre, fromage, yaourt**",
+                          "**Lait en poudre, protéines de lait, matière grasse laitière**",
+                          "**Beurre clarifié ou ghee** : beurre dont on a retiré l’eau et les protéines, très utilisé en cuisine indienne.",
+                          "**Babeurre** : liquide restant après la fabrication du beurre.",
+                          "**Lactose** : sucre du lait.",
+                          "**Lactosérum (ou petit-lait)** : liquide restant après la fabrication du fromage. Très répandu dans les biscuits, les plats préparés, la charcuterie…",
+                          "**Caséine et caséinates** : protéines du lait.",
+                          "**Présure** : enzyme extraite de l’estomac de jeunes veaux, utilisée pour faire cailler le lait dans la fabrication de nombreux fromages.",
+                          "**Lactitol (E966)** : fabriqué à partir de lactose."
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "label": "Œufs",
+                  "text": "Albumine, lysozyme…",
+                  "details": {
+                    "title": "Les œufs",
+                    "blocks": [
+                      {
+                        "type": "bullets",
+                        "items": [
+                          "**Œuf, blanc d’œuf, jaune d’œuf, œuf en poudre**",
+                          "**Albumine ou ovalbumine** : protéine du blanc d’œuf. Attention, l’albumine peut aussi venir du lait (lactalbumine).",
+                          "**Lysozyme (E1105)** : enzyme extraite du blanc d’œuf, utilisée comme conservateur dans certains fromages."
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "label": "Produits de la ruche",
+                  "text": "Miel, propolis, cire…",
+                  "details": {
+                    "title": "Les produits de la ruche",
+                    "blocks": [
+                      {
+                        "type": "bullets",
+                        "items": [
+                          "**Miel**",
+                          "**Gelée royale** : substance sécrétée par les abeilles ouvrières pour nourrir les larves et la reine.",
+                          "**Propolis** : résine récoltée par les abeilles pour protéger la ruche.",
+                          "**Pollen**",
+                          "**Cire d’abeille (E901)** : utilisée comme agent d’enrobage, par exemple sur certains bonbons ou fruits."
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "label": "Insectes",
+                  "text": "Carmin, gomme-laque…",
+                  "details": {
+                    "title": "Les insectes",
+                    "blocks": [
+                      {
+                        "type": "bullets",
+                        "items": [
+                          "**Carmin ou cochenille (E120)** : colorant rouge obtenu à partir d’insectes broyés.",
+                          "**Gomme-laque ou shellac (E904)** : résine sécrétée par un insecte, utilisée pour faire briller les bonbons, les fruits ou les dragées."
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "label": "Autres",
+                  "text": "Lanoline, phosphate osseux",
+                  "details": {
+                    "title": "Les autres",
+                    "blocks": [
+                      {
+                        "type": "bullets",
+                        "items": [
+                          "**Lanoline (E913)** : extraite de la laine de mouton.",
+                          "**Phosphate osseux (E542)** : obtenu à partir d’os d’animaux."
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Arômes et arômes naturels 🧪",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Les **arômes** sont parfois véganes, parfois pas, selon la façon dont ils sont produits. Et l’étiquette ne dit pas toujours d’où ils viennent :"
+            },
+            {
+              "type": "image",
+              "src": "lib/assets/images/veganuary/aromes-schema.webp",
+              "caption": "« Arôme de vanille » : pas forcément issu de la vanille. « Arôme naturel de vanille » : issu de la vanille."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**« Arôme de… »** : il n’est **pas forcément issu** de l’ingrédient nommé.",
+                "**« Arôme naturel de… »** : il est **forcément issu** de l’ingrédient nommé. Si c’est un fruit ou une plante c'est donc végane.",
+                "**« Arômes » ou « arômes naturels »** sans autre précision : ils peuvent venir de n’importe quelle source, y compris animale. Impossible de savoir sans demander à la marque."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Parfois végane, parfois pas 🤷",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "D’autres ingrédients peuvent être d’origine végétale ou animale, selon la façon dont ils sont produits :"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Vitamine D** : la D2 est toujours végane. La D3 est souvent fabriquée à partir de lanoline (laine de mouton), mais peut aussi être végane si elle est faite à partir de lichen."
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Certains additifs sont aussi dans ce cas en théorie, même s'ils sont de plus en plus d'origine végétale. Certains, comme le e635 (un exhausteur de goût) peut par exemple être d'origine animale."
+            },
+            {
+              "type": "callout",
+              "text": "Pas besoin de tout retenir : scannez le produit avec 321 Vegan, l’app vous dit s’il est végane ou s’il y a un doute."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Ce que l’étiquette ne dit pas 🤐",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Certains produits d’origine animale servent à la fabrication sans rester dans le produit final : ils n’apparaissent donc **pas dans la liste des ingrédients**."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Le vin et la bière** peuvent être clarifiés avec du blanc d’œuf, de la caséine (lait), de la gélatine ou de la colle de poisson.",
+                "**Certains jus de fruits** sont clarifiés à la gélatine, et certains vinaigres de cidre à la caséine.",
+                "**Des aliments sont récoltés grâce à des animaux exploités** : chiens truffiers pour les truffes, singes dressés pour cueillir des noix de coco en Thaïlande…"
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Pour ces produits-là, le plus simple est de chercher une mention « végane » ou de se renseigner auprès de la marque."
+            }
+          ]
+        },
+        {
+          "type": "myth"
         }
       ],
       "recap": [
         {
-          "emoji": "🚧",
-          "title": "Jour 8",
+          "emoji": "🚫",
+          "title": "Jamais véganes",
           "bullets": [
-            "Contenu à écrire"
+            "Gélatine, saindoux, bonite, présure, caséine…",
+            "E120, E901, E904, E913, E966, E1105, E542",
+            "Miel, propolis, gelée royale, pollen"
+          ]
+        },
+        {
+          "emoji": "🧪",
+          "title": "Les arômes",
+          "bullets": [
+            "« Arôme de » : pas forcément issu de l’ingrédient",
+            "« Arôme naturel de » : issu de l’ingrédient",
+            "« Arômes » seuls : origine inconnue"
+          ]
+        },
+        {
+          "emoji": "🔍",
+          "title": "Dans le doute",
+          "bullets": [
+            "Vitamine D3 : ça dépend",
+            "Vin, jus, vinaigre : clarifiés sans le dire",
+            "Le scanner 321 Vegan vérifie pour vous"
           ]
         }
       ]
     },
     {
       "number": 9,
-      "icon": "info",
+      "icon": "cart",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, le houmous et le guacamole du supermarché sont-ils toujours véganes ?",
+          "choices": [
+            {
+              "text": "Oui, ce sont des pois chiches et des avocats"
+            },
+            {
+              "text": "Non, certains contiennent du lait",
+              "result": "right"
+            },
+            {
+              "text": "Non, aucun ne l’est"
+            }
+          ],
+          "explanation": "Ce sont de vrais **sauveurs de véganes**, et la plupart le sont. Mais certains contiennent du lait : un petit coup d’œil aux ingrédients, ou un scan, et c’est réglé !"
+        },
+        {
           "type": "info",
-          "title": "Jour 9 (provisoire)",
+          "title": "De nouvelles habitudes 🛒",
           "blocks": [
             {
               "type": "text",
-              "text": "Contenu à écrire."
+              "text": "On a toustes nos habitudes, et devenir végane les bouleverse forcément. On peut croire que le choix se réduit énormément, que c’est compliqué… Mais toustes les véganes vous le diront : **cette impression change** une fois qu’on a trouvé ses nouveaux repères et adopté ses nouvelles habitudes."
+            },
+            {
+              "type": "text",
+              "text": "Aujourd’hui, on vous donne des repères pour les courses et pour manger sur le pouce."
             }
           ]
+        },
+        {
+          "type": "info",
+          "title": "Manger sur le pouce 🥪",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Parce qu’on n’a pas toujours le temps de préparer le repas, ni de quoi le faire réchauffer, voici des idées faciles à trouver en grande surface :"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "emoji": "🥑",
+                  "label": "Houmous et guacamole",
+                  "text": "Les sauveurs de véganes ! Mais attention, certains contiennent du lait."
+                },
+                {
+                  "emoji": "🥖",
+                  "label": "Tartinables et pain",
+                  "text": "Tartinables de tomates, d’olives… Attention aux tapenades aux anchois !"
+                },
+                {
+                  "emoji": "🥗",
+                  "label": "Salades préparées",
+                  "text": "Taboulés, carottes râpées, salades de quinoa…"
+                },
+                {
+                  "emoji": "🫑",
+                  "label": "Feuilles de vigne",
+                  "text": "Et poivrons farcis."
+                },
+                {
+                  "emoji": "🥪",
+                  "label": "Sandwichs",
+                  "text": "On trouve même des sandwichs tout faits véganes en supermarché maintenant !"
+                },
+                {
+                  "emoji": "🍎",
+                  "label": "En dessert",
+                  "text": "Un fruit, une compote, un mélange de noix… et pas mal de gâteaux industriels sont véganes sans qu'on le sache !"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Si vous avez de quoi faire chauffer ♨️",
+          "blocks": [
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "emoji": "🍜",
+                  "label": "Nouilles instantanées",
+                  "text": "Souvent véganes, scannez pour vérifier… Parfois, il y a même un logo végane !"
+                },
+                {
+                  "emoji": "🍲",
+                  "label": "Plats préparés",
+                  "text": "Lentilles cuisinées, chili sin carne, raviolis au tofu, haché végétal…"
+                }
+              ]
+            },
+            {
+              "type": "callout",
+              "text": "Les recettes changent parfois : en cas de doute, scannez le produit avec 321 Vegan."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Où trouver les produits ? 🗺️",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Sur la carte de l’appli, retrouvez les **magasins où la communauté a trouvé des produits véganes**, près de chez vous ou partout où vous allez :"
+            },
+            {
+              "type": "app_link",
+              "label": "Voir la carte des produits",
+              "target": "products_map"
+            }
+          ]
+        },
+        {
+          "type": "myth"
         }
       ],
       "recap": [
         {
-          "emoji": "🚧",
-          "title": "Jour 9",
+          "emoji": "🥪",
+          "title": "Manger sur le pouce",
           "bullets": [
-            "Contenu à écrire"
+            "Houmous, guacamole, tartinables, salades préparées",
+            "Sandwichs, nouilles instantanées, plats préparés",
+            "Attention au lait, aux anchois : scannez !"
+          ]
+        },
+        {
+          "emoji": "🗺️",
+          "title": "La carte des produits",
+          "bullets": [
+            "Les magasins où la communauté a trouvé des produits véganes",
+            "Près de chez vous, ou partout où vous allez"
           ]
         }
       ]
     },
     {
       "number": 10,
-      "icon": "info",
+      "icon": "outside",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, la soupe miso des restaurants japonais est-elle végane ?",
+          "choices": [
+            {
+              "text": "Oui, le miso est fait à partir de soja"
+            },
+            {
+              "text": "Pas toujours : son bouillon contient souvent du poisson",
+              "result": "right"
+            },
+            {
+              "text": "Non, elle contient toujours de la viande"
+            }
+          ],
+          "explanation": "Le miso est bien fait à partir de soja fermenté, mais la soupe est souvent préparée avec du **dashi**, un bouillon à base de **bonite** séchée, un poisson. (On en avait parlé dans les ingrédients jamais véganes !)"
+        },
+        {
           "type": "info",
-          "title": "Jour 10 (provisoire)",
+          "title": "Manger végane à l’extérieur 🍽️",
           "blocks": [
             {
               "type": "text",
-              "text": "Contenu à écrire."
+              "text": "Le monde est **loin d’être végane**, et selon où on habite, ça peut être un peu difficile de trouver des lieux qui proposent une offre identifiée comme végane."
+            },
+            {
+              "type": "text",
+              "text": "Ces quelques astuces vous aideront à manger à l’extérieur **sans mettre de côté vos convictions**."
             }
           ]
+        },
+        {
+          "type": "info",
+          "title": "Trouver un lieu à coup sûr 🗺️",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Le plus simple : choisir un lieu qui propose **à coup sûr** une option végane. Sur la carte de l’appli, retrouvez les lieux **100 % véganes** et ceux **avec des options véganes**, avec les avis et les photos de la communauté, près de chez vous ou partout où vous allez :"
+            },
+            {
+              "type": "app_link",
+              "label": "Voir la carte des restaurants",
+              "target": "restaurants_map"
+            },
+            {
+              "type": "text",
+              "text": "Un lieu manque ? Ajoutez-le depuis la carte, pour en faire profiter tout le monde !"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Des cuisines souvent véganes 🌍",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Certaines cuisines ont **souvent un choix végane**, même quand ce n’est pas indiqué sur la carte. **Touchez chaque cuisine** pour la découvrir !"
+            },
+            {
+              "type": "grid",
+              "items": [
+                {
+                  "emoji": "🧆",
+                  "label": "Libanaise",
+                  "text": "Falafels, sauce au tahin",
+                  "details": {
+                    "title": "La cuisine libanaise",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Vous trouverez toujours un plat ou un sandwich à base de **falafels**. La sauce blanche utilisée traditionnellement ne contient pas de lait : c’est une sauce à base de **tahin** (purée de sésame)."
+                      },
+                      {
+                        "type": "callout",
+                        "text": "En cas de doute, vous pouvez quand même demander s’il y a du lait, mais habituellement ce n’est pas le cas !"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emoji": "🍛",
+                  "label": "Indienne",
+                  "text": "Dal, chana masala…",
+                  "details": {
+                    "title": "La cuisine indienne",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Beaucoup de plats sont à base de **lentilles, de pois chiches et de légumes** : dal, chana masala, aloo gobi…"
+                      },
+                      {
+                        "type": "text",
+                        "text": "La cuisine indienne utilise souvent du **ghee** (beurre clarifié). Mais comme c’est une option moins économique, beaucoup de restaurants utilisent plutôt des huiles végétales."
+                      },
+                      {
+                        "type": "callout",
+                        "text": "Attention aussi aux sauces à la crème, au paneer (un fromage) et aux naans, souvent préparés avec du lait ou du yaourt."
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emoji": "🍣",
+                  "label": "Japonaise",
+                  "text": "Makis avocat, tofu…",
+                  "details": {
+                    "title": "La cuisine japonaise",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Les restaurants japonais ont souvent des plats végétaux : **makis avocat ou concombre**, plats à base de **tofu**, edamames… Vous devriez trouver quelque chose qui vous convient !"
+                      },
+                      {
+                        "type": "callout",
+                        "text": "Faites attention aux soupes et aux sauces, qui contiennent souvent du poisson, et aux plats de nouilles, qui peuvent contenir des œufs."
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emoji": "🫓",
+                  "label": "Éthiopienne",
+                  "text": "Lentilles, injera…",
+                  "details": {
+                    "title": "La cuisine éthiopienne et érythréenne",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "Elle a beaucoup de plats **naturellement véganes** (lentilles, pois chiches, légumes épicés), servis avec l’**injera**, qui ressemble à une grande crêpe à trous. C’est un choix parfait pour les véganes !"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Quelques pièges à éviter ⚠️",
+          "blocks": [
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "emoji": "🍟",
+                  "label": "Les frites",
+                  "text": "Elles sont quasiment toujours véganes, mais elles sont **parfois cuites dans de la graisse animale** (dans certaines régions plus que d'autres). Vérifiez avec la personne qui vous sert, et demandez-les **sans mayonnaise** !"
+                },
+                {
+                  "emoji": "🥤",
+                  "label": "Le thé glacé",
+                  "text": "Certains bars et restaurants y mettent du **miel**."
+                },
+                {
+                  "emoji": "🍧",
+                  "label": "Les sorbets",
+                  "text": "Ils sont souvent véganes, mais contiennent **parfois du blanc d’œuf** et plus rarement de la poudre de lait."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
         }
       ],
       "recap": [
         {
-          "emoji": "🚧",
-          "title": "Jour 10",
+          "emoji": "🗺️",
+          "title": "Trouver un lieu",
           "bullets": [
-            "Contenu à écrire"
+            "La carte des restaurants de l’appli",
+            "Pas d’option ? Demandez d’adapter un plat",
+            "La liste des allergènes : lait, œufs, poisson…"
+          ]
+        },
+        {
+          "emoji": "🌍",
+          "title": "Des cuisines souvent véganes",
+          "bullets": [
+            "Libanaise, indienne, japonaise, éthiopienne",
+            "Attention au ghee, au dashi, aux naans"
+          ]
+        },
+        {
+          "emoji": "⚠️",
+          "title": "Les pièges",
+          "bullets": [
+            "Frites à la graisse animale, mayonnaise",
+            "Miel dans le thé glacé, œuf dans les sorbets"
           ]
         }
       ]
     },
     {
       "number": 11,
-      "icon": "info",
+      "icon": "people",
       "steps": [
         {
           "type": "info",
-          "title": "Jour 11 (provisoire)",
+          "title": "Le corps médical 🩺",
           "blocks": [
             {
               "type": "text",
-              "text": "Contenu à écrire."
+              "text": "Il est possible que votre médecin soit réticent·e, voire inquiet·e, si vous lui dites que vous êtes végane. Ça peut être déstabilisant, mais **ça ne veut pas dire que le véganisme est dangereux**."
+            },
+            {
+              "type": "text",
+              "text": "Une alimentation végétalienne bien planifiée convient à toutes les étapes de la vie : c’est la position de la plus grande association de diététicien·nes au monde [1]. Le seul point indispensable, c’est la supplémentation en vitamine B12."
+            },
+            {
+              "type": "text",
+              "text": "Mais **la nutrition occupe une place très limitée dans les études de médecine**, partout dans le monde [2]. Et l’alimentation végétale encore moins ! Beaucoup de médecins n’ont donc tout simplement pas été formé·es à ce sujet, et reproduisent parfois des idées reçues."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Melina et al., « Position of the Academy of Nutrition and Dietetics: Vegetarian Diets », Journal of the Academy of Nutrition and Dietetics, 2016",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/27886704/"
+            },
+            {
+              "label": "Crowley et al., « Nutrition in medical education: a systematic review », The Lancet Planetary Health, 2019",
+              "url": "https://doi.org/10.1016/S2542-5196(19)30171-8"
             }
           ]
+        },
+        {
+          "type": "info",
+          "title": "Avec votre médecin 🤝",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Vous n’êtes pas obligé·e de dire que vous êtes végane** : c’est à vous de voir si c’est utile.",
+                "**Si votre médecin s’inquiète, vous avez le droit de lui demander ce qui l’inquiète précisément**, et sur quoi ça repose.",
+                "**Certain·es professionnel·les de santé (médecins, diététicien·nes) sont formé·es à l’alimentation végétale**, et sauront vous accompagner sans jugement."
+              ]
+            },
+            {
+              "type": "callout",
+              "text": "Vous avez le droit de changer de médecin si vous ne vous sentez pas écouté·e, ou si vous vous sentez jugé·e. Le but, c’est de trouver quelqu’un qui vous accompagne, vous n’avez pas à renoncer à vous faire soigner !"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "La famille et les amis 👨‍👩‍👧",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Devenir végane, ça change aussi les repas partagés, les fêtes, les habitudes en groupe. Et les réactions de l’entourage ne sont pas toujours faciles : blagues, inquiétude, remarques à table, parfois même de l’agacement. Les paroles des proches peuvent parfois être très violentes : **sachez que vous n’êtes pas seul·e à vivre ça**."
+            },
+            {
+              "type": "text",
+              "text": "Souvent, ces réactions ne parlent pas vraiment de vous : votre choix renvoie les autres à leurs propres habitudes."
+            },
+            {
+              "type": "text",
+              "text": "Il est difficile de dire quelles sont les bonnes et les mauvaises façons de gérer ces situations. C'est quelque chose de très personnel, qui dépend énormément de la situation. L'important est surtout de **vous écouter** et de protéger votre santé mentale."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Se préserver 💚",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Encore une fois, il est très important de **vous écouter**. Vous n’avez pas à vous justifier en permanence, ni à répondre à chaque remarque."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Vous avez le droit de dire « pas maintenant »** et de changer de sujet quand vous n’avez pas l’énergie.",
+                "**Vous pouvez vous entourer** : d’autres véganes, des associations, des groupes locaux… Ça fait du bien de pouvoir en parler avec des personnes qui comprennent."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
         }
       ],
       "recap": [
         {
-          "emoji": "🚧",
-          "title": "Jour 11",
+          "emoji": "🩺",
+          "title": "Le corps médical",
           "bullets": [
-            "Contenu à écrire"
+            "Une réticence vient souvent d’un manque de formation",
+            "Pas obligé·e de dire que vous êtes végane",
+            "Vous avez le droit de changer de médecin"
+          ]
+        },
+        {
+          "emoji": "👨‍👩‍👧",
+          "title": "La famille et les amis",
+          "bullets": [
+            "Leurs réactions parlent souvent plus d’eux que de vous",
+            "Vous n’êtes pas seul·e à vivre ça",
+            "Pas de règle : écoutez-vous"
+          ]
+        },
+        {
+          "emoji": "💚",
+          "title": "Se préserver",
+          "bullets": [
+            "Pas besoin de se justifier en permanence",
+            "S’entourer d’autres véganes"
           ]
         }
       ]
     },
     {
       "number": 12,
-      "icon": "info",
+      "icon": "travel",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, dans quel pays s’intéresse-t-on le plus au véganisme ?",
+          "choices": [
+            {
+              "text": "La France"
+            },
+            {
+              "text": "Le Royaume-Uni",
+              "result": "partial"
+            },
+            {
+              "text": "L’Allemagne",
+              "result": "right"
+            },
+            {
+              "text": "L’Italie"
+            }
+          ],
+          "explanation": "D’après un classement basé sur les recherches Google, c’est l’**Allemagne** qui arrive en tête en 2025. Le **Royaume-Uni** a longtemps été premier, plusieurs années de suite."
+        },
+        {
           "type": "info",
-          "title": "Jour 12 (provisoire)",
+          "title": "Voyager végane 🚆",
           "blocks": [
             {
               "type": "text",
-              "text": "Contenu à écrire."
+              "text": "Il y a dans le monde entier **de plus en plus d’options véganes**. Avec quelques repères, voyager végane devient vite un plaisir… et une belle occasion de découvrir de nouvelles cuisines !"
             }
           ]
+        },
+        {
+          "type": "info",
+          "title": "En France 🇫🇷",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Si vous voyagez en France, utilisez la **carte des produits** pour voir dans quels supermarchés on trouve une sélection de produits végétaliens :"
+            },
+            {
+              "type": "app_link",
+              "label": "Voir la carte des produits",
+              "target": "products_map"
+            },
+            {
+              "type": "text",
+              "text": "Et pour trouver un restaurant, passez sur la **carte des restaurants** :"
+            },
+            {
+              "type": "app_link",
+              "label": "Voir la carte des restaurants",
+              "target": "restaurants_map"
+            },
+            {
+              "type": "callout",
+              "text": "La carte des restaurants est toute récente : il n’y a pas encore beaucoup de lieux référencés, surtout hors de France. Vous découvrez un lieu qui manque ? Ajoutez-le pour en faire profiter tout le monde !"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "À l’étranger 🌍",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Il faut savoir que la France n’est pas un pays très « vegan friendly ». Si vous voyagez au Royaume-Uni, en Allemagne, aux Pays-Bas…, vous verrez que vous n’aurez **aucun mal à trouver des alternatives végétales**, jusque dans les supermarchés !"
+            },
+            {
+              "type": "text",
+              "text": "Ça peut quand même être pratique de connaître **quelques mots de base** dans la langue du pays, pour vous faire comprendre :"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "emoji": "🇬🇧",
+                  "label": "Anglais",
+                  "text": "Végane : **vegan** · Sans : **without** · Viande : **meat** · Poisson : **fish** · Lait : **milk** · Œuf : **egg** · Produit animal : **animal product**"
+                },
+                {
+                  "emoji": "🇩🇪",
+                  "label": "Allemand",
+                  "text": "Végane : **vegan** · Sans : **ohne** · Viande : **Fleisch** · Poisson : **Fisch** · Lait : **Milch** · Œuf : **Ei** · Produit animal : **tierisches Produkt**"
+                },
+                {
+                  "emoji": "🇪🇸",
+                  "label": "Espagnol",
+                  "text": "Végane : **vegano / vegana** · Sans : **sin** · Viande : **carne** · Poisson : **pescado** · Lait : **leche** · Œuf : **huevo** · Produit animal : **producto animal**"
+                },
+                {
+                  "emoji": "🇮🇹",
+                  "label": "Italien",
+                  "text": "Végane : **vegano / vegana** · Sans : **senza** · Viande : **carne** · Poisson : **pesce** · Lait : **latte** · Œuf : **uovo** · Produit animal : **prodotto animale**"
+                },
+                {
+                  "emoji": "🇳🇱",
+                  "label": "Néerlandais",
+                  "text": "Végane : **veganistisch** · Sans : **zonder** · Viande : **vlees** · Poisson : **vis** · Lait : **melk** · Œuf : **ei** · Produit animal : **dierlijk product**"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Préparer son voyage 🎒",
+          "blocks": [
+            {
+              "type": "bullets",
+              "items": [
+                "**Prévoyez quelques en-cas** pour le trajet : fruits secs, oléagineux, barres, sandwichs…",
+                "**Préparez une phrase toute faite** sur votre téléphone, dans la langue du pays : « Je suis végane : je ne mange ni viande, ni poisson, ni lait, ni œufs, ni miel. »"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
         }
       ],
       "recap": [
         {
-          "emoji": "🚧",
-          "title": "Jour 12",
+          "emoji": "🇫🇷",
+          "title": "En France",
           "bullets": [
-            "Contenu à écrire"
+            "La carte des produits pour les supermarchés",
+            "La carte des restaurants, à compléter ensemble"
+          ]
+        },
+        {
+          "emoji": "🌍",
+          "title": "À l’étranger",
+          "bullets": [
+            "Souvent plus facile qu’en France",
+            "Quelques mots de base dans la langue du pays"
+          ]
+        },
+        {
+          "emoji": "🎒",
+          "title": "Préparer son voyage",
+          "bullets": [
+            "Des en-cas pour le trajet",
+            "Une phrase toute faite sur son téléphone",
+            "Un logement avec une cuisine"
           ]
         }
       ]
@@ -146,6 +1231,9 @@
               "text": "Contenu à écrire."
             }
           ]
+        },
+        {
+          "type": "myth"
         }
       ],
       "recap": [
@@ -171,6 +1259,9 @@
               "text": "Contenu à écrire."
             }
           ]
+        },
+        {
+          "type": "myth"
         }
       ],
       "recap": [

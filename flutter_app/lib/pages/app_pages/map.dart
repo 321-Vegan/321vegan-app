@@ -52,6 +52,11 @@ class MapPage extends StatefulWidget {
 
   const MapPage({super.key, this.onLoginSuccess});
 
+  /// A layer to switch to ('shops' or 'restaurants'), asked from another
+  /// tab while the map is already built; before that, the saved layer is
+  /// read (see [MyHomePageState.goToMapTab]).
+  static final ValueNotifier<String?> requestedLayer = ValueNotifier(null);
+
   @override
   State<MapPage> createState() => _MapPageState();
 }
@@ -91,6 +96,9 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
     );
     _initTileCache();
+    // Not built yet: the saved layer already is the one asked for
+    MapPage.requestedLayer.value = null;
+    MapPage.requestedLayer.addListener(_onLayerRequested);
     _restoreLayer();
     _initLocation();
     _loadSavedButtonFound();
@@ -154,6 +162,7 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    MapPage.requestedLayer.removeListener(_onLayerRequested);
     _pulseController.dispose();
     _positionStreamSub?.cancel();
     super.dispose();
@@ -327,6 +336,14 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     setState(() => _layer = layer);
     PreferencesHelper.setLastMapLayerPref(layer.name);
     _loadPlaces();
+  }
+
+  void _onLayerRequested() {
+    final name = MapPage.requestedLayer.value;
+    if (name == null) return;
+    MapPage.requestedLayer.value = null;
+    final layer = _MapLayer.values.where((l) => l.name == name).firstOrNull;
+    if (layer != null) _switchLayer(layer);
   }
 
   /// Back on the layer shown last time. Usually read before the map is
