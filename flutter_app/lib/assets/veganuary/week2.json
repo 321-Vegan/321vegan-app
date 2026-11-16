@@ -104,7 +104,7 @@
     },
     {
       "id": "validisme",
-      "label": "Le véganisme est validiste : tout le monde ne peut pas s’en passer",
+      "label": "Le véganisme est validiste : tout le monde ne peut pas se passer de POA",
       "answer": {
         "title": "Le véganisme est-il validiste ?",
         "blocks": [
@@ -244,9 +244,9 @@
     },
     {
       "id": "choix",
-      "label": "Chacun fait ce qu’il veut, et puis c’est légal",
+      "label": "Chacun·e fait comme iel veut, et puis c’est légal",
       "answer": {
-        "title": "Chacun fait ce qu’il veut ?",
+        "title": "On fait toustes comme on veut ?",
         "blocks": [
           {
             "type": "text",
@@ -254,7 +254,7 @@
           },
           {
             "type": "text",
-            "text": "Chaque année, **2 050 milliards d’êtres sensibles** (animaux terrestres et aquatiques) sont tués pour l’alimentation humaine [1]. Avec environ 8,3 milliards d’humains, c’est 247 fois plus d’animaux tués que d’humains sur Terre. Par an. Ce « choix personnel », qui concerne plus de 2 000 milliards d’autres individus, est-il si personnel que ça ?"
+            "text": "Chaque année, **plusieurs milliers de milliards d’êtres sensibles** (animaux terrestres et aquatiques) sont tués pour l’alimentation humaine [1]. Avec environ 8,3 milliards d’humains, c’est plusieurs centaines de fois plus d’animaux tués que d’humains sur Terre. Par an. Alors ce « choix personnel » est-il si personnel que ça ?"
           },
           {
             "type": "text",
@@ -1212,23 +1212,151 @@
           "title": "Préparer son voyage",
           "bullets": [
             "Des en-cas pour le trajet",
-            "Une phrase toute faite sur son téléphone",
-            "Un logement avec une cuisine"
+            "Une phrase toute faite sur son téléphone"
           ]
         }
       ]
     },
     {
       "number": 13,
-      "icon": "info",
+      "icon": "support",
       "steps": [
         {
           "type": "info",
-          "title": "Jour 13 (provisoire)",
+          "title": "Mis·e à l'écart ?",
           "blocks": [
             {
               "type": "text",
-              "text": "Contenu à écrire."
+              "text": "Repas d’équipe, anniversaires, barbecues… Quand on devient végane, on se retrouve parfois **à l’écart** : on regarde les autres manger, on doit toujours tout prévoir, on est un peu moins invité·e. Si vous le vivez, **vous n’êtes pas seul·e**."
+            },
+            {
+              "type": "text",
+              "text": "Ce sentiment ne vient pas d’un défaut chez vous : **notre société est organisée autour des produits animaux**. C’est ce cadre qui vous met à l’écart, pas votre choix."
+            },
+            {
+              "type": "text",
+              "text": "Et ce cadre peut changer : quand une option végane apparaît sur une carte ou dans une cantine, c’est souvent **parce que quelqu’un l’a demandée**."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Témoignages 💬",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Vous n'êtes pas seul·e !"
+            },
+            {
+              "type": "text",
+              "text": "Touchez chaque témoignage pour le lire."
+            },
+            {
+              "type": "grid",
+              "items": [
+                {
+                  "emoji": "💼",
+                  "label": "Témoignage 1",
+                  "text": "Lorem ipsum dolor",
+                  "details": {
+                    "title": "Témoignage 1",
+                    "button": "Fermer",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "« Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation. »"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emoji": "🎓",
+                  "label": "Témoignage 2",
+                  "text": "Lorem ipsum dolor",
+                  "details": {
+                    "title": "Témoignage 2",
+                    "button": "Fermer",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "« Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. »"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emoji": "🎉",
+                  "label": "Témoignage 3",
+                  "text": "Lorem ipsum dolor",
+                  "details": {
+                    "title": "Témoignage 3",
+                    "button": "Fermer",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "« Lorem ipsum dolor sit amet, consectetur adipiscing elit. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. »"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "emoji": "💞",
+                  "label": "Témoignage 4",
+                  "text": "Lorem ipsum dolor",
+                  "details": {
+                    "title": "Témoignage 4",
+                    "button": "Fermer",
+                    "blocks": [
+                      {
+                        "type": "text",
+                        "text": "« Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium. »"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Les blagues et les remarques 🙄",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Vous l’avez déjà vécu, vous le vivez, ou vous allez le vivre. **Les remarques désobligeantes et les blagues douteuses** sont aussi une façon pour les gens de nier la réalité, et leur propre participation à l’oppression des animaux non humains."
+            },
+            {
+              "type": "text",
+              "text": "Parfois, ce sera difficile à vivre ; parfois, ça vous permettra de lancer des discussions plus sérieuses. Encore une fois, **écoutez-vous, préservez-vous**, et faites en fonction de votre énergie."
+            },
+            {
+              "type": "callout",
+              "text": "Être « le ou la végane », toujours questionné·e et remis·e en question, c’est épuisant. Vous avez le droit de dire que vous n’avez pas envie d’en parler."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Retrouver du lien 🌿",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Pour ne plus être la seule personne végane autour de la table, vous pouvez **rencontrez d’autres véganes** : associations, festivals, marchés, pique-niques, groupes locaux… Ça fait du bien d’être avec des gens qui comprennent sans avoir à expliquer. Il y a de nombreuses associations qui organisent des évènements, regardez autour de chez vous ce qui existe ; et pour trouver facilement, vous pouvez interroger des groupes en ligne."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Quand c’est trop lourd 💚",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "L’exclusion, même discrète, peut peser au quotidien. S’y ajoutent parfois la tristesse ou la colère face à ce que vivent les animaux, et à l’indifférence autour de soi. **Ces émotions sont normales** : beaucoup de véganes les ressentent."
+            },
+            {
+              "type": "callout",
+              "text": "Si ça devient trop lourd, parlez-en : à des proches de confiance, à d’autres véganes, ou à un·e professionnel·le de santé mentale."
             }
           ]
         },
@@ -1238,25 +1366,168 @@
       ],
       "recap": [
         {
-          "emoji": "🚧",
-          "title": "Jour 13",
+          "emoji": "🫂",
+          "title": "Se sentir à part",
           "bullets": [
-            "Contenu à écrire"
+            "Une société organisée autour des produits animaux",
+            "Vous n’êtes pas seul·e à le vivre"
+          ]
+        },
+        {
+          "emoji": "🙄",
+          "title": "Les remarques",
+          "bullets": [
+            "Pas d'obligation de répondre",
+            "Écoutez-vous, selon votre énergie"
+          ]
+        },
+        {
+          "emoji": "🤝",
+          "title": "Retrouver du lien",
+          "bullets": [
+            "Inviter chez soi, rencontrer d’autres véganes",
+            "En parler quand c’est trop lourd"
           ]
         }
       ]
     },
     {
       "number": 14,
-      "icon": "info",
+      "icon": "sport",
       "steps": [
         {
+          "type": "quiz",
+          "question": "Selon vous, peut-on prendre autant de muscle avec une alimentation végétale qu’avec une alimentation omnivore ?",
+          "choices": [
+            {
+              "text": "Non, les protéines végétales sont moins efficaces"
+            },
+            {
+              "text": "Oui, tout autant",
+              "result": "right"
+            },
+            {
+              "text": "Seulement en prenant des compléments"
+            }
+          ],
+          "explanation": "Dans une étude, des véganes et des omnivores ont suivi le même entraînement de musculation pendant 12 semaines, avec la même quantité de protéines : ils ont gagné **autant de muscle et de force**. Ce qui compte surtout, c’est la **quantité** de protéines, pas leur origine."
+        },
+        {
           "type": "info",
-          "title": "Jour 14 (provisoire)",
+          "title": "Sport et alimentation végétale 🏃",
           "blocks": [
             {
               "type": "text",
-              "text": "Contenu à écrire."
+              "text": "« On peut pas prendre de muscle sans manger de viande » : c’est une idée reçue la plus tenace. Pourtant, une alimentation végétalienne bien planifiée **convient tout à fait aux sportif·ves**, et de nombreux athlètes de haut niveau sont véganes [1]. Par exemple :"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "emoji": "🏋️‍♀️",
+                  "label": "Angeline Berva",
+                  "text": "Strongwoman française, végane depuis ses 17 ans : record du monde de soulevé de terre à la barre épaisse dans sa catégorie, avec **301 kg**, en 2025 [2]."
+                },
+                {
+                  "emoji": "🏋️",
+                  "label": "Patrik Baboumian",
+                  "text": "Strongman, végane depuis 2011 : il a porté **plus de 550 kg** sur 10 mètres."
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Pas besoin de viser le podium pour en profiter : quelques repères suffisent pour bien accompagner vos entraînements."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Veganuary, « Famous Vegan Athletes »",
+              "url": "https://veganuary.com/famous-vegan-athletes/"
+            },
+            {
+              "label": "Great Vegan Athletes, « Vegan strongwoman breaks world record and retains world title »",
+              "url": "https://www.greatveganathletes.com/news/vegan-strongwoman-breaks-world-record-and-retains-world-title/"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Homme = muscle = viande ? 🥩",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Si l’idée « sans viande, pas de muscle » est si tenace, c’est aussi parce que **la viande est associée à la virilité**. Des chercheurs ont montré que la viande rouge est spontanément associée au masculin [1]."
+            },
+            {
+              "type": "text",
+              "text": "Cet imaginaire est entretenu par **la publicité** : le barbecue réservé aux hommes, les burgers « pour les vrais mecs », le steak synonyme de force… Et aujourd’hui par **des influenceurs masculinistes**, qui vantent des régimes presque entièrement carnés comme symbole de puissance et de domination."
+            },
+            {
+              "type": "text",
+              "text": "Résultat : un homme qui ne mange pas de viande est souvent jugé plus vertueu mais **moins viril** [2]."
+            },
+            {
+              "type": "text",
+              "text": "Pour l’autrice féministe Carol J. Adams, ce lien n’a rien d’un hasard : dans « La Politique sexuelle de la viande », elle montre que la domination des animaux et celle des femmes reposent sur **les mêmes mécanismes** [3]."
+            },
+            {
+              "type": "callout",
+              "text": "Le muscle vient de l’entraînement, pas du steak. Et refuser l’exploitation animale n’enlève rien à personne."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Rozin et al., « Is Meat Male? A Quantitative Multimethod Framework to Establish Metaphoric Relationships », Journal of Consumer Research, 2012",
+              "url": "https://doi.org/10.1086/664970"
+            },
+            {
+              "label": "Ruby et Heine, « Meat, morals, and masculinity », Appetite, 2011",
+              "url": "https://doi.org/10.1016/j.appet.2011.01.018"
+            },
+            {
+              "label": "Ballast, « Féminisme et cause animale »",
+              "url": "https://www.revue-ballast.fr/feminisme-et-cause-animale/"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Les protéines 💪",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Quand on fait du sport, on a besoin d’un peu plus de protéines : **entre 1,2 et 2 g par kilo** de poids et par jour selon le sport et l’intensité [1], contre 0,83 g pour une personne peu active [2]. En musculation, au-delà de **1,6 g environ**, en manger plus n’apporte plus grand-chose [3]."
+            },
+            {
+              "type": "text",
+              "text": "Et leur origine compte peu : avec la même quantité de protéines, véganes et omnivores gagnent **autant de muscle et de force** [4]."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Mettez une source de protéines à chaque repas** : tofu, tempeh, seitan, légumineuses, lait et yaourt de soja…",
+                "**Les compléments de protéines en poudre ne sont pas obligatoires**, mais pratiques. Il en existe des véganes : pois, soja, riz… La whey, elle, vient du lait."
+              ]
+            }
+          ],
+          "sources": [
+            {
+              "label": "Thomas, Erdman et Burke, « Nutrition and Athletic Performance », position commune de l’American College of Sports Medicine, de l’Academy of Nutrition and Dietetics et des Dietitians of Canada, Medicine & Science in Sports & Exercise, 2016",
+              "url": "https://doi.org/10.1249/MSS.0000000000000852"
+            },
+            {
+              "label": "Anses, « Protéines : rôle, sources et apports recommandés »",
+              "url": "https://www.anses.fr/fr/content/proteines-role-sources-et-apports-recommandes"
+            },
+            {
+              "label": "Morton et al., « A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults », British Journal of Sports Medicine, 2018",
+              "url": "https://doi.org/10.1136/bjsports-2017-097608"
+            },
+            {
+              "label": "Hevia-Larraín et al., « High-Protein Plant-Based Diet Versus a Protein-Matched Omnivorous Diet to Support Resistance Training Adaptations », Sports Medicine, 2021",
+              "url": "https://doi.org/10.1007/s40279-021-01434-9"
             }
           ]
         },
@@ -1266,10 +1537,36 @@
       ],
       "recap": [
         {
-          "emoji": "🚧",
-          "title": "Jour 14",
+          "emoji": "🥩",
+          "title": "Homme = muscle = viande ?",
           "bullets": [
-            "Contenu à écrire"
+            "Un imaginaire entretenu par la pub et les masculinistes",
+            "Le muscle vient de l’entraînement, pas du steak"
+          ]
+        },
+        {
+          "emoji": "💪",
+          "title": "Les protéines",
+          "bullets": [
+            "1,2 à 2 g par kilo et par jour selon le sport",
+            "Autant de muscle qu’avec des protéines animales",
+            "Une source de protéines à chaque repas"
+          ]
+        },
+        {
+          "emoji": "🍝",
+          "title": "Manger assez",
+          "bullets": [
+            "Des féculents à chaque repas",
+            "Une collation avant et après l’effort"
+          ]
+        },
+        {
+          "emoji": "💊",
+          "title": "Les compléments",
+          "bullets": [
+            "La B12, toujours",
+            "La créatine, si vous le souhaitez"
           ]
         }
       ]

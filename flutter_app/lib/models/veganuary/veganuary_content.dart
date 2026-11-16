@@ -79,7 +79,9 @@ enum VeganuaryDayIcon {
   label,
   outside,
   people,
-  travel
+  travel,
+  support,
+  sport
 }
 
 class VeganuaryDay {
@@ -490,12 +492,17 @@ class GridItem {
   /// checked once they were read.
   final VeganuaryInfo? details;
 
+  /// `"button": "Fermer"` in the details: the label of the button closing
+  /// them, when « J’ai compris » makes no sense (e.g. a testimonial).
+  final String? detailsButton;
+
   const GridItem({
     this.image,
     this.emoji,
     required this.label,
     this.text,
     this.details,
+    this.detailsButton,
   });
 
   factory GridItem.fromJson(Map<String, dynamic> json) {
@@ -509,6 +516,7 @@ class GridItem {
       details: details == null
           ? null
           : VeganuaryInfo.fromJson({'title': label, ...details}),
+      detailsButton: details?['button'] as String?,
     );
   }
 }

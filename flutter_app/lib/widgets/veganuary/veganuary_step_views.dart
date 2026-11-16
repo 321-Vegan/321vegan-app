@@ -739,7 +739,7 @@ class _GridDetailsDialog extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: AppButton(
-                label: 'J’ai compris',
+                label: item.detailsButton ?? 'J’ai compris',
                 backgroundColor: Theme.of(context).colorScheme.primary,
                 onPressed: () => Navigator.of(context).pop(),
               ),

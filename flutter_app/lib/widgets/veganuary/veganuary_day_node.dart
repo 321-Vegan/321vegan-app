@@ -36,6 +36,8 @@ IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       VeganuaryDayIcon.outside => FontAwesomeIcons.mapLocationDot,
       VeganuaryDayIcon.people => FontAwesomeIcons.userGroup,
       VeganuaryDayIcon.travel => FontAwesomeIcons.train,
+      VeganuaryDayIcon.support => FontAwesomeIcons.handHoldingHeart,
+      VeganuaryDayIcon.sport => FontAwesomeIcons.personRunning,
     };
 
 /// A day on the Veganuary path: a coin, yellow once done, green when it's
