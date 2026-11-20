@@ -725,6 +725,36 @@
         },
         {
           "type": "myth"
+        },
+        {
+          "type": "recipe",
+          "title": "Sauce aux aubergines et tomates rôties",
+          "image": "lib/assets/images/veganuary/recette-sauce-aubergines.webp",
+          "servings": 6,
+          "ingredients": [
+            "750 g d’aubergines",
+            "700 g de tomates",
+            "20 g d’ail",
+            "20 cL de crème liquide végétale",
+            "Sel",
+            "Aromates : thym, romarin, sauge",
+            "Huile d’olive"
+          ],
+          "steps": [
+            "Préchauffer le four à 200 °C.",
+            "Couper en cubes les aubergines, les tomates. Les déposer dans un plat de cuisson avec l’ail.",
+            "Arroser généreusement d’huile. Saler et ajouter les aromates de votre choix.",
+            "Enfourner pour 30 à 40 min : l’aubergine doit être bien fondante.",
+            "Retirer les aromates et mixer le tout avec la crème liquide.",
+            "Servir avec des pâtes ou même en tant que dip pour l’apéritif.",
+            "Vous pouvez congeler la sauce sans problème !"
+          ],
+          "credit": {
+            "name": "Aude · The Greenquest",
+            "image": "lib/assets/images/veganuary/credit-the-greenquest.webp",
+            "blog": "https://thegreenquest.org/fr/sauce-aubergines-tomates-roties/",
+            "instagram": "https://www.instagram.com/the_greenquest/"
+          }
         }
       ],
       "recap": [
@@ -1249,22 +1279,34 @@
             },
             {
               "type": "text",
-              "text": "Touchez chaque témoignage pour le lire."
+              "text": "Ces témoignages ont été recueillis auprès de personnes véganes, et sont publiés anonymement avec leur accord. Touchez chacun d’eux pour le lire."
             },
             {
               "type": "grid",
               "items": [
                 {
-                  "emoji": "💼",
-                  "label": "Témoignage 1",
-                  "text": "Lorem ipsum dolor",
+                  "emoji": "💚",
+                  "label": "« Enfin cohérent avec mes valeurs »",
+                  "text": "Se sentir en décalage, et trouver ses cercles",
                   "details": {
-                    "title": "Témoignage 1",
+                    "title": "« Enfin cohérent avec mes valeurs »",
                     "button": "Fermer",
                     "blocks": [
                       {
                         "type": "text",
-                        "text": "« Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation. »"
+                        "text": "S’il doit y avoir une difficulté pour devenir végane, alors c’est l’exclusion sociale."
+                      },
+                      {
+                        "type": "text",
+                        "text": "Nous sommes dans une société spéciste et c’est une fatalité de se sentir en décalage avec la majorité des gens : au travail, avec nos amis et même notre famille. Il faut souvent se justifier, supporter quelques remarques clichées et passer pour le relou de service, et en plus accepter d’être constamment en alerte sur ce qu’on peut ou non manger lorsqu’on fait des sorties avec des carnistes."
+                      },
+                      {
+                        "type": "text",
+                        "text": "Pour le bien des animaux, il faut réussir à passer outre ces inconforts et se trouver des cercles sociaux où on peut avoir l’esprit un peu plus léger. La manière la plus simple d’en trouver, à mes yeux, ce sont les communautés véganes en ligne. Il ne faut pas désespérer, car on peut toujours trouver des personnes assez compréhensives pour ne pas nous infliger de charge mentale supplémentaire. Dans mon cas, j’ai une famille assez compréhensive pour faire attention à ce sujet, j’ai un collègue de travail qui demande toujours pour moi si le resto où on va propose des options véganes, et j’ai des amis véganes avec qui je peux partager de bons moments !"
+                      },
+                      {
+                        "type": "text",
+                        "text": "Personnellement, être végane est la meilleure chose qui me soit arrivée, car je suis enfin cohérent avec mes valeurs, et ça permet de faire du tri dans les relations !"
                       }
                     ]
                   }

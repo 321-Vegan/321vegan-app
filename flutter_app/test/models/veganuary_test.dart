@@ -119,6 +119,17 @@ void main() {
         ['Graines'],
       ]);
     });
+
+    test('credit: links written out for the downloaded image', () {
+      final credit = RecipeCredit.fromJson({
+        'name': 'Aude · The Greenquest',
+        'blog': 'https://www.thegreenquest.org/fr/sauce/',
+        'instagram': 'https://www.instagram.com/the_greenquest/',
+      });
+      expect(credit.blogLabel, 'thegreenquest.org');
+      expect(credit.instagramLabel, '@the_greenquest');
+      expect(parse(2, []).credit, isNull);
+    });
   });
 
   group('Bundled content', () {

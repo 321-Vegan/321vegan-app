@@ -828,7 +828,7 @@
     },
     {
       "number": 3,
-      "icon": "recipe",
+      "icon": "supplement",
       "steps": [
         {
           "type": "info",

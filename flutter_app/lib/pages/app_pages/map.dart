@@ -44,6 +44,12 @@ enum _MapLayer { shops, restaurants }
 
 const _compactPinsBelowZoom = 15.0;
 
+/// One copy of the world (Web Mercator stops at ±85.0511° latitude).
+final _worldBounds = LatLngBounds(
+  const LatLng(-85.0511, -180),
+  const LatLng(85.0511, 180),
+);
+
 /// A bit smaller than the shop pins (40), to make room for the stars.
 const double _restaurantPinSize = 34;
 
@@ -760,6 +766,10 @@ class _MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
             options: MapOptions(
               initialCenter: _initialCenter!,
               initialZoom: 16,
+              // flutter_map repeats the world sideways forever; past the
+              // date line the visible bounds sent to the API break. Keep the
+              // camera inside a single world, which also caps the zoom-out.
+              cameraConstraint: CameraConstraint.contain(bounds: _worldBounds),
               // Keep the map north-up: strip the rotate gesture (twist +
               // ctrl/trackpad) so users can't accidentally spin it.
               // Halve the scroll-wheel/trackpad zoom step (default 0.005) so

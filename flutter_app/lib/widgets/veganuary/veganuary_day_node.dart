@@ -25,6 +25,7 @@ IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       VeganuaryDayIcon.info => FontAwesomeIcons.scroll,
       VeganuaryDayIcon.myth => FontAwesomeIcons.comments,
       VeganuaryDayIcon.recipe => FontAwesomeIcons.bowlFood,
+      VeganuaryDayIcon.supplement => FontAwesomeIcons.capsules,
       VeganuaryDayIcon.book => FontAwesomeIcons.book,
       VeganuaryDayIcon.cart => FontAwesomeIcons.basketShopping,
       VeganuaryDayIcon.cow => FontAwesomeIcons.cow,
@@ -38,6 +39,13 @@ IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       VeganuaryDayIcon.travel => FontAwesomeIcons.train,
       VeganuaryDayIcon.support => FontAwesomeIcons.handHoldingHeart,
       VeganuaryDayIcon.sport => FontAwesomeIcons.personRunning,
+      VeganuaryDayIcon.zoo => FontAwesomeIcons.hippo,
+      VeganuaryDayIcon.clothing => FontAwesomeIcons.shirt,
+      VeganuaryDayIcon.tourism => FontAwesomeIcons.horse,
+      VeganuaryDayIcon.ecology => FontAwesomeIcons.earthEurope,
+      VeganuaryDayIcon.cosmetics => FontAwesomeIcons.pumpSoap,
+      VeganuaryDayIcon.farming => FontAwesomeIcons.seedling,
+      VeganuaryDayIcon.pets => FontAwesomeIcons.paw,
     };
 
 /// A day on the Veganuary path: a coin, yellow once done, green when it's
@@ -54,6 +62,9 @@ class VeganuaryDayNode extends StatefulWidget {
 
   /// Share of the day read so far (0 to 1), for the ring of the next day.
   final double dayProgress;
+
+  /// The day has a recipe: a small pot sticks out of the coin's top right.
+  final bool hasRecipe;
   final VoidCallback onTap;
 
   const VeganuaryDayNode({
@@ -63,6 +74,7 @@ class VeganuaryDayNode extends StatefulWidget {
     required this.state,
     required this.isNext,
     required this.dayProgress,
+    this.hasRecipe = false,
     required this.onTap,
   });
 
@@ -127,24 +139,27 @@ class _VeganuaryDayNodeState extends State<VeganuaryDayNode>
     super.dispose();
   }
 
-  /// A day shown as an illustration instead of a coin (the recipe's pot):
-  /// in color once open, in grey before, pushed in a little when pressed.
-  Widget _illustration(String asset, {required bool open}) {
-    return AnimatedScale(
-      scale: _pressed ? 0.94 : 1,
-      duration: const Duration(milliseconds: 80),
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(end: open ? 1 : 0),
-        duration: _colorDuration,
-        builder: (context, color, child) => ColorFiltered(
-          colorFilter: saturationFilter(color),
-          child: child,
+  /// Small badge of a recipe day: the pot in a white disc, in color once
+  /// the day is open, in grey before.
+  Widget _recipeBadge({required double size, required bool open}) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(end: open ? 1 : 0),
+      duration: _colorDuration,
+      builder: (context, color, child) => ColorFiltered(
+        colorFilter: saturationFilter(color),
+        child: child,
+      ),
+      child: Container(
+        width: size,
+        height: size,
+        padding: EdgeInsets.all(size * 0.08),
+        decoration: const ShapeDecoration(
+          color: Colors.white,
+          shape: CircleBorder(
+            side: BorderSide(color: kLockedFill, width: 1.5),
+          ),
         ),
-        // A bit bigger than a coin, like on the mockups
-        child: Transform.scale(
-          scale: 1.15,
-          child: Image.asset(asset, fit: BoxFit.contain),
-        ),
+        child: Image.asset(_recipeIllustration, fit: BoxFit.contain),
       ),
     );
   }
@@ -189,61 +204,67 @@ class _VeganuaryDayNodeState extends State<VeganuaryDayNode>
       child: SizedBox(
         width: width,
         height: faceHeight + depth,
-        child: widget.icon == VeganuaryDayIcon.recipe
-            ? _illustration(_recipeIllustration, open: open)
-            : Stack(
-                children: [
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    height: faceHeight,
-                    child: AnimatedContainer(
-                      duration: _colorDuration,
-                      decoration: ShapeDecoration(
-                          color: side, shape: const OvalBorder()),
-                    ),
-                  ),
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 80),
-                    left: 0,
-                    right: 0,
-                    top: pressOffset,
-                    height: faceHeight,
-                    child: AnimatedContainer(
-                      duration: _colorDuration,
-                      decoration: ShapeDecoration(
-                          color: face, shape: const OvalBorder()),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // Shine of a done (gold) coin
-                          ClipOval(
-                            child: AnimatedOpacity(
-                              duration: _colorDuration,
-                              opacity:
-                                  widget.state == VeganuaryDayState.completed
-                                      ? 1
-                                      : 0,
-                              child: CustomPaint(painter: _ShinePainter()),
-                            ),
-                          ),
-                          Center(
-                            child: TweenAnimationBuilder<Color?>(
-                              tween: ColorTween(end: iconColor),
-                              duration: _colorDuration,
-                              builder: (context, color, _) => FaIcon(
-                                  _iconData(widget.icon),
-                                  color: color,
-                                  size: 78.sp),
-                            ),
-                          ),
-                        ],
+        child: Stack(
+          // The recipe badge sticks out
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: faceHeight,
+              child: AnimatedContainer(
+                duration: _colorDuration,
+                decoration:
+                    ShapeDecoration(color: side, shape: const OvalBorder()),
+              ),
+            ),
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 80),
+              left: 0,
+              right: 0,
+              top: pressOffset,
+              height: faceHeight,
+              child: AnimatedContainer(
+                duration: _colorDuration,
+                decoration:
+                    ShapeDecoration(color: face, shape: const OvalBorder()),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Shine of a done (gold) coin
+                    ClipOval(
+                      child: AnimatedOpacity(
+                        duration: _colorDuration,
+                        opacity:
+                            widget.state == VeganuaryDayState.completed ? 1 : 0,
+                        child: CustomPaint(painter: _ShinePainter()),
                       ),
                     ),
-                  ),
-                ],
+                    Center(
+                      child: TweenAnimationBuilder<Color?>(
+                        tween: ColorTween(end: iconColor),
+                        duration: _colorDuration,
+                        builder: (context, color, _) => FaIcon(
+                            _iconData(widget.icon),
+                            color: color,
+                            size: 78.sp),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            ),
+            // Goes down with the face when pressed
+            if (widget.hasRecipe)
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 80),
+                top: pressOffset - 24.w,
+                right: -18.w,
+                child: _recipeBadge(size: 90.w, open: open),
+              ),
+          ],
+        ),
       ),
     );
 

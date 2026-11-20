@@ -402,6 +402,7 @@ class _VeganuaryPageState extends State<VeganuaryPage>
                     state: state,
                     isNext: day.number == _progress.nextDay && !heldBack,
                     dayProgress: _progress.dayProgress(day.number),
+                    hasRecipe: day.steps.any((step) => step is RecipeStep),
                     onTap: () => _openDay(day),
                   ),
                 ),

@@ -19,6 +19,7 @@ class VeganuaryService {
   static const List<String> weekAssets = [
     'lib/assets/veganuary/week1.json',
     'lib/assets/veganuary/week2.json',
+    'lib/assets/veganuary/week3.json',
   ];
 
   /// Debug: locked days open too, as a preview saving nothing (until the

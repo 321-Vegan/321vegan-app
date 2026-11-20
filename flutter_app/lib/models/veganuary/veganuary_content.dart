@@ -70,6 +70,7 @@ enum VeganuaryDayIcon {
   info,
   myth,
   recipe,
+  supplement,
   book,
   cart,
   cow,
@@ -81,7 +82,14 @@ enum VeganuaryDayIcon {
   people,
   travel,
   support,
-  sport
+  sport,
+  zoo,
+  clothing,
+  tourism,
+  ecology,
+  cosmetics,
+  farming,
+  pets
 }
 
 class VeganuaryDay {
@@ -235,7 +243,8 @@ class MythStep extends VeganuaryStep {
 /// `{"type": "recipe", "title": ..., "image": ..., "servings": 2,
 /// "ingredients": [...], "steps": [...]}`. `servings` can be a number of
 /// people or a text ("une tarte"); `ingredients`, plain lines, or groups
-/// `{"title": "Pour la pâte", "items": [...]}` (both can be mixed).
+/// `{"title": "Pour la pâte", "items": [...]}` (both can be mixed);
+/// `credit`, see [RecipeCredit].
 class RecipeStep extends VeganuaryStep {
   final String title;
 
@@ -247,12 +256,16 @@ class RecipeStep extends VeganuaryStep {
   final List<RecipeIngredients> ingredients;
   final List<String> steps;
 
+  /// The author, when the recipe comes from someone else.
+  final RecipeCredit? credit;
+
   const RecipeStep({
     required this.title,
     this.image,
     this.servings,
     required this.ingredients,
     required this.steps,
+    this.credit,
   });
 
   factory RecipeStep.fromJson(Map<String, dynamic> json) {
@@ -286,7 +299,53 @@ class RecipeStep extends VeganuaryStep {
       },
       ingredients: ingredients,
       steps: List<String>.from(json['steps'] as List),
+      credit: json['credit'] == null
+          ? null
+          : RecipeCredit.fromJson(json['credit'] as Map<String, dynamic>),
     );
+  }
+}
+
+/// `"credit": {"name": "Aude · The Greenquest", "image": ..., "blog":
+/// "https://…", "instagram": "https://www.instagram.com/…/"}`: who a recipe
+/// comes from (used with their permission), credited under its title with
+/// their portrait and links to their blog and Instagram.
+class RecipeCredit {
+  final String name;
+
+  /// Asset path or URL of their portrait, shown round.
+  final String? image;
+  final String? blog;
+  final String? instagram;
+
+  const RecipeCredit({
+    required this.name,
+    this.image,
+    this.blog,
+    this.instagram,
+  });
+
+  factory RecipeCredit.fromJson(Map<String, dynamic> json) {
+    return RecipeCredit(
+      name: json['name'] as String,
+      image: json['image'] as String?,
+      blog: json['blog'] as String?,
+      instagram: json['instagram'] as String?,
+    );
+  }
+
+  /// The blog's site, written out ("thegreenquest.org") so it stays
+  /// readable in the downloaded image.
+  String? get blogLabel =>
+      blog == null ? null : Uri.parse(blog!).host.replaceFirst('www.', '');
+
+  /// "@the_greenquest", likewise.
+  String? get instagramLabel {
+    if (instagram == null) return null;
+    final account = Uri.parse(instagram!)
+        .pathSegments
+        .firstWhere((segment) => segment.isNotEmpty, orElse: () => '');
+    return account.isEmpty ? 'Instagram' : '@$account';
   }
 }
 
@@ -488,7 +547,7 @@ class GridItem {
   final String? text;
 
   /// `"details": {"title": ..., "blocks": [...], "sources": [...]}`: the
-  /// card opens them in a dialog (the title defaults to the label), and is
+  /// card opens them in a bottom sheet (the title defaults to the label), and is
   /// checked once they were read.
   final VeganuaryInfo? details;
 

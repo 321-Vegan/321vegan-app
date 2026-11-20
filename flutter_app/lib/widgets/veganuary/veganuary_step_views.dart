@@ -6,6 +6,7 @@ import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../helpers/external_links.dart';
@@ -20,7 +21,10 @@ import '../b12/b12_reminder_settings_modal.dart';
 import '../shared/animated_reveal.dart';
 import '../shared/attention_pulse.dart';
 import '../shared/app_button.dart';
+import '../shared/app_card.dart';
+import '../shared/bottom_sheet_shell.dart';
 import '../shared/info_box.dart';
+import '../shared/tag_chip.dart';
 
 /// Pages of a Veganuary day: one view per kind of step, shown by
 /// VeganuaryDayPage between its progress bar and its button.
@@ -57,7 +61,7 @@ class _SourcesScope extends InheritedWidget {
 }
 
 /// What a day's app links need from the day page: leaving it for another
-/// tab of the app. Not in the dialogs of grid cards (another route).
+/// tab of the app. Not in the bottom sheets of grid cards (another route).
 class VeganuaryLinkScope extends InheritedWidget {
   /// Leaves the day for the map tab, on a layer ('shops' or
   /// 'restaurants'); null when there are no tabs to go to.
@@ -456,7 +460,7 @@ class _AppLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Nowhere to go (e.g. in a grid card's dialog): no button
+    // Nowhere to go (e.g. in a grid card's bottom sheet): no button
     if ((target == AppLinkTarget.restaurantsMap ||
             target == AppLinkTarget.productsMap) &&
         VeganuaryLinkScope.openMapOf(context) == null) {
@@ -499,7 +503,7 @@ class _AppLink extends StatelessWidget {
 }
 
 /// Rows of [columns] cards of the same height. Cards with details open them
-/// in a dialog, then show a check; the first one pulses until one is read.
+/// in a bottom sheet, then show a check; the first one pulses until one is read.
 class _VeganuaryGrid extends StatelessWidget {
   final int columns;
   final List<GridItem> items;
@@ -514,10 +518,13 @@ class _VeganuaryGrid extends StatelessWidget {
   });
 
   Future<void> _open(BuildContext context, GridItem item) async {
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (_) => _GridDetailsDialog(item: item),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _GridDetailsSheet(item: item),
     );
+    // Read, however it was closed (button, swipe down, tap outside)
     onCardSeen?.call(item);
   }
 
@@ -695,57 +702,85 @@ class _GridCard extends StatelessWidget {
   }
 }
 
-/// A grid card's details, opened from it.
-class _GridDetailsDialog extends StatelessWidget {
+/// A grid card's details, opened from it in a bottom sheet: scrolls when
+/// longer than most of the screen (testimonials, cards with photos).
+class _GridDetailsSheet extends StatelessWidget {
   final GridItem item;
 
-  const _GridDetailsDialog({required this.item});
+  const _GridDetailsSheet({required this.item});
 
   @override
   Widget build(BuildContext context) {
     final details = item.details!;
-    return Dialog(
-      backgroundColor: Colors.white,
-      shape: squircleBorder(radius: 28.r),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(48.w, 48.w, 48.w, 0),
-              child: _SourcesScope(
-                sources: details.sources,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(details.title,
-                        style: AppTextStyles.baloo22,
-                        textAlign: TextAlign.center),
-                    for (final block in details.blocks) ...[
-                      SizedBox(height: AppSpacing.item),
-                      _VeganuaryBlockView(block: block),
-                    ],
-                    if (details.sources.isNotEmpty) ...[
-                      SizedBox(height: AppSpacing.item),
-                      _VeganuarySources(sources: details.sources),
-                    ],
-                  ],
+    final media = MediaQuery.of(context);
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
+      child: BottomSheetShell(
+        padding: EdgeInsets.only(
+          left: 48.w,
+          right: 48.w,
+          top: 12.h,
+          bottom: media.padding.bottom + 48.w,
+        ),
+        child: Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: SingleChildScrollView(
+                  child: _SourcesScope(
+                    sources: details.sources,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // The card's emoji, big: not only text (testimonials)
+                        if (item.emoji != null) ...[
+                          Center(
+                            child: Container(
+                              width: 200.w,
+                              height: 200.w,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(item.emoji!,
+                                  style: TextStyle(fontSize: 96.sp)),
+                            ),
+                          ),
+                          SizedBox(height: AppSpacing.item),
+                        ],
+                        Text(details.title,
+                            style: AppTextStyles.baloo22,
+                            textAlign: TextAlign.center),
+                        for (final block in details.blocks) ...[
+                          SizedBox(height: AppSpacing.item),
+                          _VeganuaryBlockView(block: block),
+                        ],
+                        if (details.sources.isNotEmpty) ...[
+                          SizedBox(height: AppSpacing.item),
+                          _VeganuarySources(sources: details.sources),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(48.w),
-            child: SizedBox(
-              width: double.infinity,
-              child: AppButton(
-                label: item.detailsButton ?? 'J’ai compris',
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                onPressed: () => Navigator.of(context).pop(),
+              SizedBox(height: 48.w),
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  label: item.detailsButton ?? 'J’ai compris',
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1040,10 +1075,15 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
 
       // sharePositionOrigin is required for the iPad popover.
       final box = buttonContext.findRenderObject() as RenderBox?;
+      final credit = recipe.credit;
       await Share.shareXFiles(
         [XFile(file.path, mimeType: 'image/png')],
-        text: '${recipe.title} : la recette du Veganuary de 321 Vegan 🌱 '
-            'https://321vegan.fr',
+        text: credit == null
+            ? '${recipe.title} : la recette du Veganuary de 321 Vegan 🌱 '
+                'https://321vegan.fr'
+            : '${recipe.title}, une recette de ${credit.name}'
+                '${credit.blog != null ? ' (${credit.blog})' : ''}, dans le '
+                'Veganuary de 321 Vegan 🌱 https://321vegan.fr',
         sharePositionOrigin:
             box != null ? box.localToGlobal(Offset.zero) & box.size : null,
       );
@@ -1127,13 +1167,23 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal),
+          child: Text(
+            'La recette végane de la semaine !',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.baloo22.copyWith(color: Colors.grey[600]),
+          ),
+        ),
+        SizedBox(height: AppSpacing.afterTitle),
         if (recipe.image != null)
           Padding(
             padding:
                 EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal),
+            // Whole, at its own proportions: a portrait photo isn't cropped
             child: ClipSmoothRect(
               radius: squircleRadius(48.r),
-              child: VeganuaryImage(recipe.image!, height: 600.h),
+              child: VeganuaryImage(recipe.image!),
             ),
           ),
         Padding(
@@ -1143,16 +1193,14 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
             children: [
               if (recipe.image != null) SizedBox(height: AppSpacing.section),
               Text(
-                'La recette végane de la semaine !',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.baloo22.copyWith(color: Colors.grey[600]),
-              ),
-              SizedBox(height: AppSpacing.afterTitle),
-              Text(
                 recipe.title,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.baloo36,
               ),
+              if (recipe.credit != null) ...[
+                SizedBox(height: AppSpacing.item),
+                _RecipeCreditCard(recipe.credit!),
+              ],
               SizedBox(height: AppSpacing.section),
               Text(
                 recipe.servings == null
@@ -1209,7 +1257,7 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
               // Where the downloaded image comes from
               SizedBox(height: AppSpacing.afterTitle),
               Text(
-                'Recette du Veganuary · 321 Vegan',
+                '31 premiers jours vegan · 321 Vegan',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyRegular12
                     .copyWith(color: Colors.grey[500]),
@@ -1218,6 +1266,75 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Who the recipe comes from: their portrait, name and links. The links
+/// are written out (site, @account) so they stay readable in the
+/// downloaded image.
+class _RecipeCreditCard extends StatelessWidget {
+  final RecipeCredit credit;
+
+  const _RecipeCreditCard(this.credit);
+
+  @override
+  Widget build(BuildContext context) {
+    final linkColor = Theme.of(context).colorScheme.primary;
+    return AppCard(
+      padding: EdgeInsets.all(36.w),
+      child: Row(
+        children: [
+          if (credit.image != null) ...[
+            ClipOval(
+              child: SizedBox.square(
+                dimension: 220.w,
+                child: VeganuaryImage(credit.image!, height: 220.w),
+              ),
+            ),
+            SizedBox(width: 36.w),
+          ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Une recette de',
+                  style: AppTextStyles.bodyRegular12
+                      .copyWith(color: Colors.grey[600]),
+                ),
+                Text(
+                  credit.name,
+                  style: AppTextStyles.bodyBold15.copyWith(color: kTextPrimary),
+                ),
+                SizedBox(height: 18.h),
+                Wrap(
+                  spacing: 18.w,
+                  runSpacing: 12.h,
+                  children: [
+                    if (credit.blog != null)
+                      TagChip(
+                        label: credit.blogLabel!,
+                        icon: Icons.language_rounded,
+                        color: linkColor,
+                        onTap: () =>
+                            openExternalUrl(context, Uri.parse(credit.blog!)),
+                      ),
+                    if (credit.instagram != null)
+                      TagChip(
+                        label: credit.instagramLabel!,
+                        icon: FontAwesomeIcons.instagram,
+                        color: linkColor,
+                        onTap: () => openExternalUrl(
+                            context, Uri.parse(credit.instagram!)),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
