@@ -254,6 +254,7 @@ flutter:
     - lib/assets/veganuary/week1.json
     - lib/assets/veganuary/week2.json
     - lib/assets/veganuary/week3.json
+    - lib/assets/veganuary/week4.json
     # The whole folder (not its subfolders): images dropped in need no line
     - lib/assets/images/veganuary/
     # Others

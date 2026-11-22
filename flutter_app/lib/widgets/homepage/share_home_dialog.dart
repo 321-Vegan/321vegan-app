@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:vegan_app/models/seasonal_theme.dart';
 import 'package:vegan_app/themes/app_colors.dart';
 import 'package:vegan_app/themes/app_shapes.dart';
+import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/themes/default_theme.dart';
 import 'package:vegan_app/widgets/homepage/share_home_card.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
@@ -47,10 +48,8 @@ class ShareHomeDialog extends StatefulWidget {
 
 class _ShareHomeDialogState extends State<ShareHomeDialog> {
   static const List<ShareCardStyle> _styles = [
-    ShareCardStyle.darkMinimal,
-    ShareCardStyle.lightMinimal,
-    ShareCardStyle.dark,
-    ShareCardStyle.light,
+    ShareCardStyle.minimal,
+    ShareCardStyle.full,
   ];
 
   late final List<GlobalKey> _cardKeys =
@@ -149,6 +148,7 @@ class _ShareHomeDialogState extends State<ShareHomeDialog> {
                           child: FittedBox(
                             fit: BoxFit.contain,
                             child: MediaQuery.withNoTextScaling(
+                              // Transparent: on the dialog's background here
                               child: RepaintBoundary(
                                 key: _cardKeys[index],
                                 child: ShareHomeCard(
@@ -183,6 +183,13 @@ class _ShareHomeDialogState extends State<ShareHomeDialog> {
                       ),
                     );
                   }),
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  'Image sans fond, posée sur le fond de votre story',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodyRegular12
+                      .copyWith(color: Colors.grey[600]),
                 ),
                 SizedBox(height: 16.h),
                 Row(

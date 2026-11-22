@@ -16,6 +16,7 @@ import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/push_permission_prompt.dart';
 import '../../../widgets/veganuary/saturation_filter.dart';
 import '../../../widgets/veganuary/veganuary_progress_bar.dart';
+import '../../../widgets/veganuary/veganuary_recipes_section.dart';
 import '../../../widgets/veganuary/veganuary_step_views.dart';
 import '../../../widgets/veganuary/veganuary_week_title.dart';
 import 'veganuary_week_recap_page.dart';
@@ -25,7 +26,7 @@ enum _WeekState { completed, current, locked }
 /// The weeks of the Veganuary (from the path's "i" button): done ones lead
 /// to their fiches récap', the current one shows its progress, the next
 /// ones are locked.
-class VeganuaryWeeksPage extends StatelessWidget {
+class VeganuaryWeeksPage extends StatefulWidget {
   final List<VeganuaryWeek> weeks;
   final VeganuaryProgress progress;
 
@@ -43,6 +44,27 @@ class VeganuaryWeeksPage extends StatelessWidget {
     return Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => VeganuaryWeeksPage(weeks: weeks, progress: progress),
     ));
+  }
+
+  @override
+  State<VeganuaryWeeksPage> createState() => _VeganuaryWeeksPageState();
+}
+
+class _VeganuaryWeeksPageState extends State<VeganuaryWeeksPage> {
+  List<VeganuaryWeek> get weeks => widget.weeks;
+
+  /// Reloaded after a debug button (the path reloads once back on it).
+  late VeganuaryProgress progress = widget.progress;
+
+  /// A debug button: the page stays open, up to date, and says it's done.
+  Future<void> _debug(Future<void> Function() action, String done) async {
+    await action();
+    final updated = await VeganuaryService.loadProgress();
+    if (!mounted) return;
+    setState(() => progress = updated);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(done)));
   }
 
   _WeekState _stateOf(VeganuaryWeek week) {
@@ -84,6 +106,8 @@ class VeganuaryWeeksPage extends StatelessWidget {
                 ),
                 SizedBox(height: AppSpacing.item),
               ],
+              SizedBox(height: AppSpacing.section),
+              VeganuaryRecipesSection(weeks: weeks, progress: progress),
               if (kDebugMode) ...[
                 SizedBox(height: AppSpacing.section),
                 Wrap(
@@ -91,31 +115,26 @@ class VeganuaryWeeksPage extends StatelessWidget {
                   spacing: 24.w,
                   children: [
                     TextButton(
-                      onPressed: () async {
+                      onPressed: () => _debug(() async {
                         await VeganuaryService.shiftOneDayBack();
                         await VeganuaryReminderService.reschedule();
-                        if (context.mounted) Navigator.pop(context);
-                      },
+                      }, 'Passé au lendemain'),
                       child: const Text('Debug : passer au lendemain'),
                     ),
                     TextButton(
-                      onPressed: () async {
+                      onPressed: () => _debug(() async {
                         await VeganuaryService.reset();
                         // The reminder is offered again at the end of day 1
                         await VeganuaryReminderService.reset();
-                        if (context.mounted) Navigator.pop(context);
-                      },
+                      }, 'Parcours réinitialisé'),
                       child: const Text('Debug : réinitialiser'),
                     ),
-                    ValueListenableBuilder<bool>(
-                      valueListenable: VeganuaryService.debugUnlockAll,
-                      builder: (context, unlocked, _) => TextButton(
-                        onPressed: () =>
-                            VeganuaryService.debugUnlockAll.value = !unlocked,
-                        child: Text(unlocked
-                            ? 'Debug : reverrouiller'
-                            : 'Debug : tout débloquer (aperçu)'),
-                      ),
+                    TextButton(
+                      onPressed: () => _debug(() async {
+                        await VeganuaryService.debugCompleteNextDay();
+                        await VeganuaryReminderService.reschedule();
+                      }, 'Jour terminé'),
+                      child: const Text('Debug : terminer le jour'),
                     ),
                     TextButton(
                       onPressed: () async {
@@ -124,7 +143,7 @@ class VeganuaryWeeksPage extends StatelessWidget {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Rappel dans 10 secondes : '
-                                'passez l’app en arrière-plan'),
+                                "passez l'app en arrière-plan"),
                           ),
                         );
                       },
@@ -256,7 +275,7 @@ class _WeekCard extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: AppButton(
-                label: 'Voir les fiches récap’',
+                label: "Voir les fiches récap'",
                 compact: true,
                 backgroundColor: kAccentYellow,
                 onPressed: () =>

@@ -89,7 +89,10 @@ enum VeganuaryDayIcon {
   ecology,
   cosmetics,
   farming,
-  pets
+  pets,
+  media,
+  shelter,
+  dove
 }
 
 class VeganuaryDay {
@@ -259,6 +262,40 @@ class RecipeStep extends VeganuaryStep {
   /// The author, when the recipe comes from someone else.
   final RecipeCredit? credit;
 
+  /// Name of its downloaded image, after its title
+  /// ("recette-tarte-aux-poireaux"): each recipe saved under its own name.
+  String get fileName {
+    const accents = {
+      'à': 'a',
+      'â': 'a',
+      'ä': 'a',
+      'ç': 'c',
+      'é': 'e',
+      'è': 'e',
+      'ê': 'e',
+      'ë': 'e',
+      'î': 'i',
+      'ï': 'i',
+      'ô': 'o',
+      'ö': 'o',
+      'ù': 'u',
+      'û': 'u',
+      'ü': 'u',
+      'ÿ': 'y',
+      'œ': 'oe',
+      'æ': 'ae',
+    };
+    final plain = title
+        .toLowerCase()
+        .split('')
+        .map((char) => accents[char] ?? char)
+        .join();
+    final slug = plain
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+    return slug.isEmpty ? 'recette' : 'recette-$slug';
+  }
+
   const RecipeStep({
     required this.title,
     this.image,
@@ -336,17 +373,22 @@ class RecipeCredit {
 
   /// The blog's site, written out ("thegreenquest.org") so it stays
   /// readable in the downloaded image.
-  String? get blogLabel =>
-      blog == null ? null : Uri.parse(blog!).host.replaceFirst('www.', '');
+  String? get blogLabel => blog == null ? null : linkLabel(blog!);
 
   /// "@the_greenquest", likewise.
-  String? get instagramLabel {
-    if (instagram == null) return null;
-    final account = Uri.parse(instagram!)
-        .pathSegments
-        .firstWhere((segment) => segment.isNotEmpty, orElse: () => '');
-    return account.isEmpty ? 'Instagram' : '@$account';
-  }
+  String? get instagramLabel =>
+      instagram == null ? null : linkLabel(instagram!);
+}
+
+/// A link written out, to be read as well as tapped: "@the_greenquest" for
+/// an Instagram account, the site otherwise ("thegreenquest.org").
+String linkLabel(String url) {
+  final uri = Uri.parse(url);
+  final host = uri.host.replaceFirst('www.', '');
+  if (host != 'instagram.com') return host;
+  final account = uri.pathSegments
+      .firstWhere((segment) => segment.isNotEmpty, orElse: () => '');
+  return account.isEmpty ? 'Instagram' : '@$account';
 }
 
 class RecipeIngredients {
@@ -516,7 +558,10 @@ enum AppLinkTarget {
   restaurantsMap('restaurants_map'),
 
   /// The map tab on the shops where products were found, likewise.
-  productsMap('products_map');
+  productsMap('products_map'),
+
+  /// The partner shops and their promo codes ("Boutiques solidaires").
+  partners('partners');
 
   /// Its name in the JSON.
   final String json;
@@ -541,6 +586,11 @@ class GridItem {
 
   /// `"emoji": "🥪"`: shown instead of an image.
   final String? emoji;
+
+  /// `"icon": "book"` (or "podcast", "instagram", "site"): a plain tile
+  /// with that icon instead of an image, for a card without one (a book, an
+  /// account without a logo).
+  final String? icon;
   final String label;
 
   /// Under the label, smaller; `**text**` is bold.
@@ -552,16 +602,23 @@ class GridItem {
   final VeganuaryInfo? details;
 
   /// `"button": "Fermer"` in the details: the label of the button closing
-  /// them, when « J’ai compris » makes no sense (e.g. a testimonial).
+  /// them, when « J'ai compris » makes no sense (e.g. a testimonial).
   final String? detailsButton;
+
+  /// `"links": ["https://www.instagram.com/…/", {"label": "Écouter", "url":
+  /// "https://linktr.ee/…"}]`: under the text, a chip per link, to go
+  /// follow an account or visit a site. Optional to open, unlike [details].
+  final List<GridLink> links;
 
   const GridItem({
     this.image,
     this.emoji,
+    this.icon,
     required this.label,
     this.text,
     this.details,
     this.detailsButton,
+    this.links = const [],
   });
 
   factory GridItem.fromJson(Map<String, dynamic> json) {
@@ -570,13 +627,35 @@ class GridItem {
     return GridItem(
       image: json['image'] as String?,
       emoji: json['emoji'] as String?,
+      icon: json['icon'] as String?,
       label: label,
       text: json['text'] as String?,
       details: details == null
           ? null
           : VeganuaryInfo.fromJson({'title': label, ...details}),
       detailsButton: details?['button'] as String?,
+      links: [
+        for (final link in json['links'] as List? ?? const [])
+          GridLink.fromJson(link as Object),
+      ],
     );
+  }
+}
+
+/// A grid card's link: just its URL, written out on the chip (see
+/// [linkLabel]), or `{"label": "Écouter", "url": ...}` when the address says
+/// nothing (a linktree, a podcast page).
+class GridLink {
+  final String url;
+  final String label;
+
+  const GridLink({required this.url, required this.label});
+
+  factory GridLink.fromJson(Object json) {
+    if (json is String) return GridLink(url: json, label: linkLabel(json));
+    final map = json as Map<String, dynamic>;
+    final url = map['url'] as String;
+    return GridLink(url: url, label: map['label'] as String? ?? linkLabel(url));
   }
 }
 

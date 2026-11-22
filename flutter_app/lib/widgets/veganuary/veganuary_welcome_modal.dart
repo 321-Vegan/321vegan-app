@@ -11,14 +11,14 @@ const String veganuaryDisclaimer =
     'médical ni le suivi par un·e diététicien·ne.';
 
 const String veganuaryDisclaimerDetails =
-    'Un accompagnement peut être utile pour tout changement d’alimentation, '
-    'particulièrement pendant la grossesse et l’allaitement, pour les '
+    "Un accompagnement peut être utile pour tout changement d'alimentation, "
+    "particulièrement pendant la grossesse et l'allaitement, pour les "
     'enfants, ou si vous avez un problème de santé. La nutrition végétale '
-    'n’est pas toujours bien enseignée, et certain·es professionnel·les de '
-    'santé n’ont pas les connaissances les plus récentes sur le sujet. '
-    'N’hésitez pas à chercher un·e diététicien·ne formé·e ou habitué·e à '
-    'l’alimentation végétale. Et si on vous déconseille ce mode '
-    'd’alimentation, vous pouvez tout à fait consulter une autre personne '
+    "n'est pas toujours bien enseignée, et certain·es professionnel·les de "
+    "santé n'ont pas les connaissances les plus récentes sur le sujet. "
+    "N'hésitez pas à chercher un·e diététicien·ne formé·e ou habitué·e à "
+    "l'alimentation végétale. Et si on vous déconseille ce mode "
+    "d'alimentation, vous pouvez tout à fait consulter une autre personne "
     'mieux formée.';
 
 class _Step {
@@ -42,7 +42,7 @@ const _steps = [
     image: 'lib/assets/images/characters/watermelon.webp',
     title: 'Bienvenue dans le Veganuary !',
     text: '${VeganuaryService.totalDays} jours pour trouver les réponses aux '
-        'questions qu’on se pose sur le véganisme et bien commencer : chaque '
+        "questions qu'on se pose sur le véganisme et bien commencer : chaque "
         'jour, une info et une idée reçue à démonter, et une recette chaque '
         'semaine.',
   ),
@@ -50,8 +50,8 @@ const _steps = [
     image: 'lib/assets/images/characters/cow-ok.webp',
     title: 'À votre rythme',
     text: 'Un nouveau jour se débloque chaque jour. Un jour manqué ? Pas de '
-        'souci, vous pourrez le rattraper. L’essentiel de chaque semaine vous '
-        'attend ensuite dans ses fiches récap’.',
+        "souci, vous pourrez le rattraper. L'essentiel de chaque semaine vous "
+        "attend ensuite dans ses fiches récap'.",
   ),
   // No image: the text is long
   _Step(

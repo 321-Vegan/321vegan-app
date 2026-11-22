@@ -16,11 +16,11 @@
         "blocks": [
           {
             "type": "text",
-            "text": "Une alimentation végétalienne bien planifiée convient à toutes les étapes de la vie : enfance, grossesse, âge adulte, vieillesse. Elle convient aussi tout à fait aux personnes sportives. C’est la position de l’**Academy of Nutrition and Dietetics**, la plus grande association de diététicien·nes au monde [1]. Elle y associe même des bénéfices pour la santé, comme un risque plus faible de maladies cardiovasculaires et de diabète de type 2."
+            "text": "Une alimentation végétalienne bien planifiée convient à toutes les étapes de la vie : enfance, grossesse, âge adulte, vieillesse. Elle convient aussi tout à fait aux personnes sportives. C'est la position de l'**Academy of Nutrition and Dietetics**, la plus grande association de diététicien·nes au monde [1]. Elle y associe même des bénéfices pour la santé, comme un risque plus faible de maladies cardiovasculaires et de diabète de type 2."
           },
           {
             "type": "callout",
-            "text": "Quand on dit « bien planifiée », ça veut surtout dire qu’il faut se supplémenter en vitamine B12. Elle est produite par des bactéries et n’est pas présente dans les végétaux. On reparlera très vite de la supplémentation en B12 dans ce parcours. (Petit fait intéressant : les animaux d’élevage sont eux aussi souvent supplémentés en B12.)"
+            "text": "Quand on dit « bien planifiée », ça veut surtout dire qu'il faut se supplémenter en vitamine B12. Elle est produite par des bactéries et n'est pas présente dans les végétaux. On reparlera très vite de la supplémentation en B12 dans ce parcours. (Petit fait intéressant : les animaux d'élevage sont eux aussi souvent supplémentés en B12.)"
           },
           {
             "type": "text",
@@ -36,7 +36,7 @@
       },
       "recap": {
         "emoji": "💪",
-        "title": "Pas de carence si c’est bien planifié",
+        "title": "Pas de carence si c'est bien planifié",
         "bullets": [
           "Adapté à tous les âges, et au sport",
           "La B12 se prend en complément",
@@ -46,17 +46,17 @@
     },
     {
       "id": "privilegies",
-      "label": "Le véganisme, c’est un truc de privilégié·es",
+      "label": "Le véganisme, c'est un truc de privilégié·es",
       "answer": {
         "title": "Un truc de privilégié·es ?",
         "blocks": [
           {
             "type": "text",
-            "text": "**Côté alimentation**, les bases de l’alimentation végétale sont parmi les aliments les moins chers : légumineuses, riz, pâtes, flocons d’avoine, pommes de terre, légumes de saison ou surgelés."
+            "text": "**Côté alimentation**, les bases de l'alimentation végétale sont parmi les aliments les moins chers : légumineuses, riz, pâtes, flocons d'avoine, pommes de terre, légumes de saison ou surgelés."
           },
           {
             "type": "text",
-            "text": "Une étude de l’Université d’Oxford, publiée en 2021 dans The Lancet Planetary Health, a comparé le coût de plusieurs régimes dans 150 pays. Dans les pays riches comme la France, l’alimentation végane est ressortie comme la plus abordable, avec une facture réduite de 21 à 34 % selon sa composition [1]."
+            "text": "Une étude de l'Université d'Oxford, publiée en 2021 dans The Lancet Planetary Health, a comparé le coût de plusieurs régimes dans 150 pays. Dans les pays riches comme la France, l'alimentation végane est ressortie comme la plus abordable, avec une facture réduite de 21 à 34 % selon sa composition [1]."
           },
           {
             "type": "text",
@@ -64,12 +64,12 @@
           },
           {
             "type": "text",
-            "text": "**Côté éthique** : le véganisme, c’est refuser l’exploitation des animaux. Avoir de l’empathie pour elleux, se poser des questions morales et agir selon ses valeurs n’est pas une affaire de classe sociale. Laisser entendre que seules les personnes aisées s’intéressent à ces questions, c’est sous-entendre que les autres n’en sont pas capables. C’est un préjugé classiste, et c’est aussi factuellement faux."
+            "text": "**Côté éthique** : le véganisme, c'est refuser l'exploitation des animaux. Avoir de l'empathie pour elleux, se poser des questions morales et agir selon ses valeurs n'est pas une affaire de classe sociale. Laisser entendre que seules les personnes aisées s'intéressent à ces questions, c'est sous-entendre que les autres n'en sont pas capables. C'est un préjugé classiste, et c'est aussi factuellement faux."
           }
         ],
         "sources": [
           {
-            "label": "Springmann et al., The Lancet Planetary Health, 2021 (présentation de l’étude par l’Université d’Oxford)",
+            "label": "Springmann et al., The Lancet Planetary Health, 2021 (présentation de l'étude par l'Université d'Oxford)",
             "url": "https://www.leap.ox.ac.uk/article/sustainable-eating-is-cheaper-as-well-as-healthier-reveals-new-study"
           }
         ]
@@ -79,28 +79,28 @@
         "title": "Pas un truc de privilégié·es",
         "bullets": [
           "Les aliments de base sont parmi les moins chers",
-          "Jusqu’à un tiers d’économies dans les pays riches",
-          "L’empathie n’est pas une affaire de classe"
+          "Jusqu'à un tiers d'économies dans les pays riches",
+          "L'empathie n'est pas une affaire de classe"
         ]
       }
     },
     {
       "id": "naturel",
-      "label": "Il faut un complément, donc ce n’est pas naturel",
+      "label": "Il faut un complément, donc ce n'est pas naturel",
       "answer": {
         "title": "Un complément, pas naturel ?",
         "blocks": [
           {
             "type": "text",
-            "text": "C’est un argument qui s’appelle **l’appel à la nature** : un raisonnement fallacieux qui consiste à considérer qu’une chose est bonne parce qu’elle est naturelle, ou mauvaise parce qu’elle ne l’est pas."
+            "text": "C'est un argument qui s'appelle **l'appel à la nature** : un raisonnement fallacieux qui consiste à considérer qu'une chose est bonne parce qu'elle est naturelle, ou mauvaise parce qu'elle ne l'est pas."
           },
           {
             "type": "text",
-            "text": "Mais « naturel » ne veut pas dire « bon ». Par exemple, les champignons vénéneux sont naturels, alors que les lunettes, les vaccins ou les médicaments ne le sont pas. Au final, ce qui compte, c’est d’être en bonne santé et de faire des choix en accord avec ses valeurs. Un simple complément en B12 suffit pour répondre à ces deux points."
+            "text": "Mais « naturel » ne veut pas dire « bon ». Par exemple, les champignons vénéneux sont naturels, alors que les lunettes, les vaccins ou les médicaments ne le sont pas. Au final, ce qui compte, c'est d'être en bonne santé et de faire des choix en accord avec ses valeurs. Un simple complément en B12 suffit pour répondre à ces deux points."
           },
           {
             "type": "text",
-            "text": "D’ailleurs, on se supplémente déjà toutes et tous sans y penser. Par exemple, le sel est enrichi en iode, et beaucoup de produits en grande surface contiennent aussi des vitamines ajoutées. Personne ne trouve ça choquant : c’est simplement de la prévention."
+            "text": "D'ailleurs, on se supplémente déjà toutes et tous sans y penser. Par exemple, le sel est enrichi en iode, et beaucoup de produits en grande surface contiennent aussi des vitamines ajoutées. Personne ne trouve ça choquant : c'est simplement de la prévention."
           }
         ]
       },
@@ -108,7 +108,7 @@
         "emoji": "🍄",
         "title": "Naturel ne veut pas dire bon",
         "bullets": [
-          "L’appel à la nature est un raisonnement fallacieux",
+          "L'appel à la nature est un raisonnement fallacieux",
           "Un simple complément de B12 suffit",
           "On se supplémente déjà : le sel iodé…"
         ]
@@ -116,9 +116,9 @@
     },
     {
       "id": "traite",
-      "label": "Les vaches ont besoin d’être traites",
+      "label": "Les vaches ont besoin d'être traites",
       "answer": {
-        "title": "Les vaches ont-elles besoin d’être traites ?",
+        "title": "Les vaches ont-elles besoin d'être traites ?",
         "blocks": [
           {
             "type": "text",
@@ -126,17 +126,17 @@
           },
           {
             "type": "text",
-            "text": "Les vaches laitières ont été sélectionnées pendant des générations pour produire énormément de lait, bien plus qu’un veau ne pourrait en boire. Et de toute façon, le veau n’en profite pas : il est séparé de sa mère peu après sa naissance, pour que le lait soit vendu. Les femelles deviendront souvent vaches laitières à leur tour, et les mâles seront engraissés puis assassinés pour leur viande. La filière viande est étroitement liée à l’industrie du lait."
+            "text": "Les vaches laitières ont été sélectionnées pendant des générations pour produire énormément de lait, bien plus qu'un veau ne pourrait en boire. Et de toute façon, le veau n'en profite pas : il est séparé de sa mère peu après sa naissance, pour que le lait soit vendu. Les femelles deviendront souvent vaches laitières à leur tour, et les mâles seront engraissés puis assassinés pour leur viande. La filière viande est étroitement liée à l'industrie du lait."
           },
           {
             "type": "text",
-            "text": "Le besoin pour la vache d’être traite a été **créé de toutes pièces par l’élevage** : on l’a sélectionnée pour produire une énorme quantité de lait, on l’a inséminée, puis on lui a retiré son petit."
+            "text": "Le besoin pour la vache d'être traite a été **créé de toutes pièces par l'élevage** : on l'a sélectionnée pour produire une énorme quantité de lait, on l'a inséminée, puis on lui a retiré son petit."
           }
         ]
       },
       "recap": {
         "emoji": "🐄",
-        "title": "Un besoin créé par l’élevage",
+        "title": "Un besoin créé par l'élevage",
         "bullets": [
           "Pas de lait sans petit à nourrir",
           "Le veau est séparé de sa mère",
@@ -152,19 +152,19 @@
         "blocks": [
           {
             "type": "text",
-            "text": "Les poules d’aujourd’hui ont été sélectionnées génétiquement pour pondre énormément : environ 300 œufs par an. Leur ancêtre sauvage en pond une vingtaine tout au plus, seulement pendant une certaine période."
+            "text": "Les poules d'aujourd'hui ont été sélectionnées génétiquement pour pondre énormément : environ 300 œufs par an. Leur ancêtre sauvage en pond une vingtaine tout au plus, seulement pendant une certaine période."
           },
           {
             "type": "text",
-            "text": "Ce rythme de ponte énorme cause beaucoup de souffrances et épuise leur organisme. Pour fabriquer la coquille, la poule utilise ses réserves de calcium, jusque dans ses os, ce qui provoque de l’ostéoporose, des fractures, et des maladies de l’appareil reproducteur, toujours douloureuses et parfois mortelles."
+            "text": "Ce rythme de ponte énorme cause beaucoup de souffrances et épuise leur organisme. Pour fabriquer la coquille, la poule utilise ses réserves de calcium, jusque dans ses os, ce qui provoque de l'ostéoporose, des fractures, et des maladies de l'appareil reproducteur, toujours douloureuses et parfois mortelles."
           },
           {
             "type": "text",
-            "text": "On peut laisser leurs œufs aux poules : elles les mangent souvent. On peut aussi les leur écraser : en mangeant la coquille, elles récupèrent une partie du calcium perdu. C’est ce que font de nombreux refuges pour animaux d’élevage sauvés de l’abattoir."
+            "text": "On peut laisser leurs œufs aux poules : elles les mangent souvent. On peut aussi les leur écraser : en mangeant la coquille, elles récupèrent une partie du calcium perdu. C'est ce que font de nombreux refuges pour animaux d'élevage sauvés de l'abattoir."
           },
           {
             "type": "text",
-            "text": "Il existe une autre solution : un **implant hormonal** qui met la ponte en pause pendant plusieurs mois. Il permet de soulager les poules et de prévenir les maladies liées à la ponte. Une alternative plus coûteuse, mais qui permet d’améliorer grandement la vie des poules."
+            "text": "Il existe une autre solution : un **implant hormonal** qui met la ponte en pause pendant plusieurs mois. Il permet de soulager les poules et de prévenir les maladies liées à la ponte. Une alternative plus coûteuse, mais qui permet d'améliorer grandement la vie des poules."
           }
         ]
       },
@@ -180,25 +180,25 @@
     },
     {
       "id": "abeilles",
-      "label": "L’apiculture sauve les abeilles et aide la pollinisation",
+      "label": "L'apiculture sauve les abeilles et aide la pollinisation",
       "answer": {
-        "title": "L’apiculture sauve-t-elle les abeilles ?",
+        "title": "L'apiculture sauve-t-elle les abeilles ?",
         "blocks": [
           {
             "type": "text",
-            "text": "Il faut bien faire la distinction entre les **abeilles domestiques** (qu’on élève pour voler leur miel) et les **abeilles et autres pollinisateurs sauvages**. Les abeilles domestiques ne sont absolument pas en danger ; en revanche, les milliers d’espèces d’abeilles sauvages le sont. Et l’élevage d’abeilles mellifères contribue à leur mise en danger en leur faisant concurrence [1]."
+            "text": "Il faut bien faire la distinction entre les **abeilles domestiques** (qu'on élève pour voler leur miel) et les **abeilles et autres pollinisateurs sauvages**. Les abeilles domestiques ne sont absolument pas en danger ; en revanche, les milliers d'espèces d'abeilles sauvages le sont. Et l'élevage d'abeilles mellifères contribue à leur mise en danger en leur faisant concurrence [1]."
           },
           {
             "type": "text",
-            "text": "Évidemment, l’apiculture n’est pas la principale cause de disparition des pollinisateurs (qui est l’usage d’insecticides), mais il est certain que l’apiculture et l’introduction d’abeilles mellifères dans ces milieux ne les aident pas !"
+            "text": "Évidemment, l'apiculture n'est pas la principale cause de disparition des pollinisateurs (qui est l'usage d'insecticides), mais il est certain que l'apiculture et l'introduction d'abeilles mellifères dans ces milieux ne les aident pas !"
           },
           {
             "type": "text",
-            "text": "Et l’apiculture reste de l’exploitation : le miel, c’est la réserve de nourriture que les abeilles fabriquent pour passer l’hiver. Les apiculteurs le récoltent et le remplacent souvent par du sirop de sucre, bien moins nutritif. Certaines pratiques sont très cruelles : reines inséminées artificiellement, remplacées régulièrement, ou dont on coupe les ailes pour éviter que la colonie ne parte, enfumage pour la récolte, etc."
+            "text": "Et l'apiculture reste de l'exploitation : le miel, c'est la réserve de nourriture que les abeilles fabriquent pour passer l'hiver. Les apiculteurs le récoltent et le remplacent souvent par du sirop de sucre, bien moins nutritif. Certaines pratiques sont très cruelles : reines inséminées artificiellement, remplacées régulièrement, ou dont on coupe les ailes pour éviter que la colonie ne parte, enfumage pour la récolte, etc."
           },
           {
             "type": "text",
-            "text": "Pour aider vraiment les pollinisateurs, mieux vaut planter des fleurs locales et laisser des coins de jardin sauvages. Et militer pour l’arrêt de l’utilisation des pesticides !"
+            "text": "Pour aider vraiment les pollinisateurs, mieux vaut planter des fleurs locales et laisser des coins de jardin sauvages. Et militer pour l'arrêt de l'utilisation des pesticides !"
           }
         ],
         "sources": [
@@ -226,15 +226,15 @@
         "blocks": [
           {
             "type": "text",
-            "text": "Le soja a très mauvaise réputation, surtout en France. Il contient des **phyto-œstrogènes** (des isoflavones). Malgré leur nom, ce ne sont pas des œstrogènes. Leur structure ressemble un peu, mais elles n’agissent pas de la même façon : elles se fixent surtout sur certains récepteurs, et peuvent avoir un effet différent, voire opposé."
+            "text": "Le soja a très mauvaise réputation, surtout en France. Il contient des **phyto-œstrogènes** (des isoflavones). Malgré leur nom, ce ne sont pas des œstrogènes. Leur structure ressemble un peu, mais elles n'agissent pas de la même façon : elles se fixent surtout sur certains récepteurs, et peuvent avoir un effet différent, voire opposé."
           },
           {
             "type": "text",
-            "text": "**Chez les hommes, pas d’effet sur les hormones.** Une méta-analyse de 2021 conclut que, quelle que soit la dose, le soja ne modifie ni la testostérone ni les œstrogènes [1]. Le soja ne féminise pas, ne fait pas pousser les seins : tout ça, ce sont des mythes…"
+            "text": "**Chez les hommes, pas d'effet sur les hormones.** Une méta-analyse de 2021 conclut que, quelle que soit la dose, le soja ne modifie ni la testostérone ni les œstrogènes [1]. Le soja ne féminise pas, ne fait pas pousser les seins : tout ça, ce sont des mythes…"
           },
           {
             "type": "text",
-            "text": "En 2025, l’Anses a déconseillé le soja aux femmes enceintes ou allaitantes et recommandé de ne plus en servir dans les cantines. Cet avis est très discuté. Il repose surtout sur des études chez le rat, or les rongeurs métabolisent les isoflavones très différemment de nous [2]. L’Anses n’a pas non plus pris en compte les bénéfices du soja, ni ce qui le remplacerait dans les assiettes des cantines. Or les études chez l’humain sont plutôt rassurantes, et même souvent positives [3]."
+            "text": "En 2025, l'Anses a déconseillé le soja aux femmes enceintes ou allaitantes et recommandé de ne plus en servir dans les cantines. Cet avis est très discuté. Il repose surtout sur des études chez le rat, or les rongeurs métabolisent les isoflavones très différemment de nous [2]. L'Anses n'a pas non plus pris en compte les bénéfices du soja, ni ce qui le remplacerait dans les assiettes des cantines. Or les études chez l'humain sont plutôt rassurantes, et même souvent positives [3]."
           }
         ],
         "sources": [
@@ -254,7 +254,7 @@
       },
       "recap": {
         "emoji": "🫘",
-        "title": "Le soja n’est pas mauvais pour la santé",
+        "title": "Le soja n'est pas mauvais pour la santé",
         "bullets": [
           "Phyto-œstrogènes ne veut pas dire œstrogènes",
           "Pas d'effets négatifs sur les hormones"
@@ -269,13 +269,13 @@
       "steps": [
         {
           "type": "quiz",
-          "question": "Selon vous, être végane, c’est…",
+          "question": "Selon vous, être végane, c'est…",
           "choices": [
             {
               "text": "Ne plus manger de viande ni de poisson"
             },
             {
-              "text": "Ne manger aucun produit d’origine animale",
+              "text": "Ne manger aucun produit d'origine animale",
               "result": "partial"
             },
             {
@@ -286,7 +286,7 @@
               "text": "Suivre un régime alimentaire pour être en bonne santé"
             }
           ],
-          "explanation": "Le véganisme n’est pas un régime alimentaire : il rejette autant que possible **toute exploitation animale**, dans l’assiette mais aussi pour s’habiller, se divertir ou prendre soin de soi. Ne manger aucun produit d’origine animale, c’est le **végétalisme**, le régime alimentaire des véganes. On voit tout ça juste après !"
+          "explanation": "Le véganisme n'est pas un régime alimentaire : il rejette autant que possible **toute exploitation animale**, dans l'assiette mais aussi pour s'habiller, se divertir ou prendre soin de soi. Ne manger aucun produit d'origine animale, c'est le **végétalisme**, le régime alimentaire des véganes. On voit tout ça juste après !"
         },
         {
           "type": "info",
@@ -294,16 +294,16 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Souvent, les notions de véganisme, végétalisme, végétarisme, etc. sont mal comprises. C’est important de bien définir tout ça et donc c’est ce qu’on va faire pour ce premier jour !"
+              "text": "Souvent, les notions de véganisme, végétalisme, végétarisme, etc. sont mal comprises. C'est important de bien définir tout ça et donc c'est ce qu'on va faire pour ce premier jour !"
             },
             {
               "type": "bullets",
               "items": [
                 "**Végétarisme** : régime alimentaire qui exclut la consommation de chair animale (dont, évidemment, le poisson).",
-                "**Pesco-végétarisme** : comme le végétarisme, mais qui n’exclut pas le poisson.",
+                "**Pesco-végétarisme** : comme le végétarisme, mais qui n'exclut pas le poisson.",
                 "**Ovo-végétarisme** : végétarisme qui exclut le lait mais pas les œufs.",
                 "**Lacto-végétarisme** : végétarisme qui exclut les œufs mais pas le lait.",
-                "**Végétalisme** : régime alimentaire qui exclut la consommation de produits d’origine animale (chair animale, lait, œufs, miel et leurs dérivés)."
+                "**Végétalisme** : régime alimentaire qui exclut la consommation de produits d'origine animale (chair animale, lait, œufs, miel et leurs dérivés)."
               ]
             }
           ]
@@ -314,7 +314,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Le **véganisme** rejette et exclut autant que possible toute exploitation animale. Ce n’est pas un régime alimentaire : le régime alimentaire des véganes, c’est le végétalisme."
+              "text": "Le **véganisme** rejette et exclut autant que possible toute exploitation animale. Ce n'est pas un régime alimentaire : le régime alimentaire des véganes, c'est le végétalisme."
             },
             {
               "type": "text",
@@ -324,9 +324,9 @@
               "type": "bullets",
               "items": [
                 "**les loisirs** : zoos, cirques avec animaux, équitation…",
-                "**l’habillement** : laine, soie, cuir…",
-                "**les cosmétiques** contenant des produits d’origine animale, ou dont les marques n’excluent pas les tests sur les animaux",
-                "**les procédés de fabrication** qui utilisent des produits d’origine animale : collage du vin au blanc d’œuf, clarification du jus de pomme à la gélatine…",
+                "**l'habillement** : laine, soie, cuir…",
+                "**les cosmétiques** contenant des produits d'origine animale, ou dont les marques n'excluent pas les tests sur les animaux",
+                "**les procédés de fabrication** qui utilisent des produits d'origine animale : collage du vin au blanc d'œuf, clarification du jus de pomme à la gélatine…",
                 "**certaines méthodes de récolte** : chiens truffiers pour les truffes, singes pour la cueillette des noix de coco…"
               ]
             }
@@ -339,9 +339,9 @@
             {
               "type": "bullets",
               "items": [
-                "**Carnisme** : c’est le système de croyance qui légitime la consommation de viande.",
-                "**Spécisme** : c’est le système d’oppression fondé sur l’espèce.",
-                "**Antispécisme** : c’est l’opposition au spécisme et donc à l’exploitation animale. C’est considérer que les intérêts des animaux doivent être pris en compte de façon équitable. Les antispécistes sont donc véganes et ont un régime alimentaire végétalien."
+                "**Carnisme** : c'est le système de croyance qui légitime la consommation de viande.",
+                "**Spécisme** : c'est le système d'oppression fondé sur l'espèce.",
+                "**Antispécisme** : c'est l'opposition au spécisme et donc à l'exploitation animale. C'est considérer que les intérêts des animaux doivent être pris en compte de façon équitable. Les antispécistes sont donc véganes et ont un régime alimentaire végétalien."
               ]
             }
           ]
@@ -353,8 +353,8 @@
             {
               "type": "bullets",
               "items": [
-                "**POA – Produit d’Origine Animale** : ça désigne tous les produits qui sont obtenus à partir d’animaux (viande, lait, œufs, miel, etc.).",
-                "**PEA – Produit de l’Exploitation Animale** : ça désigne tous les produits qui ont nécessité une forme d’exploitation d’animaux non-humains."
+                "**POA – Produit d'Origine Animale** : ça désigne tous les produits qui sont obtenus à partir d'animaux (viande, lait, œufs, miel, etc.).",
+                "**PEA – Produit de l'Exploitation Animale** : ça désigne tous les produits qui ont nécessité une forme d'exploitation d'animaux non-humains."
               ]
             }
           ]
@@ -369,15 +369,15 @@
           "title": "Végétarisme et végétalisme",
           "bullets": [
             "Végétarisme : pas de chair animale, poisson compris",
-            "Pesco, ovo, lacto : ce qu’on garde en plus",
-            "Végétalisme : aucun produit d’origine animale"
+            "Pesco, ovo, lacto : ce qu'on garde en plus",
+            "Végétalisme : aucun produit d'origine animale"
           ]
         },
         {
           "emoji": "🌱",
           "title": "Le véganisme",
           "bullets": [
-            "Il exclut autant que possible l’exploitation animale",
+            "Il exclut autant que possible l'exploitation animale",
             "Son régime alimentaire : le végétalisme",
             "Il concerne aussi les loisirs, les vêtements, les cosmétiques…"
           ]
@@ -387,7 +387,7 @@
           "title": "Carnisme et spécisme",
           "bullets": [
             "Carnisme : ce qui légitime la consommation de viande",
-            "Spécisme : une oppression fondée sur l’espèce",
+            "Spécisme : une oppression fondée sur l'espèce",
             "Antispécisme : les intérêts des animaux comptent"
           ]
         },
@@ -395,8 +395,8 @@
           "emoji": "🔤",
           "title": "Les abréviations",
           "bullets": [
-            "POA : produit d’origine animale",
-            "PEA : produit de l’exploitation animale"
+            "POA : produit d'origine animale",
+            "PEA : produit de l'exploitation animale"
           ]
         }
       ]
@@ -411,7 +411,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Pas besoin de tout racheter d’un coup : voici les bases à avoir sous la main pour cuisiner végane au quotidien. **Touchez chaque catégorie** pour la découvrir !"
+              "text": "Pas besoin de tout racheter d'un coup : voici les bases à avoir sous la main pour cuisiner végane au quotidien. **Touchez chaque catégorie** pour la découvrir !"
             },
             {
               "type": "grid",
@@ -424,7 +424,7 @@
                     "blocks": [
                       {
                         "type": "text",
-                        "text": "Qu’elles soient à base de légumes ou de légumineuses, les conserves sont de précieuses alliées au quotidien. Elles offrent un accès simple et rapide à des aliments riches en fibres, tout en conservant leurs qualités nutritionnelles et en facilitant la préparation des repas."
+                        "text": "Qu'elles soient à base de légumes ou de légumineuses, les conserves sont de précieuses alliées au quotidien. Elles offrent un accès simple et rapide à des aliments riches en fibres, tout en conservant leurs qualités nutritionnelles et en facilitant la préparation des repas."
                       },
                       {
                         "type": "grid",
@@ -449,7 +449,7 @@
                       },
                       {
                         "type": "callout",
-                        "text": "Attention aux conserves cuisinées, de lentilles par exemple : certaines contiennent de la graisse d’oie."
+                        "text": "Attention aux conserves cuisinées, de lentilles par exemple : certaines contiennent de la graisse d'oie."
                       }
                     ]
                   }
@@ -462,7 +462,7 @@
                     "blocks": [
                       {
                         "type": "text",
-                        "text": "À base de soja, d’amande, d’avoine, de riz ou autres, ils remplacent très bien le lait de vache (comme boisson ou dans des recettes)."
+                        "text": "À base de soja, d'amande, d'avoine, de riz ou autres, ils remplacent très bien le lait de vache (comme boisson ou dans des recettes)."
                       },
                       {
                         "type": "grid",
@@ -470,12 +470,12 @@
                           {
                             "image": "lib/assets/images/veganuary/placard-laits-soja.webp",
                             "label": "Le soja",
-                            "text": "Il s’utilise principalement pour cuisiner (béchamel, sauce « fromagère », gâteaux, etc.)."
+                            "text": "Il s'utilise principalement pour cuisiner (béchamel, sauce « fromagère », gâteaux, etc.)."
                           },
                           {
                             "image": "lib/assets/images/veganuary/placard-laits-avoine.webp",
-                            "label": "L’avoine",
-                            "text": "Doux et légèrement sucré, il peut s’utiliser partout. Un très bon choix dans les cafés au lait par exemple !"
+                            "label": "L'avoine",
+                            "text": "Doux et légèrement sucré, il peut s'utiliser partout. Un très bon choix dans les cafés au lait par exemple !"
                           },
                           {
                             "image": "lib/assets/images/veganuary/placard-laits-riz.webp",
@@ -484,7 +484,7 @@
                           },
                           {
                             "image": "lib/assets/images/veganuary/placard-laits-amande.webp",
-                            "label": "L’amande",
+                            "label": "L'amande",
                             "text": "Plus fort en goût, il est très utile dans de nombreuses préparations sucrées."
                           }
                         ],
@@ -492,7 +492,7 @@
                       },
                       {
                         "type": "text",
-                        "text": "Et il y en a plein d’autres (cajou, noisette, chanvre…). Essayez-en et trouvez ceux que vous préférez !"
+                        "text": "Et il y en a plein d'autres (cajou, noisette, chanvre…). Essayez-en et trouvez ceux que vous préférez !"
                       }
                     ]
                   }
@@ -505,7 +505,7 @@
                     "blocks": [
                       {
                         "type": "text",
-                        "text": "Elles permettent d’enrichir les recettes tout en offrant une grande variété d’arômes et de bienfaits."
+                        "text": "Elles permettent d'enrichir les recettes tout en offrant une grande variété d'arômes et de bienfaits."
                       },
                       {
                         "type": "text",
@@ -557,7 +557,7 @@
                       },
                       {
                         "type": "callout",
-                        "text": "Attention : certaines huiles sont enrichies en vitamine D d’origine animale (produite à partir de laine de mouton), et certaines margarines contiennent du lait. Pensez à scanner le produit avec 321 Vegan pour vérifier !"
+                        "text": "Attention : certaines huiles sont enrichies en vitamine D d'origine animale (produite à partir de laine de mouton), et certaines margarines contiennent du lait. Pensez à scanner le produit avec 321 Vegan pour vérifier !"
                       }
                     ]
                   }
@@ -570,7 +570,7 @@
                     "blocks": [
                       {
                         "type": "text",
-                        "text": "Elles permettent d’assaisonner et de relever rapidement les plats. Pratiques, elles apportent de la profondeur aux recettes."
+                        "text": "Elles permettent d'assaisonner et de relever rapidement les plats. Pratiques, elles apportent de la profondeur aux recettes."
                       },
                       {
                         "type": "grid",
@@ -616,7 +616,7 @@
                     "blocks": [
                       {
                         "type": "text",
-                        "text": "L’alimentation végétale offre une très grande variété de sources de protéines ! En voici quelques-unes."
+                        "text": "L'alimentation végétale offre une très grande variété de sources de protéines ! En voici quelques-unes."
                       },
                       {
                         "type": "grid",
@@ -702,7 +702,7 @@
                     "blocks": [
                       {
                         "type": "text",
-                        "text": "Transformés ou non, c’est une source de glucides, et une des bases de tous les repas."
+                        "text": "Transformés ou non, c'est une source de glucides, et une des bases de tous les repas."
                       },
                       {
                         "type": "grid",
@@ -755,7 +755,7 @@
                           {
                             "image": "lib/assets/images/veganuary/placard-cremes-soja.webp",
                             "label": "Soja",
-                            "text": "Pas chère, pratique, c’est la base !"
+                            "text": "Pas chère, pratique, c'est la base !"
                           },
                           {
                             "image": "lib/assets/images/veganuary/placard-cremes-cajou.webp",
@@ -780,15 +780,24 @@
         },
         {
           "type": "info",
-          "title": "Et les produits pas véganes qu’on a chez soi ?",
+          "title": "Et les produits pas véganes qu'on a chez soi ?",
           "blocks": [
             {
               "type": "text",
-              "text": "Quand on devient végane, on prend conscience de la violence qui se cache derrière ces produits. On n’a donc plus envie de les voir dans ses placards."
+              "text": "Quand on devient végane, on prend conscience de la violence qui se cache derrière ces produits. On n'a donc plus envie de les voir dans ses placards."
             },
             {
               "type": "text",
-              "text": "Ce que vous en faites vous appartient. Certaines personnes choisissent de les donner à leur entourage ou à une association, d’autres de les jeter. **Il n’y a pas de bonne ou de mauvaise réponse** : faites ce qui vous semble juste !"
+              "text": "Ce que vous en faites vous appartient. Certaines personnes choisissent de les donner à leur entourage ou à une association, d'autres de les jeter. **Il n'y a pas de bonne ou de mauvaise réponse** : faites ce qui vous semble juste !"
+            },
+            {
+              "type": "text",
+              "text": "**Bon à savoir** : pour remplacer tout ça, des boutiques en ligne véganes partenaires de l'app vous offrent des **codes promo** !"
+            },
+            {
+              "type": "app_link",
+              "label": "Voir les boutiques solidaires",
+              "target": "partners"
             }
           ]
         },
@@ -810,7 +819,7 @@
           "emoji": "🔍",
           "title": "Les pièges à éviter",
           "bullets": [
-            "Pâtes fraîches aux œufs, conserves à la graisse d’oie",
+            "Pâtes fraîches aux œufs, conserves à la graisse d'oie",
             "Vitamine D animale, margarines au lait",
             "Dans le doute, scannez avec l'appli !"
           ]
@@ -840,7 +849,7 @@
             },
             {
               "type": "text",
-              "text": "L’ajout de B12 dans les produits du commerce (fromages végétaux, steaks végétaux, laits végétaux, levure maltée…) ne suffit pas. **Sans complémentation, une carence arrivera tôt ou tard**, et peut avoir des conséquences graves."
+              "text": "L'ajout de B12 dans les produits du commerce (fromages végétaux, steaks végétaux, laits végétaux, levure maltée…) ne suffit pas. **Sans complémentation, une carence arrivera tôt ou tard**, et peut avoir des conséquences graves."
             },
             {
               "type": "app_link",
@@ -849,7 +858,7 @@
             },
             {
               "type": "text",
-              "text": "Vous pouvez ajouter un rappel directement sur l’app :"
+              "text": "Vous pouvez ajouter un rappel directement sur l'app :"
             },
             {
               "type": "app_link",
@@ -884,7 +893,7 @@
                 "20 cl de crème de soja",
                 "1 cuillère à café de moutarde",
                 "1 cuillère à soupe de levure maltée",
-                "1 cuillère à café de poudre d’ail",
+                "1 cuillère à café de poudre d'ail",
                 "1 pincée de sel"
               ]
             },
@@ -898,21 +907,27 @@
               "title": "Ou pour une pâte brisée maison",
               "items": [
                 "250 g de farine",
-                "8 cl d’eau",
-                "8 cl d’huile",
+                "8 cl d'eau",
+                "8 cl d'huile",
                 "1 pincée de sel",
                 "Optionnel : quelques graines (lin, moutarde, courge, tournesol…)"
               ]
             }
           ],
           "steps": [
-            "Pâte maison : on mélange la farine, le sel et les graines, on ajoute l’eau et l’huile, puis on pétrit jusqu’à obtenir une boule homogène.",
-            "On coupe les poireaux et on les fait revenir dans une poêle avec de l’huile (ou du beurre végétal).",
+            "Pâte maison : on mélange la farine, le sel et les graines, on ajoute l'eau et l'huile, puis on pétrit jusqu'à obtenir une boule homogène.",
+            "On coupe les poireaux et on les fait revenir dans une poêle avec de l'huile (ou du beurre végétal).",
             "Une fois cuits, on ajoute les lardons végétaux ou le tofu fumé.",
-            "On mélange la crème, la moutarde, la levure maltée, la poudre d’ail et le sel, puis on ajoute tout ça aux poireaux.",
+            "On mélange la crème, la moutarde, la levure maltée, la poudre d'ail et le sel, puis on ajoute tout ça aux poireaux.",
             "On étale la pâte dans un moule et on y verse la garniture.",
-            "Au four à 180 °C pendant 25 à 30 minutes, ou jusqu’à ce que la pâte soit cuite : ça dépend de la pâte utilisée."
-          ]
+            "Au four à 180 °C pendant 25 à 30 minutes, ou jusqu'à ce que la pâte soit cuite : ça dépend de la pâte utilisée."
+          ],
+          "credit": {
+            "name": "Camille · 321 Vegan",
+            "image": "lib/assets/app_icon.png",
+            "blog": "https://321vegan.fr",
+            "instagram": "https://www.instagram.com/321vegan.app/"
+          }
         }
       ],
       "recap": [
@@ -922,7 +937,7 @@
           "bullets": [
             "Pas de source végétale fiable",
             "Les produits enrichis ne suffisent pas",
-            "Un rappel dans l’app pour ne pas oublier"
+            "Un rappel dans l'app pour ne pas oublier"
           ]
         },
         {
@@ -944,17 +959,17 @@
           "question": "Selon vous, combien de temps vit en moyenne une vache laitière en France ?",
           "choices": [
             {
-              "text": "Une vingtaine d’années"
+              "text": "Une vingtaine d'années"
             },
             {
-              "text": "Une dizaine d’années"
+              "text": "Une dizaine d'années"
             },
             {
               "text": "Moins de 6 ans",
               "result": "right"
             }
           ],
-          "explanation": "En moyenne **5,7 ans**, alors qu’une vache peut vivre une vingtaine d’années. Dès que sa production de lait baisse, elle est envoyée à l’abattoir."
+          "explanation": "En moyenne **5,7 ans**, alors qu'une vache peut vivre une vingtaine d'années. Dès que sa production de lait baisse, elle est envoyée à l'abattoir."
         },
         {
           "type": "info",
@@ -963,11 +978,11 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Derrière l’image joyeuse et rassurante des produits laitiers se cache une tout autre réalité : une vie de souffrance pour des millions de vaches, et la mort pour leurs enfants."
+              "text": "Derrière l'image joyeuse et rassurante des produits laitiers se cache une tout autre réalité : une vie de souffrance pour des millions de vaches, et la mort pour leurs enfants."
             },
             {
               "type": "text",
-              "text": "Une vache, comme tous les mammifères, ne produit du lait que pour nourrir son petit. Pour qu’elle en produise en continu, elle est **inséminée artificiellement tous les ans**."
+              "text": "Une vache, comme tous les mammifères, ne produit du lait que pour nourrir son petit. Pour qu'elle en produise en continu, elle est **inséminée artificiellement tous les ans**."
             },
             {
               "type": "text",
@@ -982,7 +997,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Quand sa production baisse, la vache est envoyée à l’abattoir. En France, les vaches laitières ont une **durée de vie moyenne de 5,7 ans**, alors qu’elles peuvent vivre une vingtaine d’années. Une bonne partie de la viande de bœuf vendue en France provient d’ailleurs de ces vaches laitières."
+              "text": "Quand sa production baisse, la vache est envoyée à l'abattoir. En France, les vaches laitières ont une **durée de vie moyenne de 5,7 ans**, alors qu'elles peuvent vivre une vingtaine d'années. Une bonne partie de la viande de bœuf vendue en France provient d'ailleurs de ces vaches laitières."
             },
             {
               "type": "text",
@@ -990,7 +1005,7 @@
             },
             {
               "type": "text",
-              "text": "On a pris le cas des vaches, mais c’est la même chose pour les chèvres et tous les animaux à qui on vole le lait."
+              "text": "On a pris le cas des vaches, mais c'est la même chose pour les chèvres et tous les animaux à qui on vole le lait."
             }
           ]
         },
@@ -1022,7 +1037,7 @@
             {
               "type": "bullets",
               "items": [
-                "**Avec ou sans sucre ?** Certains ont du sucre ajouté : vérifiez les ingrédients en fonction de ce que vous voulez ! Certains laits, comme l’avoine ou le riz, ont naturellement un petit goût sucré. C’est normal, il vient des céréales elles-mêmes, mais ils sont moins adaptés à la cuisine salée.",
+                "**Avec ou sans sucre ?** Certains ont du sucre ajouté : vérifiez les ingrédients en fonction de ce que vous voulez ! Certains laits, comme l'avoine ou le riz, ont naturellement un petit goût sucré. C'est normal, il vient des céréales elles-mêmes, mais ils sont moins adaptés à la cuisine salée.",
                 "**Aromatisé ?** Vanille, chocolat, caramel… il en existe plein, plus ou moins sucrés.",
                 "**Version barista ?** Ces laits sont conçus pour le café. Idéal pour les cappuccinos et lattes maison.",
                 "**Enrichi en calcium ?** Vous pouvez aussi en choisir."
@@ -1041,7 +1056,7 @@
           "bullets": [
             "Inséminées chaque année pour produire du lait",
             "Le veau leur est retiré peu après sa naissance",
-            "Abattues vers 5,7 ans, au lieu d’une vingtaine"
+            "Abattues vers 5,7 ans, au lieu d'une vingtaine"
           ]
         },
         {
@@ -1080,7 +1095,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Les œufs sont numérotés, de **0 à 3**. Ce chiffre indique le **type d’élevage** de la poule qui a produit l’œuf."
+              "text": "Les œufs sont numérotés, de **0 à 3**. Ce chiffre indique le **type d'élevage** de la poule qui a produit l'œuf."
             },
             {
               "type": "text",
@@ -1155,8 +1170,8 @@
                         "type": "bullets",
                         "items": [
                           "**Trop grand nombre** devant les portes, donc **incapables de se disperser**.",
-                          "Environnement **extérieur pas adapté** : pas d’abris, de végétation, rien pour se cacher alors que ce sont des animaux prudents.",
-                          "**Alimentation** disponible uniquement **à l’intérieur**."
+                          "Environnement **extérieur pas adapté** : pas d'abris, de végétation, rien pour se cacher alors que ce sont des animaux prudents.",
+                          "**Alimentation** disponible uniquement **à l'intérieur**."
                         ]
                       }
                     ]
@@ -1176,7 +1191,7 @@
                       },
                       {
                         "type": "text",
-                        "text": "Ce n’est pas bien différent du code 1, si ce n’est l’alimentation bio et le nombre théoriquement réduit."
+                        "text": "Ce n'est pas bien différent du code 1, si ce n'est l'alimentation bio et le nombre théoriquement réduit."
                       },
                       {
                         "type": "text",
@@ -1184,11 +1199,11 @@
                       },
                       {
                         "type": "callout",
-                        "text": "« L’exploitation comporte 7500 poules pondeuses d’œufs-BIO, ce qui représente une production d’environ 6400 à 7000 œufs par jour. Les poules ont le luxe de pouvoir prendre l’air sur un total de 3 ha ! »"
+                        "text": "« L'exploitation comporte 7500 poules pondeuses d'œufs-BIO, ce qui représente une production d'environ 6400 à 7000 œufs par jour. Les poules ont le luxe de pouvoir prendre l'air sur un total de 3 ha ! »"
                       },
                       {
                         "type": "text",
-                        "text": "Voici le terrain désertique où les poules ont **« le luxe de pouvoir prendre l’air »** :"
+                        "text": "Voici le terrain désertique où les poules ont **« le luxe de pouvoir prendre l'air »** :"
                       },
                       {
                         "type": "image",
@@ -1226,14 +1241,14 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Quel que soit le numéro sur l’œuf, la filière fonctionne de la même façon :"
+              "text": "Quel que soit le numéro sur l'œuf, la filière fonctionne de la même façon :"
             },
             {
               "type": "bullets",
               "items": [
-                "**Les poussins mâles sont tués.** Ils ne pondent pas, et ne grossissent pas assez vite pour être rentables en viande : ils sont éliminés à la naissance, ou avant l’éclosion. En France, leur élimination systématique est interdite depuis 2023, mais des dérogations existent et des millions de poussins sont encore tués chaque année [1].",
-                "**Les poules sont abattues jeunes.** Vers 18 mois, quand leur ponte ralentit, elles sont envoyées à l’abattoir, alors qu’elles pourraient vivre encore plusieurs années.",
-                "**Leur corps s’épuise.** Elles ont été sélectionnées pour pondre environ 300 œufs par an, un rythme qui abîme leur organisme."
+                "**Les poussins mâles sont tués.** Ils ne pondent pas, et ne grossissent pas assez vite pour être rentables en viande : ils sont éliminés à la naissance, ou avant l'éclosion. En France, leur élimination systématique est interdite depuis 2023, mais des dérogations existent et des millions de poussins sont encore tués chaque année [1].",
+                "**Les poules sont abattues jeunes.** Vers 18 mois, quand leur ponte ralentit, elles sont envoyées à l'abattoir, alors qu'elles pourraient vivre encore plusieurs années.",
+                "**Leur corps s'épuise.** Elles ont été sélectionnées pour pondre environ 300 œufs par an, un rythme qui abîme leur organisme."
               ]
             },
             {
@@ -1243,7 +1258,7 @@
           ],
           "sources": [
             {
-              "label": "Reporterre, « Les poussins sont toujours broyés en France malgré l’interdiction »",
+              "label": "Reporterre, « Les poussins sont toujours broyés en France malgré l'interdiction »",
               "url": "https://reporterre.net/Les-poussins-sont-toujours-broyes-en-France-malgre-l-interdiction"
             }
           ]
@@ -1277,17 +1292,17 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Dans un gâteau, l’œuf sert surtout à lier et à donner du moelleux. Plein d’ingrédients savent faire la même chose ! Pour remplacer **un œuf** :"
+              "text": "Dans un gâteau, l'œuf sert surtout à lier et à donner du moelleux. Plein d'ingrédients savent faire la même chose ! Pour remplacer **un œuf** :"
             },
             {
               "type": "bullets",
               "items": [
                 "**Compote de pommes** : 50 g, pour le moelleux des gâteaux, des muffins et des cookies.",
                 "**Banane écrasée** : une demi-banane, quand son goût va bien avec la recette.",
-                "**Graines de lin moulues** : 2 cuillères à café mélangées à 2 cuillères à soupe d’eau, pour lier.",
+                "**Graines de lin moulues** : 2 cuillères à café mélangées à 2 cuillères à soupe d'eau, pour lier.",
                 "**Tofu soyeux ** : 50 g, pour les flans, les cheesecakes et les gâteaux.",
-                "**Fécule de maïs** : 1 cuillère à soupe délayée dans un peu d’eau, pour lier.",
-                "**Aquafaba** (l’eau des pois chiches en conserve) : elle se monte en neige comme des blancs d’œufs, pour les mousses au chocolat et les meringues."
+                "**Fécule de maïs** : 1 cuillère à soupe délayée dans un peu d'eau, pour lier.",
+                "**Aquafaba** (l'eau des pois chiches en conserve) : elle se monte en neige comme des blancs d'œufs, pour les mousses au chocolat et les meringues."
               ]
             },
             {
@@ -1296,7 +1311,7 @@
             },
             {
               "type": "text",
-              "text": "Et si vous n’êtes pas sûr·e de comment remplacer les œufs dans vos recettes, il y a un super article sur **Vegan Pratique** [1]."
+              "text": "Et si vous n'êtes pas sûr·e de comment remplacer les œufs dans vos recettes, il y a un super article sur **Vegan Pratique** [1]."
             }
           ],
           "sources": [
@@ -1313,10 +1328,10 @@
             {
               "type": "bullets",
               "items": [
-                "**Tofu brouillé** : du tofu ferme émietté à la poêle, avec du curcuma pour la couleur et une pincée de sel kala namak pour le goût d’œuf. Parfait à la place des œufs brouillés !",
-                "**Quiches et tartes salées** : on remplace l’appareil aux œufs par du tofu soyeux mixé, ou simplement par de la crème de soja, comme dans la tarte aux poireaux du jour 3.",
-                "**Omelettes** : avec de la farine de pois chiches et de l’eau, ou avec des substituts tout prêts.",
-                "**Mayonnaise** : de la crème de soja, de l’huile et de la moutarde, au mixeur plongeant."
+                "**Tofu brouillé** : du tofu ferme émietté à la poêle, avec du curcuma pour la couleur et une pincée de sel kala namak pour le goût d'œuf. Parfait à la place des œufs brouillés !",
+                "**Quiches et tartes salées** : on remplace l'appareil aux œufs par du tofu soyeux mixé, ou simplement par de la crème de soja, comme dans la tarte aux poireaux du jour 3.",
+                "**Omelettes** : avec de la farine de pois chiches et de l'eau, ou avec des substituts tout prêts.",
+                "**Mayonnaise** : de la crème de soja, de l'huile et de la moutarde, au mixeur plongeant."
               ]
             }
           ]
@@ -1330,7 +1345,7 @@
           "emoji": "🥚",
           "title": "Les numéros sur les œufs",
           "bullets": [
-            "De 0 (bio) à 3 (en cage) : le type d’élevage",
+            "De 0 (bio) à 3 (en cage) : le type d'élevage",
             "« Plein air » : des milliers de poules, un extérieur peu utilisé",
             "Les vrais codes 0 : les alternatives végétales"
           ]
@@ -1341,7 +1356,7 @@
           "bullets": [
             "Les poussins mâles sont tués",
             "Les poules sont abattues vers 18 mois",
-            "Quel que soit le numéro sur l’œuf"
+            "Quel que soit le numéro sur l'œuf"
           ]
         },
         {
@@ -1350,7 +1365,7 @@
           "bullets": [
             "Sucré : compote, graines de lin, tofu soyeux, aquafaba",
             "Salé : tofu brouillé, farine de pois chiches",
-            "Le sel kala namak pour le goût d’œuf"
+            "Le sel kala namak pour le goût d'œuf"
           ]
         }
       ]
@@ -1364,17 +1379,17 @@
           "question": "Selon vous, pourquoi les abeilles fabriquent-elles du miel ?",
           "choices": [
             {
-              "text": "C’est un déchet qu’elles rejettent"
+              "text": "C'est un déchet qu'elles rejettent"
             },
             {
-              "text": "Elles en produisent trop : c’est du surplus"
+              "text": "Elles en produisent trop : c'est du surplus"
             },
             {
-              "text": "Pour se nourrir : c’est leur nourriture",
+              "text": "Pour se nourrir : c'est leur nourriture",
               "result": "right"
             }
           ],
-          "explanation": "**Le miel n’est pas un déchet, et il n’y a pas de surplus.** C’est la nourriture des abeilles, qu’elles produisent pour leur survie."
+          "explanation": "**Le miel n'est pas un déchet, et il n'y a pas de surplus.** C'est la nourriture des abeilles, qu'elles produisent pour leur survie."
         },
         {
           "type": "info",
@@ -1383,11 +1398,11 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Le miel est souvent vanté comme étant un produit naturel, sain et bénéfique. Pourtant, derrière ce mythe se cachent d’importants **enjeux éthiques et écologiques**."
+              "text": "Le miel est souvent vanté comme étant un produit naturel, sain et bénéfique. Pourtant, derrière ce mythe se cachent d'importants **enjeux éthiques et écologiques**."
             },
             {
               "type": "text",
-              "text": "Le miel est un **produit de l’élevage** d’animaux : les **abeilles domestiques**. Et comme tout élevage, il implique la **reproduction contrôlée** des animaux et l’**exploitation de leur travail**."
+              "text": "Le miel est un **produit de l'élevage** d'animaux : les **abeilles domestiques**. Et comme tout élevage, il implique la **reproduction contrôlée** des animaux et l'**exploitation de leur travail**."
             },
             {
               "type": "callout",
@@ -1396,7 +1411,7 @@
           ],
           "sources": [
             {
-              "label": "Ministère de l’Agriculture, « La gestion sanitaire des abeilles »",
+              "label": "Ministère de l'Agriculture, « La gestion sanitaire des abeilles »",
               "url": "https://agriculture.gouv.fr/la-gestion-sanitaire-des-abeilles"
             }
           ]
@@ -1408,15 +1423,15 @@
           "blocks": [
             {
               "type": "text",
-              "text": "**L’élevage est un problème en tant que tel.** Mais on pourrait penser que dans le cas des abeilles, « ça va, on ne les tue pas : on prend juste un peu de miel »."
+              "text": "**L'élevage est un problème en tant que tel.** Mais on pourrait penser que dans le cas des abeilles, « ça va, on ne les tue pas : on prend juste un peu de miel »."
             },
             {
               "type": "text",
-              "text": "Il faut bien comprendre que **le miel n’est pas un déchet et qu’il n’y a pas de surplus**. C’est la nourriture des abeilles, qu’elles produisent pour leur survie."
+              "text": "Il faut bien comprendre que **le miel n'est pas un déchet et qu'il n'y a pas de surplus**. C'est la nourriture des abeilles, qu'elles produisent pour leur survie."
             },
             {
               "type": "text",
-              "text": "Et beaucoup d’entre elles meurent !"
+              "text": "Et beaucoup d'entre elles meurent !"
             }
           ]
         },
@@ -1434,7 +1449,7 @@
             },
             {
               "type": "text",
-              "text": "C’est la conclusion d’un article scientifique publié en 2025 [1]."
+              "text": "C'est la conclusion d'un article scientifique publié en 2025 [1]."
             }
           ],
           "sources": [
@@ -1473,7 +1488,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Pour des raisons éthiques et écologiques, on arrête de consommer des produits de l’apiculture. Mais ce n’est **pas que le miel**, c’est aussi :"
+              "text": "Pour des raisons éthiques et écologiques, on arrête de consommer des produits de l'apiculture. Mais ce n'est **pas que le miel**, c'est aussi :"
             },
             {
               "type": "grid",
@@ -1481,15 +1496,15 @@
               "items": [
                 {
                   "label": "La gelée royale",
-                  "text": "Produite par les abeilles ouvrières, c’est la nourriture des larves et de la reine. Utilisée en compléments alimentaires, parfois en cosmétique."
+                  "text": "Produite par les abeilles ouvrières, c'est la nourriture des larves et de la reine. Utilisée en compléments alimentaires, parfois en cosmétique."
                 },
                 {
                   "label": "La propolis",
-                  "text": "Fabriquée par l’abeille à partir de ses sécrétions et de la propolis végétale qu’elle a récoltée. Utilisée en compléments alimentaires, dans certains médicaments et en cosmétique."
+                  "text": "Fabriquée par l'abeille à partir de ses sécrétions et de la propolis végétale qu'elle a récoltée. Utilisée en compléments alimentaires, dans certains médicaments et en cosmétique."
                 },
                 {
-                  "label": "La cire d’abeille",
-                  "text": "Sécrétée par les abeilles, qui l’utilisent pour construire les rayons de leur ruche. Produits d’entretien, bougies, cosmétiques, enrobage, emballages…"
+                  "label": "La cire d'abeille",
+                  "text": "Sécrétée par les abeilles, qui l'utilisent pour construire les rayons de leur ruche. Produits d'entretien, bougies, cosmétiques, enrobage, emballages…"
                 }
               ]
             }
@@ -1506,9 +1521,9 @@
             {
               "type": "bullets",
               "items": [
-                "**Sirop d’agave**",
+                "**Sirop d'agave**",
                 "**Sirop de dattes**",
-                "**Sirop d’érable**",
+                "**Sirop d'érable**",
                 "**Mélasse**",
                 "**« Miel » végane** (par exemple **Vegablum**)"
               ]
@@ -1524,8 +1539,8 @@
           "emoji": "🐝",
           "title": "Ce que le miel coûte aux abeilles",
           "bullets": [
-            "Le miel est un produit de l’élevage",
-            "Ni déchet ni surplus : c’est leur nourriture",
+            "Le miel est un produit de l'élevage",
+            "Ni déchet ni surplus : c'est leur nourriture",
             "Les abeilles sont sentientes et communiquent"
           ]
         },
@@ -1533,7 +1548,7 @@
           "emoji": "🕯️",
           "title": "Pas que le miel",
           "bullets": [
-            "Gelée royale, propolis, cire d’abeille",
+            "Gelée royale, propolis, cire d'abeille",
             "En compléments, cosmétiques, bougies…"
           ]
         },
@@ -1541,7 +1556,7 @@
           "emoji": "🥞",
           "title": "Remplacer le miel",
           "bullets": [
-            "Sirops d’agave, de dattes ou d’érable",
+            "Sirops d'agave, de dattes ou d'érable",
             "Mélasse, « miel » végane"
           ]
         }
@@ -1559,14 +1574,14 @@
               "text": "Que chaque repas soit parfait nutritionnellement"
             },
             {
-              "text": "Peser et compter tout ce qu’on mange"
+              "text": "Peser et compter tout ce qu'on mange"
             },
             {
-              "text": "Que l’équilibre se fasse sur la journée",
+              "text": "Que l'équilibre se fasse sur la journée",
               "result": "right"
             }
           ],
-          "explanation": "L’équilibre alimentaire ne se fait pas sur un seul repas, mais plutôt **sur la journée**. Tous vos repas n’ont pas à être « parfaits » nutritionnellement !"
+          "explanation": "L'équilibre alimentaire ne se fait pas sur un seul repas, mais plutôt **sur la journée**. Tous vos repas n'ont pas à être « parfaits » nutritionnellement !"
         },
         {
           "type": "info",
@@ -1574,17 +1589,17 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Faire un repas végane ne consiste pas seulement à retirer les produits d’origine animale de vos plats habituels : il s’agit de **modifier les recettes** pour avoir un plat à la fois bon et complet."
+              "text": "Faire un repas végane ne consiste pas seulement à retirer les produits d'origine animale de vos plats habituels : il s'agit de **modifier les recettes** pour avoir un plat à la fois bon et complet."
             },
             {
               "type": "text",
-              "text": "Notez que l’équilibre alimentaire ne se fait pas sur un seul repas, mais plutôt sur la journée, et que tous vos repas n’ont pas à être « parfaits » nutritionnellement !"
+              "text": "Notez que l'équilibre alimentaire ne se fait pas sur un seul repas, mais plutôt sur la journée, et que tous vos repas n'ont pas à être « parfaits » nutritionnellement !"
             }
           ]
         },
         {
           "type": "info",
-          "title": "L’assiette équilibrée 🥗",
+          "title": "L'assiette équilibrée 🥗",
           "blocks": [
             {
               "type": "text",
@@ -1615,7 +1630,7 @@
                 },
                 {
                   "label": "Fer",
-                  "text": "Lentilles et autres légumineuses, tofu, graines de courge, flocons d’avoine, quinoa, légumes verts à feuilles, chocolat noir."
+                  "text": "Lentilles et autres légumineuses, tofu, graines de courge, flocons d'avoine, quinoa, légumes verts à feuilles, chocolat noir."
                 },
                 {
                   "label": "Calcium",
@@ -1633,7 +1648,7 @@
             },
             {
               "type": "callout",
-              "text": "L’absorption du fer est améliorée s’il est associé à une source de vitamine C. Et évitez le thé et le café pendant les repas, qui freinent son absorption."
+              "text": "L'absorption du fer est améliorée s'il est associé à une source de vitamine C. Et évitez le thé et le café pendant les repas, qui freinent son absorption."
             }
           ]
         },
@@ -1644,10 +1659,10 @@
       "recap": [
         {
           "emoji": "🥗",
-          "title": "L’assiette équilibrée",
+          "title": "L'assiette équilibrée",
           "bullets": [
             "Légumes, féculents, protéines végétales, graisses",
-            "L’équilibre se fait sur la journée",
+            "L'équilibre se fait sur la journée",
             "Pas besoin de repas « parfaits »"
           ]
         },

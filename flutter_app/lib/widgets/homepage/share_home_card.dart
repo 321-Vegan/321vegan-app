@@ -7,15 +7,15 @@ import 'package:vegan_app/themes/app_shapes.dart';
 import 'package:vegan_app/themes/app_text_styles.dart';
 import 'package:vegan_app/widgets/homepage/stat_card.dart';
 
-/// The four shareable looks for [ShareHomeCard]: [dark] is the original
-/// seasonal-primary-colored card, [light] the cream/brand-green variant.
-/// [darkMinimal]/[lightMinimal] swap the heading and feature chips for a
-/// plain "321 Vegan" brand mark.
-enum ShareCardStyle { dark, light, darkMinimal, lightMinimal }
+/// The shareable looks for [ShareHomeCard]: [full] has a "Vous connaissez
+/// 321 Vegan ?" heading and feature chips, [minimal] a plain "321 Vegan"
+/// brand mark instead.
+enum ShareCardStyle { full, minimal }
 
 /// The image that gets shared: the home page (counter + stats) inside a
-/// phone mockup. Uses fixed logical sizes (no ScreenUtil) so the captured
-/// image is identical on every device.
+/// phone mockup, on a transparent background (laid on the story's own).
+/// Uses fixed logical sizes (no ScreenUtil) so the captured image is
+/// identical on every device.
 class ShareHomeCard extends StatelessWidget {
   final DateTime targetDate;
   final Map<String, int> savings;
@@ -26,59 +26,36 @@ class ShareHomeCard extends StatelessWidget {
     required this.targetDate,
     required this.savings,
     required this.theme,
-    this.style = ShareCardStyle.dark,
+    this.style = ShareCardStyle.full,
     super.key,
   });
-
-  bool get _isLight =>
-      style == ShareCardStyle.light || style == ShareCardStyle.lightMinimal;
-
-  bool get _isMinimal =>
-      style == ShareCardStyle.darkMinimal || style == ShareCardStyle.lightMinimal;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 360,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      decoration: BoxDecoration(
-        gradient: _isLight
-            ? const LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                stops: [0.0, 0.3],
-                colors: [kBackgroundGradientTop, kBackgroundGradientBottom],
-              )
-            : LinearGradient(
-                colors: [
-                  Color.lerp(theme.primaryColor, Colors.black, 0.35)!,
-                  theme.primaryColor,
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildPhoneMockup(),
           const SizedBox(height: 14),
-          if (_isMinimal)
+          if (style == ShareCardStyle.minimal)
             _buildBrandMark()
           else ...[
             _buildHeading(),
             const SizedBox(height: 10),
-            Wrap(
+            const Wrap(
               alignment: WrapAlignment.center,
               spacing: 6,
               runSpacing: 6,
               children: [
-                _FeatureChip('🌱 Voir son impact', light: _isLight),
-                _FeatureChip('📷 Scanner les produits', light: _isLight),
-                _FeatureChip('💸 Des réductions', light: _isLight),
-                _FeatureChip('🤝 Communautaire', light: _isLight),
-                _FeatureChip('❤️ Gratuit', light: _isLight),
-                _FeatureChip('💻 Open source', light: _isLight),
+                _FeatureChip('🌱 Voir son impact'),
+                _FeatureChip('📷 Scanner les produits'),
+                _FeatureChip('💸 Des réductions'),
+                _FeatureChip('🤝 Communautaire'),
+                _FeatureChip('❤️ Gratuit'),
+                _FeatureChip('💻 Open source'),
               ],
             ),
           ],
@@ -88,19 +65,12 @@ class ShareHomeCard extends StatelessWidget {
   }
 
   Widget _buildHeading() {
-    final headingStyle = AppTextStyles.baloo22
-        .copyWith(color: _isLight ? kTextPrimary : Colors.white);
-    final brandStyle = AppTextStyles.baloo22
-        .copyWith(color: _isLight ? theme.primaryColor : Colors.white);
+    final brandStyle = AppTextStyles.baloo22.copyWith(color: theme.primaryColor);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Vous connaissez ', style: headingStyle),
-        Image.asset(
-          _isLight ? 'lib/assets/app_icon.png' : 'lib/assets/white_icon.png',
-          width: 20,
-          height: 20,
-        ),
+        Text('Vous connaissez ', style: AppTextStyles.baloo22),
+        Image.asset('lib/assets/app_icon.png', width: 20, height: 20),
         const SizedBox(width: 4),
         Text('321 Vegan', style: brandStyle),
         Text(' ?', style: brandStyle),
@@ -109,18 +79,15 @@ class ShareHomeCard extends StatelessWidget {
   }
 
   Widget _buildBrandMark() {
-    final brandStyle = AppTextStyles.baloo22
-        .copyWith(color: _isLight ? theme.primaryColor : Colors.white);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Image.asset(
-          _isLight ? 'lib/assets/app_icon.png' : 'lib/assets/white_icon.png',
-          width: 22,
-          height: 22,
-        ),
+        Image.asset('lib/assets/app_icon.png', width: 22, height: 22),
         const SizedBox(width: 6),
-        Text('321 Vegan', style: brandStyle),
+        Text(
+          '321 Vegan',
+          style: AppTextStyles.baloo22.copyWith(color: theme.primaryColor),
+        ),
       ],
     );
   }
@@ -375,22 +342,20 @@ class _CounterCard extends StatelessWidget {
 
 class _FeatureChip extends StatelessWidget {
   final String label;
-  final bool light;
 
-  const _FeatureChip(this.label, {this.light = false});
+  const _FeatureChip(this.label);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: light ? kSecondaryTag : Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(14),
-        border: light ? Border.all(color: kAccentYellow) : null,
+      decoration: const ShapeDecoration(
+        color: kSecondaryTag,
+        shape: StadiumBorder(side: BorderSide(color: kAccentYellow)),
       ),
       child: Text(
         label,
-        style: AppTextStyles.bodyMedium11.copyWith(color: light ? kAccentYellow : Colors.white,)
+        style: AppTextStyles.bodyMedium11.copyWith(color: kAccentYellow),
       ),
     );
   }

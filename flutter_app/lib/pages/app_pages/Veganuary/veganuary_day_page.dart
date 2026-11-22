@@ -13,6 +13,7 @@ import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/tag_chip.dart';
 import '../../../widgets/veganuary/veganuary_progress_bar.dart';
+import '../../../widgets/veganuary/veganuary_recipe_unlocked.dart';
 import '../../../widgets/veganuary/veganuary_step_views.dart';
 
 const String _defaultMythTitle =
@@ -68,10 +69,6 @@ class VeganuaryDayPage extends StatefulWidget {
   final VeganuaryDay day;
   final VeganuaryProgress progress;
 
-  /// Debug: a locked day opened anyway, done like a new one but saving
-  /// nothing (see [VeganuaryService.debugUnlockAll]).
-  final bool preview;
-
   /// Switches to the map tab, on a layer (its app links), once the day is
   /// closed.
   final ValueChanged<String>? onOpenMap;
@@ -81,7 +78,6 @@ class VeganuaryDayPage extends StatefulWidget {
     required this.week,
     required this.day,
     required this.progress,
-    this.preview = false,
     this.onOpenMap,
   });
 
@@ -91,16 +87,11 @@ class VeganuaryDayPage extends StatefulWidget {
     required VeganuaryWeek week,
     required VeganuaryDay day,
     required VeganuaryProgress progress,
-    bool preview = false,
     ValueChanged<String>? onOpenMap,
   }) {
     return Navigator.of(context).push<bool>(MaterialPageRoute(
       builder: (_) => VeganuaryDayPage(
-          week: week,
-          day: day,
-          progress: progress,
-          preview: preview,
-          onOpenMap: onOpenMap),
+          week: week, day: day, progress: progress, onOpenMap: onOpenMap),
     ));
   }
 
@@ -135,6 +126,9 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
   final _confettiController =
       ConfettiController(duration: const Duration(seconds: 2));
 
+  /// "Recette débloquée !" over the recipe page just reached.
+  bool _recipeUnlocking = false;
+
   bool get _alreadyDone => widget.progress.isCompleted(widget.day.number);
 
   @override
@@ -148,7 +142,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
     _resume();
     if (_alreadyDone) _revealQuizzes();
     // Started today: no reminder this morning
-    if (!_alreadyDone && !widget.preview) {
+    if (!_alreadyDone) {
       VeganuaryReminderService.markDayOpened();
     }
     PreferencesHelper.getHapticFeedbackPref()
@@ -201,7 +195,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
   /// For the ring on the path, and to resume on [screen] with what was done
   /// so far.
   void _saveStarted(int screen) {
-    if (_alreadyDone || widget.preview) return;
+    if (_alreadyDone) return;
     VeganuaryService.saveStarted(
       VeganuaryStartedDay(
         day: widget.day.number,
@@ -288,9 +282,8 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
 
   bool get _isLast => _index == _screens.length - 1;
 
-  /// Back on the path: true once the day was done (not in a preview, which
-  /// saved nothing to celebrate).
-  void _close() => Navigator.of(context).pop(_completed && !widget.preview);
+  /// Back on the path: true once the day was done.
+  void _close() => Navigator.of(context).pop(_completed);
 
   /// The day resumes where it was left, like when closed with its button.
   void _openMap(String layer) {
@@ -304,15 +297,6 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
       return;
     }
     if (_screens[_index + 1] is _DoneScreen) {
-      if (widget.preview) {
-        // As if done, for the done page only
-        _savedProgress =
-            widget.progress.withCompleted(widget.day.number, mythId: _mythId);
-        _completed = true;
-        _confettiController.play();
-        setState(() => _index++);
-        return;
-      }
       setState(() => _saving = true);
       _savedProgress = await VeganuaryService.completeDay(widget.day.number,
           mythId: _mythId);
@@ -325,7 +309,18 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
     } else {
       _saveStarted(_index + 1);
     }
-    setState(() => _index++);
+    setState(() {
+      _index++;
+      // Only going forward on a day not done yet (not on a reread, nor
+      // back to it), and not if the phone asks for fewer animations
+      _recipeUnlocking = _screen is _RecipeScreen &&
+          !_alreadyDone &&
+          !MediaQuery.of(context).disableAnimations;
+    });
+  }
+
+  void _recipeUnlocked() {
+    if (_haptics) HapticHelper.impact();
   }
 
   void _back() {
@@ -431,6 +426,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
           nextAvailable: _savedProgress!.stateOf(widget.day.number + 1) ==
               VeganuaryDayState.available,
           badgeImage: widget.week.badgeImage,
+          weekNumber: widget.week.number,
         ),
       _RecapScreen() => VeganuaryRecapView(
           cards: _recapCards,
@@ -537,6 +533,13 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
                 ],
               ),
             ),
+            if (_recipeUnlocking)
+              Positioned.fill(
+                child: VeganuaryRecipeUnlocked(
+                  onUnlocked: _recipeUnlocked,
+                  onDone: () => setState(() => _recipeUnlocking = false),
+                ),
+              ),
             // Same burst as the vegan anniversary (home.dart)
             Align(
               alignment: Alignment.topCenter,

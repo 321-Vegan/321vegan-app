@@ -1,16 +1,12 @@
-import 'dart:io';
-import 'dart:ui' as ui;
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../helpers/external_links.dart';
+import '../../helpers/image_capture.dart';
 import '../../models/veganuary/veganuary_content.dart';
+import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../pages/app_pages/Profile/b12_info_page.dart';
 import '../../services/veganuary_service.dart';
 import '../../themes/app_colors.dart';
@@ -25,6 +21,7 @@ import '../shared/app_card.dart';
 import '../shared/bottom_sheet_shell.dart';
 import '../shared/info_box.dart';
 import '../shared/tag_chip.dart';
+import 'veganuary_story_share.dart';
 
 /// Pages of a Veganuary day: one view per kind of step, shown by
 /// VeganuaryDayPage between its progress bar and its button.
@@ -435,6 +432,7 @@ class _AppLink extends StatelessWidget {
         AppLinkTarget.b12Reminder => Icons.notifications_active_outlined,
         AppLinkTarget.restaurantsMap => Icons.restaurant_rounded,
         AppLinkTarget.productsMap => Icons.storefront_rounded,
+        AppLinkTarget.partners => Icons.local_offer_rounded,
       };
 
   void _open(BuildContext context) {
@@ -455,6 +453,10 @@ class _AppLink extends StatelessWidget {
         VeganuaryLinkScope.openMapOf(context)?.call('restaurants');
       case AppLinkTarget.productsMap:
         VeganuaryLinkScope.openMapOf(context)?.call('shops');
+      case AppLinkTarget.partners:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PartnersPage()),
+        );
     }
   }
 
@@ -595,18 +597,51 @@ class _GridCard extends StatelessWidget {
     required this.onTap,
   });
 
+  static IconData _linkIcon(String url) {
+    final host = Uri.parse(url).host;
+    if (host.contains('instagram.com')) return FontAwesomeIcons.instagram;
+    if (host.contains('youtube.com')) return FontAwesomeIcons.youtube;
+    return Icons.language_rounded;
+  }
+
+  static IconData _tileIcon(String name) => switch (name) {
+        'book' => FontAwesomeIcons.book,
+        'podcast' => FontAwesomeIcons.podcast,
+        'instagram' => FontAwesomeIcons.instagram,
+        _ => Icons.language_rounded,
+      };
+
   @override
   Widget build(BuildContext context) {
     final image = item.image != null
         ? AspectRatio(
             aspectRatio: 1,
-            child: VeganuaryImage(item.image!, fit: BoxFit.contain),
+            // A logo or a portrait, to follow: rounded like an app icon
+            child: item.links.isEmpty
+                ? VeganuaryImage(item.image!, fit: BoxFit.contain)
+                : ClipSmoothRect(
+                    radius: squircleRadius(36.r),
+                    child: VeganuaryImage(item.image!, fit: BoxFit.contain),
+                  ),
           )
         : item.emoji != null
             ? Center(
                 child: Text(item.emoji!, style: TextStyle(fontSize: 96.sp)),
               )
-            : null;
+            : item.icon != null
+                ? AspectRatio(
+                    aspectRatio: 1,
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: ShapeDecoration(
+                        color: kSecondaryTag,
+                        shape: squircleBorder(radius: 36.r),
+                      ),
+                      child: FaIcon(_tileIcon(item.icon!),
+                          color: kAccentYellow, size: 80.sp),
+                    ),
+                  )
+                : null;
     final textAlign = horizontal ? TextAlign.start : TextAlign.center;
     final texts = [
       Text(
@@ -621,6 +656,23 @@ class _GridCard extends StatelessWidget {
           textAlign: textAlign,
           style: AppTextStyles.bodyRegular12
               .copyWith(color: Colors.grey[600], height: 1.3),
+        ),
+      ],
+      if (item.links.isNotEmpty) ...[
+        SizedBox(height: 18.h),
+        Wrap(
+          alignment: horizontal ? WrapAlignment.start : WrapAlignment.center,
+          spacing: 18.w,
+          runSpacing: 12.h,
+          children: [
+            for (final link in item.links)
+              TagChip(
+                label: link.label,
+                icon: _linkIcon(link.url),
+                color: Theme.of(context).colorScheme.primary,
+                onTap: () => openExternalUrl(context, Uri.parse(link.url)),
+              ),
+          ],
         ),
       ],
     ];
@@ -643,7 +695,7 @@ class _GridCard extends StatelessWidget {
                 if (image != null) ...[
                   // An emoji takes less room than a picture
                   SizedBox(
-                      width: item.image != null ? 210.w : 150.w, child: image),
+                      width: item.emoji != null ? 150.w : 210.w, child: image),
                   SizedBox(width: 36.w),
                 ],
                 Expanded(
@@ -663,7 +715,20 @@ class _GridCard extends StatelessWidget {
               ],
             ),
     );
-    if (onTap == null) return card;
+    if (onTap == null) {
+      if (item.links.isEmpty) return card;
+      // The whole card follows its first link (its chips, each their own)
+      return Semantics(
+        link: true,
+        label: item.label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () =>
+              openExternalUrl(context, Uri.parse(item.links.first.url)),
+          child: card,
+        ),
+      );
+    }
 
     return Semantics(
       button: true,
@@ -773,7 +838,7 @@ class _GridDetailsSheet extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: AppButton(
-                  label: item.detailsButton ?? 'J’ai compris',
+                  label: item.detailsButton ?? "J'ai compris",
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -1049,43 +1114,23 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
 
   RecipeStep get recipe => widget.recipe;
 
-  /// Render the recipe [RepaintBoundary] to a PNG file in the temp dir.
-  Future<File?> _capturedRecipeFile() async {
-    final boundary =
-        _recipeKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return null;
-
-    final image = await boundary.toImage(pixelRatio: 3.0);
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    image.dispose();
-    if (byteData == null) return null;
-
-    final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/recette-veganuary.png');
-    await file.writeAsBytes(byteData.buffer.asUint8List());
-    return file;
-  }
-
   Future<void> _download(BuildContext buttonContext) async {
     if (_downloading) return;
     setState(() => _downloading = true);
     try {
-      final file = await _capturedRecipeFile();
+      final file = await captureImageFile(_recipeKey, recipe.fileName);
       if (file == null || !buttonContext.mounted) return;
 
-      // sharePositionOrigin is required for the iPad popover.
-      final box = buttonContext.findRenderObject() as RenderBox?;
       final credit = recipe.credit;
-      await Share.shareXFiles(
-        [XFile(file.path, mimeType: 'image/png')],
+      await shareImageFiles(
+        buttonContext,
+        [file],
         text: credit == null
             ? '${recipe.title} : la recette du Veganuary de 321 Vegan 🌱 '
                 'https://321vegan.fr'
             : '${recipe.title}, une recette de ${credit.name}'
                 '${credit.blog != null ? ' (${credit.blog})' : ''}, dans le '
                 'Veganuary de 321 Vegan 🌱 https://321vegan.fr',
-        sharePositionOrigin:
-            box != null ? box.localToGlobal(Offset.zero) & box.size : null,
       );
     } finally {
       if (mounted) setState(() => _downloading = false);
@@ -1112,14 +1157,7 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
           ),
           RepaintBoundary(
             key: _recipeKey,
-            // Opaque, for the image not to come out transparent
-            child: ColoredBox(
-              color: kBackgroundGradientBottom,
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.section),
-                child: _buildRecipe(context),
-              ),
-            ),
+            child: VeganuaryRecipeSheet(recipe: recipe),
           ),
         ],
       ),
@@ -1140,7 +1178,7 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
         children: [
           Expanded(
             child: Text(
-              'Pas le temps de cuisiner aujourd’hui ? Gardez la recette '
+              "Pas le temps de cuisiner aujourd'hui ? Gardez la recette "
               'pour plus tard.',
               style: AppTextStyles.bodyMedium13.copyWith(color: kTextPrimary),
             ),
@@ -1159,6 +1197,25 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A recipe as downloaded: photo, title, credit, ingredients and steps, on
+/// an opaque background for the image not to come out transparent.
+class VeganuaryRecipeSheet extends StatelessWidget {
+  final RecipeStep recipe;
+
+  const VeganuaryRecipeSheet({super.key, required this.recipe});
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: kBackgroundGradientBottom,
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.section),
+        child: _buildRecipe(context),
       ),
     );
   }
@@ -1355,12 +1412,16 @@ class VeganuaryDoneView extends StatelessWidget {
   /// Illustration of the week's badge (a placeholder when null).
   final String? badgeImage;
 
+  /// For the story shared ("Semaine N terminée !").
+  final int weekNumber;
+
   const VeganuaryDoneView({
     super.key,
     required this.day,
     required this.weekDays,
     required this.completedDays,
     required this.nextAvailable,
+    required this.weekNumber,
     this.badgeImage,
   });
 
@@ -1379,21 +1440,18 @@ class VeganuaryDoneView extends StatelessWidget {
                 ? 'Leçon terminée, bien joué ! 🎉\nVous rattrapez votre '
                     'retard : le jour ${day + 1} vous attend déjà.'
                 : 'Leçon terminée, bien joué ! 🎉\nVous êtes allé·e '
-                    'jusqu’au bout aujourd’hui. Rendez-vous demain pour la '
+                    "jusqu'au bout aujourd'hui. Rendez-vous demain pour la "
                     'suite.';
     final yellowTitle =
         AppTextStyles.baloo30Bold.copyWith(color: kAccentYellow);
+    final image = _weekCompleted
+        ? badgeImage ?? 'lib/assets/images/characters/tomatoes.webp'
+        : 'lib/assets/images/characters/avocado.webp';
     return _CenteredScroll(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          VeganuaryImage(
-            _weekCompleted
-                ? badgeImage ?? 'lib/assets/images/characters/tomatoes.webp'
-                : 'lib/assets/images/characters/avocado.webp',
-            height: 480.h,
-            fit: BoxFit.contain,
-          ),
+          VeganuaryImage(image, height: 480.h, fit: BoxFit.contain),
           SizedBox(height: AppSpacing.section),
           Text(
             '$day',
@@ -1423,6 +1481,14 @@ class VeganuaryDoneView extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+          SizedBox(height: AppSpacing.section * 1.5),
+          VeganuaryShareProgressButton(
+            day: day,
+            totalDays: VeganuaryService.totalDays,
+            completedDays: completedDays,
+            image: image,
+            weekDone: _weekCompleted ? weekNumber : null,
           ),
         ],
       ),

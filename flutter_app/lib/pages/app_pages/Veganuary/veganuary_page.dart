@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/veganuary/veganuary_content.dart';
@@ -181,18 +180,6 @@ class _VeganuaryPageState extends State<VeganuaryPage>
 
   Future<void> _openDay(VeganuaryDay day) async {
     final state = _progress.stateOf(day.number);
-    if (kDebugMode &&
-        VeganuaryService.debugUnlockAll.value &&
-        (state == VeganuaryDayState.locked ||
-            state == VeganuaryDayState.tomorrow)) {
-      await VeganuaryDayPage.open(context,
-          week: _week,
-          day: day,
-          progress: _progress,
-          preview: true,
-          onOpenMap: _mapOpener);
-      return;
-    }
     switch (state) {
       case VeganuaryDayState.locked:
         _showSnackBar('Terminez d\'abord les jours précédents.');
@@ -247,7 +234,7 @@ class _VeganuaryPageState extends State<VeganuaryPage>
         image: 'lib/assets/images/characters/avocado.webp',
         title: 'Un petit rappel chaque matin ?',
         message: 'On vous prévient à 10h quand un nouveau jour vous attend. '
-            'Pas de rappel les jours où vous l’avez déjà commencé.',
+            "Pas de rappel les jours où vous l'avez déjà commencé.",
         primaryLabel: 'Oui, je veux bien',
         onPrimary: () => Navigator.of(ctx).pop(true),
         secondaryLabel: 'Non merci',

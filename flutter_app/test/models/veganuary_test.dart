@@ -132,6 +132,61 @@ void main() {
     });
   });
 
+  group('Recipe file name', () {
+    RecipeStep recipe(String title) =>
+        RecipeStep(title: title, ingredients: const [], steps: const []);
+
+    test('follows the title, without accents nor punctuation', () {
+      expect(
+          recipe('Tarte aux poireaux').fileName, 'recette-tarte-aux-poireaux');
+      expect(
+          recipe('Lentilles vertes, potiron rôti, noisettes et tofu fumé')
+              .fileName,
+          'recette-lentilles-vertes-potiron-roti-noisettes-et-tofu-fume');
+      expect(recipe('Bœuf bourguignon végétal !').fileName,
+          'recette-boeuf-bourguignon-vegetal');
+    });
+
+    test('has a name even without letters in the title', () {
+      expect(recipe('🍰').fileName, 'recette');
+    });
+  });
+
+  group('Grid card links', () {
+    test('are read from the JSON, none when absent', () {
+      final withLinks = GridItem.fromJson({
+        'label': '321 Vegan',
+        'links': [
+          'https://www.instagram.com/321vegan.app/',
+          'https://321vegan.fr',
+        ],
+      });
+      expect([for (final link in withLinks.links) link.label],
+          ['@321vegan.app', '321vegan.fr']);
+      expect(withLinks.details, isNull);
+      expect(GridItem.fromJson({'label': 'Sans lien'}).links, isEmpty);
+    });
+
+    test('can have their own label', () {
+      final podcast = GridItem.fromJson({
+        'label': 'Comme un poisson dans l\'eau',
+        'links': [
+          {'label': 'Écouter', 'url': 'https://linktr.ee/poissonpodcast'},
+        ],
+      });
+      expect(podcast.links.single.label, 'Écouter');
+      expect(podcast.links.single.url, 'https://linktr.ee/poissonpodcast');
+    });
+
+    test('are written out: @account on Instagram, the site otherwise', () {
+      expect(linkLabel('https://www.instagram.com/the_greenquest/'),
+          '@the_greenquest');
+      expect(linkLabel('https://www.instagram.com/'), 'Instagram');
+      expect(linkLabel('https://www.thegreenquest.org/fr/recette/'),
+          'thegreenquest.org');
+    });
+  });
+
   group('Bundled content', () {
     test('every week file is listed in the service and in pubspec.yaml', () {
       final files = Directory('lib/assets/veganuary')

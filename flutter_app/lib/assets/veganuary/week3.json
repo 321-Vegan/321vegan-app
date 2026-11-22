@@ -1,6 +1,6 @@
 {
   "number": 3,
-  "title": "Au-delà de l’assiette",
+  "title": "Au-delà de l'assiette",
   "illustration": "lib/assets/images/characters/avocado.webp",
   "path_illustrations": [
     "lib/assets/avatars/mouton.png",
@@ -9,25 +9,25 @@
   "myths": [
     {
       "id": "compagnie",
-      "label": "Les animaux de compagnie, c’est végane du coup ?",
+      "label": "Les animaux de compagnie, c'est végane du coup ?",
       "answer": {
         "title": "Et les animaux de compagnie ?",
         "blocks": [
           {
             "type": "text",
-            "text": "Quand on devient végane et qu’on s’intéresse à l’antispécisme, on en vient forcément à questionner nos relations avec les autres animaux au sens large. Y compris avec ceux qui partagent notre quotidien."
+            "text": "Quand on devient végane et qu'on s'intéresse à l'antispécisme, on en vient forcément à questionner nos relations avec les autres animaux au sens large. Y compris avec ceux qui partagent notre quotidien."
           },
           {
             "type": "text",
-            "text": "**L’élevage d’animaux de compagnie n’est pas une pratique végane.** Faire naître des animaux pour les vendre, c’est les considérer comme des produits. Outre le fait que de nombreux élevages font vivre les animaux dans des conditions déplorables et que la sélection génétique crée de graves problèmes de santé, c’est la notion même d’élevage qui pose problème. C’est considérer que l’on peut utiliser le système reproducteur des animaux pour en tirer profit ; c’est de l’exploitation."
+            "text": "**L'élevage d'animaux de compagnie n'est pas une pratique végane.** Faire naître des animaux pour les vendre, c'est les considérer comme des produits. Outre le fait que de nombreux élevages font vivre les animaux dans des conditions déplorables et que la sélection génétique crée de graves problèmes de santé, c'est la notion même d'élevage qui pose problème. C'est considérer que l'on peut utiliser le système reproducteur des animaux pour en tirer profit ; c'est de l'exploitation."
           },
           {
             "type": "text",
-            "text": "**Adopter un animal de refuge, c’est tout autre chose.** Ces animaux nous entourent déjà. Les adopter, c’est leur offrir une vie digne, sans alimenter le commerce qui en fait naître toujours plus. C’est un geste profondément cohérent avec le véganisme."
+            "text": "**Adopter un animal de refuge, c'est tout autre chose.** Ces animaux nous entourent déjà. Les adopter, c'est leur offrir une vie digne, sans alimenter le commerce qui en fait naître toujours plus. C'est un geste profondément cohérent avec le véganisme."
           },
           {
             "type": "callout",
-            "text": "Un animal adopté n’est pas « à nous » : c’est un individu, avec ses besoins et sa personnalité, dont on devient responsable."
+            "text": "Un animal adopté n'est pas « à nous » : c'est un individu, avec ses besoins et sa personnalité, dont on devient responsable."
           }
         ]
       },
@@ -35,8 +35,8 @@
         "emoji": "🐶",
         "title": "Adopter, pas acheter",
         "bullets": [
-          "Faire naître des animaux pour les vendre, c’est de l’exploitation",
-          "Adopter en refuge n’alimente pas ce commerce",
+          "Faire naître des animaux pour les vendre, c'est de l'exploitation",
+          "Adopter en refuge n'alimente pas ce commerce",
           "Un individu dont on devient responsable"
         ]
       }
@@ -49,44 +49,44 @@
         "blocks": [
           {
             "type": "text",
-            "text": "Cette critique pointe un vrai problème : **tout le monde n’a pas le même accès à l’alimentation**. Manque d’argent, de temps, de commerces à proximité, d’informations… Ces inégalités existent, et il ne s’agit pas de les nier. L’image du véganisme qu’on voit dans les pubs et sur les réseaux sociaux, faite de substituts chers et de restos branchés, n’aide pas non plus."
+            "text": "Cette critique pointe un vrai problème : **tout le monde n'a pas le même accès à l'alimentation**. Manque d'argent, de temps, de commerces à proximité, d'informations… Ces inégalités existent, et il ne s'agit pas de les nier. L'image du véganisme qu'on voit dans les pubs et sur les réseaux sociaux, faite de substituts chers et de restos branchés, n'aide pas non plus."
           },
           {
             "type": "text",
-            "text": "**« Mais c’est trop cher ! »**"
+            "text": "**« Mais c'est trop cher ! »**"
           },
           {
             "type": "text",
-            "text": "Pourtant, les bases d’une alimentation végétale (légumineuses, céréales, pommes de terre, légumes de saison) font partie des aliments **les moins chers**. Une étude de l’université d’Oxford a même montré que dans les pays riches, une alimentation végane réduit le coût des courses **de 21 à 34 %** [1]."
+            "text": "Pourtant, les bases d'une alimentation végétale (légumineuses, céréales, pommes de terre, légumes de saison) font partie des aliments **les moins chers**. Une étude de l'université d'Oxford a même montré que dans les pays riches, une alimentation végane réduit le coût des courses **de 21 à 34 %** [1]."
           },
           {
             "type": "text",
-            "text": "Et si la viande paraît bon marché, c’est en partie parce qu’elle est **massivement subventionnée** : dans l’Union européenne, 82 % des aides agricoles vont aux produits d’origine animale [2]."
+            "text": "Et si la viande paraît bon marché, c'est en partie parce qu'elle est **massivement subventionnée** : dans l'Union européenne, 82 % des aides agricoles vont aux produits d'origine animale [2]."
           },
           {
             "type": "text",
-            "text": "**« C’est un truc de bobos »**"
+            "text": "**« C'est un truc de bobos »**"
           },
           {
             "type": "text",
-            "text": "Les cuisines végétales existent depuis des siècles partout dans le monde : le jeûne orthodoxe en Éthiopie, sans aucun produit animal, la cuisine bouddhiste au tofu et au seitan en Chine et au Japon, le dal de lentilles en Inde, les haricots et le maïs en Amérique latine… Présenter le véganisme comme une invention de Blanc·hes aisé·es, c’est effacer ces cultures et les nombreuses personnes véganes non-blanches. Aux États-Unis, la chercheuse A. Breeze Harper a par exemple réuni dans « Sistah Vegan » (2010) les voix de femmes noires véganes."
+            "text": "Les cuisines végétales existent depuis des siècles partout dans le monde : le jeûne orthodoxe en Éthiopie, sans aucun produit animal, la cuisine bouddhiste au tofu et au seitan en Chine et au Japon, le dal de lentilles en Inde, les haricots et le maïs en Amérique latine… Présenter le véganisme comme une invention de Blanc·hes aisé·es, c'est effacer ces cultures et les nombreuses personnes véganes non-blanches. Aux États-Unis, la chercheuse A. Breeze Harper a par exemple réuni dans « Sistah Vegan » (2010) les voix de femmes noires véganes."
           },
           {
             "type": "text",
-            "text": "Et ce sont souvent les personnes les plus précaires qui subissent l’élevage : dans la filière viande, le risque d’accident du travail est **2 à 3 fois plus élevé** que la moyenne [3]. Ne pas voir ce que coûte vraiment la viande, c’est aussi un privilège."
+            "text": "Et ce sont souvent les personnes les plus précaires qui subissent l'élevage : dans la filière viande, le risque d'accident du travail est **2 à 3 fois plus élevé** que la moyenne [3]. Ne pas voir ce que coûte vraiment la viande, c'est aussi un privilège."
           },
           {
             "type": "text",
-            "text": "Enfin, le véganisme consiste à refuser l’exploitation animale **autant que possible et praticable** : chacun·e fait avec ses moyens. Et rendre l’alimentation végétale accessible à toutes et tous, c’est aussi lutter contre les inégalités."
+            "text": "Enfin, le véganisme consiste à refuser l'exploitation animale **autant que possible et praticable** : chacun·e fait avec ses moyens. Et rendre l'alimentation végétale accessible à toutes et tous, c'est aussi lutter contre les inégalités."
           }
         ],
         "sources": [
           {
-            "label": "Université d’Oxford, « Sustainable eating cheaper and healthier », sur l’étude de Springmann et al., The Lancet Planetary Health, 2021",
+            "label": "Université d'Oxford, « Sustainable eating cheaper and healthier », sur l'étude de Springmann et al., The Lancet Planetary Health, 2021",
             "url": "https://www.ox.ac.uk/news/2021-11-11-sustainable-eating-cheaper-and-healthier-oxford-study"
           },
           {
-            "label": "Université de Leyde, « How EU farm subsidies favour high-emission animal products », sur l’étude de Kortleve et al., Nature Food, 2024",
+            "label": "Université de Leyde, « How EU farm subsidies favour high-emission animal products », sur l'étude de Kortleve et al., Nature Food, 2024",
             "url": "https://universiteitleiden.nl/en/news/2024/04/how-eu-farm-subsidies-favour-high-emission-animal-products"
           },
           {
@@ -99,7 +99,7 @@
         "emoji": "💸",
         "title": "Pas une affaire de privilégié·es",
         "bullets": [
-          "Les inégalités d’accès existent : il faut les combattre",
+          "Les inégalités d'accès existent : il faut les combattre",
           "Légumineuses, céréales, légumes : parmi les aliments les moins chers",
           "Des cuisines végétales partout dans le monde"
         ]
@@ -107,13 +107,13 @@
     },
     {
       "id": "chasse",
-      "label": "La chasse permet de réguler les animaux, c’est essentiel",
+      "label": "La chasse permet de réguler les animaux, c'est essentiel",
       "answer": {
         "title": "La chasse sert-elle à réguler ?",
         "blocks": [
           {
             "type": "text",
-            "text": "Une partie des animaux chassés ne sont pas sauvages : **ils sont élevés spécialement pour la chasse**, puis relâchés pour servir de cibles. Chaque année en France, 10 à 15 millions de faisans d’élevage sont ainsi lâchés dans la nature [1], et selon l’Office français de la biodiversité, presque tous les faisans tués à la chasse en sont issus. On ne régule pas une population qu’on fabrique soi-même."
+            "text": "Une partie des animaux chassés ne sont pas sauvages : **ils sont élevés spécialement pour la chasse**, puis relâchés pour servir de cibles. Chaque année en France, 10 à 15 millions de faisans d'élevage sont ainsi lâchés dans la nature [1], et selon l'Office français de la biodiversité, presque tous les faisans tués à la chasse en sont issus. On ne régule pas une population qu'on fabrique soi-même."
           },
           {
             "type": "text",
@@ -121,19 +121,19 @@
           },
           {
             "type": "text",
-            "text": "C’est vrai, et les chasseurs y sont pour beaucoup. Dès les années 1970, des sangliers ont été élevés pour être lâchés dans la nature, puis nourris avec du grain et des légumes pour qu’il y en ait toujours à chasser. Et pour préserver le « gibier », on évitait de tuer les laies dominantes, qui font le plus de petits. Ajoutez à cela la disparition du loup et du lynx, leurs prédateurs naturels, et vous obtenez une population qui explose [2]."
+            "text": "C'est vrai, et les chasseurs y sont pour beaucoup. Dès les années 1970, des sangliers ont été élevés pour être lâchés dans la nature, puis nourris avec du grain et des légumes pour qu'il y en ait toujours à chasser. Et pour préserver le « gibier », on évitait de tuer les laies dominantes, qui font le plus de petits. Ajoutez à cela la disparition du loup et du lynx, leurs prédateurs naturels, et vous obtenez une population qui explose [2]."
           },
           {
             "type": "text",
-            "text": "La France a même autorisé la chasse d’**espèces menacées**, comme la tourterelle des bois, pourtant classée vulnérable par l’UICN : le Conseil d’État a dû annuler ces autorisations [3]. Difficile de parler de régulation."
+            "text": "La France a même autorisé la chasse d'**espèces menacées**, comme la tourterelle des bois, pourtant classée vulnérable par l'UICN : le Conseil d'État a dû annuler ces autorisations [3]. Difficile de parler de régulation."
           },
           {
             "type": "text",
-            "text": "D’ailleurs, même le président des chasseurs n’y croit pas. En novembre 2021, sur RMC, Willy Schraen, président de la Fédération nationale des chasseurs, a expliqué que la chasse était avant tout une passion, et que le fait de tuer faisait partie du plaisir. Interrogé sur la régulation, il a lâché : **« J’en ai rien à foutre de réguler »** [4]. L’argument de la régulation n’est donc qu’une justification."
+            "text": "D'ailleurs, même le président des chasseurs n'y croit pas. En novembre 2021, sur RMC, Willy Schraen, président de la Fédération nationale des chasseurs, a expliqué que la chasse était avant tout une passion, et que le fait de tuer faisait partie du plaisir. Interrogé sur la régulation, il a lâché : **« J'en ai rien à foutre de réguler »** [4]. L'argument de la régulation n'est donc qu'une justification."
           },
           {
             "type": "text",
-            "text": "On entend souvent qu’il faut protéger les cultures des animaux sauvages. Mais **des solutions existent pour cohabiter sans tuer** : clôtures, protection des parcelles, répulsifs, préservation des haies et des espaces naturels où les animaux peuvent se nourrir…"
+            "text": "On entend souvent qu'il faut protéger les cultures des animaux sauvages. Mais **des solutions existent pour cohabiter sans tuer** : clôtures, protection des parcelles, répulsifs, préservation des haies et des espaces naturels où les animaux peuvent se nourrir…"
           }
         ],
         "sources": [
@@ -142,15 +142,15 @@
             "url": "https://reporterre.net/La-chasse-nuit-a-la-biodiversite-demontre-un-naturaliste"
           },
           {
-            "label": "CNRS Le Journal, « L’humain a créé les conditions de la surpopulation de sangliers »",
+            "label": "CNRS Le Journal, « L'humain a créé les conditions de la surpopulation de sangliers »",
             "url": "https://lejournal.cnrs.fr/articles/lhumain-a-cree-les-conditions-de-la-surpopulation-de-sangliers"
           },
           {
-            "label": "Conseil d’État, décision n° 443460 du 30 décembre 2021 (tourterelle des bois)",
+            "label": "Conseil d'État, décision n° 443460 du 30 décembre 2021 (tourterelle des bois)",
             "url": "https://www.conseil-etat.fr/fr/arianeweb/CE/decision/2021-12-30/443460"
           },
           {
-            "label": "Le Tribunal du Net, « “J’en ai rien à foutre de réguler !” : la déclaration du président des chasseurs fait polémique »",
+            "label": "Le Tribunal du Net, « “J'en ai rien à foutre de réguler !” : la déclaration du président des chasseurs fait polémique »",
             "url": "https://www.letribunaldunet.fr/animaux/chasseurs-declaration-polemique-willy-schraen-animaux-rmc.html"
           }
         ]
@@ -161,7 +161,7 @@
         "bullets": [
           "Faisans élevés et lâchés, sangliers nourris : on fabrique le « gibier »",
           "Même des espèces menacées ont été chassées",
-          "« J’en ai rien à foutre de réguler » : le président des chasseurs"
+          "« J'en ai rien à foutre de réguler » : le président des chasseurs"
         ]
       }
     },
@@ -173,40 +173,40 @@
         "blocks": [
           {
             "type": "text",
-            "text": "Avant toute chose, il faut se rappeler ce qu’est le cuir : **la peau d’un animal qu’on a assassiné**. Vache, veau, agneau, chèvre, crocodile… Derrière chaque sac, chaque ceinture ou chaque paire de chaussures, il y a un individu qui ne voulait pas mourir."
+            "text": "Avant toute chose, il faut se rappeler ce qu'est le cuir : **la peau d'un animal qu'on a assassiné**. Vache, veau, agneau, chèvre, crocodile… Derrière chaque sac, chaque ceinture ou chaque paire de chaussures, il y a un individu qui ne voulait pas mourir."
           },
           {
             "type": "text",
-            "text": "Ensuite, la transformation du cuir n’a rien d’écologique. Pour qu’une peau ne pourrisse pas, il faut la traiter chimiquement. La méthode la plus utilisée aujourd’hui est **le tannage au chrome**. C’est un procédé polluant, gourmand en eau et en énergie, qui rejette des produits chimiques dans l’environnement lorsque les eaux usées ne sont pas traitées."
+            "text": "Ensuite, la transformation du cuir n'a rien d'écologique. Pour qu'une peau ne pourrisse pas, il faut la traiter chimiquement. La méthode la plus utilisée aujourd'hui est **le tannage au chrome**. C'est un procédé polluant, gourmand en eau et en énergie, qui rejette des produits chimiques dans l'environnement lorsque les eaux usées ne sont pas traitées."
           },
           {
             "type": "text",
-            "text": "Et ce sont souvent des humains, loin de chez nous, qui en paient le prix. En 2012, à Hazaribagh, au Bangladesh, Human Rights Watch a montré qu’aucune tannerie ne traitait ses eaux usées, chargées de chrome, qui finissaient dans la rivière de Dacca. Les ouvrier·es, dont des enfants d’à peine 11 ans, souffraient de maladies de peau et de problèmes respiratoires [1]."
+            "text": "Et ce sont souvent des humains, loin de chez nous, qui en paient le prix. En 2012, à Hazaribagh, au Bangladesh, Human Rights Watch a montré qu'aucune tannerie ne traitait ses eaux usées, chargées de chrome, qui finissaient dans la rivière de Dacca. Les ouvrier·es, dont des enfants d'à peine 11 ans, souffraient de maladies de peau et de problèmes respiratoires [1]."
           },
           {
             "type": "text",
-            "text": "Le cuir est indissociable de l’élevage, avec ses émissions de gaz à effet de serre, la déforestation et la pollution de l’eau qu’il entraîne. Les similicuirs en plastique ne sont pas parfaits pour autant : ils viennent du pétrole et se recyclent mal. Mais même eux font bien mieux : une étude de l’université Cornell et de l’université de New York a estimé que l’empreinte carbone du cuir de vache était **12,5 fois plus élevée que celle des alternatives véganes** [2]."
+            "text": "Le cuir est indissociable de l'élevage, avec ses émissions de gaz à effet de serre, la déforestation et la pollution de l'eau qu'il entraîne. Les similicuirs en plastique ne sont pas parfaits pour autant : ils viennent du pétrole et se recyclent mal. Mais même eux font bien mieux : une étude de l'université Cornell et de l'université de New York a estimé que l'empreinte carbone du cuir de vache était **12,5 fois plus élevée que celle des alternatives véganes** [2]."
           },
           {
             "type": "text",
-            "text": "**« Mais le cuir, c’est un déchet de l’industrie de la viande ! »**"
+            "text": "**« Mais le cuir, c'est un déchet de l'industrie de la viande ! »**"
           },
           {
             "type": "text",
-            "text": "Pas vraiment : la peau se vend, et c’est même ce qui rapporte le plus en dehors de la viande. Aux États-Unis, ces « sous-produits » représentent environ 8 % de la valeur d’un bovin, et la peau en est de loin la plus grande part [3]. Acheter du cuir, c’est donc **contribuer à rentabiliser l’élevage et l’abattage**."
+            "text": "Pas vraiment : la peau se vend, et c'est même ce qui rapporte le plus en dehors de la viande. Aux États-Unis, ces « sous-produits » représentent environ 8 % de la valeur d'un bovin, et la peau en est de loin la plus grande part [3]. Acheter du cuir, c'est donc **contribuer à rentabiliser l'élevage et l'abattage**."
           },
           {
             "type": "text",
-            "text": "Des alternatives existent, et elles se multiplient. Aujourd’hui, on fabrique des matières aux propriétés semblables à celles du cuir animal en partie à partir de déchets de pomme, de raisin issus de la fabrication du vin, de feuilles d’ananas, de cactus ou même de champignons. Le liège, la toile ou les fibres recyclées sont aussi de très bonnes options."
+            "text": "Des alternatives existent, et elles se multiplient. Aujourd'hui, on fabrique des matières aux propriétés semblables à celles du cuir animal en partie à partir de déchets de pomme, de raisin issus de la fabrication du vin, de feuilles d'ananas, de cactus ou même de champignons. Le liège, la toile ou les fibres recyclées sont aussi de très bonnes options."
           }
         ],
         "sources": [
           {
-            "label": "Human Rights Watch, « Toxic Tanneries: The Health Repercussions of Bangladesh’s Hazaribagh Leather », 2012",
+            "label": "Human Rights Watch, « Toxic Tanneries: The Health Repercussions of Bangladesh's Hazaribagh Leather », 2012",
             "url": "https://www.hrw.org/report/2012/10/08/toxic-tanneries/health-repercussions-bangladeshs-hazaribagh-leather"
           },
           {
-            "label": "Green Queen, « Leather’s Emissions 70% Higher Than Previously Thought, Dwarfing Vegan Alternatives »",
+            "label": "Green Queen, « Leather's Emissions 70% Higher Than Previously Thought, Dwarfing Vegan Alternatives »",
             "url": "https://www.greenqueen.com.hk/leather-environmental-impact-emissions-tanning-vegan-plastic-alternatives/"
           },
           {
@@ -217,9 +217,9 @@
       },
       "recap": {
         "emoji": "👜",
-        "title": "Le cuir n’a rien d’écologique",
+        "title": "Le cuir n'a rien d'écologique",
         "bullets": [
-          "La peau d’un animal tué, qui rentabilise l’abattage",
+          "La peau d'un animal tué, qui rentabilise l'abattage",
           "Tannage au chrome : pollution et ouvrier·es exposé·es",
           "12,5 fois plus de CO₂ que les alternatives véganes"
         ]
@@ -233,11 +233,11 @@
         "blocks": [
           {
             "type": "text",
-            "text": "C’est un argument classique. Et c’est vrai : les animaux d’élevage que nous connaissons aujourd’hui sont le résultat de siècles de sélection par les humains, pour les rendre toujours plus rentables (plus de muscles, plus de lait, plus d’œufs…). Et **leur existence même repose sur la violence** : pour qu’ils naissent, les femelles sont inséminées de force, à répétition, puis on leur vole leurs petits pour les exploiter à leur tour ou les envoyer à l’abattoir."
+            "text": "C'est un argument classique. Et c'est vrai : les animaux d'élevage que nous connaissons aujourd'hui sont le résultat de siècles de sélection par les humains, pour les rendre toujours plus rentables (plus de muscles, plus de lait, plus d'œufs…). Et **leur existence même repose sur la violence** : pour qu'ils naissent, les femelles sont inséminées de force, à répétition, puis on leur vole leurs petits pour les exploiter à leur tour ou les envoyer à l'abattoir."
           },
           {
             "type": "text",
-            "text": "Mais **faire naître un individu ne nous donne aucun droit sur lui**. Des parents font naître leurs enfants, ils n’en deviennent pas propriétaires pour autant. Un animal né dans un élevage ressent la peur, la douleur, le manque, comme n’importe quel autre animal. C’est ça, et uniquement ça, qui compte : le fait que ces animaux soient sentients."
+            "text": "Mais **faire naître un individu ne nous donne aucun droit sur lui**. Des parents font naître leurs enfants, ils n'en deviennent pas propriétaires pour autant. Un animal né dans un élevage ressent la peur, la douleur, le manque, comme n'importe quel autre animal. C'est ça, et uniquement ça, qui compte : le fait que ces animaux soient sentients."
           },
           {
             "type": "text",
@@ -263,19 +263,19 @@
         "blocks": [
           {
             "type": "text",
-            "text": "C’est totalement un faux dilemme. **Personne n’a jamais à choisir entre la vie d’un proche et celle d’un animal non humain.** Dans la vie de tous les jours, le choix, c’est « un produit avec ou sans exploitation animale » ; et personne n’est sauvé quand on choisit la première option."
+            "text": "C'est totalement un faux dilemme. **Personne n'a jamais à choisir entre la vie d'un proche et celle d'un animal non humain.** Dans la vie de tous les jours, le choix, c'est « un produit avec ou sans exploitation animale » ; et personne n'est sauvé quand on choisit la première option."
           },
           {
             "type": "text",
-            "text": "Et puis, préférer ses proches ne veut pas dire que les autres ne comptent pas. Dans une situation d’urgence, la plupart d’entre nous sauveraient un membre de leur famille plutôt qu’un·e inconnu·e. Est-ce que ça nous autorise pour autant à exploiter ou à tuer les inconnu·es ? Avoir plus d’attachement pour certains êtres ne justifie pas de retirer des droits aux autres."
+            "text": "Et puis, préférer ses proches ne veut pas dire que les autres ne comptent pas. Dans une situation d'urgence, la plupart d'entre nous sauveraient un membre de leur famille plutôt qu'un·e inconnu·e. Est-ce que ça nous autorise pour autant à exploiter ou à tuer les inconnu·es ? Avoir plus d'attachement pour certains êtres ne justifie pas de retirer des droits aux autres."
           },
           {
             "type": "text",
-            "text": "L’antispécisme ne dit pas que toutes les vies sont identiques. Il dit que **des intérêts semblables méritent la même considération**, quelle que soit l’espèce. Un cochon comme un humain a intérêt à ne pas souffrir et à vivre. Ce n’est pas une compétition entre les humains et les autres animaux."
+            "text": "L'antispécisme ne dit pas que toutes les vies sont identiques. Il dit que **des intérêts semblables méritent la même considération**, quelle que soit l'espèce. Un cochon comme un humain a intérêt à ne pas souffrir et à vivre. Ce n'est pas une compétition entre les humains et les autres animaux."
           },
           {
             "type": "text",
-            "text": "Et au fond, on n’a pas besoin de choisir : refuser d’exploiter les animaux n’enlève rien à personne. On peut aimer sa famille et respecter les animaux. Les deux ne sont pas incompatibles, bien au contraire !"
+            "text": "Et au fond, on n'a pas besoin de choisir : refuser d'exploiter les animaux n'enlève rien à personne. On peut aimer sa famille et respecter les animaux. Les deux ne sont pas incompatibles, bien au contraire !"
           }
         ]
       },
@@ -283,8 +283,8 @@
         "emoji": "👨‍👩‍👧",
         "title": "Un faux dilemme",
         "bullets": [
-          "Au quotidien, personne n’a à choisir",
-          "Préférer ses proches n’autorise pas à exploiter les autres",
+          "Au quotidien, personne n'a à choisir",
+          "Préférer ses proches n'autorise pas à exploiter les autres",
           "Des intérêts semblables, la même considération"
         ]
       }
@@ -297,15 +297,15 @@
         "blocks": [
           {
             "type": "text",
-            "text": "C’est totalement un faux dilemme. Honnêtement, il n’y a pas grand-chose à dire de plus : cette question est souvent posée pour mettre en difficulté, plus que pour avoir une réponse."
+            "text": "C'est totalement un faux dilemme. Honnêtement, il n'y a pas grand-chose à dire de plus : cette question est souvent posée pour mettre en difficulté, plus que pour avoir une réponse."
           },
           {
             "type": "text",
-            "text": "Mais si on veut quand même apporter une réponse : **nous ne sommes pas sur une île déserte**. Nous avons accès à des supermarchés remplis de légumineuses, de céréales, de fruits et de légumes. Ce n’est pas la survie qui nous pousse à manger des animaux : c’est la société spéciste dans laquelle nous grandissons. Dès l’enfance, on nous apprend à aimer certains animaux et à en manger d’autres, et ce conditionnement nous paraît tellement normal qu’on ne le remet presque jamais en question."
+            "text": "Mais si on veut quand même apporter une réponse : **nous ne sommes pas sur une île déserte**. Nous avons accès à des supermarchés remplis de légumineuses, de céréales, de fruits et de légumes. Ce n'est pas la survie qui nous pousse à manger des animaux : c'est la société spéciste dans laquelle nous grandissons. Dès l'enfance, on nous apprend à aimer certains animaux et à en manger d'autres, et ce conditionnement nous paraît tellement normal qu'on ne le remet presque jamais en question."
           },
           {
             "type": "text",
-            "text": "Et **une situation de survie ne justifie rien au quotidien**. Dans des circonstances extrêmes, des humains ont fait des choses qu’ils n’auraient jamais faites en temps normal. Personne n’en conclut que ces actes deviennent acceptables dans la vie de tous les jours."
+            "text": "Et **une situation de survie ne justifie rien au quotidien**. Dans des circonstances extrêmes, des humains ont fait des choses qu'ils n'auraient jamais faites en temps normal. Personne n'en conclut que ces actes deviennent acceptables dans la vie de tous les jours."
           }
         ]
       },
@@ -314,7 +314,7 @@
         "title": "Pas sur une île déserte",
         "bullets": [
           "Des supermarchés pleins de végétaux",
-          "C’est le spécisme qui nous fait manger des animaux",
+          "C'est le spécisme qui nous fait manger des animaux",
           "La survie ne justifie rien au quotidien"
         ]
       }
@@ -327,13 +327,13 @@
       "steps": [
         {
           "type": "quiz",
-          "question": "Selon vous, combien d’années vit une éléphante d’Afrique née dans un zoo européen ?",
+          "question": "Selon vous, combien d'années vit une éléphante d'Afrique née dans un zoo européen ?",
           "choices": [
             { "text": "Environ 17 ans", "result": "right" },
             { "text": "Environ 35 ans" },
             { "text": "Environ 56 ans, comme dans la nature" }
           ],
-          "explanation": "Une étude a comparé les éléphantes nées dans les zoos européens à celles du parc d’Amboseli, au Kenya. La moitié des éléphantes de zoo meurent **avant 17 ans**, contre **56 ans** pour celles d’Amboseli mortes de causes naturelles. Même en comptant celles tuées par des humains, elles vivent deux fois plus longtemps dans la nature."
+          "explanation": "Une étude a comparé les éléphantes nées dans les zoos européens à celles du parc d'Amboseli, au Kenya. La moitié des éléphantes de zoo meurent **avant 17 ans**, contre **56 ans** pour celles d'Amboseli mortes de causes naturelles. Même en comptant celles tuées par des humains, elles vivent deux fois plus longtemps dans la nature."
         },
         {
           "type": "info",
@@ -346,11 +346,11 @@
             },
             {
               "type": "text",
-              "text": "Les zoos se présentent souvent comme des arches de Noé, qui sauveraient les espèces menacées. Pourtant, les zoos du monde entier n’abritent qu’environ **une espèce menacée sur sept** [1]. Et la plupart des animaux qui y naissent ne retourneront jamais dans la nature."
+              "text": "Les zoos se présentent souvent comme des arches de Noé, qui sauveraient les espèces menacées. Pourtant, les zoos du monde entier n'abritent qu'environ **une espèce menacée sur sept** [1]. Et la plupart des animaux qui y naissent ne retourneront jamais dans la nature."
             },
             {
               "type": "text",
-              "text": "Car protéger une espèce, c’est d’abord protéger **son milieu de vie** : forêts, savanes, océans… Un animal né derrière une vitre n’a, le plus souvent, nulle part où retourner."
+              "text": "Car protéger une espèce, c'est d'abord protéger **son milieu de vie** : forêts, savanes, océans… Un animal né derrière une vitre n'a, le plus souvent, nulle part où retourner."
             },
             {
               "type": "text",
@@ -358,7 +358,7 @@
             },
             {
               "type": "text",
-              "text": "Dans les zoos, les animaux sont gérés comme une collection. En 2014, le zoo de Copenhague a tué Marius, un girafon de 18 mois en bonne santé, parce que ses gènes étaient déjà trop représentés dans le programme d’élevage, puis l’a donné à manger aux lions [2]. Ce n’était pas une exception : l’association européenne des zoos estimait alors que **3 000 à 5 000 animaux** étaient tués chaque année dans les zoos européens [3]."
+              "text": "Dans les zoos, les animaux sont gérés comme une collection. En 2014, le zoo de Copenhague a tué Marius, un girafon de 18 mois en bonne santé, parce que ses gènes étaient déjà trop représentés dans le programme d'élevage, puis l'a donné à manger aux lions [2]. Ce n'était pas une exception : l'association européenne des zoos estimait alors que **3 000 à 5 000 animaux** étaient tués chaque année dans les zoos européens [3]."
             }
           ],
           "sources": [
@@ -391,11 +391,11 @@
             },
             {
               "type": "text",
-              "text": "Privés d’espace et de stimulation, beaucoup d’animaux développent des **stéréotypies** : ils font les cent pas, se balancent, tournent en rond, parfois pendant des heures. Une étude a montré que plus une espèce a un grand territoire dans la nature, plus elle souffre en captivité : les ours polaires et les lions font souvent les cent pas, et leurs petits y meurent plus souvent [1]."
+              "text": "Privés d'espace et de stimulation, beaucoup d'animaux développent des **stéréotypies** : ils font les cent pas, se balancent, tournent en rond, parfois pendant des heures. Une étude a montré que plus une espèce a un grand territoire dans la nature, plus elle souffre en captivité : les ours polaires et les lions font souvent les cent pas, et leurs petits y meurent plus souvent [1]."
             },
             {
               "type": "text",
-              "text": "Les éléphants, eux, vivent bien moins longtemps en zoo que dans la nature, comme vous l’avez vu dans le quiz [2]."
+              "text": "Les éléphants, eux, vivent bien moins longtemps en zoo que dans la nature, comme vous l'avez vu dans le quiz [2]."
             },
             {
               "type": "callout",
@@ -404,11 +404,11 @@
           ],
           "sources": [
             {
-              "label": "Science News, « Carnivores in Captivity: Size of range in wild may predict risk in zoo », sur l’étude de Clubb et Mason, Nature, 2003",
+              "label": "Science News, « Carnivores in Captivity: Size of range in wild may predict risk in zoo », sur l'étude de Clubb et Mason, Nature, 2003",
               "url": "https://www.sciencenews.org/article/carnivores-captivity-size-range-wild-may-predict-risk-zoo"
             },
             {
-              "label": "National Geographic, « Wild Elephants Live Longer Than Their Zoo Counterparts », sur l’étude de Clubb et al., Science, 2008",
+              "label": "National Geographic, « Wild Elephants Live Longer Than Their Zoo Counterparts », sur l'étude de Clubb et al., Science, 2008",
               "url": "https://www.nationalgeographic.com/animals/article/wild-elephants-live-longer-than-their-zoo-counterparts"
             }
           ]
@@ -420,11 +420,11 @@
             {
               "type": "image",
               "src": "lib/assets/images/veganuary/zoos-orque-spectacle.webp",
-              "caption": "Spectacle d’orques à Kamogawa Sea World, au Japon."
+              "caption": "Spectacle d'orques à Kamogawa Sea World, au Japon."
             },
             {
               "type": "text",
-              "text": "Dans l’océan, orques et dauphins vivent en groupes familiaux soudés et parcourent de longues distances. En bassin, ils tournent en rond dans un espace minuscule, et apprennent des tours en échange de nourriture."
+              "text": "Dans l'océan, orques et dauphins vivent en groupes familiaux soudés et parcourent de longues distances. En bassin, ils tournent en rond dans un espace minuscule, et apprennent des tours en échange de nourriture."
             },
             {
               "type": "image",
@@ -433,11 +433,11 @@
             },
             {
               "type": "text",
-              "text": "Bonne nouvelle : en France, la loi du 30 novembre 2021 interdit **les spectacles d’orques et de dauphins à partir de décembre 2026** [1]."
+              "text": "Bonne nouvelle : en France, la loi du 30 novembre 2021 interdit **les spectacles d'orques et de dauphins à partir de décembre 2026** [1]."
             },
             {
               "type": "text",
-              "text": "Les poissons, eux, sont rarement pris en compte. Ce sont pourtant aussi des êtres sentients. Beaucoup de poissons d’aquarium d’eau de mer sont capturés directement sur les récifs coralliens, parfois au cyanure, qui les étourdit et abîme les coraux. Dans une étude sur le commerce européen, **près de 15 %** des poissons analysés présentaient des signes d’empoisonnement au cyanure [2]."
+              "text": "Les poissons, eux, sont rarement pris en compte. Ce sont pourtant aussi des êtres sentients. Beaucoup de poissons d'aquarium d'eau de mer sont capturés directement sur les récifs coralliens, parfois au cyanure, qui les étourdit et abîme les coraux. Dans une étude sur le commerce européen, **près de 15 %** des poissons analysés présentaient des signes d'empoisonnement au cyanure [2]."
             }
           ],
           "sources": [
@@ -528,11 +528,11 @@
           "type": "quiz",
           "question": "Selon vous, de quel animal vient le mohair ?",
           "choices": [
-            { "text": "D’une chèvre", "result": "right" },
-            { "text": "D’un lapin" },
-            { "text": "D’un mouton" }
+            { "text": "D'une chèvre", "result": "right" },
+            { "text": "D'un lapin" },
+            { "text": "D'un mouton" }
           ],
-          "explanation": "Le mohair vient de la **chèvre angora**. Alors que la laine angora, elle, vient du **lapin angora** mais pas de la chèvre ! Et le cachemire ? D’une chèvre aussi, la **chèvre cachemire**."
+          "explanation": "Le mohair vient de la **chèvre angora**. Alors que la laine angora, elle, vient du **lapin angora** mais pas de la chèvre ! Et le cachemire ? D'une chèvre aussi, la **chèvre cachemire**."
         },
         {
           "type": "info",
@@ -549,7 +549,7 @@
             },
             {
               "type": "text",
-              "text": "On pourrait s’arrêter là : il y a élevage, donc exploitation, donc **ce n’est pas végane**. Mais parlons quand même un peu de la filière laine."
+              "text": "On pourrait s'arrêter là : il y a élevage, donc exploitation, donc **ce n'est pas végane**. Mais parlons quand même un peu de la filière laine."
             }
           ]
         },
@@ -563,7 +563,7 @@
             },
             {
               "type": "text",
-              "text": "Les moutons des élevages pour la laine sont issus d’une sélection génétique : leur toison est anormalement lourde, et ils souffrent s’ils ne sont pas tondus. Ce n’est évidemment pas le cas normalement : les moutons sauvages perdent naturellement leur toison chaque printemps. C’est bien **le résultat de sélections génétiques**."
+              "text": "Les moutons des élevages pour la laine sont issus d'une sélection génétique : leur toison est anormalement lourde, et ils souffrent s'ils ne sont pas tondus. Ce n'est évidemment pas le cas normalement : les moutons sauvages perdent naturellement leur toison chaque printemps. C'est bien **le résultat de sélections génétiques**."
             },
             {
               "type": "text",
@@ -575,11 +575,11 @@
             },
             {
               "type": "text",
-              "text": "Si elle peut être faite en douceur, ce n’est pas le cas dans les élevages, où **ce qui compte, c’est le volume**, et non le fait de ne pas faire mal : les tondeurs sont souvent payés par animal, ce qui pousse à aller vite, et les animaux sont très souvent blessés. Dans tous les cas, ça reste un moment stressant pour l’animal."
+              "text": "Si elle peut être faite en douceur, ce n'est pas le cas dans les élevages, où **ce qui compte, c'est le volume**, et non le fait de ne pas faire mal : les tondeurs sont souvent payés par animal, ce qui pousse à aller vite, et les animaux sont très souvent blessés. Dans tous les cas, ça reste un moment stressant pour l'animal."
             },
             {
               "type": "text",
-              "text": "Autre pratique barbare : certains éleveurs, notamment en Australie, pratiquent encore le **mulesing**, qui consiste à découper des bandes de peau sur l’arrière-train des agneaux."
+              "text": "Autre pratique barbare : certains éleveurs, notamment en Australie, pratiquent encore le **mulesing**, qui consiste à découper des bandes de peau sur l'arrière-train des agneaux."
             }
           ],
           "sources": [
@@ -595,11 +595,11 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Dans la production de lait et d’œufs, on envoie à l’abattoir les vaches et les poules qui produisent moins. **Pour la laine, c’est pareil.** Et beaucoup de moutons sont tués jeunes, pour leur viande."
+              "text": "Dans la production de lait et d'œufs, on envoie à l'abattoir les vaches et les poules qui produisent moins. **Pour la laine, c'est pareil.** Et beaucoup de moutons sont tués jeunes, pour leur viande."
             },
             {
               "type": "text",
-              "text": "En fait, la laine est considérée comme **un sous-produit de la viande de mouton**. En France, elle est même classée comme « sous-produit animal », un déchet d’abattoir, et des éleveurs finissent par la brûler, la composter ou l’enterrer [1]."
+              "text": "En fait, la laine est considérée comme **un sous-produit de la viande de mouton**. En France, elle est même classée comme « sous-produit animal », un déchet d'abattoir, et des éleveurs finissent par la brûler, la composter ou l'enterrer [1]."
             }
           ],
           "sources": [
@@ -611,7 +611,7 @@
         },
         {
           "type": "info",
-          "title": "« Au moins, c’est écolo ! » 🌍",
+          "title": "« Au moins, c'est écolo ! » 🌍",
           "blocks": [
             {
               "type": "text",
@@ -622,7 +622,7 @@
               "items": [
                 "**Gaz à effet de serre** : comme les vaches, les moutons sont des ruminants, et leur élevage rejette une très grande quantité de **méthane**.",
                 "**Dégradation des sols** : il appauvrit aussi les sols, provoque leur érosion et détruit la biodiversité locale [1].",
-                "**Consommation d’eau** : l’élevage demande beaucoup d’eau, le lavage de la laine brute également. Et selon un rapport de 2021, seulement 30 % de ces eaux de lavage sont traitées avant d’être rejetées [1]."
+                "**Consommation d'eau** : l'élevage demande beaucoup d'eau, le lavage de la laine brute également. Et selon un rapport de 2021, seulement 30 % de ces eaux de lavage sont traitées avant d'être rejetées [1]."
               ]
             }
           ],
@@ -639,7 +639,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "On a parlé de laine de mouton parce que c’est la plus courante, mais **il y a de la laine d’autres animaux** :"
+              "text": "On a parlé de laine de mouton parce que c'est la plus courante, mais **il y a de la laine d'autres animaux** :"
             },
             {
               "type": "grid",
@@ -664,16 +664,16 @@
             },
             {
               "type": "text",
-              "text": "En 2013, une vidéo tournée dans des élevages chinois a montré des lapins angora épilés à vif : H&M a alors arrêté l’angora [1]. Et en Mongolie, l’explosion du nombre de chèvres cachemire a contribué à dégrader environ **70 % des pâturages** [2]."
+              "text": "En 2013, une vidéo tournée dans des élevages chinois a montré des lapins angora épilés à vif : H&M a alors arrêté l'angora [1]. Et en Mongolie, l'explosion du nombre de chèvres cachemire a contribué à dégrader environ **70 % des pâturages** [2]."
             },
             {
               "type": "text",
-              "text": "En fait, on appelle « laine » les poils de nombreux animaux : alpaga, yack, chameau… Évidemment, **on n’en achète aucune** !"
+              "text": "En fait, on appelle « laine » les poils de nombreux animaux : alpaga, yack, chameau… Évidemment, **on n'en achète aucune** !"
             }
           ],
           "sources": [
             {
-              "label": "DH, « Lapins torturés en Chine : H&M arrête la production d’angora », 2013",
+              "label": "DH, « Lapins torturés en Chine : H&M arrête la production d'angora », 2013",
               "url": "https://www.dhnet.be/actu/societe/2013/11/28/lapins-tortures-en-chine-hm-arrete-la-production-dangora-WW65U6CJOBAGBJWHGZUAYSSBX4/"
             },
             {
@@ -688,7 +688,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Pour avoir chaud sans exploiter d’animaux, les matières ne manquent pas :"
+              "text": "Pour avoir chaud sans exploiter d'animaux, les matières ne manquent pas :"
             },
             {
               "type": "grid",
@@ -717,18 +717,51 @@
             },
             {
               "type": "callout",
-              "text": "Sur l’étiquette, laine, mérinos, mohair, angora, cachemire, alpaga ou yack désignent des poils d’animaux."
+              "text": "Sur l'étiquette, laine, mérinos, mohair, angora, cachemire, alpaga ou yack désignent des poils d'animaux."
             }
           ]
         },
-        { "type": "myth" }
+        { "type": "myth" },
+        {
+          "type": "recipe",
+          "title": "Lentilles vertes, potiron rôti, noisettes et tofu fumé",
+          "image": "lib/assets/images/veganuary/recette-lentilles-potiron.webp",
+          "servings": 4,
+          "ingredients": [
+            "240 g de lentilles vertes",
+            "600 g de potiron",
+            "120 g de noisettes",
+            "400 g de tofu fumé",
+            "2 feuilles de laurier",
+            "1 c. à café de paprika fumé (+ 1 pincée)",
+            "1 c. à café de poudre de colombo (+ 1 pincée)",
+            "3 c. à soupe d'huile d'olive (+ 1 filet)",
+            "Sel et poivre"
+          ],
+          "steps": [
+            "Couper le potiron en dés. Dans un saladier, les mélanger avec l'huile d'olive, les feuilles de laurier, le paprika fumé, la poudre de colombo, le sel et le poivre.",
+            "Répartir le potiron sur une plaque de cuisson et enfourner à 200 °C pendant 25 minutes, en remuant à mi-cuisson.",
+            "Ajouter les noisettes 10 à 15 minutes avant la fin de la cuisson pour les torréfier.",
+            "Rincer les lentilles, puis les verser dans une casserole avec trois fois leur volume d'eau froide. Porter à ébullition, couvrir et laisser cuire 20 à 25 minutes, jusqu'à ce qu'elles soient tendres. Saler et poivrer en fin de cuisson.",
+            "Couper le tofu fumé en dés et les mélanger avec une pincée de paprika fumé et une pincée de poudre de colombo.",
+            "Faire chauffer une poêle avec un filet d'huile, puis faire revenir le tofu jusqu'à ce qu'il soit bien doré.",
+            "Répartir les lentilles dans les assiettes, puis ajouter le potiron rôti, les noisettes torréfiées et les dés de tofu fumé.",
+            "Servir chaud et profiter de cette assiette réconfortante aux saveurs d'automne !"
+          ],
+          "credit": {
+            "name": "Jordan · Jordan Vegan Food",
+            "image": "lib/assets/images/veganuary/credit-jordan-veganfood.webp",
+            "blog": "https://jordanveganfood.odoo.com/blog/recette-3/lentilles-vertes-potiron-roti-noisettes-et-tofu-fume-19",
+            "instagram": "https://www.instagram.com/jordan.veganfood/"
+          }
+        }
       ],
       "recap": [
         {
           "emoji": "🐑",
           "title": "Élevage, sélection, tonte",
           "bullets": [
-            "Faire naître des animaux pour leur laine, c’est de l’exploitation",
+            "Faire naître des animaux pour leur laine, c'est de l'exploitation",
             "Une toison anormalement lourde, créée par la sélection",
             "Une tonte où compte le volume, pas le bien-être"
           ]
@@ -737,7 +770,7 @@
           "emoji": "⏳",
           "title": "Et après ?",
           "bullets": [
-            "Les moutons finissent à l’abattoir",
+            "Les moutons finissent à l'abattoir",
             "La laine, un sous-produit de la viande"
           ]
         },
@@ -749,7 +782,7 @@
         {
           "emoji": "🐐",
           "title": "Pas que les moutons",
-          "bullets": ["Mohair, angora, cachemire : des poils d’animaux"]
+          "bullets": ["Mohair, angora, cachemire : des poils d'animaux"]
         },
         {
           "emoji": "🧶",
@@ -764,13 +797,13 @@
       "steps": [
         {
           "type": "quiz",
-          "question": "Selon vous, quelle part des touristes ne remarque pas qu’une attraction maltraite les animaux ?",
+          "question": "Selon vous, quelle part des touristes ne remarque pas qu'une attraction maltraite les animaux ?",
           "choices": [
             { "text": "Environ 20 %" },
             { "text": "Environ la moitié" },
             { "text": "Environ 80 %", "result": "right" }
           ],
-          "explanation": "Une étude de l’université d’Oxford a analysé des milliers d’avis laissés en ligne : **80 % des touristes** n’avaient pas remarqué que l’attraction était mauvaise pour les animaux. Souvent, la souffrance ne se voit pas : parce qu'on ne sait pas regarder ou bien qu'on ne veut pas la voir..."
+          "explanation": "Une étude de l'université d'Oxford a analysé des milliers d'avis laissés en ligne : **80 % des touristes** n'avaient pas remarqué que l'attraction était mauvaise pour les animaux. Souvent, la souffrance ne se voit pas : parce qu'on ne sait pas regarder ou bien qu'on ne veut pas la voir..."
         },
         {
           "type": "info",
@@ -778,20 +811,20 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Balade à dos d’éléphant ou de chameau, selfie avec un singe, tour en calèche… En voyage, les animaux font souvent partie du décor. Mais dans le monde, au moins **550 000 animaux sauvages** sont exploités dans des attractions touristiques [1]."
+              "text": "Balade à dos d'éléphant ou de chameau, selfie avec un singe, tour en calèche… En voyage, les animaux font souvent partie du décor. Mais dans le monde, au moins **550 000 animaux sauvages** sont exploités dans des attractions touristiques [1]."
             },
             {
               "type": "text",
-              "text": "Pour qu’un animal sauvage accepte qu’on le monte, qu’on le touche ou qu’on se prenne en photo avec lui, il doit être dressé, souvent **par la peur et la douleur** [2]."
+              "text": "Pour qu'un animal sauvage accepte qu'on le monte, qu'on le touche ou qu'on se prenne en photo avec lui, il doit être dressé, souvent **par la peur et la douleur** [2]."
             },
             {
               "type": "text",
-              "text": "C’est **la demande des touristes** qui fait tourner ces activités."
+              "text": "C'est **la demande des touristes** qui fait tourner ces activités."
             }
           ],
           "sources": [
             {
-              "label": "World Animal Protection, « Reporting on the global scale of wildlife cruelty in the tourism industry for the first time », sur l’étude de l’université d’Oxford, 2015",
+              "label": "World Animal Protection, « Reporting on the global scale of wildlife cruelty in the tourism industry for the first time », sur l'étude de l'université d'Oxford, 2015",
               "url": "https://www.worldanimalprotection.org/news/reporting-global-scale-wildlife-cruelty-tourism-industry-first-time"
             },
             {
@@ -807,7 +840,7 @@
             {
               "type": "image",
               "src": "lib/assets/images/veganuary/tourisme-elephant.webp",
-              "caption": "Balade à dos d’éléphant au temple du Bayon, au Cambodge."
+              "caption": "Balade à dos d'éléphant au temple du Bayon, au Cambodge."
             },
             {
               "type": "text",
@@ -824,7 +857,7 @@
           ],
           "sources": [
             {
-              "label": "Faunalytics, « Taken For A Ride: A Report On Asia’s Elephant Tourism », sur le rapport de World Animal Protection, 2020",
+              "label": "Faunalytics, « Taken For A Ride: A Report On Asia's Elephant Tourism », sur le rapport de World Animal Protection, 2020",
               "url": "https://faunalytics.org/taken-for-a-ride-a-report-on-asias-elephant-tourism/"
             }
           ]
@@ -840,28 +873,28 @@
             },
             {
               "type": "text",
-              "text": "Les animaux domestiques aussi travaillent pour les touristes, y compris en France : calèches, balades à poney ou à dos d’âne, chiens de traîneau…"
+              "text": "Les animaux domestiques aussi travaillent pour les touristes, y compris en France : calèches, balades à poney ou à dos d'âne, chiens de traîneau…"
             },
             {
               "type": "text",
-              "text": "Les chevaux de calèche passent leurs journées dans la circulation, sur le bitume, parfois en pleine chaleur. En 2018, Montréal a voté **l’interdiction des calèches**, effective fin 2019 [1]."
+              "text": "Les chevaux de calèche passent leurs journées dans la circulation, sur le bitume, parfois en pleine chaleur. En 2018, Montréal a voté **l'interdiction des calèches**, effective fin 2019 [1]."
             },
             {
               "type": "text",
-              "text": "À Santorin, en Grèce, des ânes montent les touristes du port jusqu’au village, par des centaines de marches. En 2018, le gouvernement grec a dû interdire de leur faire porter **plus de 100 kg**, soit un cinquième de leur poids [2]."
+              "text": "À Santorin, en Grèce, des ânes montent les touristes du port jusqu'au village, par des centaines de marches. En 2018, le gouvernement grec a dû interdire de leur faire porter **plus de 100 kg**, soit un cinquième de leur poids [2]."
             },
             {
               "type": "text",
-              "text": "Et au pied des pyramides de Gizeh, en Égypte, des enquêtes de l’association PETA ont filmé des chameaux et des chevaux mal nourris, frappés et blessés [3]."
+              "text": "Et au pied des pyramides de Gizeh, en Égypte, des enquêtes de l'association PETA ont filmé des chameaux et des chevaux mal nourris, frappés et blessés [3]."
             },
             {
               "type": "text",
-              "text": "**Bonne nouvelle pour finir** : en octobre 2026, New York a voté la fin des calèches à chevaux de Central Park d’ici juin 2028, avec un plan pour aider les cochers à se reconvertir [4]."
+              "text": "**Bonne nouvelle pour finir** : en octobre 2026, New York a voté la fin des calèches à chevaux de Central Park d'ici juin 2028, avec un plan pour aider les cochers à se reconvertir [4]."
             }
           ],
           "sources": [
             {
-              "label": "Global News, sur l’interdiction des calèches à Montréal, 2018",
+              "label": "Global News, sur l'interdiction des calèches à Montréal, 2018",
               "url": "https://globalnews.ca/news/4299637/montreal-bans-horse-drawn-carriage-canada"
             },
             {
@@ -884,7 +917,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Quelques réflexes pour profiter de ses vacances sans faire souffrir d’animaux :"
+              "text": "Quelques réflexes pour profiter de ses vacances sans faire souffrir d'animaux :"
             },
             {
               "type": "grid",
@@ -892,12 +925,12 @@
                 {
                   "emoji": "🚶",
                   "label": "À pied ou à vélo",
-                  "text": "Plutôt qu’à dos d’animal ou en calèche."
+                  "text": "Plutôt qu'à dos d'animal ou en calèche."
                 },
                 {
                   "emoji": "🤳",
                   "label": "Pas de selfie",
-                  "text": "Avec un animal sauvage, même s’il a l’air calme."
+                  "text": "Avec un animal sauvage, même s'il a l'air calme."
                 },
                 {
                   "emoji": "🔍",
@@ -964,9 +997,9 @@
           "choices": [
             { "text": "Environ 20 litres" },
             { "text": "Environ 200 litres" },
-            { "text": "Jusqu’à 2 300 litres", "result": "right" }
+            { "text": "Jusqu'à 2 300 litres", "result": "right" }
           ],
-          "explanation": "Une journée végane peut réduire votre empreinte eau de **jusqu’à 2 300 litres**, soit une quinzaine de baignoires ! L’empreinte eau, c’est toute l’eau utilisée pour produire ce qu’on mange, y compris l’eau de pluie qui arrose les cultures et les prairies. Une grande partie sert à faire pousser la nourriture des animaux d’élevage."
+          "explanation": "Une journée végane peut réduire votre empreinte eau de **jusqu'à 2 300 litres**, soit une quinzaine de baignoires ! L'empreinte eau, c'est toute l'eau utilisée pour produire ce qu'on mange, y compris l'eau de pluie qui arrose les cultures et les prairies. Une grande partie sert à faire pousser la nourriture des animaux d'élevage."
         },
         {
           "type": "info",
@@ -975,15 +1008,15 @@
           "blocks": [
             {
               "type": "text",
-              "text": "L’alimentation végétale a aussi un impact sur l’environnement : elle permet de **réduire considérablement son empreinte carbone**."
+              "text": "L'alimentation végétale a aussi un impact sur l'environnement : elle permet de **réduire considérablement son empreinte carbone**."
             },
             {
               "type": "text",
-              "text": "L’élevage est en effet l’une des principales sources d’émission de gaz à effet de serre, de déforestation, de pollution de l’air et de pollution de l’eau."
+              "text": "L'élevage est en effet l'une des principales sources d'émission de gaz à effet de serre, de déforestation, de pollution de l'air et de pollution de l'eau."
             },
             {
               "type": "text",
-              "text": "Chaque journée végane évite l’émission de **jusqu’à 4,5 kg de CO₂** [1]."
+              "text": "Chaque journée végane évite l'émission de **jusqu'à 4,5 kg de CO₂** [1]."
             }
           ],
           "sources": [
@@ -1000,15 +1033,15 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Dans les régions tropicales, **90 à 99 % de la déforestation** est due à l’agriculture [1]."
+              "text": "Dans les régions tropicales, **90 à 99 % de la déforestation** est due à l'agriculture [1]."
             },
             {
               "type": "text",
-              "text": "Et l’élevage en est le premier responsable : à eux seuls, les pâturages pour les bovins causent **41 % de la déforestation tropicale** [2]. Il faut aussi cultiver la nourriture des animaux : plus des trois quarts du soja produit dans le monde (77 %) servent à nourrir les animaux d’élevage [2]."
+              "text": "Et l'élevage en est le premier responsable : à eux seuls, les pâturages pour les bovins causent **41 % de la déforestation tropicale** [2]. Il faut aussi cultiver la nourriture des animaux : plus des trois quarts du soja produit dans le monde (77 %) servent à nourrir les animaux d'élevage [2]."
             },
             {
               "type": "text",
-              "text": "Détruire une forêt, c’est détruire l’habitat de milliers d’espèces, et bien souvent les terres des peuples autochtones qui y vivent."
+              "text": "Détruire une forêt, c'est détruire l'habitat de milliers d'espèces, et bien souvent les terres des peuples autochtones qui y vivent."
             },
             {
               "type": "text",
@@ -1016,16 +1049,16 @@
             },
             {
               "type": "text",
-              "text": "Le tofu, le tempeh ou les boissons au soja ne représentent qu’environ **7 % du soja** cultivé dans le monde [3]. Manger directement des végétaux demande bien moins de terres que de les faire passer par un animal."
+              "text": "Le tofu, le tempeh ou les boissons au soja ne représentent qu'environ **7 % du soja** cultivé dans le monde [3]. Manger directement des végétaux demande bien moins de terres que de les faire passer par un animal."
             },
             {
               "type": "text",
-              "text": "En France, une alimentation végane demande environ **trois fois moins de terres agricoles** : environ 1 300 m² par personne, contre 4 000 m² pour l’alimentation moyenne [4]. Et si tout le monde mangeait végétal, on pourrait réduire la surface agricole mondiale de **75 %** [3] : de quoi rendre à la nature l’équivalent de trois fois l’Europe."
+              "text": "En France, une alimentation végane demande environ **trois fois moins de terres agricoles** : environ 1 300 m² par personne, contre 4 000 m² pour l'alimentation moyenne [4]. Et si tout le monde mangeait végétal, on pourrait réduire la surface agricole mondiale de **75 %** [3] : de quoi rendre à la nature l'équivalent de trois fois l'Europe."
             }
           ],
           "sources": [
             {
-              "label": "SEI, « Agriculture drives more than 90% of tropical deforestation », sur l’étude de Pendrill et al., Science, 2022",
+              "label": "SEI, « Agriculture drives more than 90% of tropical deforestation », sur l'étude de Pendrill et al., Science, 2022",
               "url": "https://www.sei.org/about-sei/press-room/agriculture-drives-more-than-90-of-tropical-deforestation/"
             },
             {
@@ -1044,20 +1077,20 @@
         },
         {
           "type": "info",
-          "title": "L’eau",
+          "title": "L'eau",
           "image": "lib/assets/themes/cards/water-basic.webp",
           "blocks": [
             {
               "type": "text",
-              "text": "La production de produits d’origine animale nécessite une **gigantesque quantité d’eau**, notamment pour irriguer les cultures qui nourrissent les animaux d’élevage."
+              "text": "La production de produits d'origine animale nécessite une **gigantesque quantité d'eau**, notamment pour irriguer les cultures qui nourrissent les animaux d'élevage."
             },
             {
               "type": "text",
-              "text": "Et c’est sans compter la pollution de l’eau due aux déjections qu’ils produisent."
+              "text": "Et c'est sans compter la pollution de l'eau due aux déjections qu'ils produisent."
             },
             {
               "type": "text",
-              "text": "Chaque journée végane réduit votre empreinte eau de **jusqu’à 2 300 litres** [1]. Cette empreinte compte toute l’eau utilisée pour produire ce qu’on mange."
+              "text": "Chaque journée végane réduit votre empreinte eau de **jusqu'à 2 300 litres** [1]. Cette empreinte compte toute l'eau utilisée pour produire ce qu'on mange."
             }
           ],
           "sources": [
@@ -1073,7 +1106,7 @@
         {
           "emoji": "🌍",
           "title": "Le climat",
-          "bullets": ["Jusqu’à 4,5 kg de CO₂ évités par jour"]
+          "bullets": ["Jusqu'à 4,5 kg de CO₂ évités par jour"]
         },
         {
           "emoji": "🌳",
@@ -1086,8 +1119,8 @@
         },
         {
           "emoji": "💧",
-          "title": "L’eau",
-          "bullets": ["Jusqu’à 2 300 litres d’empreinte eau en moins par jour"]
+          "title": "L'eau",
+          "bullets": ["Jusqu'à 2 300 litres d'empreinte eau en moins par jour"]
         }
       ]
     },
@@ -1097,13 +1130,13 @@
       "steps": [
         {
           "type": "quiz",
-          "question": "Selon vous, un cosmétique « cruelty free » peut-il contenir des ingrédients d’origine animale ?",
+          "question": "Selon vous, un cosmétique « cruelty free » peut-il contenir des ingrédients d'origine animale ?",
           "choices": [
             { "text": "Oui", "result": "right" },
             { "text": "Non, jamais" },
             { "text": "Seulement du miel" }
           ],
-          "explanation": "Oui ! « Cruelty free » veut seulement dire que le produit n’est **pas testé sur les animaux**. Il peut très bien contenir de la cire d’abeille, du carmin (des cochenilles écrasées) ou de la lanoline (la graisse de la laine de mouton)."
+          "explanation": "Oui ! « Cruelty free » veut seulement dire que le produit n'est **pas testé sur les animaux**. Il peut très bien contenir de la cire d'abeille, du carmin (des cochenilles écrasées) ou de la lanoline (la graisse de la laine de mouton)."
         },
         {
           "type": "info",
@@ -1119,18 +1152,18 @@
                 {
                   "emoji": "🌱",
                   "label": "Végane",
-                  "text": "Sans ingrédient d’origine animale… mais peut être **testé sur les animaux**."
+                  "text": "Sans ingrédient d'origine animale… mais peut être **testé sur les animaux**."
                 },
                 {
                   "emoji": "🐰",
                   "label": "Cruelty free",
-                  "text": "Pas testé sur les animaux… mais peut contenir **des ingrédients d’origine animale**."
+                  "text": "Pas testé sur les animaux… mais peut contenir **des ingrédients d'origine animale**."
                 }
               ]
             },
             {
               "type": "text",
-              "text": "Et oui, **c’est absurde** : un produit qui contient des cochenilles écrasées ne devrait pas pouvoir se dire « sans cruauté ». Et un produit noté « végane » ne devrait pas avoir fait l'objet de tests sur les animaux. Pourtant, la plupart des labels et listes cruelty free ne regardent que les tests. C’est comme dire qu’exploiter ou tuer des animaux pour fabriquer un produit est acceptable, du moment qu’on ne le teste pas sur eux."
+              "text": "Et oui, **c'est absurde** : un produit qui contient des cochenilles écrasées ne devrait pas pouvoir se dire « sans cruauté ». Et un produit noté « végane » ne devrait pas avoir fait l'objet de tests sur les animaux. Pourtant, la plupart des labels et listes cruelty free ne regardent que les tests. C'est comme dire qu'exploiter ou tuer des animaux pour fabriquer un produit est acceptable, du moment qu'on ne le teste pas sur eux."
             },
             {
               "type": "callout",
@@ -1140,19 +1173,19 @@
         },
         {
           "type": "info",
-          "title": "« On ne teste pas, c’est interdit » 🧪",
+          "title": "« On ne teste pas, c'est interdit » 🧪",
           "blocks": [
             {
               "type": "text",
-              "text": "En Europe, les tests de cosmétiques sur les animaux sont interdits. Beaucoup de marques s’en servent comme argument. Mais si elles vendent leurs produits dans des pays qui exigent encore des tests, l’argument ne tient plus."
+              "text": "En Europe, les tests de cosmétiques sur les animaux sont interdits. Beaucoup de marques s'en servent comme argument. Mais si elles vendent leurs produits dans des pays qui exigent encore des tests, l'argument ne tient plus."
             },
             {
               "type": "text",
-              "text": "C’était longtemps le cas de la Chine. Depuis 2021, la plupart des cosmétiques importés peuvent y échapper aux tests obligatoires, et cette exemption s’est encore élargie en 2026 [1]. Mais elle reste **sous conditions** : certains produits, comme les crèmes solaires, ne sont pas concernés, et une marque sans certificat officiel de son pays n’y a pas droit."
+              "text": "C'était longtemps le cas de la Chine. Depuis 2021, la plupart des cosmétiques importés peuvent y échapper aux tests obligatoires, et cette exemption s'est encore élargie en 2026 [1]. Mais elle reste **sous conditions** : certains produits, comme les crèmes solaires, ne sont pas concernés, et une marque sans certificat officiel de son pays n'y a pas droit."
             },
             {
               "type": "text",
-              "text": "Méfiez-vous aussi des formulations floues comme « nous sommes opposés aux tests sur les animaux ». Avoir une opinion, c’est bien ; l’appliquer, c’est mieux."
+              "text": "Méfiez-vous aussi des formulations floues comme « nous sommes opposés aux tests sur les animaux ». Avoir une opinion, c'est bien ; l'appliquer, c'est mieux."
             }
           ],
           "sources": [
@@ -1172,19 +1205,19 @@
             },
             {
               "type": "text",
-              "text": "Par exemple, Garnier est certifiée cruelty free (label Leaping Bunny) depuis 2021, mais elle appartient au groupe L’Oréal, qui teste encore sur les animaux là où la loi l’exige."
+              "text": "Par exemple, Garnier est certifiée cruelty free (label Leaping Bunny) depuis 2021, mais elle appartient au groupe L'Oréal, qui teste encore sur les animaux là où la loi l'exige."
             },
             {
               "type": "text",
-              "text": "Faut-il alors éviter Garnier ? C’est **une question compliquée**, et c'est encore une question ouverte dans la communauté végane. Une chose est sûre, préférer les plus petites marques qu'on sait éthiques est toujours un bon choix !"
+              "text": "Faut-il alors éviter Garnier ? C'est **une question compliquée**, et c'est encore une question ouverte dans la communauté végane. Une chose est sûre, préférer les plus petites marques qu'on sait éthiques est toujours un bon choix !"
             },
             {
               "type": "text",
-              "text": "Chez 321 Vegan aussi, c’est difficile de trancher : pour l’instant, Garnier est d’ailleurs notée cruelty free dans l’app."
+              "text": "Chez 321 Vegan aussi, c'est difficile de trancher : pour l'instant, Garnier est d'ailleurs notée cruelty free dans l'app."
             },
             {
               "type": "callout",
-              "text": "L’important, c’est de connaître le problème, pour pouvoir choisir en connaissance de cause."
+              "text": "L'important, c'est de connaître le problème, pour pouvoir choisir en connaissance de cause."
             }
           ]
         },
@@ -1207,7 +1240,7 @@
                 },
                 {
                   "emoji": "🐝",
-                  "label": "Cire d’abeille (Cera alba), miel (Mel)",
+                  "label": "Cire d'abeille (Cera alba), miel (Mel)",
                   "text": "Dans les baumes à lèvres, les mascaras, les crèmes."
                 },
                 {
@@ -1223,18 +1256,18 @@
                 {
                   "emoji": "🐟",
                   "label": "Guanine (CI 75170)",
-                  "text": "Tirée d’écailles de poisson, pour les effets nacrés."
+                  "text": "Tirée d'écailles de poisson, pour les effets nacrés."
                 },
                 {
                   "emoji": "🦴",
                   "label": "Collagène, kératine",
-                  "text": "Souvent tirés de peaux, d’os, de plumes ou de poils d’animaux."
+                  "text": "Souvent tirés de peaux, d'os, de plumes ou de poils d'animaux."
                 }
               ]
             },
             {
               "type": "text",
-              "text": "Pour gagner du temps, vous pouvez aussi chercher une marque dans l’app 321 Vegan : dans la recherche, choisissez « Cosmétique ». Ou scannez directement le produit !"
+              "text": "Pour gagner du temps, vous pouvez aussi chercher une marque dans l'app 321 Vegan : dans la recherche, choisissez « Cosmétique ». Ou scannez directement le produit !"
             }
           ]
         },
@@ -1261,7 +1294,7 @@
         {
           "emoji": "🔍",
           "title": "Les ingrédients",
-          "bullets": ["Carmin, cire d’abeille, lanoline, suif, guanine, collagène…"]
+          "bullets": ["Carmin, cire d'abeille, lanoline, suif, guanine, collagène…"]
         }
       ]
     },
@@ -1271,13 +1304,13 @@
       "steps": [
         {
           "type": "quiz",
-          "question": "Selon vous, d’où vient la biodynamie ?",
+          "question": "Selon vous, d'où vient la biodynamie ?",
           "choices": [
-            { "text": "D’une découverte scientifique sur les sols" },
-            { "text": "D’une tradition paysanne ancestrale" },
-            { "text": "D’un courant ésotérique, l’anthroposophie", "result": "right" }
+            { "text": "D'une découverte scientifique sur les sols" },
+            { "text": "D'une tradition paysanne ancestrale" },
+            { "text": "D'un courant ésotérique, l'anthroposophie", "result": "right" }
           ],
-          "explanation": "La biodynamie a été inventée en 1924 par **Rudolf Steiner**, le fondateur de l’anthroposophie, un courant ésotérique. Elle ne vient ni d’agronomes, ni d’une tradition paysanne."
+          "explanation": "La biodynamie a été inventée en 1924 par **Rudolf Steiner**, le fondateur de l'anthroposophie, un courant ésotérique. Elle ne vient ni d'agronomes, ni d'une tradition paysanne."
         },
         {
           "type": "info",
@@ -1285,7 +1318,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "La biodynamie est une méthode agricole inventée en 1924 par Rudolf Steiner, le fondateur de l’anthroposophie, un courant ésotérique [1]. On la reconnaît souvent au label **Demeter**."
+              "text": "La biodynamie est une méthode agricole inventée en 1924 par Rudolf Steiner, le fondateur de l'anthroposophie, un courant ésotérique [1]. On la reconnaît souvent au label **Demeter**."
             },
             {
               "type": "image",
@@ -1294,16 +1327,16 @@
             },
             {
               "type": "text",
-              "text": "Ses préparations utilisent des **parties d’animaux** : bouse de vache enterrée dans une corne de vache, fleurs d’achillée dans une vessie de cerf, camomille dans un intestin de vache, écorce de chêne dans un crâne d’animal… [1]"
+              "text": "Ses préparations utilisent des **parties d'animaux** : bouse de vache enterrée dans une corne de vache, fleurs d'achillée dans une vessie de cerf, camomille dans un intestin de vache, écorce de chêne dans un crâne d'animal… [1]"
             },
             {
               "type": "text",
-              "text": "Une partie de ses pratiques n’a jamais été validée scientifiquement, comme le fait de suivre le calendrier lunaire [2]. Et surtout, elle repose sur l’utilisation d’animaux."
+              "text": "Une partie de ses pratiques n'a jamais été validée scientifiquement, comme le fait de suivre le calendrier lunaire [2]. Et surtout, elle repose sur l'utilisation d'animaux."
             }
           ],
           "sources": [
             {
-              "label": "Section d’agriculture du Goetheanum, « Les préparations biodynamiques »",
+              "label": "Section d'agriculture du Goetheanum, « Les préparations biodynamiques »",
               "url": "https://www.soin-de-la-terre.org/wp-content/uploads/Préparations_biodynamiques_Goetheanum_c.pdf"
             },
             {
@@ -1314,23 +1347,23 @@
         },
         {
           "type": "info",
-          "title": "Et dans l’app ? 📱",
+          "title": "Et dans l'app ? 📱",
           "blocks": [
             {
               "type": "text",
-              "text": "Un produit issu de la biodynamie peut ne contenir aucun ingrédient d’origine animale… mais il a été cultivé avec des parties d’animaux. C’est pourquoi 321 Vegan ne le considère pas comme végane."
+              "text": "Un produit issu de la biodynamie peut ne contenir aucun ingrédient d'origine animale… mais il a été cultivé avec des parties d'animaux. C'est pourquoi 321 Vegan ne le considère pas comme végane."
             },
             {
               "type": "bullets",
               "items": [
-                "Au scan, il s’affiche en jaune, comme **« Végétalien »** et non « Végane ».",
+                "Au scan, il s'affiche en jaune, comme **« Végétalien »** et non « Végane ».",
                 "Un badge **« Biodynamie »** explique pourquoi.",
                 "Il ne peut pas être noté par la communauté."
               ]
             },
             {
               "type": "text",
-              "text": "Par exemple, cette choucroute ne contient aucun ingrédient d’origine animale. Mais elle porte le label Demeter et la mention « Cultivés en biodynamie » :"
+              "text": "Par exemple, cette choucroute ne contient aucun ingrédient d'origine animale. Mais elle porte le label Demeter et la mention « Cultivés en biodynamie » :"
             },
             {
               "type": "image",
@@ -1338,7 +1371,7 @@
             },
             {
               "type": "text",
-              "text": "Au scan, voici ce que l’app affiche :"
+              "text": "Au scan, voici ce que l'app affiche :"
             },
             {
               "type": "image",
@@ -1348,31 +1381,31 @@
         },
         {
           "type": "info",
-          "title": "Et le reste de l’agriculture ? 🚜",
+          "title": "Et le reste de l'agriculture ? 🚜",
           "blocks": [
             {
               "type": "text",
-              "text": "La biodynamie n’est pas la seule à utiliser des animaux. En agriculture conventionnelle comme en bio, on fertilise souvent les champs avec du **fumier**, ou avec des sous-produits d’abattoir : sang séché, corne broyée, farine de plumes… [1]"
+              "text": "La biodynamie n'est pas la seule à utiliser des animaux. En agriculture conventionnelle comme en bio, on fertilise souvent les champs avec du **fumier**, ou avec des sous-produits d'abattoir : sang séché, corne broyée, farine de plumes… [1]"
             },
             {
               "type": "text",
-              "text": "Impossible de le savoir en faisant ses courses. Ici, **on fait au mieux** : le véganisme, c’est éviter l’exploitation animale autant que possible et praticable. La biodynamie, elle, se voit sur l’étiquette : c’est facile de l’éviter."
+              "text": "Impossible de le savoir en faisant ses courses. Ici, **on fait au mieux** : le véganisme, c'est éviter l'exploitation animale autant que possible et praticable. La biodynamie, elle, se voit sur l'étiquette : c'est facile de l'éviter."
             }
           ],
           "sources": [
             {
-              "label": "Chambre d’agriculture PACA, « Les engrais organiques »",
+              "label": "Chambre d'agriculture PACA, « Les engrais organiques »",
               "url": "https://paca.chambres-agriculture.fr/fileadmin/user_upload/National/FAL_commun/publications/Provence-Alpes-Cote_d_Azur/agriculture_biologique/Les_engrais_organiques.pdf"
             }
           ]
         },
         {
           "type": "info",
-          "title": "L’agriculture végane 🌱",
+          "title": "L'agriculture végane 🌱",
           "blocks": [
             {
               "type": "text",
-              "text": "Cultiver sans aucun produit animal, c’est possible : c’est **l’agriculture biocyclique végétalienne**. Pas d’élevage, pas d’engrais d’origine animale : à la place, du compost végétal, des engrais verts, et des légumineuses qui enrichissent naturellement le sol en azote [1]."
+              "text": "Cultiver sans aucun produit animal, c'est possible : c'est **l'agriculture biocyclique végétalienne**. Pas d'élevage, pas d'engrais d'origine animale : à la place, du compost végétal, des engrais verts, et des légumineuses qui enrichissent naturellement le sol en azote [1]."
             },
             {
               "type": "text",
@@ -1389,7 +1422,7 @@
           ],
           "sources": [
             {
-              "label": "Wikifarmer, « Qu’est-ce que l’agriculture biocyclique végétalienne ? »",
+              "label": "Wikifarmer, « Qu'est-ce que l'agriculture biocyclique végétalienne ? »",
               "url": "https://wikifarmer.com/library/fr/article/quest-ce-que-lagriculture-biocyclique-vegetalienne"
             },
             {
@@ -1405,13 +1438,13 @@
           "emoji": "🐄",
           "title": "La biodynamie",
           "bullets": [
-            "Des préparations faites avec des parties d’animaux",
-            "Dans l’app : « Végétalien », pas « Végane »"
+            "Des préparations faites avec des parties d'animaux",
+            "Dans l'app : « Végétalien », pas « Végane »"
           ]
         },
         {
           "emoji": "🚜",
-          "title": "Le reste de l’agriculture",
+          "title": "Le reste de l'agriculture",
           "bullets": [
             "Fumier, sang séché, corne broyée, même en bio",
             "On fait au mieux : autant que possible et praticable"
@@ -1419,7 +1452,7 @@
         },
         {
           "emoji": "🌱",
-          "title": "L’agriculture végane",
+          "title": "L'agriculture végane",
           "bullets": [
             "Compost végétal, engrais verts, légumineuses",
             "Nouveau : la mention V-Label « Vegan Agriculture »"
@@ -1439,7 +1472,7 @@
             { "text": "Environ 300 000", "result": "right" },
             { "text": "Environ 1 millions" }
           ],
-          "explanation": "Selon la première estimation officielle, **entre 281 000 et 398 000 chiens et chats** ont été abandonnés en France en 2025. Pendant ce temps, les élevages continuent d’en faire naître."
+          "explanation": "Selon la première estimation officielle, **entre 281 000 et 398 000 chiens et chats** ont été abandonnés en France en 2025. Pendant ce temps, les élevages continuent d'en faire naître."
         },
         {
           "type": "info",
@@ -1451,16 +1484,16 @@
             },
             {
               "type": "text",
-              "text": "Par exemple, par rapport aux autres chiens, les bouledogues français ont environ **31 fois plus de risque** de souffrir d’un syndrome respiratoire obstructif, et 42 fois plus de risque d’avoir les narines trop étroites [1]. Les chercheurs relient la plupart de leurs problèmes de santé à la forme extrême de leur corps."
+              "text": "Par exemple, par rapport aux autres chiens, les bouledogues français ont environ **31 fois plus de risque** de souffrir d'un syndrome respiratoire obstructif, et 42 fois plus de risque d'avoir les narines trop étroites [1]. Les chercheurs relient la plupart de leurs problèmes de santé à la forme extrême de leur corps."
             },
             {
               "type": "text",
-              "text": "Dans les élevages, les femelles servent à produire des portées, encore et encore. Faire naître des animaux pour les vendre, c’est les traiter comme des produits, avec une « gamme », des « modèles » à la mode et un prix."
+              "text": "Dans les élevages, les femelles servent à produire des portées, encore et encore. Faire naître des animaux pour les vendre, c'est les traiter comme des produits, avec une « gamme », des « modèles » à la mode et un prix."
             }
           ],
           "sources": [
             {
-              "label": "O’Neill et al., « Disorders of French Bulldogs under primary veterinary care in the UK in 2016 », Canine Medicine and Genetics, 2021",
+              "label": "O'Neill et al., « Disorders of French Bulldogs under primary veterinary care in the UK in 2016 », Canine Medicine and Genetics, 2021",
               "url": "https://link.springer.com/content/pdf/10.1186/s40575-021-00112-3.pdf"
             }
           ]
@@ -1471,16 +1504,16 @@
           "blocks": [
             {
               "type": "text",
-              "text": "En 2025, **entre 281 000 et 398 000 chiens et chats** ont été abandonnés en France, selon la première estimation officielle de l’Observatoire de la protection des carnivores domestiques [1]. Chaque animal acheté, c’est un animal de refuge qui attend encore."
+              "text": "En 2025, **entre 281 000 et 398 000 chiens et chats** ont été abandonnés en France, selon la première estimation officielle de l'Observatoire de la protection des carnivores domestiques [1]. Chaque animal acheté, c'est un animal de refuge qui attend encore."
             },
             {
               "type": "text",
-              "text": "La loi a un peu bougé : depuis le 1er janvier 2024, les animaleries n’ont plus le droit de vendre de chiens ni de chats. Et avant d’en acheter ou d’en adopter un, il faut signer un **certificat d’engagement**, puis attendre 7 jours de réflexion [2]."
+              "text": "La loi a un peu bougé : depuis le 1er janvier 2024, les animaleries n'ont plus le droit de vendre de chiens ni de chats. Et avant d'en acheter ou d'en adopter un, il faut signer un **certificat d'engagement**, puis attendre 7 jours de réflexion [2]."
             },
             {
               "type": "bullets",
               "items": [
-                "**Adopter** en refuge ou en association, plutôt qu’acheter.",
+                "**Adopter** en refuge ou en association, plutôt qu'acheter.",
                 "**Faire stériliser** son animal, pour ne pas faire naître de nouvelles portées.",
                 "**Réfléchir avant** : un animal vit souvent plus de 10 ans."
               ]
@@ -1488,7 +1521,7 @@
           ],
           "sources": [
             {
-              "label": "La Dépêche Vétérinaire, « Entre 281 000 et 398 000 chiens et chats abandonnés en France en 2025 selon l’Ocad », 2026",
+              "label": "La Dépêche Vétérinaire, « Entre 281 000 et 398 000 chiens et chats abandonnés en France en 2025 selon l'Ocad », 2026",
               "url": "https://www.depecheveterinaire.com/entre-281000et-398000-chiens-et-chats-abandonnes-en-france-en-2025-selon-l-ocad_67A0598A4374B172.html"
             },
             {
@@ -1507,11 +1540,11 @@
             },
             {
               "type": "text",
-              "text": "**Pour les chiens**, une alimentation végane complète est possible : dans une grande enquête auprès de 2 536 chiens, ceux nourris végane n’étaient pas en moins bonne santé que les autres [1]."
+              "text": "**Pour les chiens**, une alimentation végane complète est possible : dans une grande enquête auprès de 2 536 chiens, ceux nourris végane n'étaient pas en moins bonne santé que les autres [1]."
             },
             {
               "type": "text",
-              "text": "**Pour les chats**, c’est un peu plus délicat, surtout parce que beaucoup sont difficiles et n’acceptent pas facilement une nouvelle nourriture : la transition doit souvent se faire très progressivement. Côté nutrition, leurs besoins particuliers, comme la taurine, peuvent être couverts sans produits animaux, et une enquête sur 1 369 chats n’a pas trouvé de différence de santé entre les chats nourris végane et les autres [2]. Il manque encore de grandes études cliniques pour en être tout à fait sûr, mais les résultats sont encourageants."
+              "text": "**Pour les chats**, c'est un peu plus délicat, surtout parce que beaucoup sont difficiles et n'acceptent pas facilement une nouvelle nourriture : la transition doit souvent se faire très progressivement. Côté nutrition, leurs besoins particuliers, comme la taurine, peuvent être couverts sans produits animaux, et une enquête sur 1 369 chats n'a pas trouvé de différence de santé entre les chats nourris végane et les autres [2]. Il manque encore de grandes études cliniques pour en être tout à fait sûr, mais les résultats sont encourageants."
             },
             {
               "type": "callout",

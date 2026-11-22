@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,11 +19,8 @@ class VeganuaryService {
     'lib/assets/veganuary/week1.json',
     'lib/assets/veganuary/week2.json',
     'lib/assets/veganuary/week3.json',
+    'lib/assets/veganuary/week4.json',
   ];
-
-  /// Debug: locked days open too, as a preview saving nothing (until the
-  /// app restarts).
-  static final ValueNotifier<bool> debugUnlockAll = ValueNotifier(false);
 
   static const String _progressKey = 'veganuary_progress';
   static const String _welcomeSeenKey = 'veganuary_welcome_seen';
@@ -90,6 +86,16 @@ class VeganuaryService {
       completedAt: progress.completedAt.map((day, date) =>
           MapEntry(day, DateTime(date.year, date.month, date.day - 1))),
     ));
+  }
+
+  /// Debug: the next day done without opening it (no idée reçue picked),
+  /// dated yesterday so the one after opens right away.
+  static Future<void> debugCompleteNextDay() async {
+    final progress = await loadProgress();
+    if (progress.nextDay > totalDays) return;
+    final now = DateTime.now();
+    await _save(progress.withCompleted(progress.nextDay,
+        now: DateTime(now.year, now.month, now.day - 1)));
   }
 
   static Future<void> _save(VeganuaryProgress progress) async {

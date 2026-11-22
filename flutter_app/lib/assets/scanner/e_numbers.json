@@ -1569,7 +1569,7 @@
     {
       "alternative_names": ["Vitamin C"],
       "description": "",
-      "description_fr": "Antioxydant produit par fermentation de glucose à l’aide de bactéries",
+      "description_fr": "Antioxydant produit par fermentation de glucose à l'aide de bactéries",
       "e_number": "E300",
       "name": "Ascorbic acid",
       "state": "vegan",
@@ -2544,7 +2544,7 @@
     {
       "alternative_names": [],
       "description": "",
-      "description_fr": "Gélifiants extraits par ébullition d’algues rouges",
+      "description_fr": "Gélifiants extraits par ébullition d'algues rouges",
       "e_number": "E407",
       "name": "Carrageenan",
       "state": "vegan",
@@ -5304,7 +5304,7 @@
     {
       "alternative_names": [],
       "description": "",
-      "description_fr": "Gélifiant obtenu par hydrolyse du collagène contenu dans la peau, les os ou les cartilages d’animaux (porc, bœuf)",
+      "description_fr": "Gélifiant obtenu par hydrolyse du collagène contenu dans la peau, les os ou les cartilages d'animaux (porc, bœuf)",
       "e_number": "E441",
       "name": "Gelatine",
       "state": "carniste",
@@ -5335,7 +5335,7 @@
     {
       "alternative_names": [],
       "description": "",
-      "description_fr": "Agent d’enrobage ou de glaçage, obtenu par la fonte et filtration des alvéoles d’abeilles",
+      "description_fr": "Agent d'enrobage ou de glaçage, obtenu par la fonte et filtration des alvéoles d'abeilles",
       "e_number": "E901",
       "name": "Beeswax, white and yellow",
       "state": "carniste",
@@ -5398,7 +5398,7 @@
     {
       "alternative_names": ["2-Amino-3-sulfhydrylpropanoic acid"],
       "description": "",
-      "description_fr": "Dérivés de la cystéine (acides aminés), parfois utilisés dans le pain pour améliorer la texture. Peut être extrait de poils ou plumes animales, bien que souvent produits aujourd’hui par fermentation.\nIl semble qu'en France, la l-cystéine soit très majoritairement d'origine végétale",
+      "description_fr": "Dérivés de la cystéine (acides aminés), parfois utilisés dans le pain pour améliorer la texture. Peut être extrait de poils ou plumes animales, bien que souvent produits aujourd'hui par fermentation.\nIl semble qu'en France, la l-cystéine soit très majoritairement d'origine végétale",
       "e_number": "E920",
       "name": "L-cysteine",
       "state": "Ça dépend",
@@ -5414,7 +5414,7 @@
     {
       "alternative_names": [],
       "description": "",
-      "description_fr": "Dérivés de la cystéine (acides aminés), parfois utilisés dans le pain pour améliorer la texture. Peut être extrait de poils ou plumes animales, bien que souvent produits aujourd’hui par fermentation.\nIl semble qu'en France, la l-cystine soit très majoritairement d'origine végétale",
+      "description_fr": "Dérivés de la cystéine (acides aminés), parfois utilisés dans le pain pour améliorer la texture. Peut être extrait de poils ou plumes animales, bien que souvent produits aujourd'hui par fermentation.\nIl semble qu'en France, la l-cystine soit très majoritairement d'origine végétale",
       "e_number": "E921",
       "name": "L-cystine",
       "state": "Ça dépend",
@@ -5577,7 +5577,7 @@
     {
       "alternative_names": [],
       "description": "",
-      "description_fr": "Émulsifiants extraits principalement du soja ou du tournesol par pression à froid, mais aussi parfois du jaune d’œuf. Utilisés dans chocolat, margarines, gâteaux, ...\nA priori s'il est extrait d'oeuf, ça devrait être précisé sur l'emballage.",
+      "description_fr": "Émulsifiants extraits principalement du soja ou du tournesol par pression à froid, mais aussi parfois du jaune d'œuf. Utilisés dans chocolat, margarines, gâteaux, ...\nA priori s'il est extrait d'oeuf, ça devrait être précisé sur l'emballage.",
       "e_number": "E322",
       "name": "Lecithin",
       "state": "Ça dépend",
@@ -6310,7 +6310,7 @@
         "Natural Yellow 3"
       ],
       "description": "An orange yellow colour derived from the root of the curcuma (turmeric) plant.\nApart from its culinary uses, turmeric is used as a preservative, colorant and flavouring agent in many food products including baked foods and pickles.\n",
-      "description_fr": "Colorant jaune extrait du curcuma. Utilisé dans les plats préparés, les sauces, les produits à base de riz. \nIl est entièrement d’origine végétale.",
+      "description_fr": "Colorant jaune extrait du curcuma. Utilisé dans les plats préparés, les sauces, les produits à base de riz. \nIl est entièrement d'origine végétale.",
       "e_number": "E100",
       "name": "Curcumin",
       "state": "vegan",
