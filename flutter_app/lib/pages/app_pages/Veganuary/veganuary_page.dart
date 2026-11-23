@@ -8,6 +8,7 @@ import '../../../models/veganuary/veganuary_content.dart';
 import '../../../models/veganuary/veganuary_progress.dart';
 import '../../../services/veganuary_reminder_service.dart';
 import '../../../services/veganuary_service.dart';
+import '../../../services/veganuary_sync_service.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/shared/app_background.dart';
@@ -97,9 +98,18 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     _refreshContent();
   }
 
-  /// The content edited on the API since last time, shown once downloaded.
+  /// The content edited on the API since last time, shown once downloaded;
+  /// likewise the days done on another device (logged in), each as soon as
+  /// it's there.
   Future<void> _refreshContent() async {
-    if (await VeganuaryService.refreshContent() && mounted) await _load();
+    Future<void> reloadIf(bool changed) async {
+      if (changed && mounted) await _load();
+    }
+
+    await Future.wait([
+      VeganuaryService.refreshContent().then(reloadIf),
+      VeganuarySyncService.sync().then(reloadIf),
+    ]);
   }
 
   /// The intro of the course and its disclaimer, shown once: however it's

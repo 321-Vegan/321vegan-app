@@ -116,6 +116,50 @@ class VeganuaryProgress {
     );
   }
 
+  /// With the days done elsewhere (another device, the server, see
+  /// VeganuarySyncService) added: a day done on both keeps its earliest
+  /// date, and the idée reçue known for it. A started day done elsewhere is
+  /// no longer started.
+  VeganuaryProgress mergedWith(
+      Map<int, DateTime> days, Map<int, String> myths) {
+    final merged = {...completedAt};
+    days.forEach((day, date) {
+      final local = merged[day];
+      if (local == null || date.isBefore(local)) merged[day] = dateOnly(date);
+    });
+    final started = this.started;
+    return VeganuaryProgress(
+      completedAt: merged,
+      pickedMyths: {...myths, ...pickedMyths},
+      started:
+          started != null && merged.containsKey(started.day) ? null : started,
+    );
+  }
+
+  /// Only the days done in a row from day 1, up to [lastDay]: what the
+  /// course counts on ([nextDay], [unlockDate] from day 1). Days after a
+  /// gap (e.g. from the server, after a reset on another device) are left
+  /// out, with their idées reçues.
+  VeganuaryProgress contiguous({required int lastDay}) {
+    final kept = <int, DateTime>{};
+    for (var day = 1; day <= lastDay && completedAt.containsKey(day); day++) {
+      kept[day] = completedAt[day]!;
+    }
+    if (kept.length == completedAt.length) return this;
+    final started = this.started;
+    final keepStarted = started != null && started.day == kept.length + 1;
+    return VeganuaryProgress(
+      completedAt: kept,
+      pickedMyths: {
+        for (final entry in pickedMyths.entries)
+          if (kept.containsKey(entry.key) ||
+              (keepStarted && entry.key == started.day))
+            entry.key: entry.value,
+      },
+      started: keepStarted ? started : null,
+    );
+  }
+
   VeganuaryProgress copyWith({Map<int, DateTime>? completedAt}) {
     return VeganuaryProgress(
       completedAt: completedAt ?? this.completedAt,

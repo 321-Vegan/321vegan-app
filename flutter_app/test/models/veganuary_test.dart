@@ -107,6 +107,64 @@ void main() {
 
   // A mistake in a week's JSON would leave the whole tab on "Le contenu
   // n'a pas pu être chargé": caught here instead.
+  group('VeganuaryProgress.mergedWith (days got back from the server)', () {
+    final local = VeganuaryProgress(
+      completedAt: {1: DateTime(2027, 1, 3), 2: DateTime(2027, 1, 4)},
+      pickedMyths: {1: 'soja'},
+      started: const VeganuaryStartedDay(
+          day: 3, screen: 2, screens: 6, quizAnswers: {}, openedCards: {}),
+    );
+
+    test('adds the days done elsewhere, keeping the earliest date', () {
+      final merged = local.mergedWith(
+        {
+          1: DateTime(2027, 1, 1),
+          2: DateTime(2027, 1, 9),
+          4: DateTime(2027, 1, 6),
+        },
+        {2: 'carences', 4: 'b12'},
+      );
+      expect(merged.completedAt, {
+        1: DateTime(2027, 1, 1),
+        2: DateTime(2027, 1, 4),
+        4: DateTime(2027, 1, 6),
+      });
+      // The idée reçue picked here stays
+      expect(merged.pickedMyths, {1: 'soja', 2: 'carences', 4: 'b12'});
+      expect(merged.started?.day, 3);
+    });
+
+    test('keeps only days in a row from day 1, up to the last one', () {
+      final gap = local
+          .mergedWith({4: DateTime(2027, 1, 6), 5: DateTime(2027, 1, 7)},
+              {4: 'b12'})
+          .contiguous(lastDay: 31);
+      // Day 3 is missing (left halfway here): 4 and 5 can't count yet
+      expect(gap.completedAt.keys, [1, 2]);
+      expect(gap.pickedMyths, {1: 'soja'});
+      expect(gap.started?.day, 3);
+      expect(gap.nextDay, 3);
+
+      final tooLong = VeganuaryProgress(completedAt: {
+        for (var day = 1; day <= 33; day++) day: DateTime(2027, 1, day),
+      }).contiguous(lastDay: 31);
+      expect(tooLong.completedAt.length, 31);
+
+      // Without day 1, nothing counts (no date to open the others from)
+      final noStart = const VeganuaryProgress()
+          .mergedWith({11: DateTime(2027, 1, 11)}, {})
+          .contiguous(lastDay: 31);
+      expect(noStart.completedAt, isEmpty);
+      expect(noStart.stateOf(1), VeganuaryDayState.available);
+    });
+
+    test('a day left halfway here but done elsewhere is done', () {
+      final merged = local.mergedWith({3: DateTime(2027, 1, 5)}, {});
+      expect(merged.isCompleted(3), isTrue);
+      expect(merged.started, isNull);
+    });
+  });
+
   group('Recipe', () {
     RecipeStep parse(Object? servings, List<Object> ingredients) =>
         VeganuaryStep.fromJson({

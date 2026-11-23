@@ -12,6 +12,7 @@ import '../themes/app_colors.dart';
 import 'app_notification_service.dart';
 import 'b12_reminder_service.dart';
 import 'b12_sync_service.dart';
+import 'veganuary_sync_service.dart';
 import 'dio_client.dart';
 import 'push_notification_service.dart';
 import 'scan_count_sync_service.dart';
@@ -51,6 +52,7 @@ class AuthService {
       unawaited(_syncUserDataToPreferences().then((_) {
         unawaited(ScanCountSyncService.sync());
         unawaited(B12SyncService.sync());
+        unawaited(VeganuarySyncService.sync());
       }));
     }
   }
@@ -181,6 +183,9 @@ class AuthService {
         unawaited(ScanCountSyncService.sync());
         // Same for B12 intakes (first sync seeds the local intake history).
         unawaited(B12SyncService.sync());
+        // Same for the Veganuary progress (done before logging in, or on
+        // another device)
+        unawaited(VeganuarySyncService.sync());
         // Server pushes (signalement answers...) for this account
         unawaited(PushNotificationService.registerDevice());
 
@@ -293,10 +298,12 @@ class AuthService {
     await Future.wait([
       ScanCountSyncService.sync(),
       B12SyncService.sync(),
+      VeganuarySyncService.sync(),
     ]);
     await Future.wait([
       ScanCountSyncService.clearUnsynced(),
       B12SyncService.clearPending(),
+      VeganuarySyncService.clearPending(),
     ]);
     // The B12 reminder is a personal, account-scoped routine — turn it off
     // (keeping frequency/time) so it can't keep firing for the next account
@@ -338,6 +345,7 @@ class AuthService {
     await Future.wait([
       ScanCountSyncService.clearUnsynced(),
       B12SyncService.clearPending(),
+      VeganuarySyncService.clearPending(),
     ]);
     await B12ReminderService.disable();
     await PushNotificationService.forgetDevice();

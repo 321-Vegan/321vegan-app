@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,6 +10,7 @@ import '../helpers/veganuary_images.dart';
 import '../models/veganuary/veganuary_content.dart';
 import '../models/veganuary/veganuary_progress.dart';
 import 'api_service.dart';
+import 'veganuary_sync_service.dart';
 
 /// Content and progress (stored on the device) of the Veganuary course.
 /// The content is on the API only (not in this open source repository):
@@ -120,30 +122,61 @@ class VeganuaryService {
     return true;
   }
 
-  static Future<VeganuaryProgress> loadProgress() async {
-    final prefs = await SharedPreferences.getInstance();
+  static Future<VeganuaryProgress> loadProgress() async =>
+      _read(await SharedPreferences.getInstance());
+
+  static VeganuaryProgress _read(SharedPreferences prefs) {
     final raw = prefs.getString(_progressKey);
     if (raw == null) return const VeganuaryProgress();
     return VeganuaryProgress.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
+  /// Reads the progress, changes it and writes it back with nothing in
+  /// between (no await: SharedPreferences updates its cache right away,
+  /// the disk after). A write from elsewhere at the same time (the day
+  /// page, the sync with the server) can't be overwritten by a stale copy.
+  static Future<VeganuaryProgress> _update(
+      VeganuaryProgress Function(VeganuaryProgress progress) change) async {
+    final prefs = await SharedPreferences.getInstance();
+    final updated = change(_read(prefs));
+    await prefs.setString(_progressKey, jsonEncode(updated.toJson()));
+    return updated;
+  }
+
   static Future<VeganuaryProgress> completeDay(int day,
       {String? mythId}) async {
-    final progress = await loadProgress();
-    // Opened again to reread: keeps the date it was first done.
-    if (progress.isCompleted(day)) return progress;
-    final updated = progress.withCompleted(day, mythId: mythId);
-    await _save(updated);
+    var done = false;
+    final updated = await _update((progress) {
+      // Opened again to reread: keeps the date it was first done.
+      if (progress.isCompleted(day)) return progress;
+      done = true;
+      return progress.withCompleted(day, mythId: mythId);
+    });
+    if (done) unawaited(VeganuarySyncService.onDayCompleted(day));
     return updated;
+  }
+
+  /// Adds the days done on another device (from the server, see
+  /// VeganuarySyncService), keeping only days in a row from day 1; true
+  /// when there are new ones (the path then reloads).
+  static Future<bool> mergeProgress(
+      Map<int, DateTime> days, Map<int, String> myths) async {
+    var changed = false;
+    await _update((progress) {
+      final merged =
+          progress.mergedWith(days, myths).contiguous(lastDay: totalDays);
+      changed = !mapEquals(merged.completedAt, progress.completedAt);
+      return merged;
+    });
+    return changed;
   }
 
   /// Saves where the user is in a day not done yet, to resume it there.
   static Future<void> saveStarted(VeganuaryStartedDay started,
-      {String? mythId}) async {
-    final progress = await loadProgress();
-    if (progress.isCompleted(started.day)) return;
-    await _save(progress.withStarted(started, mythId: mythId));
-  }
+      {String? mythId}) =>
+      _update((progress) => progress.isCompleted(started.day)
+          ? progress
+          : progress.withStarted(started, mythId: mythId));
 
   /// Whether the intro sheet was closed with its last button.
   static Future<bool> welcomeSeen() async {
@@ -156,36 +189,36 @@ class VeganuaryService {
     await prefs.setBool(_welcomeSeenKey, true);
   }
 
-  /// Also shows the intro sheet again.
-  static Future<void> reset() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_progressKey);
-    await prefs.remove(_welcomeSeenKey);
-  }
+  /// Debug: starts the course over, also showing the intro sheet again;
+  /// on the server too for a logged-in user (see VeganuarySyncService).
+  static Future<void> reset() => VeganuarySyncService.reset(() async {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(_progressKey);
+        await prefs.remove(_welcomeSeenKey);
+      });
 
   /// Debug: moves every completion one day back, to open the next day
   /// without waiting until tomorrow.
   static Future<void> shiftOneDayBack() async {
-    final progress = await loadProgress();
-    await _save(progress.copyWith(
-      completedAt: progress.completedAt.map((day, date) =>
-          MapEntry(day, DateTime(date.year, date.month, date.day - 1))),
-    ));
+    final updated = await _update((progress) => progress.copyWith(
+          completedAt: progress.completedAt.map((day, date) =>
+              MapEntry(day, DateTime(date.year, date.month, date.day - 1))),
+        ));
+    await VeganuarySyncService.onDatesChanged(updated.completedAt.keys);
   }
 
   /// Debug: the next day done without opening it (no idée reçue picked),
   /// dated yesterday so the one after opens right away.
   static Future<void> debugCompleteNextDay() async {
-    final progress = await loadProgress();
-    if (progress.nextDay > totalDays) return;
-    final now = DateTime.now();
-    await _save(progress.withCompleted(progress.nextDay,
-        now: DateTime(now.year, now.month, now.day - 1)));
-  }
-
-  static Future<void> _save(VeganuaryProgress progress) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_progressKey, jsonEncode(progress.toJson()));
+    int? done;
+    await _update((progress) {
+      if (progress.nextDay > totalDays) return progress;
+      done = progress.nextDay;
+      final now = DateTime.now();
+      return progress.withCompleted(progress.nextDay,
+          now: DateTime(now.year, now.month, now.day - 1));
+    });
+    if (done != null) await VeganuarySyncService.onDayCompleted(done!);
   }
 }
 

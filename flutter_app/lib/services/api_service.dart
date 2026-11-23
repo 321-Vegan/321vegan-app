@@ -636,6 +636,70 @@ class ApiService {
     }
   }
 
+  /// The Veganuary days the current user has done, saved on the API (see
+  /// VeganuarySyncService); null on failure.
+  static Future<List<({int day, DateTime completedOn, String? mythId})>?>
+      getVeganuaryDays() async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.get(
+        '/me/veganuary-days',
+        options: _authOptions,
+      );
+      final data = response.data;
+      if (data is! List) return null;
+      return [
+        for (final item in data)
+          (
+            day: item['day'] as int,
+            completedOn: DateTime.parse(item['completed_on'] as String),
+            mythId: item['myth_id'] as String?,
+          ),
+      ];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Saves a Veganuary day as done by the current user ([completedOn]
+  /// 'yyyy-MM-dd'); sent again, the earliest date is kept. Returns the HTTP
+  /// status; network failures are rethrown, for the day to be sent later.
+  static Future<int> putVeganuaryDay({
+    required int day,
+    required String completedOn,
+    String? mythId,
+  }) async {
+    final dio = await DioClient.getDio();
+    try {
+      final response = await dio.put(
+        '/me/veganuary-days/$day',
+        data: {'completed_on': completedOn, 'myth_id': mythId},
+        options: _authOptions,
+      );
+      return response.statusCode ?? 0;
+    } on dio_pkg.DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status != null) return status;
+      rethrow;
+    }
+  }
+
+  /// Forgets every Veganuary day of the current user (course started
+  /// over); true on success.
+  static Future<bool> deleteVeganuaryDays() async {
+    try {
+      final dio = await DioClient.getDio();
+      final response = await dio.delete(
+        '/me/veganuary-days',
+        options: _authOptions,
+      );
+      final status = response.statusCode ?? 0;
+      return status >= 200 && status < 300;
+    } catch (e) {
+      return false;
+    }
+  }
+
   /// Version of the Veganuary content on the API: `(version: null)`
   /// when the API has none, null when it can't be known
   /// (offline...).
