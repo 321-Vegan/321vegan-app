@@ -6,6 +6,8 @@ import 'package:vegan_app/models/veganuary/veganuary_content.dart';
 import 'package:vegan_app/models/veganuary/veganuary_progress.dart';
 import 'package:vegan_app/services/veganuary_service.dart';
 
+import '../veganuary_week_files.dart';
+
 void main() {
   group('VeganuaryProgress.stateOf', () {
     // Out of January: the January calendar rule is tested below.
@@ -175,6 +177,47 @@ void main() {
     });
   });
 
+  group('Content from the API', () {
+    // A week written for a later version of the app: a block, a link and a
+    // step of kinds this one doesn't know
+    Map<String, dynamic> week() => {
+          'number': 1,
+          'title': 'API',
+          'days': [
+            {
+              'number': 1,
+              'icon': 'a-new-icon',
+              'steps': [
+                {
+                  'type': 'info',
+                  'title': 'Info',
+                  'blocks': [
+                    {'type': 'text', 'text': 'Kept'},
+                    {'type': 'video', 'src': 'https://…'},
+                    {'type': 'app_link', 'label': 'New', 'target': 'new'},
+                  ],
+                },
+                {'type': 'game'},
+              ],
+            },
+          ],
+        };
+
+    test('the local files refuse what the app doesn\'t know', () {
+      expect(() => VeganuaryWeek.fromJson(week()),
+          throwsA(isA<UnknownVeganuaryContent>()));
+    });
+
+    test('downloaded, it leaves it out and keeps the rest', () {
+      final day = VeganuaryWeek.fromRemoteJson(week()).days.single;
+      expect(day.icon, VeganuaryDayIcon.info);
+      final info = (day.steps.single as InfoStep).info;
+      expect(info.blocks.single, isA<TextBlock>());
+      // Strict again afterwards
+      expect(() => VeganuaryWeek.fromJson(week()), throwsFormatException);
+    });
+  });
+
   group('Grid card links', () {
     test('are read from the JSON, none when absent', () {
       final withLinks = GridItem.fromJson({
@@ -210,24 +253,15 @@ void main() {
     });
   });
 
-  group('Bundled content', () {
-    test('every week file is listed in the service and in pubspec.yaml', () {
-      final files = Directory('lib/assets/veganuary')
-          .listSync()
-          .map((file) => file.path.replaceAll(r'\', '/'))
-          .where((path) => path.endsWith('.json'))
-          .toSet();
-      expect(VeganuaryService.weekAssets.toSet(), files);
-      final pubspec = File('pubspec.yaml').readAsStringSync();
-      for (final asset in VeganuaryService.weekAssets) {
-        expect(pubspec, contains('- $asset'), reason: asset);
-      }
-    });
-
+  // The course's JSON isn't in the repository (it's on the API): a local
+  // copy of it, when there's one (git-ignored), is checked before being
+  // imported, strictly (a typo fails here instead of being left out).
+  final weekFiles = veganuaryWeekFiles();
+  group('Local content files', skip: weekFiles.isEmpty, () {
     final weeks = [
-      for (final asset in VeganuaryService.weekAssets)
+      for (final file in weekFiles)
         VeganuaryWeek.fromJson(
-            jsonDecode(File(asset).readAsStringSync()) as Map<String, dynamic>),
+            jsonDecode(File(file).readAsStringSync()) as Map<String, dynamic>),
     ];
 
     test('weeks and days follow each other from 1', () {
@@ -255,7 +289,7 @@ void main() {
         }
       }
 
-      for (final file in VeganuaryService.weekAssets) {
+      for (final file in weekFiles) {
         for (final asset
             in assetsIn(jsonDecode(File(file).readAsStringSync()))) {
           expect(File(asset).existsSync(), isTrue, reason: '$file : $asset');

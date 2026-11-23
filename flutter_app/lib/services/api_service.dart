@@ -636,6 +636,39 @@ class ApiService {
     }
   }
 
+  /// Version of the Veganuary content on the API: `(version: null)`
+  /// when the API has none, null when it can't be known
+  /// (offline...).
+  static Future<({String? version})?> getVeganuaryVersion() async {
+    try {
+      final response = await http.get(
+          Uri.parse('$_baseUrl/veganuary-weeks/version'),
+          headers: _headers);
+      if (response.statusCode != 200) return null;
+      final data = json.decode(utf8.decode(response.bodyBytes));
+      return (version: data['version'] as String?);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// The Veganuary weeks, as their JSON; null on failure.
+  static Future<List<Map<String, dynamic>>?> getVeganuaryWeeks() async {
+    try {
+      final response = await http.get(
+          Uri.parse('$_baseUrl/veganuary-weeks/'),
+          headers: _headers);
+      if (response.statusCode != 200) return null;
+      final data = json.decode(utf8.decode(response.bodyBytes)) as List;
+      return [
+        for (final week in data)
+          (week as Map<String, dynamic>)['content'] as Map<String, dynamic>,
+      ];
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Get the total number of active subscriptions
   static Future<int?> getSubscriptionCount() async {
     try {

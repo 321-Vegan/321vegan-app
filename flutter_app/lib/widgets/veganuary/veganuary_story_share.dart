@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../helpers/image_capture.dart';
+import '../../helpers/veganuary_images.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_text_styles.dart';
@@ -60,7 +60,7 @@ class _VeganuaryShareProgressButtonState
     if (_sharing) return;
     setState(() => _sharing = true);
     try {
-      final network = widget.image.startsWith('http');
+      final network = veganuaryImageUrl(widget.image) != null;
       final files = await captureOffscreen(
         context,
         width: VeganuaryStoryCard.size.width,
@@ -74,9 +74,7 @@ class _VeganuaryShareProgressButtonState
           ),
         },
         precache: [
-          network
-              ? CachedNetworkImageProvider(widget.image)
-              : AssetImage(widget.image),
+          veganuaryImageProvider(widget.image),
           const AssetImage(_appIcon),
         ],
         settle: network ? const Duration(milliseconds: 700) : Duration.zero,

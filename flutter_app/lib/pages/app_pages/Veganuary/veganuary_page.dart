@@ -13,11 +13,14 @@ import '../../../themes/app_text_styles.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/animated_reveal.dart';
 import '../../../widgets/shared/app_dialog.dart';
+import '../../../widgets/shared/empty_state_view.dart';
+import '../../../widgets/shared/icon_snack_bar.dart';
 import '../../../widgets/shared/push_permission_prompt.dart';
 import '../../../widgets/shared/square_icon_button.dart';
 import '../../../widgets/veganuary/veganuary_day_node.dart';
 import '../../../widgets/veganuary/veganuary_downloads.dart';
 import '../../../widgets/veganuary/veganuary_finish_line.dart';
+import '../../../widgets/veganuary/veganuary_step_views.dart';
 import '../../../widgets/veganuary/veganuary_week_title.dart';
 import '../../../widgets/veganuary/veganuary_welcome_modal.dart';
 import '../home.dart';
@@ -91,6 +94,12 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     WidgetsBinding.instance.addObserver(this);
     _load();
     _showWelcomeOnFirstVisit();
+    _refreshContent();
+  }
+
+  /// The content edited on the API since last time, shown once downloaded.
+  Future<void> _refreshContent() async {
+    if (await VeganuaryService.refreshContent() && mounted) await _load();
   }
 
   /// The intro of the course and its disclaimer, shown once: however it's
@@ -173,6 +182,11 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     }
   }
 
+  void _retry() {
+    setState(() => _error = null);
+    _load();
+  }
+
   /// Week of the next day to do; the last written one when it isn't yet.
   /// While the day just done changes color, still its week (its last day
   /// done shouldn't jump to the next week before turning yellow).
@@ -252,9 +266,10 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     final state = _progress.stateOf(day.number);
     switch (state) {
       case VeganuaryDayState.locked:
-        _showSnackBar('Terminez d\'abord les jours précédents.');
+        showInfoSnackBar(context, 'Terminez d\'abord les jours précédents.');
       case VeganuaryDayState.tomorrow:
-        _showSnackBar('Revenez demain pour le jour ${day.number} !');
+        showInfoSnackBar(
+            context, 'Revenez demain pour le jour ${day.number} !');
       case VeganuaryDayState.available:
       case VeganuaryDayState.completed:
         final done = await VeganuaryDayPage.open(
@@ -347,12 +362,6 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     if (!granted && mounted) showPushBlockedSnackBar(context);
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
   Future<void> _openWeeks() async {
     await VeganuaryWeeksPage.open(context, weeks: _weeks!, progress: _progress);
     // Its debug buttons change the progress (the reset shows the intro again)
@@ -367,12 +376,15 @@ class _VeganuaryPageState extends State<VeganuaryPage>
       child: SafeArea(
         bottom: false,
         child: _weeks == null
-            ? Center(
-                child: _error != null
-                    ? Text('Le contenu n\'a pas pu être chargé.',
-                        style: AppTextStyles.bodyRegular15)
-                    : const CircularProgressIndicator(),
-              )
+            ? _error != null
+                ? EmptyStateView(
+                    title: 'Pas de connexion',
+                    subtitle: 'Le Veganuary se télécharge à la première '
+                        'visite. Vérifiez votre connexion, puis réessayez.',
+                    buttonLabel: 'Réessayer',
+                    onButtonTap: _retry,
+                  )
+                : const Center(child: CircularProgressIndicator())
             : Column(
                 children: [
                   Padding(
@@ -419,7 +431,8 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     return Row(
       children: [
         if (week.illustration != null) ...[
-          Image.asset(week.illustration!, width: 130.w, height: 130.w),
+          VeganuaryImage(week.illustration!,
+              width: 130.w, height: 130.w, fit: BoxFit.contain),
           SizedBox(width: 30.w),
         ],
         Expanded(child: VeganuaryWeekTitle(week: week)),
@@ -572,7 +585,8 @@ class _VeganuaryPageState extends State<VeganuaryPage>
                         // With the coin after it
                         child: _popIn(
                           i + 1,
-                          Image.asset(illustration, width: 330.w),
+                          VeganuaryImage(illustration,
+                              width: 330.w, fit: BoxFit.contain),
                           week: week.number,
                         ),
                       ),

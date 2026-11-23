@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../helpers/external_links.dart';
 import '../../helpers/image_capture.dart';
+import '../../helpers/veganuary_images.dart';
 import '../../models/b12_reminder_settings.dart';
 import '../../models/partners/partners.dart';
 import '../../models/veganuary/veganuary_content.dart';
@@ -186,26 +187,31 @@ class VeganuaryRichText extends StatelessWidget {
   }
 }
 
-/// Image of the content: an asset path, or a URL.
+/// Image of the content: an app asset, a path in the storage bucket or a
+/// URL (see veganuary_images.dart).
 class VeganuaryImage extends StatelessWidget {
   final String src;
   final double? height;
+  final double width;
   final BoxFit fit;
 
   const VeganuaryImage(
     this.src, {
     super.key,
     this.height,
+    this.width = double.infinity,
     this.fit = BoxFit.cover,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (src.startsWith('http')) {
+    final url = veganuaryImageUrl(src);
+    if (url != null) {
       return CachedNetworkImage(
-        imageUrl: src,
+        imageUrl: url,
+        cacheManager: veganuaryImageCache,
         height: height,
-        width: double.infinity,
+        width: width,
         fit: fit,
         placeholder: (context, url) =>
             Container(height: height ?? 450.h, color: kBorderDefault),
@@ -215,7 +221,7 @@ class VeganuaryImage extends StatelessWidget {
     return Image.asset(
       src,
       height: height,
-      width: double.infinity,
+      width: width,
       fit: fit,
       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
     );

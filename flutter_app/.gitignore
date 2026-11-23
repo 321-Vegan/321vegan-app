@@ -63,3 +63,6 @@ ios/Runner */
 *.ipa
 *.apk
 *.aab
+# Veganuary content: on the API only, not in this open source repository
+# (a local copy, to check with the tests before importing it)
+/lib/assets/veganuary/

@@ -13,6 +13,7 @@ import '../../../themes/app_text_styles.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_button.dart';
+import '../../../widgets/shared/icon_snack_bar.dart';
 import '../../../widgets/shared/push_permission_prompt.dart';
 import '../../../widgets/veganuary/saturation_filter.dart';
 import '../../../widgets/veganuary/veganuary_downloads.dart';
@@ -63,19 +64,13 @@ class _VeganuaryWeeksPageState extends State<VeganuaryWeeksPage> {
     final updated = await VeganuaryService.loadProgress();
     if (!mounted) return;
     setState(() => progress = updated);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(done)));
+    showInfoSnackBar(context, done);
   }
 
   _WeekState _stateOf(VeganuaryWeek week) {
-    if (week.days.every((day) => progress.isCompleted(day.number))) {
-      return _WeekState.completed;
-    }
+    if (progress.isWeekDone(week)) return _WeekState.completed;
     // Days are done in order: the first week not done is the current one
-    final current = weeks.firstWhere(
-      (w) => !w.days.every((day) => progress.isCompleted(day.number)),
-    );
+    final current = weeks.firstWhere((w) => !progress.isWeekDone(w));
     return week == current ? _WeekState.current : _WeekState.locked;
   }
 
@@ -148,12 +143,10 @@ class _VeganuaryWeeksPageState extends State<VeganuaryWeeksPage> {
                       onPressed: () async {
                         await VeganuaryReminderService.showTestSoon();
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Rappel dans 10 secondes : '
-                                "passez l'app en arrière-plan"),
-                          ),
-                        );
+                        showInfoSnackBar(
+                            context,
+                            'Rappel dans 10 secondes : '
+                            "passez l'app en arrière-plan");
                       },
                       child: const Text('Debug : rappel dans 10 s'),
                     ),

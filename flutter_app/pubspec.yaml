@@ -50,6 +50,8 @@ dependencies:
   image_picker: ^1.1.2
   geolocator: ^14.0.2
   cached_network_image: ^3.4.1
+  # The Veganuary images' own cache, kept offline (see veganuary_images.dart)
+  flutter_cache_manager: ^3.4.1
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
   flutter_timezone: ^5.0.1
@@ -157,6 +159,7 @@ flutter:
     - lib/assets/images/characters/radish.webp
     - lib/assets/images/characters/avocado.webp
     - lib/assets/images/characters/tomatoes.webp
+    - lib/assets/images/characters/recipe-pot.webp
     # Test with la vie featured
     - lib/assets/la-vie-logo.png
     # Nutriscores / Green-score
@@ -251,14 +254,6 @@ flutter:
     - lib/assets/images/remerciements/ancielle.webp
     - lib/assets/images/remerciements/discord.png
     - lib/assets/images/remerciements/github.png
-    # Veganuary
-    - lib/assets/veganuary/week1.json
-    - lib/assets/veganuary/week2.json
-    - lib/assets/veganuary/week3.json
-    - lib/assets/veganuary/week4.json
-    - lib/assets/veganuary/week5.json
-    # The whole folder (not its subfolders): images dropped in need no line
-    - lib/assets/images/veganuary/
     # Static Karla (regular, bold) for the Veganuary PDFs: a PDF can't use
     # the app's variable font
     - fonts/pdf/

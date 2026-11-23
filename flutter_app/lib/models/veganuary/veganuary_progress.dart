@@ -1,3 +1,5 @@
+import 'veganuary_content.dart';
+
 enum VeganuaryDayState {
   completed,
 
@@ -62,6 +64,16 @@ class VeganuaryProgress {
   int get nextDay => completedAt.length + 1;
 
   bool isCompleted(int day) => completedAt.containsKey(day);
+
+  bool isWeekDone(VeganuaryWeek week) =>
+      week.days.every((day) => isCompleted(day.number));
+
+  /// The recipes of the days done, in order.
+  List<RecipeStep> unlockedRecipes(List<VeganuaryWeek> weeks) => [
+        for (final week in weeks)
+          for (final day in week.days)
+            if (isCompleted(day.number)) ...day.steps.whereType<RecipeStep>(),
+      ];
 
   /// Share of [day] read so far, 0 to 1 (1 once done).
   double dayProgress(int day) {

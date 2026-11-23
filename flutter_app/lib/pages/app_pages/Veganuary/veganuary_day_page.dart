@@ -13,6 +13,7 @@ import '../../../services/veganuary_service.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../widgets/shared/app_background.dart';
 import '../../../widgets/shared/app_button.dart';
+import '../../../widgets/shared/icon_snack_bar.dart';
 import '../../../widgets/shared/tag_chip.dart';
 import '../../../widgets/veganuary/veganuary_progress_bar.dart';
 import '../../../widgets/veganuary/veganuary_recipe_unlocked.dart';
@@ -323,8 +324,19 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
     }
     if (_screens[_index + 1] is _DoneScreen) {
       setState(() => _saving = true);
-      _savedProgress = await VeganuaryService.completeDay(widget.day.number,
-          mythId: _mythId);
+      try {
+        _savedProgress = await VeganuaryService.completeDay(widget.day.number,
+            mythId: _mythId);
+      } catch (e) {
+        // Stays on the page, its button usable again to retry
+        debugPrint('Veganuary day not saved: $e');
+        if (!mounted) return;
+        setState(() => _saving = false);
+        showResultSnackBar(
+            context, "Le jour n'a pas pu être enregistré, réessayez.",
+            error: true);
+        return;
+      }
       _completed = true;
       // The next reminders are for the next day (and maybe from tomorrow)
       VeganuaryReminderService.reschedule();
@@ -400,14 +412,12 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
 
   void _remindCards() {
     final left = _cardsLeft;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(left == 1
+    showInfoSnackBar(
+        context,
+        left == 1
             ? 'Touchez la dernière carte pour la découvrir avant de continuer.'
             : 'Touchez les $left cartes restantes pour les découvrir avant '
-                'de continuer.'),
-      ));
+                'de continuer.');
   }
 
   /// What kind of page it is, right above its title (icons of the path's

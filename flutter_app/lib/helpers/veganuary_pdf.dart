@@ -9,6 +9,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../models/veganuary/veganuary_content.dart';
+import 'veganuary_images.dart';
 import '../themes/app_colors.dart';
 
 /// The Veganuary kept as PDF files (offered on the last day): the answers
@@ -374,25 +375,11 @@ Future<Uint8List> veganuaryRecipesPdf(List<RecipeStep> recipes) async {
   );
 }
 
-/// An asset, or a photo online; null when it can't be had (offline): the
-/// recipe goes without.
+/// From the app or the course's image cache; null when it can't be had
+/// (offline, never shown): the recipe goes without.
 Future<pw.MemoryImage?> _loadImage(String src) async {
   try {
-    if (!src.startsWith('http')) {
-      final data = await rootBundle.load(src);
-      return pw.MemoryImage(data.buffer.asUint8List());
-    }
-    final client = HttpClient();
-    try {
-      final response = await (await client.getUrl(Uri.parse(src))).close();
-      if (response.statusCode != 200) return null;
-      final bytes = await response
-          .fold<BytesBuilder>(BytesBuilder(), (b, chunk) => b..add(chunk))
-          .then((b) => b.takeBytes());
-      return pw.MemoryImage(bytes);
-    } finally {
-      client.close();
-    }
+    return pw.MemoryImage(await veganuaryImageBytes(src));
   } catch (_) {
     return null;
   }

@@ -1,8 +1,37 @@
+import '../../helpers/slug.dart';
+
+/// A kind of step, block or link this version of the app doesn't know: one
+/// added to the content for a later version.
+class UnknownVeganuaryContent extends FormatException {
+  const UnknownVeganuaryContent(super.message);
+}
+
+/// While reading content downloaded from the API (see
+/// [VeganuaryWeek.fromRemoteJson]): what this version doesn't know is left
+/// out instead of failing. Read with [VeganuaryWeek.fromJson] (the tests,
+/// on a local copy), it's strict: a typo fails.
+bool _skipUnknown = false;
+
+/// Each of [items] read with [parse], leaving out the unknown ones of the
+/// downloaded content.
+List<T> _parseEach<T>(
+    List<dynamic> items, T Function(Map<String, dynamic> json) parse) {
+  final parsed = <T>[];
+  for (final item in items) {
+    try {
+      parsed.add(parse(item as Map<String, dynamic>));
+    } on UnknownVeganuaryContent {
+      if (!_skipUnknown) rethrow;
+    }
+  }
+  return parsed;
+}
+
 /// Content of the Veganuary course (31 days: 4 weeks of 7 days + 1 of 3),
-/// read from one JSON file per week in lib/assets/veganuary/. A day is a
-/// list of steps (pages shown one after the other: maybe a quiz, info pages,
-/// an idée reçue, sometimes a recipe); each step type has its
-/// own JSON shape, see [VeganuaryStep.fromJson].
+/// downloaded from the API, one JSON per week (see VeganuaryService). A day
+/// is a list of steps (pages shown one after the other: maybe a quiz, info
+/// pages, an idée reçue, sometimes a recipe); each step type has its own
+/// JSON shape, see [VeganuaryStep.fromJson].
 class VeganuaryWeek {
   final int number;
   final String title;
@@ -54,6 +83,17 @@ class VeganuaryWeek {
           VeganuaryDay.fromJson(day as Map<String, dynamic>),
       ],
     );
+  }
+
+  /// From the API, maybe written for a later version of the app: what this
+  /// one doesn't know is left out (a new block type...).
+  factory VeganuaryWeek.fromRemoteJson(Map<String, dynamic> json) {
+    _skipUnknown = true;
+    try {
+      return VeganuaryWeek.fromJson(json);
+    } finally {
+      _skipUnknown = false;
+    }
   }
 
   VeganuaryMyth? mythById(String id) {
@@ -119,10 +159,8 @@ class VeganuaryDay {
   });
 
   factory VeganuaryDay.fromJson(Map<String, dynamic> json) {
-    final steps = [
-      for (final step in json['steps'] as List)
-        VeganuaryStep.fromJson(step as Map<String, dynamic>),
-    ];
+    final steps =
+        _parseEach(json['steps'] as List, VeganuaryStep.fromJson);
     final iconName = json['icon'] as String?;
     return VeganuaryDay(
       number: json['number'] as int,
@@ -179,7 +217,8 @@ sealed class VeganuaryStep {
       case 'quiz':
         return QuizStep.fromJson(json);
     }
-    throw FormatException('Unknown Veganuary step type: ${json['type']}');
+    throw UnknownVeganuaryContent(
+        'Unknown Veganuary step type: ${json['type']}');
   }
 }
 
@@ -228,7 +267,8 @@ class QuizChoice {
       result: QuizResult.values.firstWhere(
         (value) => value.name == result,
         orElse: () =>
-            throw FormatException('Unknown Veganuary quiz result: $result'),
+            throw UnknownVeganuaryContent(
+                'Unknown Veganuary quiz result: $result'),
       ),
     );
   }
@@ -272,34 +312,7 @@ class RecipeStep extends VeganuaryStep {
   /// Name of its downloaded image, after its title
   /// ("recette-tarte-aux-poireaux"): each recipe saved under its own name.
   String get fileName {
-    const accents = {
-      'à': 'a',
-      'â': 'a',
-      'ä': 'a',
-      'ç': 'c',
-      'é': 'e',
-      'è': 'e',
-      'ê': 'e',
-      'ë': 'e',
-      'î': 'i',
-      'ï': 'i',
-      'ô': 'o',
-      'ö': 'o',
-      'ù': 'u',
-      'û': 'u',
-      'ü': 'u',
-      'ÿ': 'y',
-      'œ': 'oe',
-      'æ': 'ae',
-    };
-    final plain = title
-        .toLowerCase()
-        .split('')
-        .map((char) => accents[char] ?? char)
-        .join();
-    final slug = plain
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-        .replaceAll(RegExp(r'^-+|-+$'), '');
+    final slug = slugify(title);
     return slug.isEmpty ? 'recette' : 'recette-$slug';
   }
 
@@ -444,10 +457,8 @@ class VeganuaryInfo {
     return VeganuaryInfo(
       title: json['title'] as String,
       image: json['image'] as String?,
-      blocks: [
-        for (final block in json['blocks'] as List? ?? const [])
-          VeganuaryBlock.fromJson(block as Map<String, dynamic>),
-      ],
+      blocks: _parseEach(
+          json['blocks'] as List? ?? const [], VeganuaryBlock.fromJson),
       sources: [
         for (final source in json['sources'] as List? ?? const [])
           VeganuarySource.fromJson(source as Map<String, dynamic>),
@@ -495,8 +506,8 @@ sealed class VeganuaryBlock {
           text: json['text'] as String?,
           target: AppLinkTarget.values.firstWhere(
             (value) => value.json == target,
-            orElse: () =>
-                throw FormatException('Unknown Veganuary link target: $target'),
+            orElse: () => throw UnknownVeganuaryContent(
+                'Unknown Veganuary link target: $target'),
           ),
         );
       case 'grid':
@@ -508,7 +519,8 @@ sealed class VeganuaryBlock {
           ],
         );
     }
-    throw FormatException('Unknown Veganuary block type: ${json['type']}');
+    throw UnknownVeganuaryContent(
+        'Unknown Veganuary block type: ${json['type']}');
   }
 }
 

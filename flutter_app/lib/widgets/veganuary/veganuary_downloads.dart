@@ -6,6 +6,7 @@ import '../../models/veganuary/veganuary_content.dart';
 import '../../services/veganuary_service.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_spacing.dart';
+import '../shared/icon_snack_bar.dart';
 import '../shared/sheet_option_tile.dart';
 
 /// What the Veganuary can be kept as, at its end.
@@ -27,6 +28,21 @@ Future<void> shareVeganuaryRecipes(
   final file = await buildVeganuaryRecipesPdf(recipes);
   if (!buttonContext.mounted) return;
   await shareFiles(buttonContext, [file], mimeType: 'application/pdf');
+}
+
+/// Runs [prepare] (a file built, then shared), saying so if it fails.
+Future<void> runVeganuaryDownload(
+    BuildContext context, Future<void> Function() prepare) async {
+  try {
+    await prepare();
+  } catch (e) {
+    debugPrint('Veganuary download failed: $e');
+    if (context.mounted) {
+      showResultSnackBar(context,
+          "Le téléchargement n'a pas pu être préparé, réessayez.",
+          error: true);
+    }
+  }
 }
 
 /// A card keeping part of the course as a PDF, through the share sheet. Reads the content and progress itself.
@@ -67,34 +83,20 @@ class _VeganuaryDownloadCardState extends State<VeganuaryDownloadCard> {
   Future<void> _download(BuildContext buttonContext) async {
     if (_preparing) return;
     setState(() => _preparing = true);
-    try {
+    await runVeganuaryDownload(context, () async {
       final weeks = await VeganuaryService.loadWeeks();
-      final progress = await VeganuaryService.loadProgress();
       if (widget.download == VeganuaryDownload.recipes) {
-        if (!mounted || !buttonContext.mounted) return;
-        await shareVeganuaryRecipes(buttonContext, [
-          for (final week in weeks)
-            for (final day in week.days)
-              if (progress.isCompleted(day.number))
-                ...day.steps.whereType<RecipeStep>(),
-        ]);
+        final progress = await VeganuaryService.loadProgress();
+        if (!buttonContext.mounted) return;
+        await shareVeganuaryRecipes(
+            buttonContext, progress.unlockedRecipes(weeks));
         return;
       }
       final file = await buildVeganuaryAnswersPdf(weeks);
       if (!buttonContext.mounted) return;
       await shareFiles(buttonContext, [file], mimeType: 'application/pdf');
-    } catch (e) {
-      debugPrint('Veganuary download failed: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Le téléchargement n'a pas pu être préparé, "
-              'réessayez.'),
-          backgroundColor: kSemanticError,
-        ));
-      }
-    } finally {
-      if (mounted) setState(() => _preparing = false);
-    }
+    });
+    if (mounted) setState(() => _preparing = false);
   }
 
   @override

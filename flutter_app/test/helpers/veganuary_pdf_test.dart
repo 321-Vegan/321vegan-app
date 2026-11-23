@@ -4,17 +4,19 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vegan_app/helpers/veganuary_pdf.dart';
 import 'package:vegan_app/models/veganuary/veganuary_content.dart';
-import 'package:vegan_app/services/veganuary_service.dart';
 
-/// The PDFs of the last day, built from the real content: a font missing
-/// from the assets or a block not handled would show here.
+import '../veganuary_week_files.dart';
+
+/// The PDFs of the last day, built from the local copy of the content when
+/// there's one (empty otherwise): a font missing from the assets or a block
+/// not handled would show here.
 /// `VEGANUARY_PDF_OUT=/some/folder flutter test test/helpers/veganuary_pdf_test.dart`
 /// also writes it there, to look at.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   final weeks = [
-    for (final asset in VeganuaryService.weekAssets)
+    for (final asset in veganuaryWeekFiles())
       VeganuaryWeek.fromJson(
           jsonDecode(File(asset).readAsStringSync()) as Map<String, dynamic>),
   ];

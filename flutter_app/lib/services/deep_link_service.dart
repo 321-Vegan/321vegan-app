@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 
+import '../helpers/slug.dart';
 import '../models/restaurants/restaurant.dart';
 import '../models/restaurants/restaurant_selection.dart';
 
@@ -87,25 +88,9 @@ class DeepLinkService {
   static String restaurantUrl(Restaurant restaurant) =>
       _url('restaurant', restaurant.id, restaurant.name);
 
-  static const _accents = {
-    'à': 'a', 'â': 'a', 'ä': 'a', 'á': 'a', 'ã': 'a', 'å': 'a', //
-    'ç': 'c', 'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e', //
-    'î': 'i', 'ï': 'i', 'í': 'i', 'ì': 'i', 'ñ': 'n', //
-    'ô': 'o', 'ö': 'o', 'ó': 'o', 'ò': 'o', 'õ': 'o', //
-    'ù': 'u', 'û': 'u', 'ü': 'u', 'ú': 'u', 'ÿ': 'y', //
-    'œ': 'oe', 'æ': 'ae',
-  };
-
-  /// "Mes restos à Lyon !" → "mes-restos-a-lyon", at most 60 characters
-  /// (emojis and other scripts dropped).
+  /// [slugify], at most 60 characters.
   static String _slug(String title) {
-    final ascii = title
-        .toLowerCase()
-        .split('')
-        .map((c) => _accents[c] ?? c)
-        .join()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-        .replaceAll(RegExp(r'^-+|-+$'), '');
+    final ascii = slugify(title);
     if (ascii.length <= 60) return ascii;
     return ascii.substring(0, 60).replaceAll(RegExp(r'-+$'), '');
   }

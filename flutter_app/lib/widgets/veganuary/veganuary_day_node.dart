@@ -19,7 +19,7 @@ Color _side(Color color) {
 }
 
 const String _recipeIllustration =
-    'lib/assets/images/veganuary/recipe-pot.webp';
+    'lib/assets/images/characters/recipe-pot.webp';
 
 IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       VeganuaryDayIcon.info => FontAwesomeIcons.scroll,

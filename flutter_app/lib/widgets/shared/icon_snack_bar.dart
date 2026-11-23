@@ -15,6 +15,14 @@ void showResultSnackBar(BuildContext context, String text,
     ));
 }
 
+/// Shows [text] in the default snack bar, in place of the one shown (e.g.
+/// why something can't be opened yet).
+void showInfoSnackBar(BuildContext context, String text) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(text)));
+}
+
 /// Snack bar with a white [icon] before the [message], and an optional
 /// white pill button ([actionLabel]) at the end, in the snack bar's [color].
 /// The floating squircle look comes from the app's snackBarTheme. Tapping

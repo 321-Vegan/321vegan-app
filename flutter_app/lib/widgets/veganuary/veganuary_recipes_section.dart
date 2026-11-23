@@ -9,6 +9,7 @@ import '../../themes/app_shapes.dart';
 import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
+import '../shared/icon_snack_bar.dart';
 import 'saturation_filter.dart';
 import 'veganuary_downloads.dart';
 import 'veganuary_step_views.dart';
@@ -50,13 +51,12 @@ class _VeganuaryRecipesSectionState extends State<VeganuaryRecipesSection> {
   Future<void> _downloadAll(BuildContext buttonContext) async {
     if (_downloading) return;
     setState(() => _downloading = true);
-    try {
-      await shareVeganuaryRecipes(buttonContext, [
-        for (final item in _recipes.where(_unlocked)) item.recipe,
-      ]);
-    } finally {
-      if (mounted) setState(() => _downloading = false);
-    }
+    await runVeganuaryDownload(
+      context,
+      () => shareVeganuaryRecipes(
+          buttonContext, widget.progress.unlockedRecipes(widget.weeks)),
+    );
+    if (mounted) setState(() => _downloading = false);
   }
 
   void _open(_DayRecipe item) {
@@ -64,11 +64,8 @@ class _VeganuaryRecipesSectionState extends State<VeganuaryRecipesSection> {
       VeganuaryRecipePage.open(context, item.recipe);
       return;
     }
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text('Cette recette se débloque au jour ${item.day}.'),
-      ));
+    showInfoSnackBar(
+        context, 'Cette recette se débloque au jour ${item.day}.');
   }
 
   @override
