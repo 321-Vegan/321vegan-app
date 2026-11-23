@@ -13,6 +13,12 @@ class VeganuaryService {
 
   static const int totalDays = 31;
 
+  /// The Discord server where people doing the course ask their questions
+  /// and talk with vegans (intro sheet, path's header).
+  static const String discordUrl = 'https://discord.gg/a8xrF2b23S';
+  static const String discordLogo =
+      'lib/assets/images/remerciements/discord.png';
+
   /// One file per week, in order; add the next weeks here as they're
   /// written (and in pubspec.yaml). Checked by test/models/veganuary_test.
   static const List<String> weekAssets = [
@@ -20,6 +26,7 @@ class VeganuaryService {
     'lib/assets/veganuary/week2.json',
     'lib/assets/veganuary/week3.json',
     'lib/assets/veganuary/week4.json',
+    'lib/assets/veganuary/week5.json',
   ];
 
   static const String _progressKey = 'veganuary_progress';

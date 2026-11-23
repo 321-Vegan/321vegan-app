@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../helpers/image_capture.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
@@ -315,7 +316,22 @@ class _ProgressScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            VeganuaryImage(image, height: 72, fit: BoxFit.contain),
+            // The last day: the trophy of the finish line
+            if (day >= totalDays)
+              Container(
+                width: 72,
+                height: 72,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: kAccentYellow,
+                  border: Border.all(color: kSecondaryTag, width: 3),
+                ),
+                child: const FaIcon(FontAwesomeIcons.trophy,
+                    size: 32, color: Colors.white),
+              )
+            else
+              VeganuaryImage(image, height: 72, fit: BoxFit.contain),
             Text(
               '$day',
               style: AppTextStyles.baloo90

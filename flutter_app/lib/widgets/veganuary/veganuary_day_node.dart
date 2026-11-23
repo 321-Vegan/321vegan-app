@@ -36,6 +36,7 @@ IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       VeganuaryDayIcon.label => FontAwesomeIcons.magnifyingGlass,
       VeganuaryDayIcon.outside => FontAwesomeIcons.mapLocationDot,
       VeganuaryDayIcon.people => FontAwesomeIcons.userGroup,
+      VeganuaryDayIcon.app => FontAwesomeIcons.mobileScreenButton,
       VeganuaryDayIcon.travel => FontAwesomeIcons.train,
       VeganuaryDayIcon.support => FontAwesomeIcons.handHoldingHeart,
       VeganuaryDayIcon.sport => FontAwesomeIcons.personRunning,
@@ -49,6 +50,8 @@ IconData _iconData(VeganuaryDayIcon icon) => switch (icon) {
       VeganuaryDayIcon.media => FontAwesomeIcons.mobileScreenButton,
       VeganuaryDayIcon.shelter => FontAwesomeIcons.houseChimney,
       VeganuaryDayIcon.dove => FontAwesomeIcons.dove,
+      VeganuaryDayIcon.family => FontAwesomeIcons.childReaching,
+      VeganuaryDayIcon.finish => FontAwesomeIcons.flagCheckered,
     };
 
 /// A day on the Veganuary path: a coin, yellow once done, green when it's

@@ -5,22 +5,32 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../helpers/external_links.dart';
 import '../../helpers/image_capture.dart';
+import '../../models/b12_reminder_settings.dart';
+import '../../models/partners/partners.dart';
 import '../../models/veganuary/veganuary_content.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../pages/app_pages/Profile/b12_info_page.dart';
+import '../../pages/app_pages/Scan/product_search_page.dart';
+import '../../pages/app_pages/Vegandex/vegandex_page.dart';
+import '../../services/api_service.dart';
+import '../../services/b12_reminder_service.dart';
 import '../../services/veganuary_service.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../b12/b12_reminder_settings_modal.dart';
+import '../homepage/solidarity_shops_section.dart';
 import '../shared/animated_reveal.dart';
 import '../shared/attention_pulse.dart';
 import '../shared/app_button.dart';
 import '../shared/app_card.dart';
 import '../shared/bottom_sheet_shell.dart';
 import '../shared/info_box.dart';
+import '../shared/sheet_option_tile.dart';
 import '../shared/tag_chip.dart';
+import 'veganuary_downloads.dart';
+import 'veganuary_finish_line.dart';
 import 'veganuary_story_share.dart';
 
 /// Pages of a Veganuary day: one view per kind of step, shown by
@@ -64,19 +74,29 @@ class VeganuaryLinkScope extends InheritedWidget {
   /// 'restaurants'); null when there are no tabs to go to.
   final ValueChanged<String>? onOpenMap;
 
+  /// Leaves the day for the Scan tab, looking up a barcode if not null;
+  /// null when there are no tabs to go to.
+  final ValueChanged<String?>? onOpenScan;
+
   const VeganuaryLinkScope({
     super.key,
     required this.onOpenMap,
+    required this.onOpenScan,
     required super.child,
   });
 
-  static ValueChanged<String>? openMapOf(BuildContext context) => context
-      .dependOnInheritedWidgetOfExactType<VeganuaryLinkScope>()
-      ?.onOpenMap;
+  static VeganuaryLinkScope? _of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<VeganuaryLinkScope>();
+
+  static ValueChanged<String>? openMapOf(BuildContext context) =>
+      _of(context)?.onOpenMap;
+
+  static ValueChanged<String?>? openScanOf(BuildContext context) =>
+      _of(context)?.onOpenScan;
 
   @override
   bool updateShouldNotify(VeganuaryLinkScope oldWidget) =>
-      onOpenMap != oldWidget.onOpenMap;
+      onOpenMap != oldWidget.onOpenMap || onOpenScan != oldWidget.onOpenScan;
 }
 
 /// [text] with its `**…**` parts in bold, and its `[1]`-like references
@@ -408,8 +428,20 @@ class _VeganuaryBlockView extends StatelessWidget {
           ],
         ),
       CalloutBlock(:final text) => InfoBox(text: text),
-      AppLinkBlock(:final label, :final target) =>
-        _AppLink(label: label, target: target),
+      AppLinkBlock(:final label, target: AppLinkTarget.partners) =>
+        _PartnersLink(label: label),
+      AppLinkBlock(:final label, target: AppLinkTarget.b12Info) =>
+        _B12InfoLink(label: label),
+      AppLinkBlock(:final label, target: AppLinkTarget.b12Reminder) =>
+        _B12ReminderLink(label: label),
+      AppLinkBlock(:final label, target: AppLinkTarget.downloadAnswers) =>
+        VeganuaryDownloadCard(
+            download: VeganuaryDownload.answers, label: label),
+      AppLinkBlock(:final label, target: AppLinkTarget.downloadRecipes) =>
+        VeganuaryDownloadCard(
+            download: VeganuaryDownload.recipes, label: label),
+      AppLinkBlock(:final label, :final text, :final target) =>
+        _AppLink(label: label, text: text, target: target),
       GridBlock(:final columns, :final items) => _VeganuaryGrid(
           columns: columns,
           items: items,
@@ -420,35 +452,219 @@ class _VeganuaryBlockView extends StatelessWidget {
   }
 }
 
-/// A button opening a page of the app, e.g. the B12 reminder settings.
+/// The partner shops as on the home page (cards with their promo code,
+/// opening the shop's site), then the button to the full list. Only the
+/// button while they load, or when they can't be (offline).
+class _PartnersLink extends StatefulWidget {
+  final String label;
+
+  const _PartnersLink({required this.label});
+
+  @override
+  State<_PartnersLink> createState() => _PartnersLinkState();
+}
+
+class _PartnersLinkState extends State<_PartnersLink> {
+  /// Kept for the session: the page is rebuilt on every swipe.
+  static List<Partners>? _cached;
+
+  List<Partners> _partners = _cached ?? const [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (_cached == null) _load();
+  }
+
+  Future<void> _load() async {
+    final partners = await ApiService.getPartners();
+    if (partners.isNotEmpty) _cached = partners;
+    if (!mounted) return;
+    setState(() => _partners = partners);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          alignment: Alignment.topCenter,
+          child: _partners.isEmpty
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: EdgeInsets.only(bottom: AppSpacing.item),
+                  child: SolidarityShopsSection(
+                    partners: _partners,
+                    showHeader: false,
+                  ),
+                ),
+        ),
+        _AppLink(label: widget.label, target: AppLinkTarget.partners),
+      ],
+    );
+  }
+}
+
+class _B12InfoLink extends StatelessWidget {
+  final String label;
+
+  const _B12InfoLink({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return SheetOptionTile(
+      card: true,
+      icon: Icons.menu_book_rounded,
+      color: kAccentYellow,
+      title: label,
+      detail: 'Dosage, absorption, où en trouver : validé par une '
+          'diététicienne',
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const B12InfoPage()),
+      ),
+    );
+  }
+}
+
+/// Opens the reminder settings; once a reminder is set, says so and when.
+class _B12ReminderLink extends StatefulWidget {
+  final String label;
+
+  const _B12ReminderLink({required this.label});
+
+  @override
+  State<_B12ReminderLink> createState() => _B12ReminderLinkState();
+}
+
+class _B12ReminderLinkState extends State<_B12ReminderLink> {
+  B12ReminderSettings? _settings;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final settings = await B12ReminderService.getSettings();
+    if (!mounted) return;
+    setState(() => _settings = settings);
+  }
+
+  Future<void> _open() async {
+    // Like from the settings and the dashboard's B12 banner
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const B12ReminderSettingsModal(),
+    );
+    await _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = _settings;
+    final enabled = settings?.enabled ?? false;
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      child: enabled
+          ? SheetOptionTile(
+              card: true,
+              key: const ValueKey('on'),
+              icon: Icons.notifications_active_rounded,
+              color: kSemanticSuccess,
+              title: 'Rappel B12 activé',
+              detail: settings!.getDescription(),
+              onTap: _open,
+            )
+          : SheetOptionTile(
+              card: true,
+              key: const ValueKey('off'),
+              icon: Icons.notifications_none_rounded,
+              color: kAccentYellow,
+              title: widget.label,
+              detail: "Une notification aux jours et à l'heure de votre "
+                  'choix',
+              onTap: _open,
+            ),
+    );
+  }
+}
+
+/// A button opening a page of the app, e.g. the map on the restaurants.
 class _AppLink extends StatelessWidget {
   final String label;
+
+  /// Instead of the target's own [_subtitle].
+  final String? text;
   final AppLinkTarget target;
 
-  const _AppLink({required this.label, required this.target});
+  const _AppLink({required this.label, this.text, required this.target});
+
+  /// The same as where the feature is opened in the app (the menu's scan
+  /// icon, the Scan page's Vegandex button); [_icon] otherwise.
+  String? get _iconAsset => switch (target) {
+        AppLinkTarget.scanner => 'lib/assets/images/icons/scan.webp',
+        AppLinkTarget.vegandex => 'lib/assets/images/icons/pokeball.webp',
+        _ => null,
+      };
 
   IconData get _icon => switch (target) {
-        AppLinkTarget.b12Info => Icons.menu_book_rounded,
-        AppLinkTarget.b12Reminder => Icons.notifications_active_outlined,
         AppLinkTarget.restaurantsMap => Icons.restaurant_rounded,
         AppLinkTarget.productsMap => Icons.storefront_rounded,
         AppLinkTarget.partners => Icons.local_offer_rounded,
+        AppLinkTarget.searchCosmetics => FontAwesomeIcons.pumpSoap,
+        AppLinkTarget.searchAdditives => FontAwesomeIcons.flask,
+        // Shown with their _iconAsset
+        AppLinkTarget.scanner => Icons.qr_code_scanner_rounded,
+        AppLinkTarget.vegandex => Icons.catching_pokemon,
+        // Shown as cards of their own (_B12InfoLink, _B12ReminderLink,
+        // VeganuaryDownloadCard)
+        AppLinkTarget.b12Info => Icons.menu_book_rounded,
+        AppLinkTarget.b12Reminder => Icons.notifications_none_rounded,
+        AppLinkTarget.downloadAnswers ||
+        AppLinkTarget.downloadRecipes =>
+          Icons.download_rounded,
       };
+
+  /// Under the label, as a card; a plain button without one.
+  String? get _subtitle => text ?? switch (target) {
+        AppLinkTarget.restaurantsMap =>
+          'Près de chez vous ou en voyage : 100 % véganes ou avec des '
+              'options',
+        AppLinkTarget.productsMap =>
+          'Les produits véganes repérés en magasin par la communauté',
+        AppLinkTarget.scanner =>
+          "Un aliment ou un cosmétique : l'app vous dit s'il est végane",
+        AppLinkTarget.searchCosmetics =>
+          'Une marque est-elle végane, cruelty free ?',
+        AppLinkTarget.searchAdditives => "D'origine animale ou végétale ?",
+        AppLinkTarget.vegandex => 'Des produits véganes à collectionner',
+        _ => null,
+      };
+
+  Future<void> _search(
+      BuildContext context, ProductSearchCategory category) async {
+    final openScan = VeganuaryLinkScope.openScanOf(context);
+    // Like on the Scan page: a barcode picked comes back to be looked up
+    final barcode = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+          builder: (_) => ProductSearchPage(initialCategory: category)),
+    );
+    if (barcode != null && barcode.isNotEmpty) openScan?.call(barcode);
+  }
 
   void _open(BuildContext context) {
     switch (target) {
       case AppLinkTarget.b12Info:
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const B12InfoPage()),
-        );
       case AppLinkTarget.b12Reminder:
-        // Like from the settings and the dashboard's B12 banner
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (_) => const B12ReminderSettingsModal(),
-        );
+      case AppLinkTarget.downloadAnswers:
+      case AppLinkTarget.downloadRecipes:
+        break; // Shown as cards of their own
       case AppLinkTarget.restaurantsMap:
         VeganuaryLinkScope.openMapOf(context)?.call('restaurants');
       case AppLinkTarget.productsMap:
@@ -456,6 +672,16 @@ class _AppLink extends StatelessWidget {
       case AppLinkTarget.partners:
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const PartnersPage()),
+        );
+      case AppLinkTarget.scanner:
+        VeganuaryLinkScope.openScanOf(context)?.call(null);
+      case AppLinkTarget.searchCosmetics:
+        _search(context, ProductSearchCategory.cosmetique);
+      case AppLinkTarget.searchAdditives:
+        _search(context, ProductSearchCategory.additif);
+      case AppLinkTarget.vegandex:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const VegandexPage()),
         );
     }
   }
@@ -467,6 +693,23 @@ class _AppLink extends StatelessWidget {
             target == AppLinkTarget.productsMap) &&
         VeganuaryLinkScope.openMapOf(context) == null) {
       return const SizedBox.shrink();
+    }
+    if (target == AppLinkTarget.scanner &&
+        VeganuaryLinkScope.openScanOf(context) == null) {
+      return const SizedBox.shrink();
+    }
+    final subtitle = _subtitle;
+    if (subtitle != null) {
+      final iconAsset = _iconAsset;
+      return SheetOptionTile(
+        card: true,
+        icon: iconAsset == null ? _icon : null,
+        iconAsset: iconAsset,
+        color: kAccentYellow,
+        title: label,
+        detail: subtitle,
+        onTap: () => _open(context),
+      );
     }
     final primary = Theme.of(context).colorScheme.primary;
     return Semantics(
@@ -613,35 +856,43 @@ class _GridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final image = item.image != null
+    final image = item.image != null && item.cover
         ? AspectRatio(
-            aspectRatio: 1,
-            // A logo or a portrait, to follow: rounded like an app icon
-            child: item.links.isEmpty
-                ? VeganuaryImage(item.image!, fit: BoxFit.contain)
-                : ClipSmoothRect(
-                    radius: squircleRadius(36.r),
-                    child: VeganuaryImage(item.image!, fit: BoxFit.contain),
-                  ),
+            aspectRatio: 2 / 3,
+            child: ClipSmoothRect(
+              radius: squircleRadius(12.r),
+              child: VeganuaryImage(item.image!),
+            ),
           )
-        : item.emoji != null
-            ? Center(
-                child: Text(item.emoji!, style: TextStyle(fontSize: 96.sp)),
-              )
-            : item.icon != null
-                ? AspectRatio(
-                    aspectRatio: 1,
-                    child: Container(
-                      alignment: Alignment.center,
-                      decoration: ShapeDecoration(
-                        color: kSecondaryTag,
-                        shape: squircleBorder(radius: 36.r),
+        : item.image != null
+            ? AspectRatio(
+                aspectRatio: 1,
+                // A logo or a portrait, to follow: rounded like an app icon
+                child: item.links.isEmpty
+                    ? VeganuaryImage(item.image!, fit: BoxFit.contain)
+                    : ClipSmoothRect(
+                        radius: squircleRadius(36.r),
+                        child: VeganuaryImage(item.image!, fit: BoxFit.contain),
                       ),
-                      child: FaIcon(_tileIcon(item.icon!),
-                          color: kAccentYellow, size: 80.sp),
-                    ),
+              )
+            : item.emoji != null
+                ? Center(
+                    child: Text(item.emoji!, style: TextStyle(fontSize: 96.sp)),
                   )
-                : null;
+                : item.icon != null
+                    ? AspectRatio(
+                        aspectRatio: 1,
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: ShapeDecoration(
+                            color: kSecondaryTag,
+                            shape: squircleBorder(radius: 36.r),
+                          ),
+                          child: FaIcon(_tileIcon(item.icon!),
+                              color: kAccentYellow, size: 80.sp),
+                        ),
+                      )
+                    : null;
     final textAlign = horizontal ? TextAlign.start : TextAlign.center;
     final texts = [
       Text(
@@ -1121,17 +1372,8 @@ class _VeganuaryRecipeViewState extends State<VeganuaryRecipeView> {
       final file = await captureImageFile(_recipeKey, recipe.fileName);
       if (file == null || !buttonContext.mounted) return;
 
-      final credit = recipe.credit;
-      await shareImageFiles(
-        buttonContext,
-        [file],
-        text: credit == null
-            ? '${recipe.title} : la recette du Veganuary de 321 Vegan 🌱 '
-                'https://321vegan.fr'
-            : '${recipe.title}, une recette de ${credit.name}'
-                '${credit.blog != null ? ' (${credit.blog})' : ''}, dans le '
-                'Veganuary de 321 Vegan 🌱 https://321vegan.fr',
-      );
+      // The image alone: the credit is written on it
+      await shareImageFiles(buttonContext, [file]);
     } finally {
       if (mounted) setState(() => _downloading = false);
     }
@@ -1314,7 +1556,7 @@ class VeganuaryRecipeSheet extends StatelessWidget {
               // Where the downloaded image comes from
               SizedBox(height: AppSpacing.afterTitle),
               Text(
-                '31 premiers jours vegan · 321 Vegan',
+                '31 premiers jours véganes · 321 Vegan',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyRegular12
                     .copyWith(color: Colors.grey[500]),
@@ -1451,14 +1693,22 @@ class VeganuaryDoneView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          VeganuaryImage(image, height: 480.h, fit: BoxFit.contain),
+          // The last day: the trophy of the finish line
+          if (isLastDay)
+            const VeganuaryTrophy(done: true, size: 420, appear: true)
+          else
+            VeganuaryImage(image, height: 480.h, fit: BoxFit.contain),
           SizedBox(height: AppSpacing.section),
           Text(
             '$day',
             style: AppTextStyles.baloo90.copyWith(color: kAccentYellow),
           ),
           Text(day > 1 ? 'jours !' : 'jour !', style: yellowTitle),
-          if (_weekCompleted) ...[
+          if (isLastDay) ...[
+            SizedBox(height: AppSpacing.section),
+            Text("Ligne d'arrivée franchie !",
+                textAlign: TextAlign.center, style: yellowTitle),
+          ] else if (_weekCompleted) ...[
             SizedBox(height: AppSpacing.section),
             Text('Badge débloqué !',
                 textAlign: TextAlign.center, style: yellowTitle),

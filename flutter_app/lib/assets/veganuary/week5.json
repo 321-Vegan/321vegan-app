@@ -1,0 +1,350 @@
+{
+  "number": 5,
+  "title": "Et maintenant ?",
+  "illustration": "lib/assets/images/characters/cow-ok.webp",
+  "path_illustrations": [
+    "lib/assets/avatars/poule.png"
+  ],
+  "myths": [
+    {
+      "id": "extremistes",
+      "label": "Les véganes sont trop extrémistes, et méchant·es en plus",
+      "answer": {
+        "title": "Extrémistes, les véganes ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Refuser de payer pour qu'on enferme, qu'on exploite et qu'on tue des animaux, est-ce vraiment extrême ? Ce qui l'est vraiment, c'est ce qui se passe chaque jour dans les élevages et les abattoirs."
+          },
+          {
+            "type": "text",
+            "text": "Le mot « extrémiste » sert souvent à disqualifier un message sans avoir à y répondre. Et beaucoup de luttes pour l'égalité ont d'abord été jugées extrêmes, avant de devenir des évidences."
+          },
+          {
+            "type": "text",
+            "text": "**Et « méchant·es » ?** Les véganes ne sont pas plus agressif·ves que les autres. Mais parler de ce que vivent les animaux met souvent mal à l'aise, et ce malaise se retourne parfois contre la personne qui en parle. La colère se comprend aussi : il est difficile de rester calme face à une violence que la plupart des gens ne voient pas (ou préfèrent ignorer)."
+          },
+          {
+            "type": "text",
+            "text": "Et comme dans tout groupe, il y a toutes sortes de personnes : on ne juge pas une cause sur le comportement de quelques-unes."
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🗣️",
+        "title": "Extrémistes, les véganes ?",
+        "bullets": [
+          "Refuser la violence n'a rien d'extrême",
+          "Le malaise vient souvent du sujet, pas des personnes"
+        ]
+      }
+    },
+    {
+      "id": "religion",
+      "label": "Le véganisme, c'est une religion, un dogme, une secte",
+      "answer": {
+        "title": "Une religion, vraiment ?",
+        "blocks": [
+          {
+            "type": "text",
+            "text": "Le véganisme n'est pas une religion : c'est une position éthique. Elle part d'un constat simple : les animaux sont sentients, et on peut vivre en bonne santé sans les exploiter. Alors pourquoi continuer à leur faire du mal ? D'ailleurs, il y a des véganes de toutes les religions, et sans religion."
+          },
+          {
+            "type": "text",
+            "text": "Un dogme, c'est une vérité qu'on n'a pas le droit de remettre en question. Le véganisme est justement né d'une remise en question de nos habitudes, et les véganes débattent sans cesse entre elles et eux : stratégies, priorités, façons de militer…"
+          },
+          {
+            "type": "text",
+            "text": "Une secte ? Il n'y a ni gourou, ni chef, ni argent à verser, ni rupture imposée avec ses proches."
+          },
+          {
+            "type": "text",
+            "text": "En fait, pourquoi on ne retourne pas la question au fait de manger des animaux ? On le fait souvent sans l'avoir choisi, parce qu'on a été élevé·e ainsi, et on le justifie par la tradition ou la nature..."
+          }
+        ]
+      },
+      "recap": {
+        "emoji": "🔍",
+        "title": "Une religion, vraiment ?",
+        "bullets": [
+          "Une position éthique, compatible avec toutes les religions",
+          "Ni gourou, ni dogme : on débat",
+          "Le carnisme, une croyance qu'on n'a pas choisie"
+        ]
+      }
+    }
+  ],
+  "days": [
+    {
+      "number": 29,
+      "icon": "app",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Ça fait beaucoup ! 🧠",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Nutrition, ingrédients cachés, labels, cosmétiques, idées reçues… En un mois, vous avez découvert énormément de choses."
+            },
+            {
+              "type": "text",
+              "text": "Pas de panique si vous ne retenez pas tout : personne n'y arrive. Pas besoin de tout savoir par cœur, **l'app 321 Vegan est là pour vous aider** au quotidien. Petit tour de ce qu'elle peut faire pour vous."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "En faisant ses courses 🛒",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Un doute sur un produit ? L'app vérifie pour vous :"
+            },
+            {
+              "type": "app_link",
+              "label": "Le scanner",
+              "target": "scanner",
+              "text": "Scannez le code-barres d'un aliment ou d'un cosmétique : l'app vous dit s'il est végane. Produit inconnu ? Envoyez-le, la communauté le vérifie."
+            },
+            {
+              "type": "app_link",
+              "label": "Les cosmétiques",
+              "target": "search_cosmetics",
+              "text": "Tapez le nom d'une marque : l'app vous dit si elle est végane, et si elle est cruelty free."
+            },
+            {
+              "type": "app_link",
+              "label": "Les additifs",
+              "target": "search_additives",
+              "text": "Un E120 dans les ingrédients ? Vérifiez s'il est d'origine animale."
+            },
+            {
+              "type": "app_link",
+              "label": "Le Vegandex",
+              "target": "vegandex",
+              "text": "Des produits véganes à dénicher en magasin, à collectionner en les scannant."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Et au quotidien 📱",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Pour sortir manger, trouver un produit ou se faire plaisir :"
+            },
+            {
+              "type": "app_link",
+              "label": "Voir la carte des restaurants",
+              "target": "restaurants_map"
+            },
+            {
+              "type": "app_link",
+              "label": "Voir la carte des magasins",
+              "target": "products_map"
+            },
+            {
+              "type": "app_link",
+              "label": "Voir les boutiques solidaires",
+              "target": "partners"
+            },
+            {
+              "type": "text",
+              "text": "Et pour ne jamais oublier sa B12 :"
+            },
+            {
+              "type": "app_link",
+              "label": "Programmer mon rappel B12",
+              "target": "b12_reminder"
+            },
+            {
+              "type": "text",
+              "text": "Une question ? Rejoignez notre **serveur Discord** : on y répond, et vous pouvez y discuter avec d'autres véganes."
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "image": "lib/assets/images/remerciements/discord.png",
+                  "label": "Le Discord de 321 Vegan",
+                  "text": "Questions, conseils, échanges : une communauté pour vous accompagner.",
+                  "links": [
+                    {
+                      "label": "Rejoindre",
+                      "url": "https://discord.gg/a8xrF2b23S"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "🛒",
+          "title": "En faisant ses courses",
+          "bullets": [
+            "Le scanner, pour les aliments et les cosmétiques",
+            "La recherche : marques de cosmétiques, additifs",
+            "Un produit inconnu ? On l'envoie"
+          ]
+        },
+        {
+          "emoji": "📱",
+          "title": "Et au quotidien",
+          "bullets": [
+            "Les cartes des restaurants et des magasins",
+            "Les boutiques solidaires",
+            "Le rappel B12, le Discord pour échanger"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 30,
+      "icon": "support",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Être végane dans une société spéciste 🧍‍♂️🧍‍♀️",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Être végane et antispéciste, c'est aussi voir une violence que la plupart des gens ne voient pas, ou préfèrent ignorer. C'est vivre au milieu d'elle au quotidien : dans les rayons de supermarché, les publicités, les repas, les conversations."
+            },
+            {
+              "type": "text",
+              "text": "Ce décalage pèse. On peut se sentir triste, en colère, impuissant·e, parfois découragé·e : ces émotions sont normales."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Les mots qu'on emploie 💬",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Le spécisme est partout, aussi dans les mots qu'on utilise au quotidien."
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**Des insultes** : « porc », « bête» … parce qu'on considère les animaux non-humains comme inférieurs",
+                "**« Ça »** pour parler d'un animal, au lieu de « il » ou « elle ».",
+                "**Prélever, réguler** : des mots plus doux que « tuer »."
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Adapter son language et choisir ses mots, c'est une façon simple de se rappeler, et de rappeler autour de soi, que les animaux sont **quelqu'un**, pas quelque chose."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Le monde change 🌱",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Ça peut sembler décourageant, et pourtant les choses bougent :"
+            },
+            {
+              "type": "bullets",
+              "items": [
+                "**2015** : le Code civil reconnaît les animaux comme des « êtres vivants doués de sensibilité », même s'ils restent soumis au régime des biens [1].",
+                "**2021** : la France interdit les élevages de visons pour leur fourrure, et vote la fin des spectacles d'orques et de dauphins (2026) et des animaux sauvages dans les cirques itinérants (2028) [2].",
+                "**Dans les rayons** : en France, les ventes d'alternatives végétales (lait, viande, fromage, yaourt, crème) ont augmenté de 21 % en deux ans. Le lait végétal représente 5,5 % des laits vendus en supermarché, la viande végétale 2,1 % de la viande préemballée du rayon frais : encore peu, mais ça progresse chaque année [3].",
+                "**Au quotidien** : de plus en plus de restaurants, cafés, boulangeries entièrement véganes ou proposant des options véganes."
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Ces avancées, on les doit aux personnes qui s'engagent pour les animaux. En devenant végane, **vous faites partie de ce changement**."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Assemblée nationale, question n° 65458, réponse du 25 août 2015",
+              "url": "https://questions.assemblee-nationale.fr/q14/14-65458QE.htm"
+            },
+            {
+              "label": "Vie publique, « Loi du 30 novembre 2021 visant à lutter contre la maltraitance animale »",
+              "url": "https://www.vie-publique.fr/loi/278249-loi-lutte-contre-la-maltraitance-animale"
+            },
+            {
+              "label": "GFI Europe, « Les ventes au détail d'aliments d'origine végétale ont progressé de 21 % en deux ans en France », 2026",
+              "url": "https://gfieurope.org/press/les-ventes-au-detail-daliments-dorigine-vegetale-ont-progresse-de-21-en-deux-ans-en-france/"
+            }
+          ]
+        },
+        {
+          "type": "myth"
+        }
+      ],
+      "recap": [
+        {
+          "emoji": "💬",
+          "title": "Les mots qu'on emploie",
+          "bullets": [
+            "« Du » poulet : un individu devenu matière",
+            "Un animal, c'est quelqu'un, pas quelque chose"
+          ]
+        },
+        {
+          "emoji": "🌱",
+          "title": "Le monde change",
+          "bullets": [
+            "Sensibilité, fourrure, cirques, delphinariums : les lois bougent",
+            "Les alternatives végétales : +21 % de ventes en deux ans",
+            "En devenant végane, on fait partie du changement"
+          ]
+        }
+      ]
+    },
+    {
+      "number": 31,
+      "icon": "finish",
+      "steps": [
+        {
+          "type": "info",
+          "title": "Le mot de la fin 💛",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Vous voilà au bout de ces 31 jours. Merci de les avoir parcourus avec nous !"
+            },
+            {
+              "type": "text",
+              "text": "Ce n'est pas grave si vous n'avez pas réponse à tout : personne ne l'a. Vous savez maintenant où chercher, et vous n'êtes pas seul·e. On espère que ce parcours vous aura aidé·e, et qu'il vous accompagnera encore longtemps."
+            },
+            {
+              "type": "text",
+              "text": "Pour tout garder sous la main, téléchargez les réponses aux idées reçues et les recettes :"
+            },
+            {
+              "type": "app_link",
+              "label": "Les réponses aux idées reçues",
+              "target": "download_answers"
+            },
+            {
+              "type": "app_link",
+              "label": "Les recettes",
+              "target": "download_recipes"
+            },
+            {
+              "type": "text",
+              "text": "Le parcours reste ouvert : vous pouvez relire chaque jour quand vous voulez."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

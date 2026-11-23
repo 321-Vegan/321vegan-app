@@ -83,6 +83,7 @@ dependencies:
   image_cropper: ^12.2.1
   firebase_core: ^5.1.0
   firebase_messaging: ^17.0.1
+  pdf: ^3.12.0
 
 dev_dependencies:
   flutter_test:
@@ -255,8 +256,12 @@ flutter:
     - lib/assets/veganuary/week2.json
     - lib/assets/veganuary/week3.json
     - lib/assets/veganuary/week4.json
+    - lib/assets/veganuary/week5.json
     # The whole folder (not its subfolders): images dropped in need no line
     - lib/assets/images/veganuary/
+    # Static Karla (regular, bold) for the Veganuary PDFs: a PDF can't use
+    # the app's variable font
+    - fonts/pdf/
     # Others
     - lib/assets/affiche-321vegan-a4.png
     - lib/assets/images/vegandex.webp

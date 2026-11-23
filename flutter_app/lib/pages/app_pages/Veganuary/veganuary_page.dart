@@ -1,7 +1,9 @@
 import 'dart:math';
 
+import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../helpers/external_links.dart';
 import '../../../models/veganuary/veganuary_content.dart';
 import '../../../models/veganuary/veganuary_progress.dart';
 import '../../../services/veganuary_reminder_service.dart';
@@ -9,10 +11,13 @@ import '../../../services/veganuary_service.dart';
 import '../../../themes/app_spacing.dart';
 import '../../../themes/app_text_styles.dart';
 import '../../../widgets/shared/app_background.dart';
+import '../../../widgets/shared/animated_reveal.dart';
 import '../../../widgets/shared/app_dialog.dart';
 import '../../../widgets/shared/push_permission_prompt.dart';
 import '../../../widgets/shared/square_icon_button.dart';
 import '../../../widgets/veganuary/veganuary_day_node.dart';
+import '../../../widgets/veganuary/veganuary_downloads.dart';
+import '../../../widgets/veganuary/veganuary_finish_line.dart';
 import '../../../widgets/veganuary/veganuary_week_title.dart';
 import '../../../widgets/veganuary/veganuary_welcome_modal.dart';
 import '../home.dart';
@@ -21,6 +26,10 @@ import 'veganuary_weeks_page.dart';
 
 /// Going on to the next week: the path slides, the header fades.
 const Duration _weekChangeDuration = Duration(milliseconds: 900);
+
+/// First visit, once the intro sheet is closed: the coins pop in one after
+/// the other, then confetti.
+const Duration _introDuration = Duration(milliseconds: 1600);
 
 /// Veganuary tab: the path of the week of the next day to do, one coin per
 /// day.
@@ -32,7 +41,10 @@ class VeganuaryPage extends StatefulWidget {
 }
 
 class _VeganuaryPageState extends State<VeganuaryPage>
-    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+    with
+        WidgetsBindingObserver,
+        AutomaticKeepAliveClientMixin,
+        SingleTickerProviderStateMixin {
   // Kept while on the other tabs: no reload, nor the bubble and ring
   // appearing again, on each return
   @override
@@ -59,6 +71,20 @@ class _VeganuaryPageState extends State<VeganuaryPage>
   double _pull = 0;
   bool _pullUsed = false;
 
+  /// The coins popping in on the first visit, and on reaching a new week
+  /// (at 1 the rest of the time).
+  late final AnimationController _intro =
+      AnimationController(vsync: this, duration: _introDuration, value: 1);
+  final _confetti = ConfettiController(duration: const Duration(seconds: 1));
+
+  /// The week whose coins pop in (a new one reached); all on the first
+  /// visit (null).
+  int? _introWeek;
+
+  /// The course just finished: what to download appears only once the
+  /// trophy has turned yellow.
+  bool _holdDownloads = false;
+
   @override
   void initState() {
     super.initState();
@@ -67,25 +93,56 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     _showWelcomeOnFirstVisit();
   }
 
-  /// The intro of the course and its disclaimer, until closed with its last
-  /// button.
+  /// The intro of the course and its disclaimer, shown once: however it's
+  /// closed (its last button, or swiped away), then the path comes in.
   Future<void> _showWelcomeOnFirstVisit() async {
     if (await VeganuaryService.welcomeSeen() || !mounted) return;
     // Wait a bit for the page to be fully displayed
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
-    final seen = await showModalBottomSheet<bool>(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const VeganuaryWelcomeModal(),
     );
-    if (seen == true) await VeganuaryService.markWelcomeSeen();
+    await VeganuaryService.markWelcomeSeen();
+    if (mounted) _playIntro();
+  }
+
+  /// The coins pop in from the top, then confetti; straight there if the
+  /// phone asks for fewer animations.
+  Future<void> _playIntro() async {
+    if (MediaQuery.of(context).disableAnimations) {
+      _intro.value = 1;
+      return;
+    }
+    await _intro.forward(from: 0);
+    if (mounted) _confetti.play();
+  }
+
+  /// One coin of the intro: grows with a little bounce, in turn. Only on
+  /// the week it plays for, and only while it plays: a path built after it
+  /// (e.g. the week leaving when the next one comes in) isn't tied to it.
+  Widget _popIn(int index, Widget child, {required int week}) {
+    final playing = _intro.isAnimating || _intro.value < 1;
+    if (!playing || (_introWeek != null && week != _introWeek)) return child;
+    final start = min(index * 0.09, 0.6);
+    return FadeTransition(
+      opacity: _intro.drive(CurveTween(curve: Interval(start, start + 0.15))),
+      child: ScaleTransition(
+        scale: _intro.drive(CurveTween(
+            curve: Interval(start, start + 0.4, curve: Curves.easeOutBack))),
+        child: child,
+      ),
+    );
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _intro.dispose();
+    _confetti.dispose();
     super.dispose();
   }
 
@@ -99,6 +156,11 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     try {
       final weeks = await VeganuaryService.loadWeeks();
       final progress = await VeganuaryService.loadProgress();
+      // First visit: an empty path behind the intro sheet, filled once closed
+      if (!await VeganuaryService.welcomeSeen() && !_intro.isAnimating) {
+        _introWeek = null;
+        _intro.value = 0;
+      }
       if (mounted) {
         setState(() {
           _weeks = weeks;
@@ -178,6 +240,14 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     return home == null ? null : (layer) => home.goToMapTab(layer: layer);
   }
 
+  /// Likewise: the Scan tab, looking up a barcode if not null.
+  ValueChanged<String?>? get _scanOpener {
+    final home = MyHomePage.of(context);
+    return home == null
+        ? null
+        : (barcode) => home.goToScanTab(barcode: barcode);
+  }
+
   Future<void> _openDay(VeganuaryDay day) async {
     final state = _progress.stateOf(day.number);
     switch (state) {
@@ -193,6 +263,7 @@ class _VeganuaryPageState extends State<VeganuaryPage>
           day: day,
           progress: _progress,
           onOpenMap: _mapOpener,
+          onOpenScan: _scanOpener,
         );
         if (done == true) {
           await _celebrate();
@@ -210,15 +281,42 @@ class _VeganuaryPageState extends State<VeganuaryPage>
     await Future.delayed(const Duration(milliseconds: 350));
     final progress = await VeganuaryService.loadProgress();
     if (!mounted) return;
+    final finished = progress.nextDay > VeganuaryService.totalDays;
+    final animate = !MediaQuery.of(context).disableAnimations;
     setState(() {
       _progress = progress;
       _heldBackDay = progress.nextDay;
       _browsedWeek = null;
+      if (finished && animate) _holdDownloads = true;
     });
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
-    setState(() => _heldBackDay = null);
+    // A new week reached: its coins pop in as it slides up, like the very
+    // first time
+    final weekBefore = _week.number;
+    var newWeek = false;
+    setState(() {
+      _heldBackDay = null;
+      newWeek = _week.number > weekBefore && animate;
+      if (newWeek) {
+        _introWeek = _week.number;
+        _intro.value = 0;
+      }
+    });
+    if (newWeek) {
+      await Future.delayed(_weekChangeDuration * 0.5);
+      if (mounted) await _playIntro();
+    }
     if (progress.nextDay == 2) await _offerReminder();
+    // The last one: the trophy turns yellow (on its own), confetti, then
+    // what to keep appears
+    if (finished && animate && mounted) {
+      await Future.delayed(const Duration(milliseconds: 700));
+      if (!mounted) return;
+      _confetti.play();
+      await Future.delayed(const Duration(milliseconds: 900));
+      if (mounted) setState(() => _holdDownloads = false);
+    }
   }
 
   /// At the end of day 1 (once only): the morning reminder, off unless
@@ -289,7 +387,27 @@ class _VeganuaryPageState extends State<VeganuaryPage>
                       ),
                     ),
                   ),
-                  Expanded(child: _buildPathOfWeek()),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Positioned.fill(child: _buildPathOfWeek()),
+                        // Same burst as at the end of a day
+                        Align(
+                          alignment: Alignment.topCenter,
+                          child: IgnorePointer(
+                            child: ConfettiWidget(
+                              numberOfParticles: 20,
+                              maxBlastForce: 50.r,
+                              confettiController: _confetti,
+                              blastDirectionality:
+                                  BlastDirectionality.explosive,
+                              shouldLoop: false,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
       ),
@@ -306,6 +424,19 @@ class _VeganuaryPageState extends State<VeganuaryPage>
         ],
         Expanded(child: VeganuaryWeekTitle(week: week)),
         SizedBox(width: 30.w),
+        // Questions, other vegans: the course's Discord server
+        Semantics(
+          button: true,
+          label: 'Rejoindre le Discord du Veganuary',
+          excludeSemantics: true,
+          child: SquareIconButton.action(
+            onTap: () => openExternalUrl(
+                context, Uri.parse(VeganuaryService.discordUrl)),
+            shadows: const [],
+            child: Image.asset(VeganuaryService.discordLogo, width: 96.w),
+          ),
+        ),
+        SizedBox(width: 24.w),
         Semantics(
           button: true,
           label: 'Voir les semaines du Veganuary',
@@ -353,6 +484,7 @@ class _VeganuaryPageState extends State<VeganuaryPage>
   Widget _buildPath() {
     final week = _week;
     final now = DateTime.now();
+    final isLastWeek = week.days.last.number == VeganuaryService.totalDays;
 
     return NotificationListener<ScrollNotification>(
       onNotification: _onPathScroll,
@@ -361,8 +493,40 @@ class _VeganuaryPageState extends State<VeganuaryPage>
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.fromLTRB(
             AppSpacing.pageHorizontal, 60.h, AppSpacing.pageHorizontal, 120.h),
-        itemCount: week.days.length,
+        // The last week ends on the trophy
+        itemCount: week.days.length + (isLastWeek ? 1 : 0),
         itemBuilder: (context, i) {
+          if (i == week.days.length) {
+            final daysLeft =
+                VeganuaryService.totalDays - _progress.completedAt.length;
+            return Padding(
+              padding: EdgeInsets.only(top: 60.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _popIn(i, VeganuaryFinishLine(daysLeft: daysLeft),
+                      week: week.number),
+                  // Once over: everything to keep, at hand
+                  AnimatedReveal(
+                    visible: daysLeft <= 0 && !_holdDownloads,
+                    duration: const Duration(milliseconds: 500),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SizedBox(height: AppSpacing.section),
+                        Text(
+                          'À garder sous la main',
+                          style: AppTextStyles.baloo22,
+                        ),
+                        SizedBox(height: AppSpacing.afterTitle),
+                        const VeganuaryDownloads(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
           final day = week.days[i];
           final heldBack = day.number == _heldBackDay;
           final state = heldBack
@@ -383,14 +547,18 @@ class _VeganuaryPageState extends State<VeganuaryPage>
               children: [
                 Align(
                   alignment: Alignment(-bend * 0.5, 0),
-                  child: VeganuaryDayNode(
-                    day: day.number,
-                    icon: day.icon,
-                    state: state,
-                    isNext: day.number == _progress.nextDay && !heldBack,
-                    dayProgress: _progress.dayProgress(day.number),
-                    hasRecipe: day.steps.any((step) => step is RecipeStep),
-                    onTap: () => _openDay(day),
+                  child: _popIn(
+                    i,
+                    week: week.number,
+                    VeganuaryDayNode(
+                      day: day.number,
+                      icon: day.icon,
+                      state: state,
+                      isNext: day.number == _progress.nextDay && !heldBack,
+                      dayProgress: _progress.dayProgress(day.number),
+                      hasRecipe: day.steps.any((step) => step is RecipeStep),
+                      onTap: () => _openDay(day),
+                    ),
                   ),
                 ),
                 if (illustration != null)
@@ -401,7 +569,12 @@ class _VeganuaryPageState extends State<VeganuaryPage>
                     right: bend > 0 ? 0 : null,
                     child: ExcludeSemantics(
                       child: IgnorePointer(
-                        child: Image.asset(illustration, width: 330.w),
+                        // With the coin after it
+                        child: _popIn(
+                          i + 1,
+                          Image.asset(illustration, width: 330.w),
+                          week: week.number,
+                        ),
                       ),
                     ),
                   ),

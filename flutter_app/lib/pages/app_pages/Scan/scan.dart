@@ -46,6 +46,11 @@ class ScanPage extends StatefulWidget {
 
   const ScanPage({super.key, this.onLoginSuccess});
 
+  /// A barcode to look up, set from elsewhere (e.g. picked in a search
+  /// opened from the Veganuary) before switching to the Scan tab: run like
+  /// one typed in the search (see [MyHomePageState.goToScanTab]).
+  static final ValueNotifier<String?> requestedBarcode = ValueNotifier(null);
+
   @override
   ScanPageState createState() => ScanPageState();
 }
@@ -126,6 +131,10 @@ class ScanPageState extends State<ScanPage>
       duration: const Duration(milliseconds: 450),
       vsync: this,
     );
+
+    ScanPage.requestedBarcode.addListener(_onBarcodeRequested);
+    // Asked for before this tab was first built
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onBarcodeRequested());
 
     _loadScanHistory();
     _loadShowBoycottPref();
@@ -570,6 +579,13 @@ class ScanPageState extends State<ScanPage>
     });
   }
 
+  void _onBarcodeRequested() {
+    final barcode = ScanPage.requestedBarcode.value;
+    if (barcode == null || !mounted) return;
+    ScanPage.requestedBarcode.value = null;
+    _simulateScan(barcode, manualEntry: true);
+  }
+
   /// Pushes the unified product search page (Additifs / Cosmétiques /
   /// Code-barres). The "Code-barres" tab pops with the chosen barcode instead
   /// of showing its own result — feeding it into [_simulateScan] runs it
@@ -593,6 +609,7 @@ class ScanPageState extends State<ScanPage>
 
   @override
   void dispose() {
+    ScanPage.requestedBarcode.removeListener(_onBarcodeRequested);
     _connectivitySubscription?.cancel();
     // _vegandexCollapseTimer?.cancel();
     controller.dispose();

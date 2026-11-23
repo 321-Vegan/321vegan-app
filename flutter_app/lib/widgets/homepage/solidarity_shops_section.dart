@@ -20,10 +20,16 @@ class SolidarityShopsSection extends StatefulWidget {
   /// default push to [PartnersPage].
   final VoidCallback? onSeeAll;
 
+  /// The "Boutiques solidaires" title and its arrow; hidden where the page
+  /// already introduces the shops and has its own "see all" button (the
+  /// Veganuary).
+  final bool showHeader;
+
   const SolidarityShopsSection({
     super.key,
     required this.partners,
     this.onSeeAll,
+    this.showHeader = true,
   });
 
   @override
@@ -87,20 +93,22 @@ class _SolidarityShopsSectionState extends State<SolidarityShopsSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onTap: () => _seeAll(context),
-          child: Row(
-            children: [
-              Text(
-                'Boutiques solidaires',
-                style: AppTextStyles.baloo22,
-              ),
-              const Spacer(),
-              Icon(Icons.arrow_forward, size: 54.sp, color: Colors.grey[600]),
-            ],
+        if (widget.showHeader) ...[
+          GestureDetector(
+            onTap: () => _seeAll(context),
+            child: Row(
+              children: [
+                Text(
+                  'Boutiques solidaires',
+                  style: AppTextStyles.baloo22,
+                ),
+                const Spacer(),
+                Icon(Icons.arrow_forward, size: 54.sp, color: Colors.grey[600]),
+              ],
+            ),
           ),
-        ),
-        SizedBox(height: AppSpacing.afterTitle),
+          SizedBox(height: AppSpacing.afterTitle),
+        ],
         // IntrinsicHeight sizes the row to its tallest card so it never
         // overflows, regardless of font metrics or text length.
         SingleChildScrollView(

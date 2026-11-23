@@ -15,6 +15,7 @@ import '../../../widgets/settings/settings_toggle_tile.dart';
 import '../../../widgets/shared/app_button.dart';
 import '../../../widgets/shared/push_permission_prompt.dart';
 import '../../../widgets/veganuary/saturation_filter.dart';
+import '../../../widgets/veganuary/veganuary_downloads.dart';
 import '../../../widgets/veganuary/veganuary_progress_bar.dart';
 import '../../../widgets/veganuary/veganuary_recipes_section.dart';
 import '../../../widgets/veganuary/veganuary_step_views.dart';
@@ -105,6 +106,13 @@ class _VeganuaryWeeksPageState extends State<VeganuaryWeeksPage> {
                   progress: progress,
                 ),
                 SizedBox(height: AppSpacing.item),
+              ],
+              // The course done: its idées reçues to keep, as a PDF
+              if (progress.completedAt.length >=
+                  VeganuaryService.totalDays) ...[
+                SizedBox(height: AppSpacing.section),
+                const VeganuaryDownloadCard(
+                    download: VeganuaryDownload.answers),
               ],
               SizedBox(height: AppSpacing.section),
               VeganuaryRecipesSection(weeks: weeks, progress: progress),

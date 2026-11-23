@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../helpers/external_links.dart';
 import '../../services/veganuary_service.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
 import '../shared/bottom_sheet_shell.dart';
@@ -29,11 +32,15 @@ class _Step {
   /// Smaller, below [text].
   final String? details;
 
+  /// A button to join the Discord server, below [text].
+  final bool discord;
+
   const _Step({
     this.image,
     required this.title,
     required this.text,
     this.details,
+    this.discord = false,
   });
 }
 
@@ -42,16 +49,22 @@ const _steps = [
     image: 'lib/assets/images/characters/watermelon.webp',
     title: 'Bienvenue dans le Veganuary !',
     text: '${VeganuaryService.totalDays} jours pour trouver les réponses aux '
-        "questions qu'on se pose sur le véganisme et bien commencer : chaque "
-        'jour, une info et une idée reçue à démonter, et une recette chaque '
-        'semaine.',
+        "questions qu'on se pose sur le véganisme : chaque "
+        'jour, une info et une idée reçue à démonter, et des recettes !',
   ),
   _Step(
     image: 'lib/assets/images/characters/cow-ok.webp',
     title: 'À votre rythme',
     text: 'Un nouveau jour se débloque chaque jour. Un jour manqué ? Pas de '
-        "souci, vous pourrez le rattraper. L'essentiel de chaque semaine vous "
-        "attend ensuite dans ses fiches récap'.",
+        "souci, vous pourrez le rattraper.",
+  ),
+  _Step(
+    image: VeganuaryService.discordLogo,
+    title: "Vous n'êtes pas seul·e",
+    text: 'Tout au long du parcours, retrouvez-nous sur notre serveur '
+        "Discord : posez vos questions, échangez avec d'autres véganes, "
+        'partagez vos découvertes.',
+    discord: true,
   ),
   // No image: the text is long
   _Step(
@@ -62,9 +75,8 @@ const _steps = [
 ];
 
 /// First-visit intro sheet of the Veganuary tab, in a few swipeable steps
-/// ending with the health disclaimer, shown once. Pops `true` when closed
-/// with "C'est parti !" on the last step so the caller can mark it as seen
-/// for good; swiping the sheet away leaves it to show again next time.
+/// ending with the health disclaimer, shown once: the caller marks it as
+/// seen however it's closed ("C'est parti !" or swiped away).
 class VeganuaryWelcomeModal extends StatefulWidget {
   const VeganuaryWelcomeModal({super.key});
 
@@ -134,6 +146,17 @@ class _VeganuaryWelcomeModalState extends State<VeganuaryWelcomeModal> {
                             style: AppTextStyles.bodyRegular15
                                 .copyWith(color: Colors.grey[600]),
                           ),
+                          if (step.discord) ...[
+                            SizedBox(height: 36.h),
+                            AppButton(
+                              label: 'Rejoindre le Discord',
+                              icon: FontAwesomeIcons.discord,
+                              compact: true,
+                              backgroundColor: kAccentYellow,
+                              onPressed: () => openExternalUrl(context,
+                                  Uri.parse(VeganuaryService.discordUrl)),
+                            ),
+                          ],
                           if (step.details != null) ...[
                             SizedBox(height: 24.h),
                             Text(

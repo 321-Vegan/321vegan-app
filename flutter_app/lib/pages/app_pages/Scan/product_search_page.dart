@@ -18,21 +18,27 @@ import 'package:vegan_app/widgets/shared/empty_state_view.dart';
 import 'package:vegan_app/widgets/shared/info_box.dart';
 import 'package:vegan_app/widgets/shared/search_field.dart';
 
-enum _SearchCategory { aliment, cosmetique, additif }
+/// The chips of [ProductSearchPage] (Code-barres, Cosmétiques, Additifs).
+enum ProductSearchCategory { aliment, cosmetique, additif }
 
 /// Unified product search page: one search field, category chips, results
 /// below (Additifs, Cosmétiques, Code-barres). Picking a barcode result (or
 /// typing a valid one) pops this page with the code so the Scan page can
 /// run it through the same pipeline as a camera scan.
 class ProductSearchPage extends StatefulWidget {
-  const ProductSearchPage({super.key});
+  /// Shown first, instead of the one picked last time (e.g. "Cosmétique"
+  /// from a Veganuary link).
+  final ProductSearchCategory? initialCategory;
+
+  const ProductSearchPage({super.key, this.initialCategory});
 
   @override
   State<ProductSearchPage> createState() => _ProductSearchPageState();
 }
 
 class _ProductSearchPageState extends State<ProductSearchPage> {
-  _SearchCategory _category = _SearchCategory.cosmetique;
+  late ProductSearchCategory _category =
+      widget.initialCategory ?? ProductSearchCategory.cosmetique;
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
 
@@ -45,13 +51,13 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   void initState() {
     super.initState();
     _loadENumbers();
-    _loadLastSearchCategory();
+    if (widget.initialCategory == null) _loadLastSearchCategory();
   }
 
   Future<void> _loadLastSearchCategory() async {
     final saved = await PreferencesHelper.getLastSearchCategoryPref();
     if (saved == null || !mounted) return;
-    for (final category in _SearchCategory.values) {
+    for (final category in ProductSearchCategory.values) {
       if (category.name == saved && category != _category) {
         setState(() => _category = category);
         break;
@@ -82,23 +88,23 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
       _query = value;
       _barcodeError = null;
     });
-    if (_category == _SearchCategory.cosmetique) {
+    if (_category == ProductSearchCategory.cosmetique) {
       _searchCosmetics(value);
-    } else if (_category == _SearchCategory.aliment) {
+    } else if (_category == ProductSearchCategory.aliment) {
       _searchBarcodes(value);
     }
   }
 
-  void _selectCategory(_SearchCategory category) {
+  void _selectCategory(ProductSearchCategory category) {
     if (category == _category) return;
     setState(() {
       _category = category;
       _barcodeError = null;
     });
     PreferencesHelper.setLastSearchCategoryPref(category.name);
-    if (category == _SearchCategory.cosmetique && _query.isNotEmpty) {
+    if (category == ProductSearchCategory.cosmetique && _query.isNotEmpty) {
       _searchCosmetics(_query);
-    } else if (category == _SearchCategory.aliment && _query.isNotEmpty) {
+    } else if (category == ProductSearchCategory.aliment && _query.isNotEmpty) {
       _searchBarcodes(_query);
     }
   }
@@ -118,7 +124,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   /// Lets the user proceed with a typed code even if it has no local
   /// suggestion; the real lookup happens back on the Scan page.
   void _submitBarcode(String raw) {
-    if (_category != _SearchCategory.aliment) return;
+    if (_category != ProductSearchCategory.aliment) return;
     if (!BarcodeHelper.isValid(raw)) {
       setState(() => _barcodeError = 'Code-barres invalide (EAN-8 ou EAN-13)');
       return;
@@ -175,31 +181,31 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
       .toList();
 
   String get _searchHint => switch (_category) {
-        _SearchCategory.additif => "Rechercher un additif (ex. e200, carmin…)",
-        _SearchCategory.cosmetique => "Rechercher une marque (ex. Avril, Nae…)",
-        _SearchCategory.aliment => "Code-barres (ex. 3770016570121)",
+        ProductSearchCategory.additif => "Rechercher un additif (ex. e200, carmin…)",
+        ProductSearchCategory.cosmetique => "Rechercher une marque (ex. Avril, Nae…)",
+        ProductSearchCategory.aliment => "Code-barres (ex. 3770016570121)",
       };
 
   String get _emptyPromptTitle => switch (_category) {
-        _SearchCategory.additif => 'Recherchez un additif',
-        _SearchCategory.cosmetique => 'Recherchez une marque',
-        _SearchCategory.aliment => 'Entrez un code-barres',
+        ProductSearchCategory.additif => 'Recherchez un additif',
+        ProductSearchCategory.cosmetique => 'Recherchez une marque',
+        ProductSearchCategory.aliment => 'Entrez un code-barres',
       };
 
   String get _emptyPromptSubtitle => switch (_category) {
-        _SearchCategory.aliment => 'Tapez un code-barres pour le rechercher.',
+        ProductSearchCategory.aliment => 'Tapez un code-barres pour le rechercher.',
         _ => 'Tapez un nom pour lancer la recherche.',
       };
 
   @override
   Widget build(BuildContext context) {
     final List<Object> results = switch (_category) {
-      _SearchCategory.additif => _filteredENumbers,
-      _SearchCategory.cosmetique => _cosmeticResults,
-      _SearchCategory.aliment => _barcodeResults,
+      ProductSearchCategory.additif => _filteredENumbers,
+      ProductSearchCategory.cosmetique => _cosmeticResults,
+      ProductSearchCategory.aliment => _barcodeResults,
     };
     final hasQuery = _query.isNotEmpty;
-    final isAliment = _category == _SearchCategory.aliment;
+    final isAliment = _category == ProductSearchCategory.aliment;
 
     return AppBackground(
       child: Scaffold(
@@ -255,25 +261,25 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                     _buildCategoryChip(
                       label: 'Code-barres',
                       icon: CupertinoIcons.barcode_viewfinder,
-                      isSelected: _category == _SearchCategory.aliment,
+                      isSelected: _category == ProductSearchCategory.aliment,
                       enabled: true,
-                      onTap: () => _selectCategory(_SearchCategory.aliment),
+                      onTap: () => _selectCategory(ProductSearchCategory.aliment),
                     ),
                     SizedBox(width: 24.w),
                     _buildCategoryChip(
                       label: 'Cosmétique',
                       icon: Icons.soap_rounded,
-                      isSelected: _category == _SearchCategory.cosmetique,
+                      isSelected: _category == ProductSearchCategory.cosmetique,
                       enabled: true,
-                      onTap: () => _selectCategory(_SearchCategory.cosmetique),
+                      onTap: () => _selectCategory(ProductSearchCategory.cosmetique),
                     ),
                     SizedBox(width: 24.w),
                     _buildCategoryChip(
                       label: 'Additif',
                       icon: Icons.science,
-                      isSelected: _category == _SearchCategory.additif,
+                      isSelected: _category == ProductSearchCategory.additif,
                       enabled: true,
-                      onTap: () => _selectCategory(_SearchCategory.additif),
+                      onTap: () => _selectCategory(ProductSearchCategory.additif),
                     ),
                   ],
                 ),

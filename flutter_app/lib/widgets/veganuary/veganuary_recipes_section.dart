@@ -1,8 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../helpers/image_capture.dart';
 import '../../models/veganuary/veganuary_content.dart';
 import '../../models/veganuary/veganuary_progress.dart';
 import '../../pages/app_pages/Veganuary/veganuary_recipe_page.dart';
@@ -12,6 +10,7 @@ import '../../themes/app_spacing.dart';
 import '../../themes/app_text_styles.dart';
 import '../shared/app_button.dart';
 import 'saturation_filter.dart';
+import 'veganuary_downloads.dart';
 import 'veganuary_step_views.dart';
 
 /// A recipe of the course and the day it comes with.
@@ -19,7 +18,7 @@ typedef _DayRecipe = ({int day, RecipeStep recipe});
 
 /// All the recipes of the course, in the list of weeks: the ones of the days
 /// done open again, the others are greyed out until then. "Tout télécharger"
-/// shares the ones unlocked as images, like each recipe's own button.
+/// shares the ones unlocked in a PDF.
 class VeganuaryRecipesSection extends StatefulWidget {
   final List<VeganuaryWeek> weeks;
   final VeganuaryProgress progress;
@@ -47,47 +46,18 @@ class _VeganuaryRecipesSectionState extends State<VeganuaryRecipesSection> {
 
   bool _unlocked(_DayRecipe item) => widget.progress.isCompleted(item.day);
 
-  /// The unlocked recipes, at the screen's width (as on their page),
-  /// shared at once.
+  /// The unlocked recipes, in a PDF.
   Future<void> _downloadAll(BuildContext buttonContext) async {
     if (_downloading) return;
-    final recipes = _recipes.where(_unlocked).toList();
-    final sources = [
-      for (final item in recipes)
-        for (final src in [item.recipe.image, item.recipe.credit?.image])
-          if (src != null) src,
-    ];
     setState(() => _downloading = true);
     try {
-      final files = await captureOffscreen(
-        context,
-        width: MediaQuery.sizeOf(context).width,
-        images: {
-          for (final item in recipes)
-            item.recipe.fileName: VeganuaryRecipeSheet(recipe: item.recipe),
-        },
-        precache: [
-          for (final src in sources)
-            _isNetwork(src) ? CachedNetworkImageProvider(src) : AssetImage(src),
-        ],
-        // A network photo still fades in
-        settle: sources.any(_isNetwork)
-            ? const Duration(milliseconds: 700)
-            : Duration.zero,
-      );
-      if (files.isEmpty || !buttonContext.mounted) return;
-
-      await shareImageFiles(
-        buttonContext,
-        files,
-        text: 'Les recettes du Veganuary de 321 Vegan 🌱 https://321vegan.fr',
-      );
+      await shareVeganuaryRecipes(buttonContext, [
+        for (final item in _recipes.where(_unlocked)) item.recipe,
+      ]);
     } finally {
       if (mounted) setState(() => _downloading = false);
     }
   }
-
-  static bool _isNetwork(String src) => src.startsWith('http');
 
   void _open(_DayRecipe item) {
     if (_unlocked(item)) {

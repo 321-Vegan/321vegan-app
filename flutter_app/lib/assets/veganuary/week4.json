@@ -49,7 +49,7 @@
     },
     {
       "id": "entorse",
-      "label": "Tu feras bien une petite entorse ? Et quand personne ne regarde, je suis sûr·e que tu manges de la viande",
+      "label": "Tu feras bien une petite entorse ? Quand personne ne regarde, je sais que tu manges de la viande",
       "answer": {
         "title": "Une petite entorse, pour une fois ?",
         "blocks": [
@@ -133,11 +133,11 @@
       "id": "individuel",
       "label": "Les actions individuelles n'ont pas d'impact",
       "answer": {
-        "title": "Nos choix individuels comptent-ils ?",
+        "title": "Nos choix individuels ne comptent pas ?",
         "blocks": [
           {
             "type": "text",
-            "text": "Oui, et de plusieurs façons. D'abord directement : moins de demande, c'est moins d'animaux élevés et tués."
+            "text": "Si, et de plusieurs façons. D'abord directement : moins de demande, c'est moins d'animaux élevés et tués."
           },
           {
             "type": "text",
@@ -209,7 +209,7 @@
         "blocks": [
           {
             "type": "text",
-            "text": "Évidemment, ni l'un ni l'autre. Personne ne va relâcher des milliards d'animaux du jour au lendemain. Si l'on consomme moins de produits animaux, les élevages font simplement **naître moins d'animaux** : la transition se fait peu à peu, d'année en année."
+            "text": "Ni l'un ni l'autre. Les animaux d'élevage ne se multiplient pas tout seuls : ils existent parce que l'élevage les **fait naître**, par insémination artificielle, pour les exploiter puis les tuer. Arrêter de consommer des produits animaux, c'est arrêter d'en faire naître pour les exploiter."
           },
           {
             "type": "text",
@@ -217,7 +217,7 @@
           },
           {
             "type": "text",
-            "text": "Et si certaines races disparaissaient ? Les races d'animaux d'élevage ont été créées par l'élevage pour être rentables (plus de lait, plus de viande, plus de laine). Ces animaux sont d'ailleurs souvent en grande souffrance à cause de ça. La disparition de ces races n'est pas une mauvaise chose. À l'inverse, l'élevage occupe 83 % des terres agricoles du monde pour seulement 18 % de nos calories [2] : par l'espace qu'il prend et la pollution qu'il engendre, il fait disparaître énormément d'espèces sauvages."
+            "text": "Et si certaines races disparaissaient ? Les races d'animaux d'élevage ont été créées par l'élevage pour être rentables (plus de lait, plus de viande, plus de laine). Ces animaux sont d'ailleurs souvent en grande souffrance à cause de ça. La disparition de ces races n'est pas une mauvaise chose. À l'inverse, l'élevage occupe 77 % des terres agricoles du monde pour seulement 18 % de nos calories [2] : par l'espace qu'il prend et la pollution qu'il engendre, il fait disparaître énormément d'espèces sauvages."
           }
         ],
         "sources": [
@@ -226,8 +226,8 @@
             "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6016768/"
           },
           {
-            "label": "Poore et Nemecek, « Reducing food's environmental impacts through producers and consumers », Science, 2018",
-            "url": "https://doi.org/10.1126/science.aaq0216"
+            "label": "Our World in Data, « Half of the world's habitable land is used for agriculture »",
+            "url": "https://ourworldindata.org/global-land-for-agriculture"
           }
         ]
       },
@@ -257,7 +257,7 @@
           },
           {
             "type": "text",
-            "text": "Le lapin en est l'exemple parfait. C'est la même espèce qui vit sur le canapé, dans un clapier d'élevage ou dans une cage de laboratoire. À la maison, il a un prénom et on l'emmène chez le vétérinaire alors en élevage ou en laboratoire il est considéré comme un simple numéro. Pourtant la seule chose qui change c'est notre regard."
+            "text": "Le lapin en est l'exemple parfait. C'est la même espèce qui vit sur le canapé, dans un clapier d'élevage ou dans une cage de laboratoire. À la maison, il a un prénom et on l'emmène chez le vétérinaire alors en élevage ou qu'en laboratoire il est considéré comme un simple numéro. Pourtant la seule chose qui change c'est notre regard."
           },
           {
             "type": "text",
@@ -496,7 +496,7 @@
                   "links": [
                     {
                       "label": "Écouter",
-                      "url": "https://www.irivoiregrange.com/las-vegan-parano-podcast/"
+                      "url": "https://pod.link/1820120290"
                     }
                   ]
                 },
@@ -507,7 +507,7 @@
                   "links": [
                     {
                       "label": "Écouter",
-                      "url": "https://www.mangeusedherbe.net/"
+                      "url": "https://www.mangeusedherbe.net/#/podcast"
                     }
                   ]
                 },
@@ -619,7 +619,7 @@
                 {
                   "image": "lib/assets/images/veganuary/res-extremiste-vert.webp",
                   "label": "L'extrémiste vert",
-                  "text": "Un compte militant végane.",
+                  "text": "Un compte militant antispéciste intersectionnel.",
                   "links": [
                     "https://www.instagram.com/l_extremiste_vert/"
                   ]
@@ -634,7 +634,7 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Pour réfléchir, rire, et soutenir d'autres façons de faire :"
+              "text": "Pour se questionner, réfléchir, rire :"
             },
             {
               "type": "grid",
@@ -798,7 +798,7 @@
                 {
                   "image": "lib/assets/images/veganuary/res-avf.webp",
                   "label": "Association végétarienne de France",
-                  "text": "Défend l’alimentation végétale depuis 1995 afin de préserver les animaux, la santé et la planète.",
+                  "text": "Défend l'alimentation végétale depuis 1995 afin de préserver les animaux, la santé et la planète.",
                   "links": [
                     "https://www.vegetarisme.fr/",
                     "https://www.instagram.com/avf.vege/"
@@ -819,7 +819,7 @@
                   "text": "Sensibiliser dans la rue, avec des images et discussions",
                   "links": [
                     "https://www.anonymousforthevoiceless.org/",
-                    "https://www.instagram.com/anonymousforthevoiceless/"
+                    "https://www.instagram.com/av_france_belgique/"
                   ]
                 },
                 {
@@ -838,15 +838,6 @@
                   "links": [
                     "https://futur-asso.com/",
                     "https://www.instagram.com/futur_asso/"
-                  ]
-                },
-                {
-                  "image": "lib/assets/images/veganuary/res-refuges-animalistes.webp",
-                  "label": "Réseau des refuges animalistes",
-                  "text": "Refuges et sanctuaires pour les animaux dits de rente",
-                  "links": [
-                    "https://www.reseau-national-refuges-animalistes.org/",
-                    "https://www.instagram.com/reseaurefugesanimalistes/"
                   ]
                 },
                 {
@@ -894,7 +885,7 @@
           "title": "Des associations à connaître",
           "bullets": [
             "AVF, L214, Anonymous for the Voiceless, Co&xister",
-            "Futur, Réseau des refuges animalistes, PAZ",
+            "Futur, PAZ",
             "Chacune agit à sa façon"
           ]
         },
@@ -910,92 +901,160 @@
     },
     {
       "number": 24,
-      "icon": "plate",
+      "icon": "family",
       "steps": [
         {
           "type": "quiz",
-          "question": "Pour des conseils sur votre alimentation végane, vers qui vaut-il mieux se tourner ?",
+          "question": "À la cantine, combien de menus végétariens la loi impose-t-elle chaque semaine ?",
           "choices": [
             {
-              "text": "Un·e diététicien·ne formé·e à l'alimentation végétale",
+              "text": "Aucun, ce n'est pas obligatoire"
+            },
+            {
+              "text": "Au moins un",
               "result": "right"
             },
             {
-              "text": "Son médecin généraliste",
-              "result": "partial"
-            },
-            {
-              "text": "Un·e influenceur·se qui a l'air en pleine forme"
+              "text": "Un tous les jours"
             }
           ],
-          "explanation": "Votre médecin peut vous aider, mais l'alimentation végétale est encore peu enseignée. Un·e **diététicien·ne formé·e** à l'alimentation végétale connaît ses besoins particuliers et pourra vous conseiller au mieux."
+          "explanation": "Depuis la loi EGalim, rendue définitive par la loi Climat et résilience en 2021, les cantines scolaires doivent proposer **au moins un menu végétarien par semaine**. Mais végétarien ne veut pas dire végane : il contient souvent des œufs ou du fromage..."
         },
         {
           "type": "info",
-          "title": "Des pros qui partagent leurs conseils 🥗",
+          "title": "Élever des enfants véganes",
           "blocks": [
             {
               "type": "text",
-              "text": "Sur les réseaux, des professionnelles de la nutrition partagent gratuitement des conseils sourcés sur l'alimentation végétale :"
+              "text": "Élever un enfant végane, c'est composer avec un monde qui ne l'est pas encore, très spéciste et souvent réticent face à ce choix. À la cantine par exemple, la loi n'impose qu'**un menu végétarien par semaine** [1]. Aucune obligation (pour le moment) de proposer une option végétalienne."
+            },
+            {
+              "type": "text",
+              "text": "Repas de famille, anniversaires, regard des autres parents… Il y a des difficultés, mais **vous n'êtes pas seul·e** : de plus en plus de familles font ce choix, et des professionnel·les sont là pour les accompagner."
+            },
+            {
+              "type": "text",
+              "text": "**Et côté santé, que disent les études ?**"
+            },
+            {
+              "type": "text",
+              "text": "Les études récentes sont très rassurantes. Une grande étude publiée en 2026 a suivi près de 1,2 million de bébés jusqu'à 2 ans : ceux des familles véganes grandissaient comme les autres, avec des écarts minimes, et sans plus de retards de croissance à 2 ans [2]. Une méta-analyse de 2026, qui rassemble 59 études sur près de 49 000 enfants et ados, montre aussi que les valeurs des enfants véganes restent en moyenne dans les normes, avec un cholestérol plus bas. Elles montrent aussi l'importance de la complémentation en B12 [3]."
+            },
+            {
+              "type": "text",
+              "text": "**La vitamine B12, indispensable dès la grossesse**, et, comme pour tous les enfants, **un suivi régulier** par un·e médecin ou un·e pédiatre. Les pédiatres européens (ESPGHAN) conseillent aussi de se faire accompagner par un·e diététicien·ne [4]. Et l'Académie américaine de nutrition et de diététique estime qu'une alimentation végane bien menée convient à tous les âges, y compris aux enfants [5]."
+            }
+          ],
+          "sources": [
+            {
+              "label": "ma cantine (ministère de l'Agriculture), « Loi Climat et Résilience : quel impact sur les obligations EGAlim ? »",
+              "url": "https://ma-cantine.agriculture.gouv.fr/blog/10/"
+            },
+            {
+              "label": "Avital et al., « Growth Trajectories in Infants From Families With Plant-Based or Omnivorous Dietary Patterns », JAMA Network Open, 2026",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/41642623/"
+            },
+            {
+              "label": "Lotti et al., « Lacto-ovo-vegetarian and vegan diets in children and adolescents: a systematic review and meta-analysis of nutritional and health outcomes », Critical Reviews in Food Science and Nutrition, 2026",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/41382333/"
+            },
+            {
+              "label": "Verduci et al., « Vegan diet and nutritional status in infants, children and adolescents: A position paper based on a systematic search by the ESPGHAN Nutrition Committee », Journal of Pediatric Gastroenterology and Nutrition, 2025",
+              "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12580465/"
+            },
+            {
+              "label": "Melina et al., « Position of the Academy of Nutrition and Dietetics: Vegetarian Diets », Journal of the Academy of Nutrition and Dietetics, 2016",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/27886704/"
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Se faire accompagner 🤝",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "**Astrid Prévost**, diététicienne spécialisée en alimentation végétale, et **Émilie Leblanc**, maman de deux enfants végétaliens, ont créé ensemble des programmes en ligne pour les familles végétariennes et véganes :"
             },
             {
               "type": "grid",
               "columns": 1,
               "items": [
                 {
-                  "emoji": "🩺",
-                  "label": "Astrid Prévost",
-                  "text": "Diététicienne nutritionniste",
-                  "details": {
-                    "blocks": [
-                      {
-                        "type": "text",
-                        "text": "Astrid est diététicienne nutritionniste, spécialisée en alimentation végétale. Végane depuis plus de dix ans, elle démonte les idées fausses sur la santé et l'alimentation végétale."
-                      }
-                    ]
-                  }
+                  "icon": "site",
+                  "label": "Diversification veggie",
+                  "text": "Pour les premiers repas de bébé : à commencer entre 4 et 6 mois, jusqu'à 18 mois.",
+                  "links": [
+                    {
+                      "label": "Découvrir",
+                      "url": "https://petitmaisveggie.com/programme-diversification-vege/"
+                    }
+                  ]
                 },
                 {
-                  "emoji": "👶",
-                  "label": "Petit mais veggie",
-                  "text": "Émilie · @petit_mais_veggie",
-                  "details": {
-                    "blocks": [
-                      {
-                        "type": "text",
-                        "text": "Le compte d'Émilie, pour les parents et futurs parents : grossesse, allaitement, bébés et enfants végétariens ou véganes."
-                      },
-                      {
-                        "type": "text",
-                        "text": "Avec Astrid, elle propose des programmes pour accompagner les familles."
-                      }
-                    ]
-                  }
+                  "icon": "site",
+                  "label": "Veggie Kids",
+                  "text": "Pour les enfants de 1 à 12 ans : les besoins de chaque âge, des recettes et des idées de repas.",
+                  "links": [
+                    {
+                      "label": "Découvrir",
+                      "url": "https://petitmaisveggie.com/programme-veggie-kids-1-12-ans/"
+                    }
+                  ]
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "info",
-          "title": "Quand consulter ? 📋",
-          "blocks": [
-            {
-              "type": "text",
-              "text": "Au quotidien, les bases suffisent : on les a vues au jour 7, sans oublier la vitamine B12. Mais un accompagnement est précieux dans certaines situations :"
             },
             {
-              "type": "bullets",
+              "type": "text",
+              "text": "Certaines mutuelles les remboursent, comme une consultation diététique. Et pour leurs conseils au quotidien, suivez-les :"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
               "items": [
-                "**Pendant la grossesse et l'allaitement**, et pour les bébés et les enfants.",
-                "**Si vous faites beaucoup de sport**.",
-                "**Si vous avez une maladie** ou un traitement au long cours.",
-                "**Si votre rapport à la nourriture est compliqué** : le véganisme ne doit pas devenir un régime de plus."
+                {
+                  "image": "lib/assets/images/veganuary/res-astrid-prevost.webp",
+                  "label": "Astrid Prévost",
+                  "text": "Diététicienne nutritionniste spécialisée en alimentation végétale : des conseils sourcés, pour les enfants comme pour les adultes.",
+                  "links": [
+                    "https://www.instagram.com/astrid_nutrition_militante/"
+                  ]
+                },
+                {
+                  "image": "lib/assets/images/veganuary/res-petit-mais-veggie.webp",
+                  "label": "Petit mais veggie",
+                  "text": "Émilie partage recettes et conseils pour les enfants végétariens et véganes, de la grossesse à 12 ans.",
+                  "links": [
+                    "https://www.instagram.com/petit_mais_veggie/",
+                    "https://petitmaisveggie.com"
+                  ]
+                }
               ]
             },
             {
               "type": "text",
-              "text": "N'hésitez pas à demander à un·e diététicien·ne s'il ou elle est formé·e à l'alimentation végétale. Beaucoup consultent aussi en visio."
+              "text": "Elles en parlent aussi dans un épisode du podcast Papatriarcat :"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "icon": "podcast",
+                  "label": "Papatriarcat #232",
+                  "text": "« La parentalité végane » : Émilie et Astrid répondent aux questions et aux idées reçues, de la B12 à la cantine.",
+                  "links": [
+                    {
+                      "label": "Écouter",
+                      "url": "https://papatriarcat.fr/episodes/232-la-parentalite-vegane-emilie-et-astrid/"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Et pour toute la famille, la **vitamine B12** est indispensable :"
             },
             {
               "type": "app_link",
@@ -1010,19 +1069,19 @@
       ],
       "recap": [
         {
-          "emoji": "🥗",
-          "title": "Des pros à suivre",
+          "emoji": "🧒",
+          "title": "Élever des enfants véganes",
           "bullets": [
-            "Astrid Prévost, diététicienne",
-            "Petit mais veggie, pour les familles"
+            "Des difficultés, mais vous n'êtes pas seul·e",
+            "Bien menée, c'est possible : B12 et suivi régulier"
           ]
         },
         {
-          "emoji": "📋",
-          "title": "Quand consulter ?",
+          "emoji": "🤝",
+          "title": "Se faire accompagner",
           "bullets": [
-            "Grossesse, enfants, sport, maladie",
-            "Un·e diététicien·ne formé·e au végétal"
+            "Astrid Prévost et Petit mais veggie",
+            "Des programmes de la diversification à 12 ans"
           ]
         }
       ]
@@ -1047,68 +1106,137 @@
               "text": "René Descartes, un philosophe français"
             }
           ],
-          "explanation": "C'est **Richard Ryder** qui a inventé le mot, en 1970, sur le modèle de « racisme » et « sexisme ». Peter Singer l'a ensuite fait connaître dans son livre « La Libération animale », en 1975."
+          "explanation": "Le terme « spécisme », avec l'idée qu'il s'agirait d'un préjugé, est apparu en 1970 dans un pamphlet du psychologue **Richard D. Ryder**, sur le modèle de « racisme » et « sexisme ». Peter Singer l'a ensuite fait connaître dans son livre « La Libération animale », en 1975."
         },
         {
           "type": "info",
-          "title": "À lire 📚",
+          "title": "De la lecture 📚",
           "blocks": [
             {
               "type": "text",
-              "text": "Quelques lectures pour aller plus loin, du plus accessible au plus théorique :"
+              "text": "Quelques livres pour aller plus loin :"
             },
             {
               "type": "grid",
               "columns": 1,
               "items": [
                 {
-                  "image": "lib/assets/images/veganuary/res-questions-animalistes.webp",
-                  "label": "Questions animalistes",
-                  "text": "Le site de Florence Dellerie, autrice et illustratrice scientifique : ses travaux sur l'éthique animale et la pensée critique.",
+                  "image": "lib/assets/images/veganuary/cover-que-ressentent-vraiment-les-animaux.webp",
+                  "cover": true,
+                  "label": "Que ressentent vraiment les animaux ?",
+                  "text": "Florence Dellerie · La Martinière, 2026. Un petit livre accessible sur la sentience des autres animaux, et sur les préjugés qui nous empêchent de la voir.",
                   "links": [
-                    "https://questionsanimalistes.com/"
+                    {
+                      "label": "Voir le livre",
+                      "url": "https://www.editionsdelamartiniere.fr/livres/que-ressentent-vraiment-les-animaux/"
+                    }
                   ]
                 },
                 {
-                  "image": "lib/assets/images/veganuary/res-insolente-veggie.webp",
-                  "label": "Insolente Veggie",
-                  "text": "La BD humoristique de Rosa B sur le carnisme et le spécisme.",
+                  "image": "lib/assets/images/veganuary/cover-defendre-les-animaux.webp",
+                  "cover": true,
+                  "label": "Défendre les animaux sans se faire bouffer tout·e cru·e",
+                  "text": "Gabrielle Pozzo di Borgo · Robert Laffont, 2026. Un dialogue drôle pour désamorcer les débats sur la question animale.",
                   "links": [
-                    "https://insolente-veggie.com/"
+                    {
+                      "label": "Voir le livre",
+                      "url": "https://www.placedeslibraires.fr/livre/9782221284902-defendre-les-animaux-sans-se-faire-bouffer-tout-e-cru-e-gabrielle-pozzo-di-borgo/"
+                    }
                   ]
                 },
                 {
-                  "icon": "book",
-                  "label": "Voir son steak comme un animal mort",
-                  "text": "Martin Gibert · Lux, 2015. Un livre court sur ce qui nous empêche de voir l'animal dans notre assiette."
+                  "image": "lib/assets/images/veganuary/cover-idees-fausses-antispecisme.webp",
+                  "cover": true,
+                  "label": "En finir avec les idées fausses sur l'antispécisme",
+                  "text": "Victor Duran-Le Peuch · Éditions de l'Atelier, 2025. 48 idées reçues décortiquées par l'auteur du podcast Comme un poisson dans l'eau.",
+                  "links": [
+                    {
+                      "label": "Voir le livre",
+                      "url": "https://editionsatelier.com/boutique/accueil/492-en-finir-avec-les-idees-fausses-sur-l-antispecisme-9782708295407.html"
+                    }
+                  ]
                 },
                 {
-                  "icon": "book",
-                  "label": "L'antispécisme",
-                  "text": "Valéry Giroux · Que sais-je ?, 2020. Une introduction claire : d'où vient l'idée, ce qu'elle défend, ce qu'on lui oppose."
+                  "image": "lib/assets/images/veganuary/cover-ainsi-l-animal-et-nous.webp",
+                  "cover": true,
+                  "label": "Ainsi l'animal et nous",
+                  "text": "Kaoutar Harchi · Actes Sud, 2024, en poche chez Babel depuis 2026. La sociologue et romancière relie le sort fait aux animaux aux dominations entre humains.",
+                  "links": [
+                    {
+                      "label": "Voir le livre",
+                      "url": "https://actes-sud.fr/catalogue/ainsi-l-animal-et-nous-019544"
+                    }
+                  ]
                 },
                 {
-                  "icon": "book",
+                  "image": "lib/assets/images/veganuary/cover-politique-sexuelle-de-la-viande.webp",
+                  "cover": true,
                   "label": "La Politique sexuelle de la viande",
-                  "text": "Carol J. Adams. Un classique féministe sur les liens entre la domination des femmes et celle des animaux."
+                  "text": "Carol J. Adams · Le Passager clandestin, 2025. Une théorie critique féministe végane : le classique sur les liens entre la domination des femmes et celle des animaux.",
+                  "links": [
+                    {
+                      "label": "Voir le livre",
+                      "url": "https://www.lepassagerclandestin.fr/catalogue/essais/la-politique-sexuelle-de-la-viande/"
+                    }
+                  ]
                 },
                 {
-                  "icon": "book",
-                  "label": "Zoopolis",
-                  "text": "Sue Donaldson et Will Kymlicka · Alma, 2016. Quels droits pour les animaux domestiques, sauvages, et ceux qui vivent en ville ? On en reparle au jour 28."
+                  "image": "lib/assets/images/veganuary/cover-pourquoi-trump-tofu.webp",
+                  "cover": true,
+                  "label": "Pourquoi Trump ne mange pas de tofu",
+                  "text": "Suzanne Zaccour · 2025. Le patriarcat jusque dans l'assiette : pourquoi la viande reste un marqueur de virilité, et ce que le féminisme a à voir avec le véganisme.",
+                  "links": [
+                    {
+                      "label": "Voir le livre",
+                      "url": "https://www.lirandco.fr/sociologie-de-la-famille-et-des-generations/1724673-pourquoi-trump-ne-mange-pas-de-tofu-le-patriarcat-jusque-dans-l-assiette"
+                    }
+                  ]
                 },
+                {
+                  "image": "lib/assets/images/veganuary/cover-le-souci-avec-le-miel.webp",
+                  "cover": true,
+                  "label": "Le souci avec le miel & 21 autres raisons insoupçonnées de devenir végan.e",
+                  "text": "Franche Hirsute · Leduc Graphic, 2024. Une BD documentaire sur 22 formes d'exploitation animale cachées dans notre quotidien : mode, loisirs, fêtes…",
+                  "links": [
+                    {
+                      "label": "Voir le livre",
+                      "url": "https://www.editionsleduc.com/produit/3409/9791028529314/le-souci-avec-le-miel-21-autres-raisons-insoupconnees-de-devenir-vegan-e"
+                    }
+                  ]
+                },
+                {
+                  "image": "lib/assets/images/veganuary/cover-panique-chez-les-carnistes.webp",
+                  "cover": true,
+                  "label": "Insolente Veggie : Panique chez les carnistes !",
+                  "text": "Rosa B. · La Plage, 2025. Le dernier album de la BD humoristique sur le carnisme et le spécisme.",
+                  "links": [
+                    {
+                      "label": "Voir le livre",
+                      "url": "https://www.laplage.fr/produit/23549/9782383383970/insolente-veggie-panique-chez-les-carnistes"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Et une revue, en ligne et en papier :"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
                 {
                   "image": "lib/assets/images/veganuary/res-lamorce.webp",
                   "label": "L'Amorce",
-                  "text": "Une revue en ligne engagée contre le spécisme, sur ses enjeux éthiques, politiques et culturels.",
+                  "text": "La seule revue francophone consacrée au spécisme. Son 3e numéro papier, « L'idée de nature dans le viseur », est en librairie depuis mai 2026.",
                   "links": [
-                    "https://lamorce.co/"
+                    "https://lamorce.co/",
+                    {
+                      "label": "En papier",
+                      "url": "https://lamorce.co/lamorce-en-papier/"
+                    }
                   ]
-                },
-                {
-                  "icon": "site",
-                  "label": "Philosolavie",
-                  "text": "À compléter"
                 }
               ]
             }
@@ -1121,12 +1249,12 @@
       "recap": [
         {
           "emoji": "📚",
-          "title": "À lire",
+          "title": "De la lecture",
           "bullets": [
-            "Questions animalistes, de Florence Dellerie",
-            "Insolente Veggie, la BD de Rosa B",
-            "Martin Gibert, Valéry Giroux, Carol J. Adams, « Zoopolis »",
-            "La revue L'Amorce"
+            "Florence Dellerie, Gabrielle Pozzo di Borgo, Suzanne Zaccour",
+            "Victor Duran-Le Peuch, Kaoutar Harchi, Carol J. Adams",
+            "Et les BD de Franche Hirsute et d'Insolente Veggie",
+            "La revue L'Amorce, en ligne et en papier"
           ]
         }
       ]
@@ -1182,7 +1310,11 @@
             },
             {
               "type": "text",
-              "text": "Mais il faut savoir que, souvent, ces poules sont **rachetées aux éleveur·ses** [1]. Cet argent revient à la filière, et ne change rien au nombre de poules qu'elle fera naître ensuite. Quand c'est possible, mieux vaut passer par une association antispéciste ou un refuge."
+              "text": "Mais ces poules sont souvent **rachetées aux éleveur·ses** [1] : cet argent revient à la filière, qui en fera naître d'autres pour les remplacer."
+            },
+            {
+              "type": "text",
+              "text": "Il existe aussi des **poules rescapées**, sauvées par des associations ou accueillies dans des refuges, qui cherchent une famille : c'est l'option à privilégier."
             },
             {
               "type": "text",
@@ -1210,15 +1342,39 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Une poule adoptée continue de pondre, encore et encore. Chaque œuf lui coûte beaucoup de calcium, pris sur ses os."
+              "text": "Une poule adoptée continue de pondre. On peut se dire que manger ses œufs ne pose pas de problème : elle est bien traitée, et ils seraient perdus sinon."
             },
             {
               "type": "text",
-              "text": "Beaucoup de personnes véganes **leur redonnent leurs œufs** : cuits, écrasés avec la coquille et mélangés à leur nourriture, ils leur rendent une partie de ce que la ponte leur a pris."
+              "text": "Mais ces œufs sont **les siens** : elle ne les pond pas pour nous. Les utiliser reste une forme d'exploitation, même si le contexte n'a rien à voir avec celui d'un élevage."
             },
             {
-              "type": "callout",
-              "text": "Si une poule pond trop ou a des problèmes de ponte, un·e vétérinaire peut lui poser un implant qui met sa ponte en pause."
+              "type": "text",
+              "text": "Et chaque œuf lui coûte beaucoup de calcium, pris sur ses os. Beaucoup de personnes véganes **leur redonnent leurs œufs** : cuits, écrasés avec la coquille et mélangés à leur nourriture, ils leur rendent une partie de ce que la ponte leur a pris."
+            }
+          ]
+        },
+        {
+          "type": "info",
+          "title": "Les implants 💉",
+          "blocks": [
+            {
+              "type": "text",
+              "text": "Sélectionnées pour pondre presque tous les jours, les poules s'épuisent : la ponte fragilise leurs os, et provoque souvent des problèmes de santé."
+            },
+            {
+              "type": "text",
+              "text": "Un·e vétérinaire peut leur poser sous la peau un **implant qui met la ponte en pause**. Dans une étude, la ponte s'est arrêtée de deux mois à plus de quatre mois selon les poules, et les poules implantées avaient moins de lésions du bréchet, l'os de leur poitrine [1]. L'implant peut ensuite être renouvelé."
+            },
+            {
+              "type": "text",
+              "text": "Ce n'est pas encore très courant : il faut trouver un·e vétérinaire habitué·e aux poules, souvent spécialisé·e en NAC (nouveaux animaux de compagnie). Cela peut les soulager et améliorer leurs conditions de vie."
+            }
+          ],
+          "sources": [
+            {
+              "label": "Eusemann et al., « Influence of a Sustained Release Deslorelin Acetate Implant on Reproductive Physiology and Associated Traits in Laying Hens », Frontiers in Physiology, 2018",
+              "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6306558/"
             }
           ]
         },
@@ -1240,14 +1396,23 @@
           "title": "Les adopter ?",
           "bullets": [
             "Une vie sauvée, mais souvent rachetée à la filière",
-            "Plutôt via une asso antispéciste ou un refuge"
+            "Privilégier les poules rescapées des assos et refuges"
           ]
         },
         {
           "emoji": "🥚",
           "title": "Leurs œufs",
           "bullets": [
+            "Ce sont les leurs : les utiliser reste de l'exploitation",
             "Leur redonner, pour leur rendre du calcium"
+          ]
+        },
+        {
+          "emoji": "💉",
+          "title": "Les implants",
+          "bullets": [
+            "Ils mettent la ponte en pause plusieurs mois",
+            "À poser par un·e vétérinaire habitué·e aux poules"
           ]
         }
       ]
@@ -1279,11 +1444,11 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Cochons, vaches, moutons, poules : dans les refuges, des animaux sauvés de l'abattoir ou de l'abandon vivent enfin pour eux-mêmes. Chacun a un nom, une histoire, un caractère."
+              "text": "Cochons, vaches, moutons, poules : dans les refuges, des animaux sauvés de l'abattoir ou de l'abandon vivent enfin pour eux-mêmes. Chacun a un nom et peut vivre sa vie sereinement, en sécurité."
             },
             {
               "type": "text",
-              "text": "Les refuges montrent aussi **qui sont ces animaux** qu'on ne croise d'habitude qu'en barquette : un cochon qui joue, une vache qui choisit ses amies. Les voir vivre change souvent le regard."
+              "text": "Les refuges montrent aussi **qui sont ces animaux** qu'on ne croise d'habitude qu'en barquette : un cochon qui joue, une vache qui choisit ses amies. Les voir vivre change souvent le regard qu'on porte sur eux."
             },
             {
               "type": "text",
@@ -1293,63 +1458,27 @@
         },
         {
           "type": "info",
-          "title": "Quelques refuges en France 🐷",
+          "title": "Trouver un refuge 🐷",
           "blocks": [
+            {
+              "type": "text",
+              "text": "Le **Réseau des refuges animalistes** rassemble des refuges et sanctuaires pour les animaux dits de rente, partout en France. Sur son site, découvrez ceux qui en font partie, et peut-être un près de chez vous :"
+            },
             {
               "type": "grid",
               "columns": 1,
               "items": [
                 {
-                  "emoji": "🐖",
-                  "label": "Refuge GroinGroin",
-                  "text": "Cochons et autres animaux de ferme",
-                  "details": {
-                    "blocks": [
-                      {
-                        "type": "text",
-                        "text": "Fondé en 2005, GroinGroin a d'abord recueilli des cochons sauvés de l'abattoir ou abandonnés. Il accueille aussi des poules, des chèvres et des vaches."
-                      }
-                    ]
-                  }
-                },
-                {
-                  "emoji": "🐐",
-                  "label": "Refuge des Croq'Épines",
-                  "text": "Entre Touraine et Berry",
-                  "details": {
-                    "blocks": [
-                      {
-                        "type": "text",
-                        "text": "Le refuge accueille des animaux de ferme qui ne sont plus « productifs », pour qu'ils puissent vivre leur vie sereinement."
-                      }
-                    ]
-                  }
-                },
-                {
-                  "emoji": "🐑",
-                  "label": "La Ferme des Rescapés",
-                  "text": "Dans le Lot",
-                  "details": {
-                    "blocks": [
-                      {
-                        "type": "text",
-                        "text": "La Ferme des Rescapés accueille en particulier des animaux craintifs, malades ou fragiles, sauvés de l'abattoir ou de l'euthanasie."
-                      }
-                    ]
-                  }
-                },
-                {
-                  "emoji": "🐄",
-                  "label": "Domaine des Douages",
-                  "text": "Dans la Nièvre",
-                  "details": {
-                    "blocks": [
-                      {
-                        "type": "text",
-                        "text": "Un lieu d'accueil pour les animaux de ferme, qui vit uniquement grâce aux dons."
-                      }
-                    ]
-                  }
+                  "image": "lib/assets/images/veganuary/res-refuges-animalistes.webp",
+                  "label": "Réseau des refuges animalistes",
+                  "text": "Refuges et sanctuaires pour les animaux dits de rente",
+                  "links": [
+                    {
+                      "label": "Les refuges",
+                      "url": "https://www.reseau-national-refuges-animalistes.org/refuges/"
+                    },
+                    "https://www.instagram.com/reseaurefugesanimalistes/"
+                  ]
                 }
               ]
             }
@@ -1365,7 +1494,8 @@
                 "**Parrainer un animal** : un petit don chaque mois pour sa nourriture et ses soins.",
                 "**Donner du matériel** : foin, paille, couvertures… Beaucoup de refuges publient leurs besoins.",
                 "**Donner un coup de main** lors des journées de bénévolat.",
-                "**Visiter** lors des portes ouvertes, en respectant le rythme des animaux."
+                "**Visiter** lors de portes ouvertes.",
+                "**Les suivre** sur les réseaux et partager leur travail"
               ]
             },
             {
@@ -1389,9 +1519,9 @@
         },
         {
           "emoji": "🐷",
-          "title": "Quelques refuges",
+          "title": "Trouver un refuge",
           "bullets": [
-            "GroinGroin, Croq'Épines, Ferme des Rescapés, Domaine des Douages"
+            "Le Réseau des refuges animalistes, partout en France"
           ]
         },
         {
@@ -1439,8 +1569,8 @@
             {
               "type": "bullets",
               "items": [
-                "**Il est dressé** pour accepter qu'on le monte, avec un mors dans la bouche, des éperons ou une cravache.",
-                "**Il vit souvent seul dans un box**, alors que c'est un animal social, fait pour vivre en troupeau et marcher des heures.",
+                "**Il est dressé** pour accepter qu'on le monte, parfois avec un mors dans la bouche, des éperons ou une cravache.",
+                "**Il vit souvent seul dans un box**, alors que c'est un animal social, fait pour vivre en troupeau et marcher des heures sur de grandes distances.",
                 "**Il est vendu** quand il ne convient plus, et certains finissent à l'abattoir."
               ]
             },
@@ -1456,18 +1586,18 @@
           "blocks": [
             {
               "type": "text",
-              "text": "Pigeons, rats, moineaux, renards : ces animaux partagent nos villes, et pourtant on les traite souvent comme des nuisibles."
+              "text": "Pigeons, rats, moineaux, renards : ces animaux partagent nos villes. Pourtant, on les traite le plus souvent comme des « nuisibles », qu'on chasse, qu'on piège ou qu'on empoisonne."
             },
             {
               "type": "bullets",
               "items": [
                 "**Les pigeons des villes** descendent de pigeons domestiqués par les humains, puis abandonnés. Ils souffrent souvent de pattes abîmées par des fils et des cheveux qui s'y enroulent, jusqu'à perdre des doigts.",
-                "**Les rats** sont souvent tués avec des poisons qui les font mourir lentement, en plusieurs jours."
+                "**Les rats** sont souvent tués avec des poisons qui les font mourir lentement, causant de grandes souffrances."
               ]
             },
             {
               "type": "text",
-              "text": "Dans « Zoopolis », Sue Donaldson et Will Kymlicka proposent de les voir comme des **résident·es** de nos villes : des animaux avec qui apprendre à cohabiter, plutôt qu'à éliminer [1]."
+              "text": "Il est temps d'**arrêter de les voir comme des nuisibles**. Dans « Zoopolis », Sue Donaldson et Will Kymlicka proposent de les considérer comme des **résident·es** de nos villes : des animaux avec qui apprendre à cohabiter, plutôt qu'à éliminer [1]."
             }
           ],
           "sources": [
@@ -1479,25 +1609,42 @@
         },
         {
           "type": "info",
-          "title": "Comment cohabiter ? 🕊️",
+          "title": "Pinpon Pigeon",
           "blocks": [
             {
               "type": "text",
-              "text": "Des associations aident les animaux liminaires, comme **Pinpon Pigeon**, qui soigne les pigeons et sensibilise à leur cause, avec des bénévoles partout en France [1]."
+              "text": "L'association **Pinpon Pigeon** a vu le jour à Marseille en 2025. Ses bénévoles viennent en aide aux pigeons, notamment en retirant les cheveux et les fils qui s'emmêlent autour des pattes des pigeons, et leur causent douleurs, infections et parfois la perte de doigts."
             },
             {
-              "type": "bullets",
-              "items": [
-                "**Un pigeon blessé ?** Contactez une association : tous les centres de soins pour la faune sauvage n'acceptent pas les pigeons.",
-                "**Ne leur donnez pas de pain** : il les nourrit mal.",
-                "**Préférez les méthodes qui éloignent** les animaux, plutôt que celles qui les tuent."
-              ]
-            }
-          ],
-          "sources": [
+              "type": "text",
+              "text": "Iels sont aujourd'hui plus de 1 400, organisé·es en groupes locaux, en France, en Belgique et en Suisse. Et sauvetage après sauvetage, iels changent le regard sur ces oiseaux : un pigeon n'est pas un nuisible, c'est un animal dont les intérêts comptent."
+            },
             {
-              "label": "HelloAsso, Pinpon Pigeon",
-              "url": "https://www.helloasso.com/associations/pinpon-pigeon"
+              "type": "text",
+              "text": "**Pour les rejoindre**, il suffit d'adhérer à l'association : les adhérent·es peuvent ensuite rejoindre le groupe de leur ville."
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "image": "lib/assets/images/veganuary/res-pinpon-pigeon.webp",
+                  "label": "Pinpon Pigeon",
+                  "text": "Adhérer à l'association, rejoindre un groupe local ou suivre les sauvetages.",
+                  "links": [
+                    "https://pinponpigeon.fr/",
+                    "https://www.instagram.com/pinponpigeon.asso/",
+                    {
+                      "label": "Adhérer",
+                      "url": "https://pinpon-pigeon.assoconnect.com/collect/description/681443-m-adhesions-annuelles"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "text": "Sur leur site, vous pourrez aussi retrouver des **kits de soin**, et quoi faire si vous trouvez un pigeon blessé."
             }
           ]
         },
@@ -1515,19 +1662,19 @@
           ]
         },
         {
-          "emoji": "🐦",
+          "emoji": "🐀",
           "title": "Les animaux liminaires",
           "bullets": [
-            "Pigeons, rats, renards : nos voisin·es",
+            "Pigeons, rats, renards : nos voisin·es, pas des nuisibles",
             "Cohabiter plutôt qu'éliminer"
           ]
         },
         {
-          "emoji": "🕊️",
-          "title": "Cohabiter",
+          "emoji": "🐦",
+          "title": "Pinpon Pigeon",
           "bullets": [
-            "Pinpon Pigeon soigne les pigeons",
-            "Pas de pain, des méthodes qui éloignent"
+            "Des bénévoles qui libèrent les pattes des pigeons",
+            "On adhère pour rejoindre le groupe de sa ville"
           ]
         }
       ]

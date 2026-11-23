@@ -2,7 +2,6 @@
   "number": 1,
   "title": "Les bases",
   "illustration": "lib/assets/images/characters/watermelon.webp",
-  "cover_image": "lib/assets/images/vegandex.webp",
   "path_illustrations": [
     "lib/assets/avatars/canard.png",
     "lib/assets/images/buy-premium/flower.webp"
@@ -796,7 +795,7 @@
             },
             {
               "type": "app_link",
-              "label": "Voir les boutiques solidaires",
+              "label": "Voir toutes les boutiques",
               "target": "partners"
             }
           ]

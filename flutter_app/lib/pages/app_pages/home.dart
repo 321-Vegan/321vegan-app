@@ -340,8 +340,10 @@ class MyHomePageState extends State<MyHomePage>
     _tabController.animateTo(_mapTabIndex);
   }
 
-  /// Switches to the Scan tab (e.g. from an announcement).
-  void goToScanTab() {
+  /// Switches to the Scan tab (e.g. from an announcement), looking up
+  /// [barcode] if given.
+  void goToScanTab({String? barcode}) {
+    if (barcode != null) ScanPage.requestedBarcode.value = barcode;
     _tabController.animateTo(_scanTabIndex);
   }
 

@@ -8,9 +8,10 @@ import 'package:vegan_app/services/veganuary_service.dart';
 
 void main() {
   group('VeganuaryProgress.stateOf', () {
-    final monday = DateTime(2026, 1, 5, 10);
-    final tuesday = DateTime(2026, 1, 6, 9);
-    final thursday = DateTime(2026, 1, 8, 20);
+    // Out of January: the January calendar rule is tested below.
+    final monday = DateTime(2026, 2, 2, 10);
+    final tuesday = DateTime(2026, 2, 3, 9);
+    final thursday = DateTime(2026, 2, 5, 20);
 
     test('day 1 is open right away, the others are locked', () {
       const progress = VeganuaryProgress();
@@ -41,8 +42,30 @@ void main() {
 
     test('days open from the start, across a month end', () {
       final progress = const VeganuaryProgress()
-          .withCompleted(1, now: DateTime(2026, 1, 30));
-      expect(progress.unlockDate(4), DateTime(2026, 2, 2));
+          .withCompleted(1, now: DateTime(2026, 3, 30));
+      expect(progress.unlockDate(4), DateTime(2026, 4, 2));
+    });
+
+    test('started in January, day N opens on January N', () {
+      final jan5 = DateTime(2026, 1, 5, 10);
+      var progress = const VeganuaryProgress().withCompleted(1, now: jan5);
+      // Days 2 to 5 right away, one after the other...
+      for (var day = 2; day <= 5; day++) {
+        expect(progress.stateOf(day, now: jan5), VeganuaryDayState.available);
+        expect(progress.stateOf(day + 1, now: jan5), VeganuaryDayState.locked);
+        progress = progress.withCompleted(day, now: jan5);
+      }
+      // ...then one a day, by the calendar
+      expect(progress.stateOf(6, now: jan5), VeganuaryDayState.tomorrow);
+      expect(progress.unlockDate(6), DateTime(2026, 1, 6));
+      expect(progress.unlockDate(31), DateTime(2026, 1, 31));
+    });
+
+    test('started on December 31, days open from the start', () {
+      final progress = const VeganuaryProgress()
+          .withCompleted(1, now: DateTime(2026, 12, 31));
+      expect(progress.unlockDate(2), DateTime(2027, 1, 1));
+      expect(progress.unlockDate(5), DateTime(2027, 1, 4));
     });
 
     test('a day left halfway shows how far, until done', () {
@@ -75,7 +98,7 @@ void main() {
           .withCompleted(1, mythId: 'soja', now: monday);
       final restored = VeganuaryProgress.fromJson(
           jsonDecode(jsonEncode(progress.toJson())) as Map<String, dynamic>);
-      expect(restored.completedAt, {1: DateTime(2026, 1, 5)});
+      expect(restored.completedAt, {1: DateTime(2026, 2, 2)});
       expect(restored.pickedMyths, {1: 'soja'});
     });
   });
@@ -254,7 +277,13 @@ void main() {
         expect(week.myths.length, greaterThanOrEqualTo(mythDays));
         expect(
             week.myths.map((m) => m.id).toSet(), hasLength(week.myths.length));
-        expect(week.days.every((day) => day.recap.isNotEmpty), isTrue);
+        // But the last one, "Le mot de la fin"
+        expect(
+          week.days
+              .where((day) => day.number < VeganuaryService.totalDays)
+              .every((day) => day.recap.isNotEmpty),
+          isTrue,
+        );
         expect(week.myths.every((myth) => myth.recap != null), isTrue);
       });
 

@@ -92,7 +92,14 @@ enum VeganuaryDayIcon {
   pets,
   media,
   shelter,
-  dove
+  dove,
+  family,
+
+  /// What the 321 Vegan app can do.
+  app,
+
+  /// The last day: the finish line.
+  finish
 }
 
 class VeganuaryDay {
@@ -485,6 +492,7 @@ sealed class VeganuaryBlock {
         final target = json['target'] as String;
         return AppLinkBlock(
           label: json['label'] as String,
+          text: json['text'] as String?,
           target: AppLinkTarget.values.firstWhere(
             (value) => value.json == target,
             orElse: () =>
@@ -539,9 +547,13 @@ class CalloutBlock extends VeganuaryBlock {
 /// "b12_info"}`: a button opening a page of the app.
 class AppLinkBlock extends VeganuaryBlock {
   final String label;
+
+  /// `"text": "Scannez le code-barres…"`: under the label, smaller,
+  /// instead of the target's own (plain text: no bold).
+  final String? text;
   final AppLinkTarget target;
 
-  const AppLinkBlock({required this.label, required this.target});
+  const AppLinkBlock({required this.label, this.text, required this.target});
 }
 
 /// Pages of the app a link can open; add one here (and where the link
@@ -561,7 +573,26 @@ enum AppLinkTarget {
   productsMap('products_map'),
 
   /// The partner shops and their promo codes ("Boutiques solidaires").
-  partners('partners');
+  partners('partners'),
+
+  /// The Scan tab, leaving the day like the maps.
+  scanner('scanner'),
+
+  /// The product search on "Cosmétique", over the day; a barcode picked
+  /// there leaves the day for the Scan tab.
+  searchCosmetics('search_cosmetics'),
+
+  /// The product search on "Additif", likewise.
+  searchAdditives('search_additives'),
+
+  /// The Vegandex page, over the day.
+  vegandex('vegandex'),
+
+  /// A PDF of the answers to all the idées reçues of the course.
+  downloadAnswers('download_answers'),
+
+  /// The recipes unlocked, as images.
+  downloadRecipes('download_recipes');
 
   /// Its name in the JSON.
   final String json;
@@ -583,6 +614,10 @@ class GridBlock extends VeganuaryBlock {
 class GridItem {
   /// Asset path or URL; none: just the label and text.
   final String? image;
+
+  /// `"cover": true`: [image] is a book cover, shown upright (2:3) rather
+  /// than in a square.
+  final bool cover;
 
   /// `"emoji": "🥪"`: shown instead of an image.
   final String? emoji;
@@ -612,6 +647,7 @@ class GridItem {
 
   const GridItem({
     this.image,
+    this.cover = false,
     this.emoji,
     this.icon,
     required this.label,
@@ -626,6 +662,7 @@ class GridItem {
     final details = json['details'] as Map<String, dynamic>?;
     return GridItem(
       image: json['image'] as String?,
+      cover: json['cover'] as bool? ?? false,
       emoji: json['emoji'] as String?,
       icon: json['icon'] as String?,
       label: label,

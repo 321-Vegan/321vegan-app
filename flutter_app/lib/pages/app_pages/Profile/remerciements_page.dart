@@ -47,10 +47,6 @@ class RemerciementsPage extends StatelessWidget {
                     'des marques : un travail essentiel et précieux !',
                 tagLabel: 'Validation produits & Marques',
                 placeholderIcon: Icons.volunteer_activism_outlined,
-                linkIcon: Icons.open_in_new,
-                linkLabel: 'discord.com',
-                imageAsset: 'lib/assets/images/remerciements/discord.png',
-                url: 'https://discord.gg/NV67QXS2JF',
               ),
               SizedBox(height: AppSpacing.item),
               const _CreditCard(
@@ -136,8 +132,8 @@ class _CreditCard extends StatelessWidget {
   final IconData? linkIcon;
   final String? linkIconAsset;
 
-  /// Whether [linkIconAsset] is tinted grey. Some brand marks (Discord,
-  /// GitHub) must keep their official color and can't be recolored per
+  /// Whether [linkIconAsset] is tinted grey. Some brand marks (GitHub)
+  /// must keep their official color and can't be recolored per
   /// their brand guidelines, so this is false for those.
   final bool tintLinkIconAsset;
   final String? linkLabel;

@@ -49,11 +49,7 @@
         "blocks": [
           {
             "type": "text",
-            "text": "Cette critique pointe un vrai problème : **tout le monde n'a pas le même accès à l'alimentation**. Manque d'argent, de temps, de commerces à proximité, d'informations… Ces inégalités existent, et il ne s'agit pas de les nier. L'image du véganisme qu'on voit dans les pubs et sur les réseaux sociaux, faite de substituts chers et de restos branchés, n'aide pas non plus."
-          },
-          {
-            "type": "text",
-            "text": "**« Mais c'est trop cher ! »**"
+            "text": "**Tout le monde n'a pas le même accès à l'alimentation**. Manque d'argent, de temps, de commerces à proximité, d'informations… Ces inégalités existent, et il ne s'agit pas de les nier. Le fait que le véganisme soit vu comme un privilège a beaucoup à voir avec l'image que certaines personnes veulent lui donner."
           },
           {
             "type": "text",
@@ -129,7 +125,7 @@
           },
           {
             "type": "text",
-            "text": "D'ailleurs, même le président des chasseurs n'y croit pas. En novembre 2021, sur RMC, Willy Schraen, président de la Fédération nationale des chasseurs, a expliqué que la chasse était avant tout une passion, et que le fait de tuer faisait partie du plaisir. Interrogé sur la régulation, il a lâché : **« J'en ai rien à foutre de réguler »** [4]. L'argument de la régulation n'est donc qu'une justification."
+            "text": "D'ailleurs, même le président des chasseurs n'y croit pas. En novembre 2021, sur RMC, Willy Schraen, président de la Fédération nationale des chasseurs, a expliqué que la chasse était avant tout une passion, et que le fait de tuer faisait partie du plaisir. Interrogé sur la régulation, il a répondu : **« J'en ai rien à foutre de réguler »** [4]. L'argument de la régulation n'est donc qu'une justification."
           },
           {
             "type": "text",
@@ -1544,11 +1540,29 @@
             },
             {
               "type": "text",
-              "text": "**Pour les chats**, c'est un peu plus délicat, surtout parce que beaucoup sont difficiles et n'acceptent pas facilement une nouvelle nourriture : la transition doit souvent se faire très progressivement. Côté nutrition, leurs besoins particuliers, comme la taurine, peuvent être couverts sans produits animaux, et une enquête sur 1 369 chats n'a pas trouvé de différence de santé entre les chats nourris végane et les autres [2]. Il manque encore de grandes études cliniques pour en être tout à fait sûr, mais les résultats sont encourageants."
+              "text": "**Pour les chats**, ça peut être un peu plus délicat, surtout parce que beaucoup sont difficiles et n'acceptent pas facilement une nouvelle nourriture : la transition doit souvent se faire très progressivement. Côté nutrition, leurs besoins particuliers, comme la taurine, peuvent être couverts sans produits animaux, et une enquête sur 1 369 chats n'a pas trouvé de différence de santé entre les chats nourris végane et les autres [2]. Il manque encore de grandes études cliniques, mais les résultats sont encourageants."
             },
             {
               "type": "callout",
               "text": "Dans tous les cas, une alimentation végane pour un animal doit être complète, adaptée à son espèce et suivie par un·e vétérinaire."
+            },
+            {
+              "type": "text",
+              "text": "Pour se lancer, le site **VEGAnimalis** rassemble tout le nécessaire : marques de croquettes et de pâtées, alimentation faite maison, transition, soins…"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "items": [
+                {
+                  "icon": "site",
+                  "label": "VEGAnimalis",
+                  "text": "Nourrir son chien ou son chat sans produits animaux, en pratique.",
+                  "links": [
+                    "https://www.veganimalis.com/"
+                  ]
+                }
+              ]
             }
           ],
           "sources": [
@@ -1586,7 +1600,8 @@
           "title": "Dans leur gamelle",
           "bullets": [
             "Chiens : une alimentation végane complète est possible",
-            "Chats : plus délicat, toujours avec un·e vétérinaire"
+            "Chats : plus délicat, toujours avec un·e vétérinaire",
+            "VEGAnimalis, pour se lancer"
           ]
         }
       ]

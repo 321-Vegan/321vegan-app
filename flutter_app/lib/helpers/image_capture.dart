@@ -85,15 +85,26 @@ Future<List<File>> captureOffscreen(
 
 /// The share sheet with images (it can save them to the photos, or post
 /// them as an Instagram story), its iPad popover pointing at
-/// [buttonContext].
+/// [buttonContext]. Without [text], only the images are shared (saving a
+/// recipe: a text would be saved to the notes alongside).
 Future<void> shareImageFiles(
   BuildContext buttonContext,
   List<File> files, {
-  required String text,
+  String? text,
+}) =>
+    shareFiles(buttonContext, files, mimeType: 'image/png', text: text);
+
+/// The share sheet with [files] of [mimeType] (e.g. a PDF: saved to Files,
+/// sent by email...), its iPad popover pointing at [buttonContext].
+Future<void> shareFiles(
+  BuildContext buttonContext,
+  List<File> files, {
+  required String mimeType,
+  String? text,
 }) async {
   final box = buttonContext.findRenderObject() as RenderBox?;
   await Share.shareXFiles(
-    [for (final file in files) XFile(file.path, mimeType: 'image/png')],
+    [for (final file in files) XFile(file.path, mimeType: mimeType)],
     text: text,
     sharePositionOrigin:
         box != null ? box.localToGlobal(Offset.zero) & box.size : null,

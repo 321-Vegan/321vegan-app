@@ -11,7 +11,8 @@ enum VeganuaryDayState {
 
 /// Where the user is in the course. The day day 1 is done starts it: day N
 /// opens N-1 days later. Days missed are caught up, in order (back on day 3
-/// after skipping day 2: day 2 then day 3).
+/// after skipping day 2: day 2 then day 3). Started in January, day N opens
+/// on January N instead (see [unlockDate]).
 class VeganuaryProgress {
   /// Day number → date it was done (local, no time).
   final Map<int, DateTime> completedAt;
@@ -79,9 +80,12 @@ class VeganuaryProgress {
         : VeganuaryDayState.available;
   }
 
-  /// Date [day] opens; day 1 must be done.
+  /// Date [day] opens; day 1 must be done. Started in January, it follows
+  /// the calendar: day N opens on January N (started on the 5th, days 2 to 5
+  /// open right after day 1).
   DateTime unlockDate(int day) {
     final start = completedAt[1]!;
+    if (start.month == DateTime.january) return DateTime(start.year, 1, day);
     return DateTime(start.year, start.month, start.day + day - 1);
   }
 

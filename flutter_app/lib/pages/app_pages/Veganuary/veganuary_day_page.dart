@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -73,12 +75,17 @@ class VeganuaryDayPage extends StatefulWidget {
   /// closed.
   final ValueChanged<String>? onOpenMap;
 
+  /// Switches to the Scan tab, looking up a barcode if not null, once the
+  /// day is closed.
+  final ValueChanged<String?>? onOpenScan;
+
   const VeganuaryDayPage({
     super.key,
     required this.week,
     required this.day,
     required this.progress,
     this.onOpenMap,
+    this.onOpenScan,
   });
 
   /// Resolves to true when the day was done.
@@ -88,10 +95,15 @@ class VeganuaryDayPage extends StatefulWidget {
     required VeganuaryDay day,
     required VeganuaryProgress progress,
     ValueChanged<String>? onOpenMap,
+    ValueChanged<String?>? onOpenScan,
   }) {
     return Navigator.of(context).push<bool>(MaterialPageRoute(
       builder: (_) => VeganuaryDayPage(
-          week: week, day: day, progress: progress, onOpenMap: onOpenMap),
+          week: week,
+          day: day,
+          progress: progress,
+          onOpenMap: onOpenMap,
+          onOpenScan: onOpenScan),
     ));
   }
 
@@ -125,6 +137,13 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
   /// Bursts on reaching the done page.
   final _confettiController =
       ConfettiController(duration: const Duration(seconds: 2));
+
+  /// The last day: on top of it, two cannons firing up from the bottom
+  /// corners, for longer.
+  final _finaleController =
+      ConfettiController(duration: const Duration(seconds: 3));
+
+  bool get _isLastDay => widget.day.number >= VeganuaryService.totalDays;
 
   /// "Recette débloquée !" over the recipe page just reached.
   bool _recipeUnlocking = false;
@@ -228,6 +247,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
   @override
   void dispose() {
     _confettiController.dispose();
+    _finaleController.dispose();
     super.dispose();
   }
 
@@ -291,6 +311,11 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
     widget.onOpenMap!(layer);
   }
 
+  void _openScan(String? barcode) {
+    _close();
+    widget.onOpenScan!(barcode);
+  }
+
   Future<void> _next() async {
     if (_isLast) {
       _close();
@@ -306,6 +331,10 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
       if (!mounted) return;
       setState(() => _saving = false);
       _confettiController.play();
+      if (_isLastDay && !MediaQuery.of(context).disableAnimations) {
+        _finaleController.play();
+        if (_haptics) HapticHelper.doubleImpact();
+      }
     } else {
       _saveStarted(_index + 1);
     }
@@ -503,6 +532,8 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
                         key: ValueKey(_index),
                         child: VeganuaryLinkScope(
                           onOpenMap: widget.onOpenMap == null ? null : _openMap,
+                          onOpenScan:
+                              widget.onOpenScan == null ? null : _openScan,
                           child: _buildScreen(_screen),
                         ),
                       ),
@@ -553,6 +584,27 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
                 ),
               ),
             ),
+            // The finish line: up from both bottom corners, towards the
+            // middle
+            for (final (alignment, direction) in [
+              (Alignment.bottomLeft, -pi / 3),
+              (Alignment.bottomRight, -2 * pi / 3),
+            ])
+              Align(
+                alignment: alignment,
+                child: IgnorePointer(
+                  child: ConfettiWidget(
+                    confettiController: _finaleController,
+                    blastDirection: direction,
+                    emissionFrequency: 0.08,
+                    numberOfParticles: 12,
+                    maxBlastForce: 90.r,
+                    minBlastForce: 50.r,
+                    gravity: 0.15,
+                    shouldLoop: false,
+                  ),
+                ),
+              ),
           ]),
         ),
       ),
