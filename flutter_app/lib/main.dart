@@ -19,6 +19,7 @@ import 'services/deep_link_service.dart';
 import 'services/notification_service.dart';
 import 'services/anniversary_service.dart';
 import 'services/veganuary_reminder_service.dart';
+import 'models/veganuary/veganuary_progress.dart';
 import 'services/products_of_interest_cache.dart';
 import 'services/push_notification_service.dart';
 import 'services/subscription_service.dart';
@@ -36,6 +37,9 @@ void main() async {
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   await dotenv.load(fileName: ".env");
+  // Beta tests only: the Veganuary days open one after the other right away
+  VeganuaryProgress.unlockRightAway =
+      dotenv.env['VEGANUARY_UNLOCK_RIGHT_AWAY'] == 'true';
   await DatabaseHelper.instance.database;
   await DatabaseHelper.instance.cosmeticsDatabase;
   await AuthService.init();

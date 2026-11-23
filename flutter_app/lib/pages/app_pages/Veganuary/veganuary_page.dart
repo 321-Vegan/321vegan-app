@@ -16,6 +16,7 @@ import '../../../widgets/shared/animated_reveal.dart';
 import '../../../widgets/shared/app_dialog.dart';
 import '../../../widgets/shared/empty_state_view.dart';
 import '../../../widgets/shared/icon_snack_bar.dart';
+import '../../../widgets/shared/info_box.dart';
 import '../../../widgets/shared/push_permission_prompt.dart';
 import '../../../widgets/shared/square_icon_button.dart';
 import '../../../widgets/veganuary/veganuary_day_node.dart';

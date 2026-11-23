@@ -70,7 +70,19 @@ void main() {
       expect(progress.unlockDate(5), DateTime(2027, 1, 4));
     });
 
-    test('a day left halfway shows how far, until done', () {
+    test('beta tests: the next day opens right away', () {
+      final progress =
+          VeganuaryProgress(completedAt: {1: DateTime(2026, 2, 10)});
+      final sameDay = DateTime(2026, 2, 10, 18);
+      expect(progress.stateOf(2, now: sameDay), VeganuaryDayState.tomorrow);
+      VeganuaryProgress.unlockRightAway = true;
+      addTearDown(() => VeganuaryProgress.unlockRightAway = false);
+      expect(progress.stateOf(2, now: sameDay), VeganuaryDayState.available);
+      // Still in order
+      expect(progress.stateOf(3, now: sameDay), VeganuaryDayState.locked);
+    });
+
+        test('a day left halfway shows how far, until done', () {
       final started = const VeganuaryProgress().withStarted(
         const VeganuaryStartedDay(
           day: 1,

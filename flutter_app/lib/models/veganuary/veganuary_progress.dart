@@ -16,6 +16,11 @@ enum VeganuaryDayState {
 /// after skipping day 2: day 2 then day 3). Started in January, day N opens
 /// on January N instead (see [unlockDate]).
 class VeganuaryProgress {
+  /// Beta tests: each day opens as soon as the one before it is done, not
+  /// the next day (`VEGANUARY_UNLOCK_RIGHT_AWAY=true` in .env, set in
+  /// main.dart). Never in a build for the stores.
+  static bool unlockRightAway = false;
+
   /// Day number → date it was done (local, no time).
   final Map<int, DateTime> completedAt;
 
@@ -85,7 +90,7 @@ class VeganuaryProgress {
   VeganuaryDayState stateOf(int day, {DateTime? now}) {
     if (isCompleted(day)) return VeganuaryDayState.completed;
     if (day != nextDay) return VeganuaryDayState.locked;
-    if (day == 1) return VeganuaryDayState.available;
+    if (day == 1 || unlockRightAway) return VeganuaryDayState.available;
     final today = dateOnly(now ?? DateTime.now());
     return unlockDate(day).isAfter(today)
         ? VeganuaryDayState.tomorrow
