@@ -80,7 +80,7 @@ class _VeganuaryWeeksPageState extends State<VeganuaryWeeksPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text('Veganuary', style: AppTextStyles.baloo22),
+          title: Text('Parcours 321 Vegan', style: AppTextStyles.baloo22),
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:vegan_app/helpers/preference_helper.dart';
 import 'package:vegan_app/pages/app_pages/home.dart';
 import 'package:vegan_app/services/subscription_service.dart';
+import 'package:vegan_app/services/veganuary_launch.dart';
 import 'package:vegan_app/widgets/shared/announcement_sheet.dart';
 
 /// App news shown once each at launch (see [showNextAnnouncement]), oldest
@@ -11,24 +12,6 @@ import 'package:vegan_app/widgets/shared/announcement_sheet.dart';
 /// once they're no longer relevant. [home] drives the buttons that switch
 /// tab; null where they're never pressed (e.g. marking all seen).
 List<Announcement> appAnnouncements({MyHomePageState? home}) => [
-      Announcement(
-        id: 'product_ratings',
-        badge: 'Nouveau',
-        title: 'Notez les produits !',
-        message: 'Donnez votre avis sur les produits que vous scannez et '
-            'découvrez celui de la communauté.',
-        image: 'lib/assets/images/characters/cow-ok.webp',
-        features: const [
-          'Notez de 1 à 5 étoiles',
-          'Ajoutez un commentaire si vous le souhaitez',
-          'Consultez les avis des autres utilisateur·ices',
-        ],
-        note:
-            'Scannez un produit ou ouvrez-le depuis le Vegandex ou l\'historique pour le '
-            'noter. Retrouvez toutes vos notes dans Paramètres > Notes.',
-        primaryLabel: 'Scanner',
-        onPrimary: home?.goToScanTab,
-      ),
       Announcement(
         id: 'map_places',
         badge: 'Nouveau',
@@ -50,6 +33,28 @@ List<Announcement> appAnnouncements({MyHomePageState? home}) => [
                 await PreferencesHelper.setLastMapLayerPref('restaurants');
                 home.goToMapTab();
               },
+      ),
+      Announcement(
+        id: 'veganuary_course',
+        badge: VeganuaryLaunch.isOpen.value ? 'Nouveau' : 'Bientôt',
+        title: 'Le Parcours 321 Vegan',
+        message: VeganuaryLaunch.isOpen.value
+            ? "31 jours pour trouver les réponses aux questions qu'on se pose "
+                'sur le véganisme.'
+            : 'Dès le ${VeganuaryLaunch.opensAtLabel}, 31 jours pour trouver '
+                "les réponses aux questions qu'on se pose sur le véganisme.",
+        image: 'lib/assets/images/characters/watermelon.webp',
+        features: const [
+          'Chaque jour, une info et une idée reçue démontée',
+          'Des recettes à tester, à garder en PDF',
+          'Un certificat à la fin des 31 jours',
+        ],
+        note: VeganuaryLaunch.isOpen.value
+            ? null
+            : "Activez le rappel sur la page du parcours pour être "
+                "prévenu·e dès l'ouverture.",
+        primaryLabel: VeganuaryLaunch.isOpen.value ? 'Commencer' : 'Découvrir',
+        onPrimary: home?.goToVeganuaryTab,
       ),
     ];
 

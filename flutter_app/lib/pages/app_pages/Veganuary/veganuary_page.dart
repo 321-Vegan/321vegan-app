@@ -390,7 +390,7 @@ class _VeganuaryPageState extends State<VeganuaryPage>
             ? _error != null
                 ? EmptyStateView(
                     title: 'Pas de connexion',
-                    subtitle: 'Le Veganuary se télécharge à la première '
+                    subtitle: 'Le parcours se télécharge à la première '
                         'visite. Vérifiez votre connexion, puis réessayez.',
                     buttonLabel: 'Réessayer',
                     onButtonTap: _retry,
@@ -451,7 +451,7 @@ class _VeganuaryPageState extends State<VeganuaryPage>
         // Questions, other vegans: the course's Discord server
         Semantics(
           button: true,
-          label: 'Rejoindre le Discord du Veganuary',
+          label: 'Rejoindre le Discord du parcours',
           excludeSemantics: true,
           child: SquareIconButton.action(
             onTap: () => openExternalUrl(
@@ -463,7 +463,7 @@ class _VeganuaryPageState extends State<VeganuaryPage>
         SizedBox(width: 24.w),
         Semantics(
           button: true,
-          label: 'Voir les semaines du Veganuary',
+          label: 'Voir les semaines du parcours',
           excludeSemantics: true,
           child: SquareIconButton.action(
             onTap: _openWeeks,

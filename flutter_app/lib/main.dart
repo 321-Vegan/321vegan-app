@@ -18,6 +18,7 @@ import 'services/b12_reminder_service.dart';
 import 'services/deep_link_service.dart';
 import 'services/notification_service.dart';
 import 'services/anniversary_service.dart';
+import 'services/veganuary_launch.dart';
 import 'services/veganuary_reminder_service.dart';
 import 'models/veganuary/veganuary_progress.dart';
 import 'services/products_of_interest_cache.dart';
@@ -40,6 +41,10 @@ void main() async {
   // Beta tests only: the Veganuary days open one after the other right away
   VeganuaryProgress.unlockRightAway =
       dotenv.env['VEGANUARY_UNLOCK_RIGHT_AWAY'] == 'true';
+  // Beta tests only: the Veganuary tab open before its opening date
+  VeganuaryLaunch.openRightAway =
+      dotenv.env['VEGANUARY_OPEN_RIGHT_AWAY'] == 'true';
+  await VeganuaryLaunch.init();
   await DatabaseHelper.instance.database;
   await DatabaseHelper.instance.cosmeticsDatabase;
   await AuthService.init();
@@ -77,6 +82,7 @@ Future<void> _initDeferred() async {
     PushNotificationService.init(),
     'PushNotificationService.init',
   );
+  await _withTimeout(VeganuaryLaunch.refresh(), 'VeganuaryLaunch.refresh');
   await _withTimeout(
     _migrateBiweeklyReminderIfNeeded(),
     'migrateBiweeklyReminderIfNeeded',
@@ -94,6 +100,11 @@ Future<void> _initDeferred() async {
   await _withTimeout(
     VeganuaryReminderService.reschedule(),
     'VeganuaryReminderService.reschedule',
+  );
+  // And the one for the opening, if asked from the teaser
+  await _withTimeout(
+    VeganuaryReminderService.rescheduleOpeningReminder(),
+    'VeganuaryReminderService.rescheduleOpeningReminder',
   );
 
   // Pre-load products of interest cache at app startup (when likely to have internet)

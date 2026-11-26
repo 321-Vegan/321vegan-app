@@ -29,7 +29,7 @@ void main() {
   test('the answers PDF', () async {
     final bytes = await veganuaryAnswersPdf(weeks);
     expect(String.fromCharCodes(bytes.take(5)), '%PDF-');
-    keep('veganuary-reponses-idees-recues', bytes);
+    keep('Parcours 321 Vegan - Idées reçues', bytes);
   });
 
   test('the recipes PDF', () async {
@@ -38,6 +38,6 @@ void main() {
         for (final day in week.days) ...day.steps.whereType<RecipeStep>(),
     ]);
     expect(String.fromCharCodes(bytes.take(5)), '%PDF-');
-    keep('veganuary-recettes', bytes);
+    keep('Parcours 321 Vegan - Recettes', bytes);
   });
 }

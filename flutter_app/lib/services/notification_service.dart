@@ -168,8 +168,8 @@ class NotificationService {
 
         const veganuaryChannel = AndroidNotificationChannel(
           'veganuary_reminders',
-          'Rappels Veganuary',
-          description: 'Un rappel le matin quand un jour du Veganuary '
+          'Rappels du parcours',
+          description: 'Un rappel le matin quand un jour du parcours '
               'vous attend',
           importance: Importance.high,
           playSound: true,
@@ -420,9 +420,9 @@ class NotificationService {
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
         'veganuary_reminders',
-        'Rappels Veganuary',
+        'Rappels du parcours',
         channelDescription:
-            'Un rappel le matin quand un jour du Veganuary vous attend',
+            'Un rappel le matin quand un jour du parcours vous attend',
         importance: Importance.high,
         priority: Priority.high,
         icon: 'ic_notification',

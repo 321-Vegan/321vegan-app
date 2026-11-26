@@ -4,6 +4,7 @@ import 'package:timezone/timezone.dart' as tz;
 import '../helpers/preference_helper.dart';
 import '../models/veganuary/veganuary_progress.dart';
 import 'notification_service.dart';
+import 'veganuary_launch.dart';
 import 'veganuary_service.dart';
 
 /// Veganuary daily reminder, opt-in (offered at the end of day 1): at 10h,
@@ -22,6 +23,10 @@ class VeganuaryReminderService {
 
   /// After the planned ones, so they don't cancel it.
   static const int _testNotificationId = 3099;
+
+  /// The opening reminder, set from the teaser.
+  static const int _openingNotificationId = 3098;
+  static const String _openingKey = 'veganuary_opening_reminder';
   static const int _daysAhead = 7;
   static const int _hour = 10;
 
@@ -123,7 +128,7 @@ class VeganuaryReminderService {
   }) {
     return _notificationService.scheduleVeganuaryReminder(
       id: id,
-      title: 'Veganuary : jour $day',
+      title: 'Parcours 321 Vegan : jour $day',
       body: 'Votre jour $day vous attend : une info et une idée reçue '
           'à démonter.',
       scheduledDate: date,
@@ -153,6 +158,53 @@ class VeganuaryReminderService {
             date.isAfter(now) &&
             !(VeganuaryProgress.dateOnly(date) == today && lastOpened == today))
         .toList();
+  }
+
+  /// Whether "Me prévenir" was tapped on the teaser (see
+  /// [setOpeningReminder]).
+  static Future<bool> isOpeningReminderSet() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_openingKey) ?? false;
+  }
+
+  /// "Me prévenir" on the teaser: a notification the morning the course
+  /// opens. Asks the OS permission (call it from a user action); false if
+  /// refused, nothing planned then.
+  static Future<bool> setOpeningReminder() async {
+    await PreferencesHelper.markNotificationPermissionAsked();
+    if (!await _notificationService.requestPermissions()) return false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_openingKey, true);
+    await rescheduleOpeningReminder();
+    return true;
+  }
+
+  static Future<void> cancelOpeningReminder() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_openingKey);
+    await _notificationService.cancelNotification(_openingNotificationId);
+  }
+
+  /// Plans the opening reminder again, at [VeganuaryLaunch.opensAt] (10h
+  /// that day): the date may have changed on the API.
+  static Future<void> rescheduleOpeningReminder() async {
+    try {
+      await _notificationService.cancelNotification(_openingNotificationId);
+      if (!await isOpeningReminderSet()) return;
+      final opensAt = VeganuaryLaunch.opensAt;
+      var date = tz.TZDateTime(
+          tz.local, opensAt.year, opensAt.month, opensAt.day, _hour);
+      if (opensAt.isAfter(date)) date = tz.TZDateTime.from(opensAt, tz.local);
+      if (!date.isAfter(tz.TZDateTime.now(tz.local))) return;
+      await _notificationService.scheduleVeganuaryReminder(
+        id: _openingNotificationId,
+        title: 'Le Parcours 321 Vegan commence !',
+        body: "C'est le jour 1 : une info, une idée reçue à démonter",
+        scheduledDate: date,
+      );
+    } catch (e) {
+      debugPrint('VeganuaryReminderService: opening reminder failed: $e');
+    }
   }
 
   static Future<void> _cancelAll() async {

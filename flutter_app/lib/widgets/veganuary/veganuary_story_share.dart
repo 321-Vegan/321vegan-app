@@ -47,13 +47,13 @@ class _VeganuaryShareProgressButtonState
 
   String get _shareText {
     final day = widget.day;
-    const end = "avec l'app 321 Vegan, disponible sur iOS et Android 🌱 "
+    const end = "de l'app 321 Vegan, disponible sur iOS et Android 🌱 "
         'https://321vegan.fr';
     if (day >= widget.totalDays) {
-      return "J'ai terminé les ${widget.totalDays} jours du Veganuary $end";
+      return "J'ai terminé les ${widget.totalDays} jours du parcours $end";
     }
-    if (day == 1) return "J'ai commencé le Veganuary $end";
-    return 'Jour $day du Veganuary $end';
+    if (day == 1) return "J'ai commencé le parcours $end";
+    return 'Jour $day du parcours $end';
   }
 
   Future<void> _share(BuildContext buttonContext) async {
@@ -65,7 +65,7 @@ class _VeganuaryShareProgressButtonState
         context,
         width: VeganuaryStoryCard.size.width,
         images: {
-          'veganuary-jour-${widget.day}': VeganuaryStoryCard(
+          'parcours-321-vegan-jour-${widget.day}': VeganuaryStoryCard(
             day: widget.day,
             totalDays: widget.totalDays,
             completedDays: widget.completedDays,
@@ -219,7 +219,7 @@ class VeganuaryStoryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const _AppName(),
+              const VeganuaryAppName(),
             ],
           ),
         ),
@@ -300,8 +300,8 @@ class _ProgressScreen extends StatelessWidget {
   });
 
   String get _subtitle {
-    if (day >= totalDays) return 'jours : défi relevé !';
-    return day > 1 ? 'jours de Veganuary !' : 'jour de Veganuary !';
+    if (day >= totalDays) return 'jours : parcours complet !';
+    return day > 1 ? 'jours de parcours !' : 'jour de parcours !';
   }
 
   @override
@@ -365,9 +365,9 @@ class _ProgressScreen extends StatelessWidget {
   }
 }
 
-/// Under the phone: where to find the app.
-class _AppName extends StatelessWidget {
-  const _AppName();
+/// Under the phone (and the certificate): where to find the app.
+class VeganuaryAppName extends StatelessWidget {
+  const VeganuaryAppName({super.key});
 
   @override
   Widget build(BuildContext context) {

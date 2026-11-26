@@ -10,6 +10,8 @@ import 'package:vegan_app/pages/app_pages/Scan/scan.dart';
 import 'package:vegan_app/pages/app_pages/dashboard/dashboard_page.dart';
 import 'package:vegan_app/pages/app_pages/map.dart';
 import 'package:vegan_app/pages/app_pages/Veganuary/veganuary_page.dart';
+import 'package:vegan_app/services/veganuary_launch.dart';
+import 'package:vegan_app/widgets/veganuary/veganuary_teaser.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:confetti/confetti.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -347,6 +349,9 @@ class MyHomePageState extends State<MyHomePage>
     _tabController.animateTo(_scanTabIndex);
   }
 
+  /// Switches to the Veganuary tab (its teaser before the opening).
+  void goToVeganuaryTab() => _tabController.animateTo(_veganuaryTabIndex);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -358,7 +363,12 @@ class MyHomePageState extends State<MyHomePage>
               DashboardPage(key: _dashboardKey),
               ScanPage(onLoginSuccess: _onLoginSuccess),
               MapPage(onLoginSuccess: _onLoginSuccess),
-              const VeganuaryPage(),
+              // A teaser until the course opens
+              ValueListenableBuilder<bool>(
+                valueListenable: VeganuaryLaunch.isOpen,
+                builder: (_, open, __) =>
+                    open ? const VeganuaryPage() : const VeganuaryTeaser(),
+              ),
             ],
           ),
           Align(
@@ -394,7 +404,7 @@ class MyHomePageState extends State<MyHomePage>
           ),
           AppBottomNavItem(
             icon: FontAwesomeIcons.seedling,
-            label: 'Veganuary',
+            label: '321... Vegan',
           ),
         ],
         onTap: (int value) {

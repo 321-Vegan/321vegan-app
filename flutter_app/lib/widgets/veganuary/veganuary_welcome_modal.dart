@@ -47,7 +47,7 @@ class _Step {
 const _steps = [
   _Step(
     image: 'lib/assets/images/characters/watermelon.webp',
-    title: 'Bienvenue dans le Veganuary !',
+    title: 'Bienvenue dans le Parcours 321 Vegan !',
     text: '${VeganuaryService.totalDays} jours pour trouver les réponses aux '
         "questions qu'on se pose sur le véganisme : chaque "
         'jour, une info et une idée reçue à démonter, et des recettes !',

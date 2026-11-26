@@ -48,14 +48,14 @@ void main() {
   testWidgets('first day', (tester) async {
     await _pumpStory(tester, 1);
     expect(tester.takeException(), isNull);
-    expect(find.text('jour de Veganuary !'), findsOneWidget);
+    expect(find.text('jour de parcours !'), findsOneWidget);
   });
 
   // The tallest one: with the line of the week done
   testWidgets('a week done fits in the story', (tester) async {
     await _pumpStory(tester, 14, weekDone: 2);
     expect(tester.takeException(), isNull);
-    expect(find.text('jours de Veganuary !'), findsOneWidget);
+    expect(find.text('jours de parcours !'), findsOneWidget);
     expect(find.text('Semaine 2 terminée !'), findsOneWidget);
     expect(find.text('15'), findsOneWidget);
     expect(find.text('14'), findsOneWidget);
@@ -64,7 +64,7 @@ void main() {
   testWidgets('last day', (tester) async {
     await _pumpStory(tester, 31, weekDone: 5);
     expect(tester.takeException(), isNull);
-    expect(find.text('jours : défi relevé !'), findsOneWidget);
+    expect(find.text('jours : parcours complet !'), findsOneWidget);
     // The challenge is over: no "Semaine 5 terminée !"
     expect(find.textContaining('Semaine'), findsNothing);
   });

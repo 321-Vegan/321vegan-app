@@ -8,6 +8,7 @@ import '../../themes/app_colors.dart';
 import '../../themes/app_spacing.dart';
 import '../shared/icon_snack_bar.dart';
 import '../shared/sheet_option_tile.dart';
+import 'veganuary_certificate.dart';
 
 /// What the Veganuary can be kept as, at its end.
 enum VeganuaryDownload {
@@ -115,8 +116,8 @@ class _VeganuaryDownloadCardState extends State<VeganuaryDownloadCard> {
   }
 }
 
-/// The three downloads one under the other (under the finish line, once
-/// the course is done).
+/// The certificate, then the downloads, one under the other (under the
+/// finish line, once the course is done).
 class VeganuaryDownloads extends StatelessWidget {
   const VeganuaryDownloads({super.key});
 
@@ -126,10 +127,17 @@ class VeganuaryDownloads extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final download in VeganuaryDownload.values) ...[
-          if (download != VeganuaryDownload.values.first)
-            SizedBox(height: AppSpacing.item),
+          SizedBox(height: AppSpacing.item),
           VeganuaryDownloadCard(download: download),
         ],
+        SheetOptionTile(
+          card: true,
+          icon: FontAwesomeIcons.trophy,
+          color: kAccentYellow,
+          title: 'Mon certificat',
+          detail: 'À votre nom, à partager ou à garder',
+          onTap: () => showVeganuaryCertificateSheet(context),
+        ),
       ],
     );
   }

@@ -8,6 +8,7 @@ import '../../models/seasonal_theme.dart';
 import '../../pages/app_pages/Partners/partners_page.dart';
 import '../../pages/app_pages/home.dart';
 import '../../services/b12_reminder_service.dart';
+import '../../services/veganuary_launch.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_shapes.dart';
 import '../shared/page_dots_indicator.dart';
@@ -54,8 +55,14 @@ class PromoSlide {
   });
 }
 
-/// Static content until the real news source is wired
-final List<PromoSlide> _promoSlides = [
+/// Static content until the real news source is wired. A getter: read when
+/// the carousel mounts, for the course's state at that time.
+List<PromoSlide> get _promoSlides => [
+  const PromoSlide(
+    title: 'Parcours 321 Vegan',
+    subtitle: '31 jours de contenus sur le véganisme. RDV le premier janvier !',
+    image: 'lib/assets/images/characters/avocado.webp',
+  ),
   PromoSlide(
     title: 'Nouvelle carte',
     subtitle: 'Avec les restaurants !',
@@ -256,6 +263,9 @@ class _PromoCard extends StatelessWidget {
     }
   }
 
+  bool get _hasButton =>
+      slide.url != null || slide.page != null || slide.onTap != null;
+
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -289,16 +299,15 @@ class _PromoCard extends StatelessWidget {
                 SizedBox(height: 6.h),
                 Text(
                   slide.subtitle,
-                  maxLines: 2,
+                  // The card's height leaves room for one line above a button
+                  maxLines: _hasButton ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 40.sp,
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
-                if (slide.url != null ||
-                    slide.page != null ||
-                    slide.onTap != null) ...[
+                if (_hasButton) ...[
                   SizedBox(height: 20.h),
                   ElevatedButton(
                     onPressed: () => _handleButtonTap(context),

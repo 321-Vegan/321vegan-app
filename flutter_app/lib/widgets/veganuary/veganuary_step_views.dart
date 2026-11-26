@@ -30,6 +30,7 @@ import '../shared/bottom_sheet_shell.dart';
 import '../shared/info_box.dart';
 import '../shared/sheet_option_tile.dart';
 import '../shared/tag_chip.dart';
+import 'veganuary_certificate.dart';
 import 'veganuary_downloads.dart';
 import 'veganuary_finish_line.dart';
 import 'veganuary_story_share.dart';
@@ -1680,7 +1681,7 @@ class VeganuaryDoneView extends StatelessWidget {
     final isLastDay = day >= VeganuaryService.totalDays;
     final message = isLastDay
         ? 'Bravo, vous avez parcouru les ${VeganuaryService.totalDays} '
-            'jours du Veganuary !'
+            'jours du parcours !'
         : _weekCompleted
             ? 'Vous avez été là jour après jour, et ça paie : vous en savez '
                 'maintenant beaucoup plus.\nContinuez comme ça !'
@@ -1739,13 +1740,17 @@ class VeganuaryDoneView extends StatelessWidget {
             ),
           ),
           SizedBox(height: AppSpacing.section * 1.5),
-          VeganuaryShareProgressButton(
-            day: day,
-            totalDays: VeganuaryService.totalDays,
-            completedDays: completedDays,
-            image: image,
-            weekDone: _weekCompleted ? weekNumber : null,
-          ),
+          // The last day: a certificate instead of the progress
+          if (isLastDay)
+            const VeganuaryCertificateButton()
+          else
+            VeganuaryShareProgressButton(
+              day: day,
+              totalDays: VeganuaryService.totalDays,
+              completedDays: completedDays,
+              image: image,
+              weekDone: _weekCompleted ? weekNumber : null,
+            ),
         ],
       ),
     );

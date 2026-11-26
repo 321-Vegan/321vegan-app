@@ -700,17 +700,21 @@ class ApiService {
     }
   }
 
-  /// Version of the Veganuary content on the API: `(version: null)`
-  /// when the API has none, null when it can't be known
-  /// (offline...).
-  static Future<({String? version})?> getVeganuaryVersion() async {
+  /// Version of the Veganuary content on the API (`version: null` when the
+  /// API has none), and the date the course opens if set there; null when
+  /// it can't be known (offline...).
+  static Future<({String? version, DateTime? opensAt})?>
+      getVeganuaryVersion() async {
     try {
       final response = await http.get(
           Uri.parse('$_baseUrl/veganuary-weeks/version'),
           headers: _headers);
       if (response.statusCode != 200) return null;
       final data = json.decode(utf8.decode(response.bodyBytes));
-      return (version: data['version'] as String?);
+      return (
+        version: data['version'] as String?,
+        opensAt: DateTime.tryParse(data['opens_at'] as String? ?? ''),
+      );
     } catch (e) {
       return null;
     }
@@ -832,7 +836,8 @@ class ApiService {
     }
   }
 
-  /// Get scan summary for a shop (distinct EANs with scan count and last scan date)
+  /// Products seen at a shop (scanned, or reported as found without a scan),
+  /// with their presence score.
   static Future<List<ShopScanSummary>> getShopProducts({
     required int shopId,
   }) async {
@@ -843,6 +848,9 @@ class ApiService {
 
       final response = await dio.get(
         '/shops/$shopId/products',
+        // Products only seen without a scan come without a last scan date:
+        // the API leaves them out for app versions that don't ask for them.
+        queryParameters: {'include_reported': true},
         options: dio_pkg.Options(
           headers: {
             if (accessToken != null) 'Authorization': 'Bearer $accessToken',

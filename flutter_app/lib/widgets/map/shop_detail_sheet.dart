@@ -21,6 +21,8 @@ import 'package:vegan_app/widgets/reviews/rating_status_chip.dart';
 import 'package:vegan_app/widgets/reviews/review_card.dart';
 import 'package:vegan_app/widgets/reviews/review_form_sheet.dart';
 import 'package:vegan_app/widgets/reviews/reviews_empty_state.dart';
+import 'package:vegan_app/widgets/map/report_seen_product_sheet.dart';
+import 'package:vegan_app/widgets/shared/animated_reveal.dart';
 import 'package:vegan_app/widgets/shared/app_button.dart';
 import 'package:vegan_app/widgets/shared/square_icon_button.dart';
 
@@ -153,6 +155,22 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
           await ApiService.getShopProducts(shopId: widget.shop.id);
       if (mounted) setState(() => _scanSummaries = summaries);
     }
+  }
+
+  /// A product not seen here yet, reported as seen without a scan: it moves
+  /// from the "not present" grid to the list, marked "Vu sans scan".
+  Future<void> _reportSeen(ProductOfInterest product) {
+    return showReportSeenProductSheet(
+      context,
+      product: product,
+      shop: widget.shop,
+      onSent: () async {
+        if (mounted) setState(() => _foundEans.add(product.ean));
+        final summaries =
+            await ApiService.getShopProducts(shopId: widget.shop.id);
+        if (mounted) setState(() => _scanSummaries = summaries);
+      },
+    );
   }
 
   Future<void> _reportNotFound(String ean) async {
@@ -420,7 +438,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   ),
                   SizedBox(width: 8.w),
                   Text(
-                    'Pas présent ou pas encore scanné (${unscanned.length})',
+                    'Pas présent ou pas encore signalé (${unscanned.length})',
                     style: TextStyle(
                       fontSize: 46.sp,
                       fontWeight: FontWeight.w600,
@@ -431,7 +449,27 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
               ),
             ),
           ),
-          if (_unscannedExpanded) _buildUnscannedGrid(unscanned),
+          AnimatedReveal(
+            visible: _unscannedExpanded,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: 24.h),
+                  child: Text(
+                    _isLoggedIn
+                        ? 'Vous en avez vu un ici sans le scanner ? '
+                            'Touchez-le pour le signaler.'
+                        : 'Connectez-vous pour signaler un produit vu dans '
+                            'ce magasin.',
+                    style: AppTextStyles.bodyRegular13
+                        .copyWith(color: Colors.grey[600]),
+                  ),
+                ),
+                _buildUnscannedGrid(unscanned),
+              ],
+            ),
+          ),
         ],
       ],
     );
@@ -450,41 +488,45 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       itemCount: products.length,
       itemBuilder: (context, index) {
         final product = products[index];
-        return Column(
-          children: [
-            Expanded(
-              child: ClipSmoothRect(
-                radius: squircleRadius(8.r),
-                child: product.image.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: '$_baseUrl/${product.image}',
-                        fit: BoxFit.contain,
-                        placeholder: (_, __) => Container(
+        return GestureDetector(
+          onTap: _isLoggedIn ? () => _reportSeen(product) : null,
+          behavior: HitTestBehavior.opaque,
+          child: Column(
+            children: [
+              Expanded(
+                child: ClipSmoothRect(
+                  radius: squircleRadius(8.r),
+                  child: product.image.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: '$_baseUrl/${product.image}',
+                          fit: BoxFit.contain,
+                          placeholder: (_, __) => Container(
+                            color: Colors.grey[200],
+                            child: Icon(Icons.image, color: Colors.grey[400]),
+                          ),
+                          errorWidget: (_, __, ___) => Container(
+                            color: Colors.grey[200],
+                            child: Icon(Icons.image, color: Colors.grey[400]),
+                          ),
+                        )
+                      : Container(
                           color: Colors.grey[200],
                           child: Icon(Icons.image, color: Colors.grey[400]),
                         ),
-                        errorWidget: (_, __, ___) => Container(
-                          color: Colors.grey[200],
-                          child: Icon(Icons.image, color: Colors.grey[400]),
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: Icon(Icons.image, color: Colors.grey[400]),
-                      ),
+                ),
               ),
-            ),
-            Text(
-              product.name,
-              style: TextStyle(
-                fontSize: 34.sp,
-                color: Colors.grey[600],
+              Text(
+                product.name,
+                style: TextStyle(
+                  fontSize: 34.sp,
+                  color: Colors.grey[600],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -520,8 +562,17 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
     );
   }
 
+  /// "aujourd'hui", "hier" or "il y a N jours".
+  String _daysAgo(int days) {
+    if (days <= 0) return "aujourd'hui";
+    if (days == 1) return 'hier';
+    return 'il y a $days jours';
+  }
+
   Widget _buildScoreDetails(ShopScanSummary summary, bool isNotFound) {
     final relevantCount = summary.notFoundCount;
+    final daysSinceLastScan = summary.daysSinceLastScan;
+    final daysSinceLastFound = summary.daysSinceLastFound;
 
     return Container(
       margin: EdgeInsets.only(top: 18.h),
@@ -536,16 +587,30 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildDetailLine(
-            Icons.schedule,
-            'Dernier scan il y a ${summary.daysSinceLastScan} jours',
-          ),
+          if (daysSinceLastScan != null) ...[
+            _buildDetailLine(
+              Icons.schedule,
+              'Dernier scan ${_daysAgo(daysSinceLastScan)}',
+            ),
+            SizedBox(height: 14.h),
+            _buildDetailLine(
+              Icons.qr_code_scanner,
+              'Scanné ${summary.scanCount} fois',
+            ),
+          ] else
+            _buildDetailLine(
+              Icons.qr_code_scanner,
+              'Jamais scanné dans ce magasin',
+            ),
           SizedBox(height: 14.h),
-          _buildDetailLine(
-            Icons.bar_chart,
-            'Scanné ${summary.scanCount} fois',
-          ),
-          SizedBox(height: 14.h),
+          if (daysSinceLastFound != null) ...[
+            _buildDetailLine(
+              Icons.visibility_outlined,
+              'Vu sans scan ${_daysAgo(daysSinceLastFound)}'
+              '${summary.foundCount > 1 ? ' (${summary.foundCount} fois)' : ''}',
+            ),
+            SizedBox(height: 14.h),
+          ],
           _buildDetailLine(
             Icons.search_off,
             relevantCount > 0
@@ -571,7 +636,7 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                   _buildReportedStatus('Présence signalée')
                 else
                   _buildReportPill(
-                    icon: Icons.search,
+                    icon: Icons.visibility_outlined,
                     label: 'Trouvé',
                     color: Theme.of(context).colorScheme.primary,
                     onTap: () => _reportFound(summary.ean),
@@ -716,6 +781,24 @@ class _ShopDetailSheetState extends State<ShopDetailSheet>
                             fontSize: 38.sp,
                             color: Colors.grey[500],
                           ),
+                        ),
+                      ],
+                      if (summary.isSeenOnly) ...[
+                        SizedBox(height: 6.h),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 40.sp,
+                              color: Colors.grey[600],
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              'Vu sans scan',
+                              style: AppTextStyles.bodyMedium13
+                                  .copyWith(color: Colors.grey[600]),
+                            ),
+                          ],
                         ),
                       ],
                     ],
