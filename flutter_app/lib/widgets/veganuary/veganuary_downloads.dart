@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../helpers/image_capture.dart';
+import '../../helpers/pdf_download.dart';
 import '../../helpers/veganuary_pdf.dart';
 import '../../models/veganuary/veganuary_content.dart';
 import '../../services/veganuary_service.dart';
@@ -18,19 +18,19 @@ enum VeganuaryDownload {
   recipes,
 }
 
-/// The recipes, in a PDF (one per page), through the share sheet. Each
-/// recipe's own button gives an image instead, to share.
-Future<void> shareVeganuaryRecipes(
+/// The recipes, in a PDF (one per page), downloaded (see [downloadPdf]).
+/// Each recipe's own button gives an image instead, to share.
+Future<void> downloadVeganuaryRecipes(
   BuildContext buttonContext,
   List<RecipeStep> recipes,
 ) async {
   if (recipes.isEmpty) return;
   final file = await buildVeganuaryRecipesPdf(recipes);
   if (!buttonContext.mounted) return;
-  await shareFiles(buttonContext, [file], mimeType: 'application/pdf');
+  await downloadPdf(buttonContext, file);
 }
 
-/// Runs [prepare] (a file built, then shared), saying so if it fails.
+/// Runs [prepare] (a file built, then downloaded), saying so if it fails.
 Future<void> runVeganuaryDownload(
     BuildContext context, Future<void> Function() prepare) async {
   try {
@@ -45,7 +45,7 @@ Future<void> runVeganuaryDownload(
   }
 }
 
-/// A card keeping part of the course as a PDF, through the share sheet. Reads the content and progress itself.
+/// A card keeping part of the course as a PDF (see [downloadPdf]). Reads the content and progress itself.
 class VeganuaryDownloadCard extends StatefulWidget {
   final VeganuaryDownload download;
 
@@ -88,20 +88,20 @@ class _VeganuaryDownloadCardState extends State<VeganuaryDownloadCard> {
       if (widget.download == VeganuaryDownload.recipes) {
         final progress = await VeganuaryService.loadProgress();
         if (!buttonContext.mounted) return;
-        await shareVeganuaryRecipes(
+        await downloadVeganuaryRecipes(
             buttonContext, progress.unlockedRecipes(weeks));
         return;
       }
       final file = await buildVeganuaryAnswersPdf(weeks);
       if (!buttonContext.mounted) return;
-      await shareFiles(buttonContext, [file], mimeType: 'application/pdf');
+      await downloadPdf(buttonContext, file);
     });
     if (mounted) setState(() => _preparing = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Own context: the share popover (iPad) points at the card
+    // Own context: the share popover (iPad, fallback) points at the card
     return Builder(
       builder: (buttonContext) => SheetOptionTile(
         card: true,

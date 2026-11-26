@@ -1475,7 +1475,7 @@ class VeganuaryRecipeSheet extends StatelessWidget {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSpacing.pageHorizontal),
           child: Text(
-            'La recette végane de la semaine !',
+            'La recette végane du jour !',
             textAlign: TextAlign.center,
             style: AppTextStyles.baloo22.copyWith(color: Colors.grey[600]),
           ),

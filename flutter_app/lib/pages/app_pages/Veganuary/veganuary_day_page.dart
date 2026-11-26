@@ -392,7 +392,7 @@ class _VeganuaryDayPageState extends State<VeganuaryDayPage> {
         _DoneScreen() when !_isLast => 'Continuer',
         _DoneScreen() || _RecapScreen() => 'Terminer',
         _ when _isLast => 'Fermer',
-        _ => 'On continue !',
+        _ => 'Suivant',
       };
 
   /// The idée reçue pick goes on by itself; a quiz, once answered.

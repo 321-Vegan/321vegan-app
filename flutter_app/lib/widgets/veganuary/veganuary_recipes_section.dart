@@ -19,7 +19,7 @@ typedef _DayRecipe = ({int day, RecipeStep recipe});
 
 /// All the recipes of the course, in the list of weeks: the ones of the days
 /// done open again, the others are greyed out until then. "Tout télécharger"
-/// shares the ones unlocked in a PDF.
+/// downloads the ones unlocked in a PDF.
 class VeganuaryRecipesSection extends StatefulWidget {
   final List<VeganuaryWeek> weeks;
   final VeganuaryProgress progress;
@@ -53,7 +53,7 @@ class _VeganuaryRecipesSectionState extends State<VeganuaryRecipesSection> {
     setState(() => _downloading = true);
     await runVeganuaryDownload(
       context,
-      () => shareVeganuaryRecipes(
+      () => downloadVeganuaryRecipes(
           buttonContext, widget.progress.unlockedRecipes(widget.weeks)),
     );
     if (mounted) setState(() => _downloading = false);

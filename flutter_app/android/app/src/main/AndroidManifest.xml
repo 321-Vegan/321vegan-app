@@ -11,6 +11,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <!-- Vibration permission for notifications -->
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- screenOrientation="portrait" on UCropActivity makes Play infer a
+         required portrait screen, which hides the app from tablets, desktops
+         and Android XR: declare it optional -->
+    <uses-feature android:name="android.hardware.screen.portrait" android:required="false"/>
 
     <application
         android:label="321 Vegan"

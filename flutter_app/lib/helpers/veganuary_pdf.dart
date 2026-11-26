@@ -187,7 +187,7 @@ pw.Widget _bullet(_Fonts fonts, String text) {
 /// The answers to every idée reçue of the course, week by week, each with
 /// its sources.
 Future<File> buildVeganuaryAnswersPdf(List<VeganuaryWeek> weeks) async =>
-    _save('veganuary-reponses-idees-recues', await veganuaryAnswersPdf(weeks));
+    _save('Veganuary - Idées reçues', await veganuaryAnswersPdf(weeks));
 
 @visibleForTesting
 Future<Uint8List> veganuaryAnswersPdf(List<VeganuaryWeek> weeks) async {
@@ -354,7 +354,7 @@ List<pw.Widget> _block(_Fonts fonts, VeganuaryBlock block) {
 /// ingredients and steps. (Each recipe's own button gives an image, to
 /// share.)
 Future<File> buildVeganuaryRecipesPdf(List<RecipeStep> recipes) async =>
-    _save('veganuary-recettes', await veganuaryRecipesPdf(recipes));
+    _save('Veganuary - Recettes', await veganuaryRecipesPdf(recipes));
 
 @visibleForTesting
 Future<Uint8List> veganuaryRecipesPdf(List<RecipeStep> recipes) async {
